@@ -4,8 +4,6 @@ import {
   documentManagementSaveButtonSelector,
   newMessageButtonSelector,
   prebillingSearchButtonSelector,
-  visitPatientNameSelector,
-  visitAideNameSelector,
 } from "./utils/templates&const";
 import GM_fetch from "@trim21/gm-fetch";
 import { fetch, stringifyCookies, assignIntervalTimer } from "./utils/util";
