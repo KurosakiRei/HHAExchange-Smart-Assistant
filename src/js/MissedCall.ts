@@ -27,10 +27,9 @@ const templateForReason = {
       endTime: string;
     }
   ) =>
-    `I spoke to patient ${patientName} and aide ${aideName} on ${getTodayMMDD()}. The patient confirmed that the aide ${aideName} arrived at ${
+    `I spoke to patient ${patientName} and aide ${aideName} on ${getTodayMMDD()}. The patient confirmed that ${aideName} arrived at ${
       schedule.startTime
-    }. I spoke to the aide ${aideName}, and the aide stated that she forgot to clock in. The aide ${aideName} was informed that she must clock in and out every shift and counseling note was placed on the aide ${aideName}'s profile.`,
-
+    }. I spoke to the aide, who stated they forgot to clock in. The aide was reminded to clock in and out for every shift, and a counseling note was placed on their profile.`,
   "Attendant failed to call out": (
     patientName: string,
     aideName: string,
@@ -41,8 +40,7 @@ const templateForReason = {
   ) =>
     `I spoke to patient ${patientName} on ${getTodayMMDD()}. The patient confirmed that aide ${aideName} left at ${
       schedule.endTime
-    }. I called the aide ${aideName}, and she stated that she forgot to clock out. The aide ${aideName} was informed that she must not only clock in but out every shift and counseling note was placed on ${aideName}'s profile. A timesheet will be submitted for this.`,
-
+    }. I contacted the aide, who stated they forgot to clock out. The aide was reminded to clock in and out for every shift, and a counseling note was placed on their profile. A timesheet will be submitted for this.`,
   "Attendant failed to call in and out": (
     patientName: string,
     aideName: string,
@@ -51,11 +49,11 @@ const templateForReason = {
       endTime: string;
     }
   ) =>
-    `I spoke to patient ${patientName} and aide ${aideName} on ${getTodayMMDD()}. The patient confirmed that the aide ${aideName} arrived at ${
+    `I spoke to patient ${patientName} and aide ${aideName} on ${getTodayMMDD()}. The patient confirmed that ${aideName} arrived at ${
       schedule.startTime
     } and left at ${
       schedule.endTime
-    }. I spoke to the aide ${aideName}, and the aide stated that she forgot to clock in and clock out. The aide ${aideName} was informed that she must clock in and out every shift and counseling note was placed on the aide ${aideName}'s profile. A timesheet will be submitted for this.`,
+    }. I spoke to the aide, who stated they forgot to clock in and out. The aide was reminded to clock in and out for every shift, and a counseling note was placed on their profile. A timesheet will be submitted for this.`,
 };
 
 export const missedCallResolver = async (Reason: ReasonType) => {
