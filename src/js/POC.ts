@@ -7,11 +7,13 @@ import {
   visitVerifyStarSelector,
   visitAuditCaregiverSelector,
   visitScheduleTimeSelector,
+  visitDutySelector,
 } from "../utils/templates&const";
 
 import { sleep } from "../utils/util";
 
 export const POCResolver = () => {
+  console.log("clicked");
   POCTick();
   POCReasonChooser();
   $(visitNotesSelector).val("task does not match plan of care");
@@ -29,13 +31,13 @@ function POCSafeTick(el: any) {
 }
 
 function POCTick() {
-  let pocList = ["107", "111", "112", "411", "502", "511"];
+  let pocList = ["101", "107", "111", "112", "411", "502", "511"];
   for (const dutyNum of pocList) {
-    POCSafeTick($(`.TableColumnTextLeft:contains("${dutyNum}")`)[0]);
+    POCSafeTick($(`${visitDutySelector}("${dutyNum}")`)[0]);
   }
   if ("0800-0800" == $(visitScheduleTimeSelector).text()) {
-    POCSafeTick($(`.TableColumnTextLeft:contains("801")`)[0]);
-    POCSafeTick($(`.TableColumnTextLeft:contains("802")`)[0]);
+    POCSafeTick($(`${visitDutySelector}("801")`)[0]);
+    POCSafeTick($(`${visitDutySelector}("802")`)[0]);
   }
 }
 

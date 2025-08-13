@@ -1,5 +1,7 @@
 import {
+  prebillingSearchButtonSelector,
   prebillingToDateSelector,
+  prebillingAdvancedFilterButtonSelector,
   prebillingDisciplineButtonSelector,
   prebillingDisciplineOptionSelectAllSelector,
   prebillingDisciplineOptionSelector,
@@ -11,9 +13,13 @@ import { getYesterdayFormatted, sleep } from "../utils/util";
 
 export const prebillingSelector = async () => {
   $(prebillingToDateSelector).val(getYesterdayFormatted());
+  await sleep(100);
+  $(prebillingAdvancedFilterButtonSelector)[0].click();
   await selectDiscipline();
   await selectCoordinator();
-
+  $(prebillingSearchButtonSelector)[0].click();
+  await sleep(100);
+  $(prebillingAdvancedFilterButtonSelector)[0].click();
   /*     parent.document.getElementById('ctl00_ContentPlaceHolder1_iframe').style.visibility = 'hidden';
     parent.document.getElementById('ctl00_ContentPlaceHolder1_hdnPg').value = 0;
     parent.document.getElementById('ctl00_ContentPlaceHolder1_hdnRefresh').value = 1;
@@ -25,14 +31,15 @@ export const prebillingSelector = async () => {
 async function selectDiscipline() {
   await sleep(100);
   $(prebillingDisciplineButtonSelector)[0].click();
-  await sleep(300);
+  await sleep(400);
   $(prebillingDisciplineOptionSelectAllSelector)[0].click();
 
-  let expectedRole = ["NonSkilled", "PCA", "HHA"];
+  let expectedRole = ["Non Skilled", "PCA", "HHA"];
   for (const element of $(prebillingDisciplineOptionSelector)) {
     if (expectedRole.includes(element.innerText)) {
       /* if(!element.parentElement.parentElement.parentElement.classList.contains("selected")) */
-      $(element.previousSibling).find("input")[0].click();
+      // console.log($(element.previousSibling)[0])
+      ($(element.previousSibling)[0] as HTMLInputElement).click();
     }
   }
   await sleep(100);
@@ -51,7 +58,8 @@ async function selectCoordinator() {
   for (const element of $(prebillingCoordinatorOptionSelector)) {
     if (expectedCoordinatorList.includes(element.innerText)) {
       /* if(!element.parentElement.parentElement.parentElement.classList.contains("selected")) */
-      $(element.previousSibling).find("input")[0].click();
+      // $(element.previousSibling).find("input")[0].click();
+      ($(element.previousSibling)[0] as HTMLInputElement).click();
     }
   }
   await sleep(100);

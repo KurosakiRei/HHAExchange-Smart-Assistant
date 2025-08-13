@@ -24,8 +24,9 @@ async function messageHandler(reason: string, notes: string) {
   let expectedReason = reason;
   let select = $(newMessageReasonSelector);
   for (const reason of $(newMessageReasonOptionSelector)) {
+    console.log(reason);
     if (expectedReason == reason.innerText) {
-      select.val((reason as HTMLOptionElement).value);
+      select.val((reason as HTMLOptionElement).getAttribute("value"));
       select[0].dispatchEvent(new Event("change"));
       break;
     }
