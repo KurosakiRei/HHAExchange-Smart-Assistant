@@ -169,7 +169,8 @@ export const getYesterdayFormatted = () => {
   const dd = String(today.getDate()).padStart(2, "0");
   const yyyy = today.getFullYear();
 
-  return `${mm}/${dd}/${yyyy}`;
+  // return `${mm}/${dd}/${yyyy}`;
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 export const getTodayMMDD = () => {
@@ -193,4 +194,39 @@ export const convertMilitaryTime = (timeStr) => {
   return minutes === 0
     ? `${hours12}${period}`
     : `${hours12}:${minutes.toString().padStart(2, "0")}${period}`;
+};
+
+export const searchElementInAllFrames = (win, selector) => {
+  let result = null;
+
+  function searchWindow(currentWindow) {
+    try {
+      if (currentWindow.document) {
+        const foundElement =
+          currentWindow.document.querySelector < HTMLElement > selector;
+        if (foundElement) {
+          result = foundElement;
+          return true; // 找到了，停止搜索
+        }
+      }
+    } catch (e) {
+      console.warn("无法访问的 window:", e);
+    }
+
+    try {
+      for (let i = 0; i < currentWindow.frames.length; i++) {
+        const frame = currentWindow.frames[i];
+        if (searchWindow(frame)) {
+          return true; // 子frame中找到了，停止搜索
+        }
+      }
+    } catch (e) {
+      console.warn("无法访问 frames:", e);
+    }
+
+    return false; // 当前window和子frames都没找到
+  }
+
+  searchWindow(win);
+  return result;
 };

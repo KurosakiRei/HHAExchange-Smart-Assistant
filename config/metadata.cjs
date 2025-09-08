@@ -6,21 +6,17 @@ const {
 } = require("../package.json");
 
 module.exports = {
-  name: {
-    "": "webpack-userscript-template",
-    cn: "中文名",
-    en: "english name",
-  },
-  namespace: "https://trim21.me/",
+  name: "HHAExchange Smart Assistant",
+  namespace: "https://kurosakirei.dev/",
   version: version,
   author: author,
   source: repository.url,
   // 'license': 'MIT',
-  match: ["*://www.example.com/", "*://example.com/*"],
+  match: ["*://app.hhaexchange.com/", "*://app.hhaexchange.com/*","*://mt3.1voicetech.com/webapp/*"],
   require: [
     `https://cdn.jsdelivr.net/npm/jquery@${dependencies.jquery}/dist/jquery.min.js`,
   ],
-  grant: ["GM.xmlHttpRequest"],
-  connect: ["httpbin.org"],
-  "run-at": "document-end",
+  grant: ["GM.xmlHttpRequest","GM_openInTab", "GM_addStyle"],
+  connect: ["https://app.hhaexchange.com"],
+  "run-at": "document-idle",
 };

@@ -4,77 +4,58 @@ import {
   documentManagementSaveButtonSelector,
   newMessageButtonSelector,
   prebillingSearchButtonSelector,
+  homePageSearchButtonSelector,
 } from "./utils/templates&const";
 import GM_fetch from "@trim21/gm-fetch";
-import { fetch, stringifyCookies, assignIntervalTimer } from "./utils/util";
+import { assignIntervalTimer } from "./utils/util";
 import { POCResolver } from "./js/POC";
 import { copyAttachmentToDescrp } from "./js/DocManagement";
 import { createNewQA, createWelcomeCall } from "./js/NewMessageHandler";
 import { prebillingSelector } from "./js/Prebilling";
 import { missedCallResolver } from "./js/MissedCall";
-
-import axios from "axios";
-import { createApp } from "vue";
-import VisitsMonitor from "./VisitsMonitor.vue";
+import { incomingCallHandler } from "./js/IncomingCallHandler";
+import { highlight2Call } from "./js/Highlight2Call";
+import { visitMonitor } from "./js/VisitMonitor";
+import { homePageSelector } from "./js/HomePage";
 
 async function main() {
   console.log("HHA Exchange Smart Assistant: script start");
 
-  // let result = await fetch(, {
-  //   headers:{
-  //     cookie: getAllCookies(),
-  //     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-  //   }
-  // })
+  async function FetchTester() {
+    try {
+      // 构造目标网站的搜索URL
+      // const searchUrl = `https://your-search-site.com/search?q=${number}`; // <--- [!] 修改为实际的搜索URL格式
 
-  //   try {
-  //     const response = await axios.get(`
-  // https://app.hhaexchange.com/HHANotification2410010000/default.aspx?S=${getAllCookies()["HHAX_Session"]}&AppVersion=ENT&Version=24.10&MinorVersion=1.0`, {
-  //       headers: {
-  //         "cookie": getAllCookies(),
-  //         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-  //       }, withCredentials: true
-  //     });
-  //     console.log(response);
-  //     console.log('Response Headers:', response.headers);
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
+      // console.log('正在搜索:', searchUrl);
+      let SearchCGphone =
+        "https://app.hhaexchange.com/ENT2507010000/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=347-265-3886&LastName=&Type=2&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=&_=1755108928644";
 
-  // try {
-  //   const response = await axios.get(`
-  // https://app.hhaexchange.com/HHANotification2410010000/default.aspx?S=${getAllCookies()["HHAX_Session"]}&AppVersion=ENT&Version=24.10&MinorVersion=1.0`, {
-  //     headers: {
-  //       "cookie": getAllCookies(),
-  //       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-  //     }, withCredentials: true
-  //   });
-  //   console.log(response);
-  //   console.log('Response Headers:', response.headers);
-  // } catch (error) {
-  //   console.error(error);
-  // }
+      let missIn =
+        "https://app.hhaexchange.com/ENT2507010000/Call/CallReportsXSLT_ns.aspx?CallType=2&VendorID=469&CoordinatorID=69419&PatientNumber=&PatientName=&AideName=&AssignmentID=&sort=VisitDate&ord=DESC&Source=-1&CaregiverTeamID=-1&SkillType=-1&HideVisitWithTimeSheetRequired=false&FromDate=2025-08-13%2000:00:00&ToDate=2025-08-13%2023:59:00&TimesheetRequired=-1&PatientTeamID=-1&PatientLocationID=-1&PatientBranchID=-1&CaregiverLocationID=-1&CaregiverBranchID=-1&time=1755113664818&OfficeId=469,5137,5139,6475,14849&DisciplineIDs=0";
 
-  /*   try {
-      const r = await GM_fetch(
-        `https://app.hhaexchange.com/HHANotification2410010000/default.aspx?S=${getAllCookies()["HHAX_Session"]}&AppVersion=ENT&Version=24.10&MinorVersion=1.0`, {
-        method: "get",
-        headers: {
-          "cookie": stringifyCookies(getAllCookies()),
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        }
-      });
-      console.log(r);
-      console.log(r.json())
-      console.log(r.headers.getSetCookie())
+      let CallMaintenance_ns =
+        "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+
+      const r = (await GM_fetch(CallMaintenance_ns, {
+        method: "GET",
+      })) as Response & { rawBody: Blob };
+      console.log("r", r);
+      const text = await r.rawBody.text();
+      console.log("text:", text);
     } catch (error) {
       console.error(error);
-    } */
+    }
+  }
+
+  setInterval(() => {
+    // FetchTester()
+  }, 10000);
+
   let $missedInBtn = $("<input/>").text("Missed In").attr({
     type: "button",
     id: "missedInBtn",
     name: "missedInBtn",
-    class: "curveButtons",
+    class: "button hollow",
     tabindex: "1",
     value: "Missed In",
   });
@@ -83,7 +64,7 @@ async function main() {
     type: "button",
     id: "missedOutBtn",
     name: "missedOutBtn",
-    class: "curveButtons",
+    class: "button hollow",
     tabindex: "1",
     value: "Missed Out",
   });
@@ -92,16 +73,16 @@ async function main() {
     type: "button",
     id: "missedInOutBtn",
     name: "missedInOutBtn",
-    class: "curveButtons",
+    class: "button hollow",
     tabindex: "1",
-    value: "Missed In/Out",
+    value: "Missed In&Out",
   });
 
   let $POCBtn = $("<input/>").text("POC").attr({
     type: "button",
     id: "uxBtnPOC",
     name: "uxBtnPOC",
-    class: "curveButtons",
+    class: "button hollow",
     tabindex: "1",
     value: "POC",
   });
@@ -112,7 +93,7 @@ async function main() {
       type: "button",
       id: "uxBtnCopyToDescrp",
       name: "uxBtnCopyToDescrp",
-      class: "curveButtons",
+      class: "button hollow",
       tabindex: "1",
       value: "Copy Attachment To Descrption",
     });
@@ -121,7 +102,7 @@ async function main() {
     type: "button",
     id: "newQABtn",
     name: "newQABtn",
-    class: "button secondary-button",
+    class: "button hollow",
     value: "New QA",
   });
 
@@ -129,7 +110,7 @@ async function main() {
     type: "button",
     id: "newWelcomecallBtn",
     name: "newWelcomecallBtn",
-    class: "button secondary-button",
+    class: "button hollow",
     value: "New Welcome Call",
   });
 
@@ -137,9 +118,24 @@ async function main() {
     type: "button",
     id: "prebillingSelector",
     name: "prebillingSelector",
-    class: "curveButtons",
+    class: "button hollow",
     value: "Prebilling Selector: Tao",
   });
+
+  let $HomePageSelector = $("<input/>").text("").attr({
+    type: "button",
+    id: "homePageSelector",
+    name: "homePageSelector",
+    class: "button hollow",
+    value: "Home Page Selector: Tao",
+  });
+
+  assignIntervalTimer(
+    homePageSearchButtonSelector,
+    $HomePageSelector,
+    "#homePageSelector",
+    homePageSelector
+  );
 
   assignIntervalTimer(
     prebillingSearchButtonSelector,
@@ -154,6 +150,7 @@ async function main() {
     "#newQABtn",
     createNewQA
   );
+
   assignIntervalTimer(
     newMessageButtonSelector,
     $newWelcomeCall,
@@ -187,21 +184,6 @@ async function main() {
     ["Attendant failed to call in"]
   );
 
-  /*   // let intervalbtnGroup: string | number | NodeJS.Timer;
-    setInterval(() => {
-      $btnGroup = $(saveButtonSelector).parent();
-      if ($btnGroup && $("#uxBtnPOC").length <= 0) {
-        $btnGroup.prepend($POCBtn)
-        $POCBtn.on('click', () => POCResolver())
-        // clearInterval(intervalbtnGroup)
-      }
-  
-      //#ctl00_ContentPlaceHolder1_uxGvSearch   FOR CALLMAINTANANCE TABLE ID
-  
-  
-      // console.log("cookies:", getAllCookies());
-    }, 1000) */
-
   assignIntervalTimer(
     documentManagementSaveButtonSelector,
     $copyDescrpBtn,
@@ -209,21 +191,9 @@ async function main() {
     copyAttachmentToDescrp
   );
 
-  /*   // uxLblMessage
-    setInterval(() => {
-      $btnGroup = $(documentManagementSaveButtonSelector).parent();
-      if ($btnGroup && $("#uxBtnCopyToDescrp").length <= 0) {
-        $btnGroup.prepend($CopyDescrpBtn)
-        $CopyDescrpBtn.on('click', () => copyAttachmentToDescrp())
-        // clearInterval(intervalbtnGroup)
-      }
-  
-      //#ctl00_ContentPlaceHolder1_uxGvSearch   FOR CALLMAINTANANCE TABLE ID
-  
-  
-      // console.log("cookies:", getAllCookies());
-    }, 1000)
-  */
+  visitMonitor();
+  highlight2Call();
+  incomingCallHandler();
 }
 
 main().catch((e) => {

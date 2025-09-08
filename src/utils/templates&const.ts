@@ -10,34 +10,70 @@ export const visitVerifyStarSelector = "#uxlblVerifiedBy";
 export const visitAuditCaregiverSelector = "#uxChkCaregiver";
 export const visitAuditPatientSelector = "#uxChkPatient";
 export const visitScheduleTimeSelector = "#lblScheduledTime";
+export const visitStartTimeInputSelector = "#txtVisitStartTime";
+export const visitEndTimeInputSelector = "#txtVisitEndTime";
 
-export const documentManagementSaveButtonSelector = "#uxBtnSave";
+export const documentManagementSaveButtonSelector =
+  "#AddEditDocumentModalSaveBtn";
 export const attachmentFilenameSelector = "#lblFileName";
-export const documentManagementDescrptionSelector = "#txtDiscription";
+export const documentManagementDescrptionSelector =
+  "#attachedDocumentDescription";
 
-export const newMessageButtonSelector =
-  "#nonServicePortalMessageFieldsContainer > tr.action-options > td > input:nth-child(2)";
+/* export const newMessageButtonSelector =
+  "#nonServicePortalMessageFieldsContainer > tr.action-options > td > input:nth-child(2)"; */
+export const newMessageButtonSelector = "#htmlmodal #BtnCancel";
 export const newMessageReasonSelector = "#ddlReasonList1";
 export const newMessageReasonOptionSelector = "#ddlReasonList1 > option";
 export const newMessageNoteSelector = "#txtNote";
-export const newMessagePatientNameSelecotr = "#txtInternalMember";
+export const newMessagePatientNameSelecotr = "#txtMember";
+
+export const homePageSearchButtonSelector = "#btnSearch";
+export const homePageCommunicationTypeSelector = "#ddlCommunicationType";
+export const homePageCommunicationTypeOptionSelector =
+  "#ddlCommunicationType > option";
+
+export const homePageCoordinatorSelector = "#ddlCoordinator";
+export const homePageCoordinatorOptionSelector = "#ddlCoordinator > option";
+
+export const homePagestatusSelector = "#ddlstatus";
+export const homePagestatusOptionSelector = "#ddlstatus > option";
 
 export const prebillingSearchButtonSelector =
   "#ctl00_ContentPlaceHolder1_uxSearchPrebilling";
 export const prebillingToDateSelector = "#ctl00_ContentPlaceHolder1_uxDtToDate";
-export const prebillingDisciplineButtonSelector =
-  "#TABLE1 > tbody > tr > td > table > tbody > tr:nth-child(5) > td:nth-child(2) > table > tbody > tr > td > div > button";
-export const prebillingDisciplineOptionSelectAllSelector =
-  "#TABLE1 > tbody > tr > td > table > tbody > tr:nth-child(5) > td:nth-child(2) > table > tbody > tr > td > div > div > ul > li.ms-select-all > label > div > div.checkbox-wrap-div > input";
-export const prebillingDisciplineOptionSelector =
-  "#TABLE1 > tbody > tr > td > table > tbody > tr:nth-child(5) > td:nth-child(2) > table > tbody > tr > td > div > div > ul > li > label > div > div.text-wrap-div";
+export const prebillingAdvancedFilterButtonSelector = "#accordion-label";
 
-export const prebillingCoordinatorButtonSelector =
-  "#uxTrDiscipline > td:nth-child(2) > div > button";
+export const prebillingDisciplineButtonSelector = "#discipid_choice";
+export const prebillingDisciplineOptionSelectAllSelector =
+  "#discipid_listbox > .ms-select-all > label > input";
+export const prebillingDisciplineOptionSelector =
+  "#discipid_listbox > li > label > span.text-wrap-div";
+
+export const prebillingCoordinatorButtonSelector = "#coordid_choice";
 export const prebillingCoordinatorOptionSelectAllSelector =
-  "#uxTrDiscipline > td:nth-child(2) > div > div > ul > li.ms-select-all > label > div > div.checkbox-wrap-div > input";
+  "#coordid_fieldset ul > .ms-select-all > label > input";
 export const prebillingCoordinatorOptionSelector =
-  "#uxTrDiscipline > td:nth-child(2) > div > div > ul > li > label > div > div.text-wrap-div";
+  "#coordid_listbox > li > label > span.text-wrap-div";
+
+export const prebillingSearchResultsSelector = "#tblDetails";
+export const prebillingVisitAdmissionIdSelector =
+  "#ucVisitHeader_lblAdmissionID";
+export const prebillingVisitDateSelector = "#ucVisitHeader_lblVisitDate";
+export const prebillingVisitScheduledTimeSelector = "#lblScheduledTime";
 
 export const visitPatientNameSelector = "#ucVisitHeader_lblPatientName";
 export const visitDateSelector = "#ucVisitHeader_lblVisitDate";
+export const visitDutySelector = "#tdDutySheet tbody tr td:contains";
+export const caregiverInfoNameSelector =
+  "#ctl00_ContentPlaceHolder1_uxlblInfoName";
+
+// --- incomingCallHandler ---
+export const TOAST_CONTAINER_SELECTOR: string =
+  ".Vue-Toastification__container.bottom-left";
+export const TOAST_TOAST_SELECTOR: string = ".Vue-Toastification__toast";
+export const TOAST_TOAST_WRAPPER_SELECTOR: string = ".call-toast-wrapper";
+export const CALL_STATE_SELECTOR: string =
+  ".CallStateAndIconWrapper__CallState";
+export const MAIN_CONTENT_SELECTOR: string = ".main-content";
+export const CALL_INFO_PANEL_SELECTOR: string = "div.call-info";
+export const PHONE_NUMBER_CONTAINER_SELECTOR: string = ".contact-otherinfo";

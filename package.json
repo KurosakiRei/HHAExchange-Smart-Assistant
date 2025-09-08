@@ -1,7 +1,7 @@
 {
-  "name": "webpack-userscript-template-with-vue3",
-  "description": "Build your UserScript with webpack + vue3",
-  "version": "0.0.2",
+  "name": "hhaexchange-smart-assistant",
+  "description": "There will be more buttons on the HHAeXchange page to improve your work efficiency",
+  "version": "2.0.1",
   "author": {
     "name": "KurosakiRei",
     "email": "kurosakirei@outlook.com"
@@ -20,7 +20,10 @@
   },
   "private": true,
   "dependencies": {
-    "jquery": "^3.6.3"
+    "@trim21/gm-fetch": "^0.3.0",
+    "axios": "^1.7.8",
+    "jquery": "^3.6.3",
+    "naive-ui": "^2.40.2"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json}": [
