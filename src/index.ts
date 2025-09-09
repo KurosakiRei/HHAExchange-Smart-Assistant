@@ -20,6 +20,7 @@ import { homePageSelector } from "./js/HomePage";
 
 async function main() {
   console.log("HHA Exchange Smart Assistant: script start");
+  incomingCallHandler();
 
   async function FetchTester() {
     try {
@@ -193,7 +194,6 @@ async function main() {
 
   visitMonitor();
   highlight2Call();
-  incomingCallHandler();
 }
 
 main().catch((e) => {

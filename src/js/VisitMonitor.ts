@@ -11,6 +11,34 @@ interface PhoneInfo {
   phone: string;
 }
 
+// --- 1. TYPES & INTERFACES ---
+// (Coordinator, ApiParams 等接口不变)
+// 新增：异常打钟的详情
+interface AnomalyDetail {
+  assignId: string;
+  caregiverCode: string;
+  caregiverName: string;
+  officeName: string;
+  caregiverPhone: string;
+  caregiverTeam: string;
+  patientName: string;
+  callDate: string;
+  callTime: string;
+  callType: string;
+  callerId: string;
+  status: string;
+}
+// 缓存的数据结构现在可以是两种类型之一
+type CachedDetails = VisitDetail[] | AnomalyDetail[];
+interface TrackedData {
+  count: number;
+  details: CachedDetails;
+  timestamp: number;
+}
+
+// 定义追踪任务类型
+type CallType = 2 | 3 | "anomaly";
+
 // 追踪结果的详情
 interface VisitDetail {
   patientName: string;
@@ -25,13 +53,6 @@ interface VisitDetail {
   discipline: string;
   serviceCode: string;
   caregiverTeam: string;
-}
-
-// 缓存的数据结构
-interface TrackedData {
-  count: number;
-  details: VisitDetail[];
-  timestamp: number; // 缓存时间戳
 }
 
 interface ApiParams {
@@ -75,6 +96,117 @@ export const visitMonitor = async () => {
   const statusDataCache = new Map<string, TrackedData>();
   let officeIdString: string | null = null;
 
+  // --- REWRITTEN: 全新的 API 参数管理器 ---
+  const apiParamProvider = {
+    params: null as
+      | (ApiParams & {
+          sessionID: string;
+          viewState: string;
+          viewStateGenerator: string;
+          vendorID: string;
+        })
+      | null,
+
+    /**
+     * 获取并缓存所有API请求所需的基础参数
+     */
+    async get() {
+      // 如果已经缓存了参数，直接返回
+      if (this.params) return this.params;
+
+      console.log("Fetching API parameters for the first time...");
+      const url =
+        "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+      const r = (await GM_fetch(url, { method: "GET" })) as Response & {
+        rawBody: Blob;
+      };
+      const text = await r.rawBody.text();
+
+      /**
+       * 辅助函数：使用正则表达式从大段文本中精确提取指定键的值
+       * @param key 要查找的键 (例如 'userID')
+       * @param sourceText 从中查找的源文本
+       */
+      const getParamFromText = (
+        key: string,
+        sourceText: string
+      ): string | null => {
+        // 正则表达式查找类似 'key: 'value'' 的模式
+        const regex = new RegExp(`${key}\\s*:\\s*'([^']+)'`);
+        const match = sourceText.match(regex);
+        // 如果匹配成功，返回捕获组1 (也就是单引号里的值)
+        return match ? match[1] : null;
+      };
+
+      /**
+       * 辅助函数：从HTML中提取隐藏input的值
+       */
+      const getInputValue = (id: string, sourceText: string): string | null => {
+        const match = sourceText.match(
+          new RegExp(`id="${id}"[\\s\\S]*?value="([^"]*)"`)
+        );
+        return match ? match[1] : null;
+      };
+
+      // 组装并缓存所有参数
+      this.params = {
+        userID: getParamFromText("userID", text)!,
+        appSecret: getParamFromText("appSecret", text)!,
+        appVersion: getParamFromText("appVersion", text)!,
+        version: getParamFromText("version", text)!,
+        minorVersion: getParamFromText("minorVersion", text)!,
+        appName: getParamFromText("appName", text)!,
+        sessionID: getParamFromText("sessionID", text)!,
+        vendorID: getParamFromText("vendorID", text)!,
+        viewState: getInputValue("__VIEWSTATE", text)!,
+        viewStateGenerator: getInputValue("__VIEWSTATEGENERATOR", text)!,
+      };
+
+      // 进行一次严格的检查，确保所有关键参数都已成功获取
+      for (const [key, value] of Object.entries(this.params)) {
+        if (!value) {
+          throw new Error(`Failed to extract critical API parameter: ${key}`);
+        }
+      }
+
+      console.log("API parameters cached successfully:", this.params);
+      return this.params;
+    },
+
+    /**
+     * 从 HTML 文本中解析并更新 ViewState
+     */
+    parseViewState(htmlText: string): {
+      viewState: string;
+      viewStateGenerator: string;
+    } {
+      const getInputValue = (id: string, sourceText: string): string | null => {
+        const match = sourceText.match(
+          new RegExp(`id="${id}"[\\s\\S]*?value="([^"]*)"`)
+        );
+        return match ? match[1] : null;
+      };
+
+      const viewState = getInputValue("__VIEWSTATE", htmlText);
+      const viewStateGenerator = getInputValue(
+        "__VIEWSTATEGENERATOR",
+        htmlText
+      );
+
+      if (viewState && this.params) {
+        this.params.viewState = viewState;
+      }
+      if (viewStateGenerator && this.params) {
+        this.params.viewStateGenerator = viewStateGenerator;
+      }
+
+      return {
+        viewState: viewState || "",
+        viewStateGenerator: viewStateGenerator || "",
+      };
+    },
+  };
+
   // --- 2. HTML 结构创建 ---
   const container = document.createElement("div");
   container.id = "tracker-container";
@@ -84,36 +216,21 @@ export const visitMonitor = async () => {
   const panel = document.createElement("div");
   panel.id = "tracker-panel";
   panel.innerHTML = `
-        <div id="tracking-view" class="tracker-view">
-            <div class="tracker-header">
-                <h3>各类状态追踪</h3>
-                <button id="edit-list-btn" class="tracker-header-btn">编辑追踪列表</button>
-            </div>
-            <div class="tracker-content">
-                <table class="tracker-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 40px;">编号</th>
-                            <th class="col-coordinator">Coordinator (Ext.)</th>
-                            <th style="width: 80px;">上班钟</th>
-                            <th style="width: 80px;">下班钟</th>
-                            <th style="width: 80px;">异常</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tracking-table-body"></tbody>
-                </table>
-            </div>
+         <div id="tracking-view" class="tracker-view">
+            <div class="tracker-header"><h3 style="color: #333 !important;">各类状态追踪</h3><button id="edit-list-btn" class="tracker-header-btn">编辑追踪列表</button></div>
+            <div class="tracker-content"><table class="tracker-table"><thead><tr>
+                    <th style="width:40px;color: #333 !important;">编号</th>
+                    <th style="width:40px;color: #333 !important;"class="col-coordinator">Coordinator (Ext.)</th>
+                    <th style="width:80px;color: #333 !important;">上班钟</th>
+                    <th style="width:80px;color: #333 !important;">下班钟</th>
+                    <th style="width:80px;color: #333 !important;">异常打钟</th>
+                    <th style="width:80px;color: #333 !important;">消息</th>
+                </tr></thead><tbody id="tracking-table-body"></tbody></table></div>
         </div>
         <div id="editing-view" class="tracker-view hidden">
-            <div class="tracker-header">
-                <button id="back-btn" class="tracker-header-btn back-btn">←</button>
-                <h3>编辑追踪列表</h3>
-            </div>
+            <div class="tracker-header"><button id="back-btn" class="tracker-header-btn back-btn">←</button><h3 style="color: #333 !important;">编辑追踪列表</h3></div>
             <div id="editing-content" class="tracker-content"></div>
-            <div class="tracker-footer">
-                <button id="cancel-btn" class="tracker-header-btn">取消</button>
-                <button id="save-btn" class="tracker-header-btn" style="background-color: #007bff; color: white;">保存</button>
-            </div>
+            <div class="tracker-footer"><button id="cancel-btn" class="tracker-header-btn">取消</button><button id="save-btn" class="tracker-header-btn" style="background-color:#007bff;color:white">保存</button></div>
         </div>
     `;
   container.appendChild(dragHandle);
@@ -131,12 +248,6 @@ export const visitMonitor = async () => {
   const editingContent = document.getElementById(
     "editing-content"
   ) as HTMLDivElement;
-  const editListBtn = document.getElementById(
-    "edit-list-btn"
-  ) as HTMLButtonElement;
-  const backBtn = document.getElementById("back-btn") as HTMLButtonElement;
-  const cancelBtn = document.getElementById("cancel-btn") as HTMLButtonElement;
-  const saveBtn = document.getElementById("save-btn") as HTMLButtonElement;
 
   // --- 5. 核心功能逻辑 ---
   function showToast(message: string, type: "success" | "error"): void {
@@ -207,7 +318,6 @@ export const visitMonitor = async () => {
       textResult.match(
         new RegExp(`var\\s+${name}\\s*=\\s*['"]([^'"]+)['"];`)
       )?.[1];
-
     const apiParams: ApiParams = {
       userID: getParam("gnUserID")!,
       appSecret: getParam("gnApSc")!,
@@ -220,47 +330,27 @@ export const visitMonitor = async () => {
     if (!apiParams.userID || !apiParams.appSecret) {
       throw new Error("Failed to extract initial API parameters.");
     }
-    console.log("Step 1 Success. Params:", apiParams);
 
     console.log("Step 2: Fetching office IDs...");
-    const officeUrl = `https://app.hhaexchange.com/HHAWS${
-      apiParams.appVersion
-    }${apiParams.version.replace(".", "")}010000/Office.asmx/GetAllOffices`;
-    const officePayload = {
-      ...apiParams,
-      IPAddress: "127.0.0.1",
-      PayrollSetupID: "-1",
-      permissionName: "",
-      selectedOfficeID: "-1",
-      selectionType: "Filter",
-    };
-
-    const officeRes = await fetch(officeUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json; charset=UTF-8" },
-      body: JSON.stringify(officePayload),
-    });
-    const officeData = await officeRes.json();
-    const offices = JSON.parse(officeData.d);
-    const officeIDs: number[] = offices
-      .map((o: any) => o.OfficeID)
-      .filter((id: number) => id > 0);
-    console.log("Step 2 Success. Office IDs:", officeIDs);
+    const officeIds = await getOfficeIds();
 
     console.log("Step 3: Fetching coordinators...");
     const coordinatorUrl = `${initialUrl}/GetCoordinatorForOffice`;
-    const officeXml = `<Offices>${officeIDs
+    const officeXml = `<Offices>${officeIds
+      .split(",")
       .map((id) => `<Office ID="${id}"/>`)
       .join("")}</Offices>`;
 
-    const coordinatorRes = await fetch(coordinatorUrl, {
+    // FIXED: Corrected the GM_fetch call and response handling
+    const coordinatorRes = await GM_fetch(coordinatorUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=UTF-8" },
       body: JSON.stringify({ officeXml }),
     });
-    const coordinatorData = await coordinatorRes.json();
-    const coordinatorsRaw = JSON.parse(coordinatorData.d);
+    const coordinatorText = await (coordinatorRes as any).rawBody.text();
+    const coordinatorData = JSON.parse(coordinatorText);
 
+    const coordinatorsRaw = JSON.parse(coordinatorData.d);
     const coordinators: Coordinator[] = coordinatorsRaw
       .map((c: any) => ({
         id: c.CoordinatorID,
@@ -283,12 +373,11 @@ export const visitMonitor = async () => {
   async function getOfficeIds(): Promise<string> {
     if (officeIdString) return officeIdString;
 
-    // This reuses part of the fetchAllCoordinators logic.
-    const r = await GM_fetch(
+    const r = (await GM_fetch(
       "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx",
       { method: "GET" }
-    );
-    const textResult = await (r as any).rawBody.text();
+    )) as Response & { rawBody: Blob };
+    const textResult = await r.rawBody.text();
     const getParam = (name: string) =>
       textResult.match(
         new RegExp(`var\\s+${name}\\s*=\\s*['"]([^'"]+)['"];`)
@@ -312,12 +401,16 @@ export const visitMonitor = async () => {
       selectedOfficeID: "-1",
       selectionType: "Filter",
     };
-    const officeRes = await fetch(officeUrl, {
+
+    // FIXED: Corrected the GM_fetch call and response handling
+    const officeRes = (await GM_fetch(officeUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=UTF-8" },
       body: JSON.stringify(officePayload),
-    });
-    const officeData = await officeRes.json();
+    })) as Response & { rawBody: Blob };
+    const officeText = await officeRes.rawBody.text();
+    const officeData = JSON.parse(officeText);
+
     const offices = JSON.parse(officeData.d);
     const officeIDs: number[] = offices
       .map((o: any) => o.OfficeID)
@@ -434,40 +527,494 @@ export const visitMonitor = async () => {
     return { ...parsedData, timestamp: Date.now() };
   }
 
-  // --- 视图渲染与更新 ---
+  // --- 追踪数据获取与解析 ---
 
-  function renderTrackingView(): void {
-    if (trackedCoordinators.length === 0) {
-      trackingTableBody.innerHTML = `<tr><td colspan="5">没有正在追踪的 Coordinator</td></tr>`;
-      return;
+  /**
+   * 获取“异常打钟”报告
+   */
+  async function fetchAnomalyReport(
+    coordinatorId: number
+  ): Promise<TrackedData> {
+    const apiParams = await apiParamProvider.get();
+
+    const url = `https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx?VisitStatus=13&s=${apiParams.sessionID}&Version=${apiParams.version}&MinorVersion=${apiParams.minorVersion}&AppVersion=${apiParams.appVersion}`;
+
+    const today = new Date();
+    // ASP.NET 页面期望 MM/dd/yyyy 格式
+    const toDate = `${String(today.getMonth() + 1).padStart(2, "0")}/${String(
+      today.getDate()
+    ).padStart(2, "0")}/${today.getFullYear()}`;
+
+    // 使用 URLSearchParams 来构建一个与浏览器完全一致的 Form Data
+    const formData = new URLSearchParams();
+
+    // --- Form Data (严格按照您提供的列表构建) ---
+
+    // 动态替换的关键参数
+    formData.append("__VIEWSTATE", apiParams.viewState);
+    formData.append("__VIEWSTATEGENERATOR", apiParams.viewStateGenerator);
+    formData.append("ctl00$ucMenu$hidMenuUserId", apiParams.userID);
+    formData.append("ctl00$hdnSessionID", apiParams.sessionID);
+    formData.append("ctl00$hdnAppVersion", apiParams.appVersion);
+    formData.append("ctl00$hdnVersion", apiParams.version);
+    formData.append("ctl00$hdnMinorVersion", apiParams.minorVersion);
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnuserid",
+      apiParams.userID
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnappVersion",
+      apiParams.appVersion
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnversion",
+      apiParams.version
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnminorVersion",
+      apiParams.minorVersion
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnAppSecret",
+      apiParams.appSecret
+    );
+    // 注意: IPAddress 最好不要硬编码，但如果服务器不校验，则可以使用一个占位符
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnIpAddress",
+      "127.0.0.1"
+    );
+    // Office IDs
+    const officeIds = officeIdString || (await getOfficeIds());
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnOffices",
+      officeIds
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnAllOffices",
+      officeIds
+    );
+    formData.append("ctl00$ContentPlaceHolder1$hdnSelectedOffices", officeIds);
+    // 用户与日期参数
+    formData.append(
+      "ctl00$ContentPlaceHolder1$uxDdlCoordinator",
+      coordinatorId.toString()
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnSelectedCoordinator",
+      coordinatorId.toString()
+    );
+    formData.append("ctl00$ContentPlaceHolder1$uxDtFromDate", "08/04/2025"); // 根据要求固定 (注意格式)
+    formData.append("ctl00$ContentPlaceHolder1$uxDtToDate", toDate);
+    // ContentPlaceHolder1 下的其他动态参数
+    formData.append("ctl00$ContentPlaceHolder1$hdnUserID", apiParams.userID);
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnAppVersion",
+      apiParams.appVersion
+    );
+    formData.append("ctl00$ContentPlaceHolder1$hdnVersion", apiParams.version);
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnMinorVersion",
+      apiParams.minorVersion
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnServicePath",
+      "/HHAWSENT2507010000/"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$hdnAppName", apiParams.appName);
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnAppSecret",
+      apiParams.appSecret
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnWSURL",
+      "/HHAWSENT2507010000/"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnSessionId",
+      apiParams.sessionID
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnVendorID",
+      apiParams.vendorID
+    );
+
+    // 静态参数 (完全复制)
+    formData.append("__LASTFOCUS", "");
+    formData.append("__EVENTTARGET", "");
+    formData.append("__EVENTARGUMENT", "");
+    formData.append("ctl00$hidUserMessageID", "");
+    formData.append(
+      "ctl00$ucMenu$hidAgenciesUsingNewPendingPlacementVendor",
+      "true"
+    );
+    formData.append("ctl00$ucMenu$hidMenuVendorId", "469");
+    formData.append("ctl00$hdnShowCmpArtMenu", "0");
+    formData.append("ctl00$hdnMobileChatAppVersionID", "34");
+    formData.append("ctl00$hdnChatAccess", "False");
+    formData.append("ctl00$hdnProviderAppVersionID", "101");
+    formData.append("ctl00$hdnIsOldHistoryEnabled", "0");
+    formData.append("ctl00$hdnIsNewHistoryEnabled", "1");
+    formData.append(
+      "ctl00$hdnHistoryViewerUrl",
+      "https://app.hhaexchange.com/history/"
+    );
+    formData.append(
+      "ctl00$hdnWebcomponentsLibraryUrl",
+      "https://unpkg.com/foundation-web-components/umd/webcomponents.js"
+    );
+    formData.append("ctl00$hdnFileSizeText", "20");
+    formData.append("ctl00$hdnFileSizeLimit", "20971520");
+    formData.append("selectAll", "on");
+    // 对于有多个同名键的情况，需要多次 append
+    const officeIdList = officeIds.split(",");
+    officeIdList.forEach((id) => formData.append("selectItem", id));
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnWebURL",
+      "/HHAWSENT2507010000/Office.asmx"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnCallbackFunction",
+      "UpdateOfficeData();"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnSingleSelect",
+      "false"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnIsDisable",
+      "false"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$divOffice$hdnWidth", "178");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnAutoPostback",
+      "False"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnDefaultText",
+      "Select one or more..."
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnOnClientSideLoad",
+      "bindedOn();"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnPermissionName",
+      ""
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnSelectionType",
+      "Filter"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$divOffice$hdnRevokeMethod", "");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnSelectAllRevokeMethod",
+      ""
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnOnOpenFunction",
+      "OnOpen();"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnOnCloseNoChangeFunction",
+      "OnClientClose();"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnGetDependentControls",
+      ""
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnOnSingleSelect",
+      ""
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnEmptyDisable",
+      "false"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$divOffice$hdnNoOffice", "false");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnShowUnassignedOfficeForReferrals",
+      "false"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnSetOfficeSelectionValue",
+      ""
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnPayrollSetupID",
+      "-1"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$divOffice$hdnCaregiverID", "");
+    formData.append("ctl00$ContentPlaceHolder1$divOffice$hdnCustomeMethod", "");
+    // hdnOfficeNames 最好动态生成，但如果固定也可以
+    formData.append(
+      "ctl00$ContentPlaceHolder1$divOffice$hdnOfficeNames",
+      "Always Home Care,AHC – New York,AHC -- Richmond,Private Duty Expert,Always NHTD/TBI"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$uxtxtFromTime", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxtxtToTime", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxTxtAideFirstName", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxTxtAideLastName", "");
+    formData.append("ctl00$ContentPlaceHolder1$txtCaregiverCode", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxDdlTeam", "-1");
+    formData.append("ctl00$ContentPlaceHolder1$hdnSelectedCaregiverTeam", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxDdlCaregiverLocation", "-1");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnSelectedCaregiverLocation",
+      ""
+    );
+    formData.append("ctl00$ContentPlaceHolder1$uxDdlCaregiverBranch", "-1");
+    formData.append("ctl00$ContentPlaceHolder1$hdnSelectedCaregiverBranch", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxTxtAssignmentID", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxTxtAdmissionID", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxDdlContract", "-1");
+    formData.append("ctl00$ContentPlaceHolder1$hdnSelectedContract", "");
+    // 多个 selectItem
+    const maintenanceStatus = [
+      "9",
+      "15",
+      "19",
+      "24",
+      "11",
+      "10",
+      "14",
+      "16",
+      "12",
+      "22",
+      "23",
+      "18",
+      "20",
+      "21",
+      "13",
+      "8",
+      "43",
+      "25",
+      "26",
+      "27",
+      "36",
+      "33",
+      "34",
+      "29",
+      "32",
+    ];
+    maintenanceStatus.forEach((item) => formData.append("selectItem", item));
+    formData.append("ctl00$ContentPlaceHolder1$hdnCallerInfo", "");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnBroadcastReceivedPageSize",
+      "25"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnAltCaregiverValue",
+      "Caregiver"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$hdnAltPatientValue", "Patient");
+    formData.append("ctl00$ContentPlaceHolder1$hdnAltFOBValue", "FOB");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnIsBeaconDeviceEnable",
+      "691,651,262,339,959,338,370,155,180,243,848,216,241,194,939,543,709,1730,377,674,733,801,744"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnddlMaintenanceStatus",
+      maintenanceStatus.join(",")
+    );
+    formData.append("ctl00$ContentPlaceHolder1$uxTxtPatientFirstName", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxTxtPatientLastName", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxDdlPatientTeam", "-1");
+    formData.append("ctl00$ContentPlaceHolder1$hdnSelectedPatientTeam", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxDdlPatientLocation", "-1");
+    formData.append("ctl00$ContentPlaceHolder1$hdnSelectedPatientLocation", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxDdlPatientBranch", "-1");
+    formData.append("ctl00$ContentPlaceHolder1$hdnSelectedPatientBranch", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxBtnSearch", "Search");
+    formData.append("ctl00$ContentPlaceHolder1$hdnCallReprocessLimit", "1000");
+    // GvSearch controls are likely not needed as they are response-related
+    formData.append("ctl00$ContentPlaceHolder1$uxDdlVendor", "469");
+    formData.append("ctl00$ContentPlaceHolder1$uxHidRefresh", "");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$uxHidValidateScheduleOvertime",
+      "True"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$uxHidScheduleOvertimePwd", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxHidAideID", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxHidAideCode", "");
+    formData.append("ctl00$ContentPlaceHolder1$uxHidFromCallDashBoard", "1");
+    formData.append("ctl00$ContentPlaceHolder1$hdnFromTime", "");
+    formData.append("ctl00$ContentPlaceHolder1$hdnToTime", "");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hidProviderURL",
+      "https://app.hhaexchange.com/PROVIDER2507010000/caregiver-availability"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$hdnEditSkilledSchedule", "True");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnEditNonSkillSchedule",
+      "True"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnEditPayrollInfoAfterPayroll",
+      "False"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnEditPayrollInfoAfterBilling",
+      "False"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnInternalEditScheduleTime",
+      "True"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$hdnLinkCall", "True");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnAllowLinkingUnrecognizedNumber",
+      "True"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$hdnEditPatientProfile", "False");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnReportPagePath",
+      "https://reports.hhaexchange.com/HHAReportsML/Reports/"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnReportServicepath",
+      "http://AWSProdWebRP2/HHAReportsWS/ReportWebService.asmx"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$hdnControlID", "");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnCallDashboardCorrections",
+      ""
+    );
+    formData.append("ctl00$ContentPlaceHolder1$hdnHistoryData", "");
+    formData.append("ctl00$ContentPlaceHolder1$hdnIspopupOpen", "");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnKafkaWebAPIPath",
+      "/HHAXKafkaAPI20070100/api/"
+    );
+    formData.append("ctl00$ContentPlaceHolder1$hdnHistoryURL", "/HHAHistory/");
+    formData.append("ctl00$ContentPlaceHolder1$hdnMessageType", "2");
+    formData.append("ctl00$ContentPlaceHolder1$hdnMessageSource", "3");
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnAllowLinkingUnrecognizedFOB",
+      "True"
+    );
+    formData.append(
+      "ctl00$ContentPlaceHolder1$hdnAllowLinkingUnrecognizedGPS",
+      "True"
+    );
+
+    const response = await GM_fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formData.toString(),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch anomaly report: ${response.status} ${response.statusText}`
+      );
     }
 
+    const htmlText = await (response as any).rawBody.text();
+    return { ...parseAnomalyReport(htmlText), timestamp: Date.now() };
+  }
+
+  /**
+   * 解析异常打钟报告 HTML
+   */
+  function parseAnomalyReport(htmlText: string): {
+    count: number;
+    details: AnomalyDetail[];
+    viewState: string;
+    viewStateGenerator: string;
+  } {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlText, "text/html");
+    const countSpan = doc.querySelector(
+      "#ctl00_ContentPlaceHolder1_uxlblSearchCount"
+    );
+    const countMatch = countSpan?.textContent?.match(/\((\d+)\)/);
+    const count = countMatch ? parseInt(countMatch[1], 10) : 0;
+    const { viewState, viewStateGenerator } =
+      apiParamProvider.parseViewState(htmlText);
+    const details: AnomalyDetail[] = [];
+    if (count > 0) {
+      const rows = doc.querySelectorAll(
+        "#ctl00_ContentPlaceHolder1_uxGvSearch > tbody > tr"
+      );
+      rows.forEach((row) => {
+        const cells = Array.from(row.querySelectorAll("td"));
+        if (cells.length < 12) return;
+
+        // FIX: 电话号码换行处理
+        let phoneHtml = cells[4]?.innerHTML || "";
+        phoneHtml = phoneHtml
+          .replace(/Phone2:/g, "<br>Phone2:")
+          .replace(/Phone3:/g, "<br>Phone3:");
+
+        // FIX: 只获取 Status 标题
+        const statusCell = cells[11];
+        const statusText =
+          statusCell
+            ?.querySelector('span[id*="uxlblStatus"]')
+            ?.textContent?.trim() ||
+          statusCell?.textContent?.trim() ||
+          "";
+
+        details.push({
+          assignId: cells[0]?.textContent?.trim() || "",
+          caregiverCode: cells[1]?.textContent?.trim() || "",
+          caregiverName: cells[2]?.textContent?.trim() || "",
+          officeName: cells[3]?.textContent?.trim() || "",
+          caregiverPhone: phoneHtml,
+          caregiverTeam: cells[5]?.textContent?.trim() || "",
+          patientName: cells[6]?.textContent?.trim() || "",
+          callDate: cells[7]?.textContent?.trim() || "",
+          callTime: cells[8]?.textContent?.trim() || "",
+          callType:
+            cells[9]?.textContent
+              ?.trim()
+              .replace(/History/gi, "")
+              .trim() || "", // FIX: 移除 "History"
+          callerId: cells[10]?.textContent?.trim() || "",
+          status: statusText,
+        });
+      });
+    }
+    return { count, details, viewState, viewStateGenerator };
+  }
+
+  // --- 视图渲染 (renderTrackingView 已更新) ---
+  function renderTrackingView(): void {
+    if (trackedCoordinators.length === 0) {
+      trackingTableBody.innerHTML = `<tr><td colspan="6" style="color: #333 !important;">没有正在追踪的 Coordinator</td></tr>`; // colspan 改为 6
+      return;
+    }
     const rowsHtml = trackedCoordinators
       .map((coordinator, index) => {
         const clockInData = statusDataCache.get(`${coordinator.id}-2`);
         const clockOutData = statusDataCache.get(`${coordinator.id}-3`);
-
+        const anomalyData = statusDataCache.get(`${coordinator.id}-anomaly`);
         const clockInCount = clockInData?.count ?? 0;
         const clockOutCount = clockOutData?.count ?? 0;
-
+        const anomalyCount = anomalyData?.count ?? 0;
         const clockInStatus = clockInCount > 0 ? "status-error" : "status-ok";
         const clockOutStatus = clockOutCount > 0 ? "status-error" : "status-ok";
+        const anomalyStatus = anomalyCount > 0 ? "status-error" : "status-ok";
 
         return `
                 <tr>
-                    <td>${index + 1}</td>
-                    <td class="col-coordinator">${coordinator.name}</td>
+                    <td style="color: #333 !important;">${index + 1}</td>
+                    <td class="col-coordinator" style="color: #333 !important;">${
+                      coordinator.name
+                    }</td>
                     <td><div class="status-icon ${clockInStatus}" data-coordinator-id="${
           coordinator.id
         }" data-call-type="2">${clockInCount}</div></td>
                     <td><div class="status-icon ${clockOutStatus}" data-coordinator-id="${
           coordinator.id
         }" data-call-type="3">${clockOutCount}</div></td>
+                    <td><div class="status-icon ${anomalyStatus}" data-coordinator-id="${
+          coordinator.id
+        }" data-call-type="anomaly">${anomalyCount}</div></td>
                     <td><div class="status-icon status-ok" data-coordinator-id="${
                       coordinator.id
-                    }" data-call-type="anomaly">0</div></td>
-                </tr>
-            `;
+                    }" data-call-type="message">0</div></td>
+                </tr>`;
       })
       .join("");
     trackingTableBody.innerHTML = rowsHtml;
@@ -477,13 +1024,15 @@ export const visitMonitor = async () => {
   function renderEditingView(): void {
     const tableHtml = `
             <table class="tracker-table">
-                <thead><tr><th class="col-coordinator">所有可用 Coordinator</th><th style="width: 80px;">操作</th></tr></thead>
+                <thead><tr><th style="color: #333 !important;"class="col-coordinator">所有可用 Coordinator</th><th style="color: #333 !important;">操作</th></tr></thead>
                 <tbody id="editing-table-body">
                     ${allCoordinators
                       .map(
                         (c) => `
                         <tr data-id="${c.id}">
-                            <td class="col-coordinator">${c.name}</td>
+                            <td class="col-coordinator" style="color: #333 !important;">${
+                              c.name
+                            }</td>
                             <td class="edit-list-actions">
                                 <button class="${
                                   tempTrackedIds.has(c.id)
@@ -502,67 +1051,43 @@ export const visitMonitor = async () => {
     editingContent.innerHTML = tableHtml;
   }
 
-  // --- 详情气泡 (Popover) ---
-
-  // 新增一个辅助函数来渲染病人姓名单元格
-  function renderPatientNameCell(detail: VisitDetail): string {
-    if (!detail.phones || detail.phones.length === 0) {
-      return `<td>${detail.patientName}</td>`;
-    }
-
-    const phoneItems = detail.phones
-      .map(
-        (p) => `
-            <div class="phone-tooltip-item">
-                <label>${p.label}</label>
-                <span>${p.phone}</span>
-            </div>
-        `
-      )
-      .join("");
-
-    return `
-            <td>
-                <div class="phone-icon-wrapper">
-                    <span>${detail.patientName}</span>
-                    <span class="phone-icon">📞</span>
-                    <div class="phone-tooltip">
-                        ${phoneItems}
-                    </div>
-                </div>
-            </td>
-        `;
-  }
-
-  // --- 追踪循环 ---
-
+  // --- 追踪循环 (runTrackingUpdate 已更新) ---
   async function runTrackingUpdate() {
     if (trackedCoordinators.length === 0) return;
     console.log(
       `[${new Date().toLocaleTimeString()}] Running tracking update...`
     );
-
     try {
       const officeIds = await getOfficeIds();
       const promises: Promise<void>[] = [];
-
       for (const coordinator of trackedCoordinators) {
-        // For Clock-In (2)
+        // 上班钟 (CallType=2)
         promises.push(
-          fetchStatusReport(coordinator.id, 2, officeIds).then((data) => {
-            statusDataCache.set(`${coordinator.id}-2`, data);
-          })
+          fetchStatusReport(coordinator.id, 2, officeIds)
+            .then((data) => {
+              statusDataCache.set(`${coordinator.id}-2`, data);
+            })
+            .catch((err) => console.error(err))
         );
-        // For Clock-Out (3)
+        // 下班钟 (CallType=3)
         promises.push(
-          fetchStatusReport(coordinator.id, 3, officeIds).then((data) => {
-            statusDataCache.set(`${coordinator.id}-3`, data);
-          })
+          fetchStatusReport(coordinator.id, 3, officeIds)
+            .then((data) => {
+              statusDataCache.set(`${coordinator.id}-3`, data);
+            })
+            .catch((err) => console.error(err))
+        );
+        // 异常打钟
+        promises.push(
+          fetchAnomalyReport(coordinator.id)
+            .then((data) => {
+              statusDataCache.set(`${coordinator.id}-anomaly`, data);
+            })
+            .catch((err) => console.error(err))
         );
       }
-
       await Promise.allSettled(promises);
-      renderTrackingView(); // Re-render the main view with new data
+      renderTrackingView();
       console.log("Tracking update complete.");
     } catch (error) {
       console.error("Failed to run tracking update:", error);
@@ -627,39 +1152,161 @@ export const visitMonitor = async () => {
     handleElement.addEventListener("mousedown", onMouseDown);
   }
 
-  // --- REWRITTEN: 详情气泡 (Popover) ---
-  function showDetailsPopover(data: TrackedData, targetElement: HTMLElement) {
-    document.getElementById("details-popover")?.remove();
-    const popover = document.createElement("div");
-    popover.id = "details-popover";
-    const tableRows = data.details
+  // --- 详情气泡 (Popover) ---
+
+  /**
+   * 辅助函数：专门用于渲染病人姓名单元格（<td>）
+   * 如果有电话号码，则会生成带有悬浮提示的HTML
+   * @param detail
+   * @returns 返回一个完整的 <td>...</td> HTML字符串
+   */
+  function renderPatientNameCell(detail: VisitDetail): string {
+    // 如果没有电话或电话列表为空，则只返回简单的姓名单元格
+    if (!detail.phones || detail.phones.length === 0) {
+      return `<td style="color: #333 !important;">${detail.patientName}</td>`;
+    }
+
+    // 如果有电话，则生成带有悬浮提示的复杂HTML
+    const phoneItems = detail.phones
       .map(
-        (d) =>
-          `<tr>${renderPatientNameCell(d)}<td>${d.assignmentId}</td><td>${
-            d.admissionId
-          }</td><td>${d.caregiverName}</td><td>${d.visitDate}</td><td>${
-            d.coordinators
-          }</td><td>${d.schedule}</td><td>${d.contract}</td><td>${
-            d.discipline
-          }</td><td>${d.serviceCode}</td><td>${d.caregiverTeam}</td></tr>`
+        (p) => `
+        <div class="phone-tooltip-item">
+                <label>${p.label}</label>
+                <span>${p.phone}</span>
+            </div>
+        `
       )
       .join("");
-    popover.innerHTML = `<div class="popover-header"><h4>详情列表 (${data.count} 条记录)</h4><button class="popover-close-btn">&times;</button></div><div class="popover-content"><table class="popover-table"><thead><tr><th>Patient Name</th><th>Assignment ID</th><th>Admission ID</th><th>Caregiver Name</th><th>Visit Date</th><th>Coordinators</th><th>Schedule</th><th>Contract</th><th>Discipline</th><th>Service Code</th><th>Caregiver Team</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
+    return `
+            <td>
+                <div class="phone-icon-wrapper" style="color: #333 !important;">
+                    <span>${detail.patientName}</span>
+                    <span class="phone-icon">📞</span>
+                    <div class="phone-tooltip">${phoneItems}</div>
+                </div>
+            </td>
+    `;
+  }
+
+  /**
+   * 显示详情气泡 (Popover)
+   * @param data 从缓存中获取的数据
+   * @param callType 数据类型 (2, 3, 'anomaly')，用于决定渲染哪个表格
+   * @param targetElement 用户点击的图标元素，用于定位
+   */
+  function showDetailsPopover(
+    data: TrackedData,
+    callType: CallType,
+    targetElement: HTMLElement
+  ) {
+    // 1. 清理：移除任何已存在的气泡，确保页面上只有一个
+    document.getElementById("details-popover")?.remove();
+
+    // 2. 创建：创建新的气泡容器
+    const popover = document.createElement("div");
+    popover.id = "details-popover";
+
+    let tableHtml: string;
+
+    // --- 3. 渲染：根据 callType 决定渲染哪种表格 ---
+    if (callType == 2 || callType == 3) {
+      const details = data.details as VisitDetail[];
+      const tableRows = details
+        .map(
+          (d) => `
+            <tr>
+                    ${renderPatientNameCell(d)}
+                    <td style="color: #333 !important;">${d.assignmentId}</td>
+                    <td style="color: #333 !important;">${d.admissionId}</td>
+                    <td style="color: #333 !important;">${d.caregiverName}</td>
+                    <td style="color: #333 !important;">${d.visitDate}</td>
+                    <td style="color: #333 !important;">${d.coordinators}</td>
+                    <td style="color: #333 !important;">${d.schedule}</td>
+                    <td style="color: #333 !important;">${d.contract}</td>
+                    <td style="color: #333 !important;">${d.discipline}</td>
+                    <td style="color: #333 !important;">${d.serviceCode}</td>
+                    <td style="color: #333 !important;">${d.caregiverTeam}</td>
+                </tr>`
+        )
+        .join("");
+
+      tableHtml = `
+            <thead><tr>
+                <th>Patient Name</th><th>Assignment ID</th><th>Admission ID</th>
+                <th>Caregiver Name</th><th>Visit Date</th><th>Coordinators</th>
+                <th>Schedule</th><th>Contract</th><th>Discipline</th>
+                <th>Service Code</th><th>Caregiver Team</th>
+            </tr></thead>
+            <tbody>${tableRows}</tbody>
+        `;
+    } else if (callType === "anomaly") {
+      const details = data.details as AnomalyDetail[];
+      const tableRows = details
+        .map(
+          (d) => `
+            <tr>
+                    <td style="color: #333 !important;">${d.assignId}</td><td style="color: #333 !important;">${d.caregiverCode}</td>
+                    <td style="color: #333 !important;">${d.caregiverName}</td><td style="color: #333 !important;">${d.officeName}</td>
+                    <td style="color: #333 !important;">${d.caregiverPhone}</td><td style="color: #333 !important;">${d.caregiverTeam}</td>
+                    <td style="color: #333 !important;">${d.patientName}</td><td style="color: #333 !important;">${d.callDate}</td>
+                    <td style="color: #333 !important;">${d.callTime}</td><td style="color: #333 !important;">${d.callType}</td>
+                    <td style="color: #333 !important;">${d.callerId}</td><td style="color: #333 !important;">${d.status}</td>
+                </tr>`
+        )
+        .join("");
+
+      tableHtml = `
+            <thead>
+            <tr>
+                <th style="color: #333 !important;">Assign. ID#</th>
+                <th style="color: #333 !important;">Caregiver Code</th>
+                <th style="color: #333 !important;">Caregiver Name</th>
+                <th style="color: #333 !important;">Office Name</th>
+                <th style="color: #333 !important;">Caregiver Phone</th>
+                <th style="color: #333 !important;">Caregiver Team</th>
+                <th style="color: #333 !important;">Patient Name</th>
+                <th style="color: #333 !important;">Call Date</th>
+                <th style="color: #333 !important;">Call Time</th>
+                <th style="color: #333 !important;">Call Type</th>
+                <th style="color: #333 !important;">Caller ID</th>
+                <th style="color: #333 !important;">Status</th>
+            </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+        `;
+    } else {
+      // 备用情况
+      tableHtml = `<tbody><tr><td style="color: #333 !important;">未知的数据类型</td></tr></tbody>`;
+    }
+
+    // --- 4. 组装：将头部、内容和表格组装成完整的 Popover HTML ---
+    popover.innerHTML = `
+        <div class="popover-header"><h4 style="color: #333 !important;">详情列表 (${data.count} 条记录)</h4><button class="popover-close-btn">&times;</button></div>
+            <div class="popover-content"><table class="popover-table">${tableHtml}</table></div>
+        `;
+
+    // --- 5. 注入与激活 ---
     document.body.appendChild(popover);
 
+    // 激活拖拽功能
     const popoverHeader = popover.querySelector(
       ".popover-header"
     ) as HTMLElement;
-    if (popoverHeader) makeDraggable(popover, popoverHeader);
+    if (popoverHeader) {
+      makeDraggable(popover, popoverHeader);
+    }
 
+    // 智能定位
     const targetRect = targetElement.getBoundingClientRect();
-    const popoverHeight = popover.offsetHeight,
-      popoverWidth = popover.offsetWidth;
+    const popoverHeight = popover.offsetHeight;
+    const popoverWidth = popover.offsetWidth;
     const margin = 10;
+
     let top = targetRect.bottom + 5;
     if (top + popoverHeight > window.innerHeight - margin)
       top = targetRect.top - popoverHeight - 5;
     if (top < margin) top = margin;
+
     let left = targetRect.left;
     if (left + popoverWidth > window.innerWidth - margin)
       left = targetRect.right - popoverWidth;
@@ -667,9 +1314,13 @@ export const visitMonitor = async () => {
 
     popover.style.top = `${top}px`;
     popover.style.left = `${left}px`;
+
+    // 绑定关闭事件
     popover
       .querySelector(".popover-close-btn")
       ?.addEventListener("click", () => popover.remove());
+
+    // 触发淡入动画
     requestAnimationFrame(() => popover.classList.add("visible"));
   }
 
@@ -785,54 +1436,55 @@ export const visitMonitor = async () => {
       handleGoBack();
     });
 
+    // --- 主追踪列表的点击事件 (已更新) ---
     const trackingTableBody = document.getElementById(
       "tracking-table-body"
     ) as HTMLTableSectionElement;
     trackingTableBody.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      if (!target.classList.contains("status-icon")) return;
+      if (target.classList.contains("status-icon")) {
+        const coordinatorId = target.dataset.coordinatorId;
+        const callType = target.dataset.callType; // 类型断言
+        if (!coordinatorId || !callType) return;
 
-      const coordinatorId = target.dataset.coordinatorId;
-      const callType = target.dataset.callType;
-      if (!coordinatorId || !callType) return;
-
-      if (callType === "anomaly") {
-        showToast("异常追踪功能待开发", "success");
-        return;
-      }
-
-      const cacheKey = `${coordinatorId}-${callType}`;
-      const data = statusDataCache.get(cacheKey);
-
-      if (data) {
-        showDetailsPopover(data, target);
-      } else {
-        showToast("暂无数据或正在加载中...", "success");
+        if (callType === "message") {
+          showToast("消息功能待开发", "success");
+          return;
+        }
+        const cacheKey = `${coordinatorId}-${callType}`;
+        const data = statusDataCache.get(cacheKey);
+        if (data && data.count > 0) {
+          showDetailsPopover(data, callType as CallType, target);
+        } else if (data && data.count === 0) {
+          showToast("没有需要处理的记录", "success");
+        } else {
+          showToast("暂无数据或正在加载中...", "success");
+        }
       }
     });
   }
 
+  // --- 初始化 (initialize 已更新) ---
   function initialize() {
     loadTrackedCoordinators();
     renderTrackingView();
     attachAllEventListeners();
-
     runTrackingUpdate();
-    setInterval(runTrackingUpdate, 30000);
+    setInterval(runTrackingUpdate, 120000); // 间隔已更新为 2 分钟
   }
 
   initialize();
 
-  try {
-    let CallMaintenance_ns =
-      "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
-    const r = (await GM_fetch(CallMaintenance_ns, {
-      method: "GET",
-    })) as Response & { rawBody: Blob };
-    console.log("r", r);
-    const result = await r.rawBody.text();
-    console.log("text:", result);
-  } catch (error) {
-    console.error(error);
-  }
+  /*     try {
+            let CallMaintenance_ns =
+                "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+            const r = (await GM_fetch(CallMaintenance_ns, {
+                method: "GET",
+            })) as Response & { rawBody: Blob };
+            console.log("r", r);
+            const result = await r.rawBody.text();
+            console.log("text:", result);
+        } catch (error) {
+            console.error(error);
+        } */
 };

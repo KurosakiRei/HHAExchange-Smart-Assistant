@@ -17,6 +17,6 @@ module.exports = {
     `https://cdn.jsdelivr.net/npm/jquery@${dependencies.jquery}/dist/jquery.min.js`,
   ],
   grant: ["GM.xmlHttpRequest","GM_openInTab", "GM_addStyle"],
-  connect: ["https://app.hhaexchange.com"],
+  connect: ["app.hhaexchange.com"],
   "run-at": "document-idle",
 };
