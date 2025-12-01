@@ -1281,7 +1281,7 @@ export const visitMonitor = async () => {
 
     // --- 4. 组装：将头部、内容和表格组装成完整的 Popover HTML ---
     popover.innerHTML = `
-        <div class="popover-header"><h4 style="color: #333 !important;">详情列表 (${data.count} 条记录)</h4><button class="popover-close-btn">&times;</button></div>
+        <div class="popover-header"><h4 style="color: #333 !important;">详情列表（只显示最新10条） (${data.count} 条记录)</h4><button class="popover-close-btn">&times;</button></div>
             <div class="popover-content"><table class="popover-table">${tableHtml}</table></div>
         `;
 

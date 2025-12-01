@@ -1,7 +1,7 @@
 {
   "name": "hhaexchange-smart-assistant",
   "description": "There will be more buttons on the HHAeXchange page to improve your work efficiency",
-  "version": "2.0.1",
+  "version": "3.1.0",
   "author": {
     "name": "KurosakiRei",
     "email": "kurosakirei@outlook.com"
@@ -12,7 +12,10 @@
     "build": "webpack --config config/webpack.config.prod.cjs",
     "dev": "webpack --config config/webpack.config.dev.cjs",
     "prepare": "husky install",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "bmad:refresh": "bmad-method install -f -i codex",
+    "bmad:list": "bmad-method list:agents",
+    "bmad:validate": "bmad-method validate"
   },
   "repository": {
     "type": "git",

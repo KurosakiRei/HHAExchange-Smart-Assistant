@@ -2,3 +2,9 @@ node_modules
 .idea
 .vscode
 dist
+# BMAD (local only)
+.bmad-core/
+.bmad-*/
+
+Untitled-1.html
+Untitled-2.html
