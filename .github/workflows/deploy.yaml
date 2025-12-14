@@ -8,6 +8,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout dev branch
         uses: actions/checkout@v4
@@ -26,14 +28,19 @@ jobs:
       - name: Build production script
         run: npm run build
 
+      - name: Prepare deploy folder
+        run: |
+          mkdir -p deploy
+          cp dist/index.prod.user.js deploy/index.prod.user.js
+
       - name: Deploy to dist branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: dist
-          publish_dir: ./dist
+          publish_dir: ./deploy
           keep_files: false
           enable_jekyll: true
-          commit_message: "deploy: v${{ github.event.head_commit.message }}"
+          commit_message: "deploy: ${{ github.event.head_commit.message }}"
           user_name: github-actions[bot]
           user_email: github-actions[bot]@users.noreply.github.com
