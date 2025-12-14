@@ -15,9 +15,8 @@ module.exports = {
   license: "MIT",
   source: repository.url,
   // 使用 GreasyFork 作为更新源（私有仓库也能自动更新）
-  // TODO: 将 YOUR_SCRIPT_ID 替换为你在 GreasyFork 上的实际脚本 ID
-  updateURL: "https://update.greasyfork.org/scripts/YOUR_SCRIPT_ID/HHAExchange%20Smart%20Assistant.user.js",
-  downloadURL: "https://update.greasyfork.org/scripts/YOUR_SCRIPT_ID/HHAExchange%20Smart%20Assistant.user.js",
+  updateURL: "https://update.greasyfork.org/scripts/558949/HHAExchange%20Smart%20Assistant.user.js",
+  downloadURL: "https://update.greasyfork.org/scripts/558949/HHAExchange%20Smart%20Assistant.user.js",
   match: ["*://app.hhaexchange.com/", "*://app.hhaexchange.com/*","*://mt3.1voicetech.com/webapp/*"],
   require: [
     // 使用具体版本号而不是版本范围（GreasyFork 要求）
