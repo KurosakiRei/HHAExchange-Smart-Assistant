@@ -11,6 +11,8 @@ module.exports = {
   version: version,
   author: author,
   source: repository.url,
+  updateURL: "https://github.com/KurosakiRei/HHAExchange-Smart-Assistant/releases/latest/download/index.prod.user.js",
+  downloadURL: "https://github.com/KurosakiRei/HHAExchange-Smart-Assistant/releases/latest/download/index.prod.user.js",
   // 'license': 'MIT',
   match: ["*://app.hhaexchange.com/", "*://app.hhaexchange.com/*","*://mt3.1voicetech.com/webapp/*"],
   require: [
