@@ -32,6 +32,7 @@ jobs:
         run: |
           mkdir -p deploy
           cp dist/index.prod.user.js deploy/index.prod.user.js
+          ls -la deploy/
 
       - name: Deploy to dist branch
         uses: peaceiris/actions-gh-pages@v4
@@ -40,7 +41,7 @@ jobs:
           publish_branch: dist
           publish_dir: ./deploy
           keep_files: false
-          enable_jekyll: true
+          enable_jekyll: false
           commit_message: "deploy: ${{ github.event.head_commit.message }}"
           user_name: github-actions[bot]
           user_email: github-actions[bot]@users.noreply.github.com

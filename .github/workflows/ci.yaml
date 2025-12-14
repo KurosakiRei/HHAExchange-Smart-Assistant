@@ -4,6 +4,7 @@ on:
   push:
     branches-ignore:
       - gh-pages
+      - dist
       - "renovate/**"
   pull_request:
 
@@ -11,12 +12,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup node
-        uses: actions/setup-node@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
           cache: "npm"
 
-      - run: npm ci
-      - run: npm run build
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build script
+        run: npm run build
+      
+      - name: Verify build output
+        run: |
+          ls -la dist/
+          test -f dist/index.prod.user.js || exit 1
