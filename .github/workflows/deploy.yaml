@@ -45,43 +45,10 @@ jobs:
           commit_message: "deploy: ${{ github.event.head_commit.message }}"
           user_name: github-actions[bot]
           user_email: github-actions[bot]@users.noreply.github.com
-
-      - name: Upload to GreasyFork
+      
+      - name: Notify GreasyFork sync
         if: success()
-        env:
-          GREASY_FORK_API_KEY: ${{ secrets.GREASY_FORK_API_KEY }}
         run: |
-          if [ -z "$GREASY_FORK_API_KEY" ]; then
-            echo "⚠️ GREASY_FORK_API_KEY not set, skipping GreasyFork upload"
-            echo "To enable auto-publishing to GreasyFork:"
-            echo "1. Get your API key from: https://greasyfork.org/users/api-keys"
-            echo "2. Add it as a repository secret named GREASY_FORK_API_KEY"
-            exit 0
-          fi
-          
-          SCRIPT_ID="${{ secrets.GREASY_FORK_SCRIPT_ID }}"
-          if [ -z "$SCRIPT_ID" ]; then
-            echo "⚠️ GREASY_FORK_SCRIPT_ID not set, skipping GreasyFork upload"
-            echo "Set your script ID as a repository secret named GREASY_FORK_SCRIPT_ID"
-            exit 0
-          fi
-          
-          echo "📤 Uploading to GreasyFork (Script ID: $SCRIPT_ID)..."
-          
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X PATCH \
-            "https://greasyfork.org/api/v1/scripts/$SCRIPT_ID" \
-            -H "Authorization: Token $GREASY_FORK_API_KEY" \
-            -F "script[code]=@dist/index.prod.user.js" \
-            -F "script[changelog]=Auto-deployed from commit: ${{ github.sha }}")
-          
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | head -n-1)
-          
-          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ]; then
-            echo "✅ Successfully uploaded to GreasyFork!"
-            echo "🔗 View at: https://greasyfork.org/scripts/$SCRIPT_ID"
-          else
-            echo "❌ Upload failed with HTTP $HTTP_CODE"
-            echo "Response: $BODY"
-            exit 1
-          fi
+          echo "✅ Deployed to dist branch"
+          echo "🔄 GreasyFork will sync from: https://raw.githubusercontent.com/${{ github.repository }}/dist/index.prod.user.js"
+          echo "📝 Configure sync at: https://greasyfork.org/zh-CN/scripts/558949/edit"
