@@ -24,7 +24,7 @@
   "private": true,
   "dependencies": {
     "@trim21/gm-fetch": "^0.3.0",
-    "axios": "^1.7.8",
+    "axios": "^1.12.0",
     "jquery": "^3.6.3",
     "naive-ui": "^2.40.2"
   },
