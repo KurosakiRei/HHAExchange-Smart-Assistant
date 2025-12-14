@@ -28,8 +28,28 @@ interface AnomalyDetail {
   callerId: string;
   status: string;
 }
-// 缓存的数据结构现在可以是两种类型之一
-type CachedDetails = VisitDetail[] | AnomalyDetail[];
+// 新增：消息通知的详情接口
+interface MessageDetail {
+  notificationId: number;
+  patientId: number;
+  memberName: string;
+  payerName: string;
+  reason: string;
+  note: string;
+  status: string;
+  createdDate: string;
+  createdTime: string;
+  createdDateTimeDisplay: string; // 格式化的日期时间显示，如 "12/13/2024 12:13:26 PM (Yesterday)"
+  createdDateHoverDisplay: string; // 悬停显示的完整日期时间
+  coordinatorName: string;
+  officeName: string;
+  fromUserName: string;
+  canReplyClose: boolean;
+  isPatientNote: boolean;
+}
+
+// 缓存的数据结构现在可以是三种类型之一
+type CachedDetails = VisitDetail[] | AnomalyDetail[] | MessageDetail[];
 interface TrackedData {
   count: number;
   details: CachedDetails;
@@ -37,7 +57,7 @@ interface TrackedData {
 }
 
 // 定义追踪任务类型
-type CallType = 2 | 3 | "anomaly";
+type CallType = 2 | 3 | "anomaly" | "message";
 
 // --- TAB SYNC TYPES (Story 1: Plan D 多 Tab 同步) ---
 /**
@@ -57,7 +77,7 @@ interface SyncCacheData {
  */
 interface SyncMessage {
   /** 消息类型 */
-  type: 'DATA_UPDATED' | 'REQUEST_REFRESH' | 'TAB_CLOSING';
+  type: "DATA_UPDATED" | "REQUEST_REFRESH" | "TAB_CLOSING";
   /** 发送消息的 Tab ID */
   sourceTabId: string;
   /** 消息时间戳 */
@@ -92,25 +112,34 @@ interface ApiParams {
 export const visitMonitor = async () => {
   // --- FIX 1: 三层防御机制，彻底杜绝脚本重复执行 ---
 
-  // 第 1 层：检查 DOM 中是否已存在UI，如果存在，说明已运行过，立即退出。
+  // 第 1 层：检查是否在iframe中运行
+  if (window.self !== window.top) {
+    console.log("Status Tracker script stopped: running in an iframe.");
+    return;
+  }
+
+  // 第 2 层：检查 DOM 中是否已存在UI，如果存在，说明已运行过，立即退出。
   if (document.getElementById("tracker-container")) {
     console.log(
       "Status Tracker script stopped: UI container already exists in the DOM."
     );
     return;
   }
-  // 第 2 层：检查顶层窗口的全局标志位，防止 iframe 竞争。
-  if ((window.top as any).visitMonitorHasRun) {
-    console.log("Status Tracker script stopped: global flag is already set.");
-    return;
-  }
-  (window.top as any).visitMonitorHasRun = true;
 
-  // 第 3 层：您的原始检查，作为基础保险。
-  if (window.self !== window.top) {
-    console.log("Status Tracker script stopped: running in an iframe.");
+  // 第 3 层：检查全局标志位，但只有在DOM也存在时才阻止执行
+  // 如果DOM不存在但标志存在，说明页面重新加载了，需要重新初始化
+  const hasUI = document.getElementById("tracker-container") !== null;
+  const hasFlag = (window.top as any).visitMonitorHasRun;
+
+  if (hasFlag && hasUI) {
+    console.log(
+      "Status Tracker script stopped: already running with UI present."
+    );
     return;
   }
+
+  // 如果到这里，要么标志不存在，要么UI不存在（页面重载），设置标志并继续
+  (window.top as any).visitMonitorHasRun = true;
 
   // --- 状态与常量 ---
   const STORAGE_KEY = "hha_coordinator_tracker_list";
@@ -124,13 +153,13 @@ export const visitMonitor = async () => {
   // --- TAB SYNC MANAGER (Story 1 & 4: Plan D 多 Tab 同步 + 边缘情况处理) ---
   /**
    * TabSyncManager - 管理多 Tab 之间的数据同步
-   * 
+   *
    * 功能：
    * - 使用 localStorage 存储共享数据，实现跨 Tab 数据持久化
    * - 使用 BroadcastChannel 实时通知其他 Tab 数据更新
    * - 提供缓存新鲜度判断，决定是否需要重新请求 API
    * - Story 4: 边缘情况处理（降级、错误处理、storage 事件备用）
-   * 
+   *
    * @see docs/adr/001-multi-tab-sync.md - 架构决策记录
    * @see docs/stories/epic-1-multi-tab-sync.md - Epic 详情
    */
@@ -143,12 +172,12 @@ export const visitMonitor = async () => {
     private readonly channelSupported: boolean;
     /** storage 事件回调（用于 BroadcastChannel 不可用时的备用方案） */
     private storageCallback: ((msg: SyncMessage) => void) | null = null;
-    
+
     // --- 常量配置 ---
     /** localStorage 缓存键名 */
-    private readonly CACHE_KEY = 'hha_visit_monitor_cache';
+    private readonly CACHE_KEY = "hha_visit_monitor_cache";
     /** BroadcastChannel 频道名称 */
-    private readonly CHANNEL_NAME = 'hha-visit-monitor-sync';
+    private readonly CHANNEL_NAME = "hha-visit-monitor-sync";
     /** 缓存新鲜阈值：30秒内视为新鲜，直接使用 */
     private readonly FRESH_THRESHOLD = 30 * 1000;
     /** 缓存过期阈值：2分钟后视为过期，必须刷新 */
@@ -156,25 +185,34 @@ export const visitMonitor = async () => {
 
     constructor() {
       // 生成唯一的 Tab ID
-      this.tabId = `tab_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      
+      this.tabId = `tab_${Date.now()}_${Math.random()
+        .toString(36)
+        .substring(2, 9)}`;
+
       // 检测 BroadcastChannel 支持
-      this.channelSupported = typeof BroadcastChannel !== 'undefined';
-      
+      this.channelSupported = typeof BroadcastChannel !== "undefined";
+
       if (this.channelSupported) {
         try {
           this.channel = new BroadcastChannel(this.CHANNEL_NAME);
-          console.log(`[TabSyncManager] Tab ${this.tabId} initialized with BroadcastChannel`);
+          console.log(
+            `[TabSyncManager] Tab ${this.tabId} initialized with BroadcastChannel`
+          );
         } catch (e) {
-          console.warn('[TabSyncManager] Failed to create BroadcastChannel:', e);
+          console.warn(
+            "[TabSyncManager] Failed to create BroadcastChannel:",
+            e
+          );
           this.channel = null;
         }
       } else {
-        console.warn('[TabSyncManager] BroadcastChannel not supported, falling back to localStorage + storage event');
+        console.warn(
+          "[TabSyncManager] BroadcastChannel not supported, falling back to localStorage + storage event"
+        );
       }
-      
+
       // 注册 Tab 关闭清理
-      window.addEventListener('beforeunload', () => this.cleanup());
+      window.addEventListener("beforeunload", () => this.cleanup());
     }
 
     /**
@@ -186,24 +224,29 @@ export const visitMonitor = async () => {
       try {
         const stored = localStorage.getItem(this.CACHE_KEY);
         if (!stored) return null;
-        
+
         const parsed = JSON.parse(stored);
-        
+
         // Story 4: 增强数据结构验证
         if (!this.isValidCacheData(parsed)) {
-          console.warn('[TabSyncManager] Invalid cache structure, clearing corrupted data');
+          console.warn(
+            "[TabSyncManager] Invalid cache structure, clearing corrupted data"
+          );
           this.clearCache();
           return null;
         }
-        
+
         return parsed as SyncCacheData;
       } catch (e) {
         // Story 4: JSON 解析错误处理
         if (e instanceof SyntaxError) {
-          console.error('[TabSyncManager] JSON parse error, clearing corrupted cache:', e.message);
+          console.error(
+            "[TabSyncManager] JSON parse error, clearing corrupted cache:",
+            e.message
+          );
           this.clearCache();
         } else {
-          console.error('[TabSyncManager] Failed to read cached data:', e);
+          console.error("[TabSyncManager] Failed to read cached data:", e);
         }
         return null;
       }
@@ -214,21 +257,23 @@ export const visitMonitor = async () => {
      * @param data - 待验证的数据
      */
     private isValidCacheData(data: unknown): data is SyncCacheData {
-      if (!data || typeof data !== 'object') return false;
+      if (!data || typeof data !== "object") return false;
       const obj = data as Record<string, unknown>;
-      
+
       // 检查必需字段
-      if (typeof obj.timestamp !== 'number') return false;
-      if (typeof obj.sourceTabId !== 'string') return false;
-      if (!obj.data || typeof obj.data !== 'object') return false;
-      
+      if (typeof obj.timestamp !== "number") return false;
+      if (typeof obj.sourceTabId !== "string") return false;
+      if (!obj.data || typeof obj.data !== "object") return false;
+
       // 检查 timestamp 是否合理（不超过 24 小时）
       const age = Date.now() - (obj.timestamp as number);
       if (age < 0 || age > 24 * 60 * 60 * 1000) {
-        console.warn('[TabSyncManager] Cache timestamp out of reasonable range');
+        console.warn(
+          "[TabSyncManager] Cache timestamp out of reasonable range"
+        );
         return false;
       }
-      
+
       return true;
     }
 
@@ -244,23 +289,30 @@ export const visitMonitor = async () => {
         data.forEach((value, key) => {
           dataObj[key] = value;
         });
-        
+
         const cacheData: SyncCacheData = {
           data: dataObj,
           timestamp: Date.now(),
-          sourceTabId: this.tabId
+          sourceTabId: this.tabId,
         };
-        
+
         const jsonStr = JSON.stringify(cacheData);
-        
+
         // Story 4: 检查数据大小（localStorage 限制约 5MB）
         const sizeKB = new Blob([jsonStr]).size / 1024;
-        if (sizeKB > 4096) { // 4MB 警告阈值
-          console.warn(`[TabSyncManager] Cache size is large: ${sizeKB.toFixed(1)}KB`);
+        if (sizeKB > 4096) {
+          // 4MB 警告阈值
+          console.warn(
+            `[TabSyncManager] Cache size is large: ${sizeKB.toFixed(1)}KB`
+          );
         }
-        
+
         localStorage.setItem(this.CACHE_KEY, jsonStr);
-        console.log(`[TabSyncManager] Cache updated by Tab ${this.tabId}, size: ${sizeKB.toFixed(1)}KB`);
+        console.log(
+          `[TabSyncManager] Cache updated by Tab ${
+            this.tabId
+          }, size: ${sizeKB.toFixed(1)}KB`
+        );
       } catch (e) {
         this.handleStorageError(e as Error);
       }
@@ -274,9 +326,11 @@ export const visitMonitor = async () => {
       if (this.channel) {
         try {
           this.channel.postMessage(message);
-          console.log(`[TabSyncManager] Broadcasted ${message.type} from Tab ${this.tabId}`);
+          console.log(
+            `[TabSyncManager] Broadcasted ${message.type} from Tab ${this.tabId}`
+          );
         } catch (e) {
-          console.error('[TabSyncManager] Failed to broadcast message:', e);
+          console.error("[TabSyncManager] Failed to broadcast message:", e);
         }
       }
       // Story 4: BroadcastChannel 不可用时，storage 事件会自动触发其他 Tab
@@ -290,47 +344,58 @@ export const visitMonitor = async () => {
      */
     onMessage(callback: (msg: SyncMessage) => void): void {
       this.storageCallback = callback;
-      
+
       // 方案 1: BroadcastChannel（优先）
       if (this.channel) {
         this.channel.onmessage = (event: MessageEvent<SyncMessage>) => {
           callback(event.data);
         };
-        
+
         // Story 4: 处理 BroadcastChannel 错误
         this.channel.onmessageerror = (event) => {
-          console.error('[TabSyncManager] BroadcastChannel message error:', event);
+          console.error(
+            "[TabSyncManager] BroadcastChannel message error:",
+            event
+          );
         };
       }
-      
+
       // 方案 2: storage 事件（备用，当 BroadcastChannel 不可用或出错时）
-      window.addEventListener('storage', (event: StorageEvent) => {
+      window.addEventListener("storage", (event: StorageEvent) => {
         // 只关注我们的缓存键
         if (event.key !== this.CACHE_KEY) return;
         // 只处理其他 Tab 的修改
         if (!event.newValue) return;
-        
+
         try {
           const newData = JSON.parse(event.newValue) as SyncCacheData;
           // 防止自己触发自己
           if (newData.sourceTabId === this.tabId) return;
-          
-          console.log(`[TabSyncManager] Storage event detected from Tab ${newData.sourceTabId}`);
-          
+
+          console.log(
+            `[TabSyncManager] Storage event detected from Tab ${newData.sourceTabId}`
+          );
+
           // 如果 BroadcastChannel 不可用，使用 storage 事件作为备用
           if (!this.channel && this.storageCallback) {
             this.storageCallback({
-              type: 'DATA_UPDATED',
+              type: "DATA_UPDATED",
               sourceTabId: newData.sourceTabId,
-              timestamp: newData.timestamp
+              timestamp: newData.timestamp,
             });
           }
         } catch (e) {
-          console.error('[TabSyncManager] Failed to parse storage event data:', e);
+          console.error(
+            "[TabSyncManager] Failed to parse storage event data:",
+            e
+          );
         }
       });
-      
-      console.log(`[TabSyncManager] Message listeners registered (BroadcastChannel: ${!!this.channel}, Storage: true)`);
+
+      console.log(
+        `[TabSyncManager] Message listeners registered (BroadcastChannel: ${!!this
+          .channel}, Storage: true)`
+      );
     }
 
     /**
@@ -341,15 +406,17 @@ export const visitMonitor = async () => {
      *   - USE_AND_REFRESH: 缓存可用但需刷新（30s-2min），先显示再后台刷新
      *   - REFRESH: 缓存过期（>2min），必须立即刷新
      */
-    shouldFetchFresh(cachedTimestamp: number): 'USE' | 'USE_AND_REFRESH' | 'REFRESH' {
+    shouldFetchFresh(
+      cachedTimestamp: number
+    ): "USE" | "USE_AND_REFRESH" | "REFRESH" {
       const age = Date.now() - cachedTimestamp;
-      
+
       if (age < this.FRESH_THRESHOLD) {
-        return 'USE';
+        return "USE";
       } else if (age < this.STALE_THRESHOLD) {
-        return 'USE_AND_REFRESH';
+        return "USE_AND_REFRESH";
       } else {
-        return 'REFRESH';
+        return "REFRESH";
       }
     }
 
@@ -360,9 +427,9 @@ export const visitMonitor = async () => {
       if (this.channel) {
         // 通知其他 Tab 本 Tab 即将关闭
         this.broadcast({
-          type: 'TAB_CLOSING',
+          type: "TAB_CLOSING",
           sourceTabId: this.tabId,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
         this.channel.close();
         this.channel = null;
@@ -375,17 +442,25 @@ export const visitMonitor = async () => {
      * @param error - 错误对象
      */
     private handleStorageError(error: Error): void {
-      console.error('[TabSyncManager] Storage error:', error.name, error.message);
-      
-      if (error.name === 'QuotaExceededError') {
-        console.warn('[TabSyncManager] Storage quota exceeded, attempting cleanup...');
+      console.error(
+        "[TabSyncManager] Storage error:",
+        error.name,
+        error.message
+      );
+
+      if (error.name === "QuotaExceededError") {
+        console.warn(
+          "[TabSyncManager] Storage quota exceeded, attempting cleanup..."
+        );
         this.clearCache();
-        
+
         // 清理其他可能的旧数据（如果需要）
         this.cleanupOldStorageData();
-      } else if (error.name === 'SecurityError') {
+      } else if (error.name === "SecurityError") {
         // 隐私模式或其他安全限制
-        console.error('[TabSyncManager] Storage access denied (possibly private browsing mode)');
+        console.error(
+          "[TabSyncManager] Storage access denied (possibly private browsing mode)"
+        );
       }
     }
 
@@ -395,18 +470,27 @@ export const visitMonitor = async () => {
     private cleanupOldStorageData(): void {
       try {
         // 清理与本应用相关的其他旧缓存
-        const keysToCheck = ['hha_visit_monitor_', 'hha_coordinator_'];
+        const keysToCheck = ["hha_visit_monitor_", "hha_coordinator_"];
         for (let i = localStorage.length - 1; i >= 0; i--) {
           const key = localStorage.key(i);
-          if (key && keysToCheck.some(prefix => key.startsWith(prefix)) && key !== this.CACHE_KEY) {
+          if (
+            key &&
+            keysToCheck.some((prefix) => key.startsWith(prefix)) &&
+            key !== this.CACHE_KEY
+          ) {
             // 检查是否是旧数据（超过 7 天）
             try {
               const data = localStorage.getItem(key);
               if (data) {
                 const parsed = JSON.parse(data);
-                if (parsed.timestamp && Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
+                if (
+                  parsed.timestamp &&
+                  Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000
+                ) {
                   localStorage.removeItem(key);
-                  console.log(`[TabSyncManager] Cleaned up old storage: ${key}`);
+                  console.log(
+                    `[TabSyncManager] Cleaned up old storage: ${key}`
+                  );
                 }
               }
             } catch {
@@ -416,7 +500,10 @@ export const visitMonitor = async () => {
           }
         }
       } catch (e) {
-        console.error('[TabSyncManager] Failed to cleanup old storage data:', e);
+        console.error(
+          "[TabSyncManager] Failed to cleanup old storage data:",
+          e
+        );
       }
     }
 
@@ -426,9 +513,9 @@ export const visitMonitor = async () => {
     clearCache(): void {
       try {
         localStorage.removeItem(this.CACHE_KEY);
-        console.log('[TabSyncManager] Cache cleared');
+        console.log("[TabSyncManager] Cache cleared");
       } catch (e) {
-        console.error('[TabSyncManager] Failed to clear cache:', e);
+        console.error("[TabSyncManager] Failed to clear cache:", e);
       }
     }
 
@@ -442,9 +529,11 @@ export const visitMonitor = async () => {
         channelActive: !!this.channel,
         cacheKey: this.CACHE_KEY,
         hasCachedData: !!this.getCachedData(),
-        cachedDataAge: this.getCachedData()?.timestamp 
-          ? `${((Date.now() - this.getCachedData()!.timestamp) / 1000).toFixed(1)}s`
-          : 'N/A'
+        cachedDataAge: this.getCachedData()?.timestamp
+          ? `${((Date.now() - this.getCachedData()!.timestamp) / 1000).toFixed(
+              1
+            )}s`
+          : "N/A",
       };
     }
   }
@@ -579,7 +668,7 @@ export const visitMonitor = async () => {
             </div>
             <div class="tracker-content"><table class="tracker-table"><thead><tr>
                     <th style="width:40px;color: #333 !important;">编号</th>
-                    <th style="width:40px;color: #333 !important;"class="col-coordinator">Coordinator (Ext.)</th>
+                    <th style="width:40px;color: #333 !important;"class="col-coordinator">辅导员 (Ext.)</th>
                     <th style="width:80px;color: #333 !important;">上班钟</th>
                     <th style="width:80px;color: #333 !important;">下班钟</th>
                     <th style="width:80px;color: #333 !important;">异常打钟</th>
@@ -620,7 +709,9 @@ export const visitMonitor = async () => {
     for (const [key, value] of Object.entries(data)) {
       statusDataCache.set(key, value);
     }
-    console.log(`[Story2] Restored ${Object.keys(data).length} items from cache`);
+    console.log(
+      `[Story2] Restored ${Object.keys(data).length} items from cache`
+    );
   }
 
   /**
@@ -628,7 +719,7 @@ export const visitMonitor = async () => {
    * @param timestamp - 时间戳
    */
   function updateLastRefreshTime(timestamp: number): void {
-    const timeEl = document.getElementById('last-refresh-time');
+    const timeEl = document.getElementById("last-refresh-time");
     if (timeEl) {
       const date = new Date(timestamp);
       timeEl.textContent = `（上次更新: ${date.toLocaleTimeString()}）`;
@@ -751,6 +842,525 @@ export const visitMonitor = async () => {
   }
 
   // --- 全新的追踪数据获取与解析 ---
+
+  // --- 消息监控相关的缓存 ---
+  let messageApiCache: {
+    payers: string | null;
+    payerIdWithContractChhaId: { key: number; value: number }[] | null;
+    reasonIds: string | null;
+    officeIds: string | null;
+    timestamp: number;
+  } = {
+    payers: null,
+    payerIdWithContractChhaId: null,
+    reasonIds: null,
+    officeIds: null,
+    timestamp: 0,
+  };
+
+  /**
+   * 获取消息 API 所需的基础参数（从页面全局变量获取）
+   * 这些变量在 HHAExchange 页面加载时已经存在
+   * 注意：由于 Tampermonkey 运行在沙盒中，需要使用 unsafeWindow 访问页面全局变量
+   */
+  function getMessageApiParams(): {
+    appVersion: string;
+    version: string;
+    minorVersion: string;
+    userID: string;
+    appSecret: string;
+    appName: string;
+  } {
+    // 尝试使用 unsafeWindow（Tampermonkey 提供的真实页面 window）
+    // 如果不可用，回退到普通 window
+    const win = (
+      typeof unsafeWindow !== "undefined" ? unsafeWindow : window
+    ) as any;
+
+    const params = {
+      appVersion: win.gnAppVersion || "ENT",
+      version: win.gnVersion || "25.07",
+      minorVersion: win.gnMinorVersion || "1.0",
+      userID: String(win.gnUserID || ""),
+      appSecret: win.gnApSc || "",
+      appName: win.gnApNm || "ENT",
+    };
+
+    console.log("[VisitMonitor] getMessageApiParams:", params);
+    return params;
+  }
+
+  /**
+   * 获取消息 API 的 base URL
+   */
+  function getMessageApiBaseUrl(): string {
+    const params = getMessageApiParams();
+    return `https://app.hhaexchange.com/ENTP${params.version.replace(
+      ".",
+      ""
+    )}010000`;
+  }
+
+  /**
+   * 获取消息 API 所需的 OfficeIDs (数组形式，用于其他API调用)
+   */
+  async function getMessageOfficeIdsArray(): Promise<number[]> {
+    const officeIds = await getMessageOfficeIds();
+    return officeIds
+      .split(",")
+      .map(Number)
+      .filter((n) => n > 0);
+  }
+
+  /**
+   * 获取消息 API 所需的 Contract Payers 列表（包含 LinkedContractChhaId 映射）
+   * 使用 GetContractPayersList API (正确的API)
+   */
+  async function getMessageContractPayers(): Promise<{
+    payers: string;
+    payerIdWithContractChhaId: { key: number; value: number }[];
+  }> {
+    if (messageApiCache.payers && messageApiCache.payerIdWithContractChhaId) {
+      return {
+        payers: messageApiCache.payers,
+        payerIdWithContractChhaId: messageApiCache.payerIdWithContractChhaId,
+      };
+    }
+
+    const baseUrl = getMessageApiBaseUrl();
+    const params = getMessageApiParams();
+    const officeIds = await getMessageOfficeIdsArray();
+
+    console.log(
+      "[VisitMonitor] getMessageContractPayers - fetching from:",
+      `${baseUrl}/api/PayerNotification/GetContractPayersList`
+    );
+    console.log(
+      "[VisitMonitor] getMessageContractPayers - using officeIds:",
+      officeIds
+    );
+
+    const res = (await GM_fetch(
+      `${baseUrl}/api/PayerNotification/GetContractPayersList`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          appsecret: params.appSecret,
+          appname: params.appName,
+        },
+        body: JSON.stringify({
+          appVersion: params.appVersion,
+          version: params.version,
+          minorVersion: params.minorVersion,
+          userID: params.userID,
+          vendorId: "469", // ProviderId
+          listOfficeId: officeIds,
+          internalNote: "Both",
+        }),
+      }
+    )) as Response & { rawBody: Blob };
+
+    const rawText = await res.rawBody.text();
+    console.log(
+      "[VisitMonitor] getMessageContractPayers - response status:",
+      res.status
+    );
+    const data = JSON.parse(rawText);
+    const payerList = data.ListPayers || [];
+    console.log(
+      "[VisitMonitor] getMessageContractPayers - payer count:",
+      payerList.length
+    );
+
+    // 提取 PayerId 列表
+    const payerIds = payerList
+      .map((p: { PayerId: number }) => p.PayerId)
+      .join(",");
+
+    // 构建 PayerId -> LinkedContractChhaId 映射
+    const payerIdWithContractChhaId = payerList.map(
+      (p: { PayerId: number; LinkedContractChhaId: number }) => ({
+        key: p.PayerId,
+        value: p.LinkedContractChhaId || 0,
+      })
+    );
+
+    messageApiCache.payers = payerIds;
+    messageApiCache.payerIdWithContractChhaId = payerIdWithContractChhaId;
+
+    console.log(
+      "[VisitMonitor] getMessageContractPayers - result payers:",
+      payerIds.substring(0, 80) + "..."
+    );
+    return { payers: payerIds, payerIdWithContractChhaId };
+  }
+
+  /**
+   * 获取消息 API 所需的 Payers 列表 (向后兼容的简化版本)
+   */
+  async function getMessagePayers(): Promise<string> {
+    const { payers } = await getMessageContractPayers();
+    return payers;
+  }
+
+  /**
+   * 获取消息 API 所需的 ReasonIDs
+   */
+  async function getMessageReasonIds(): Promise<string> {
+    if (messageApiCache.reasonIds) return messageApiCache.reasonIds;
+
+    const baseUrl = getMessageApiBaseUrl();
+    const params = getMessageApiParams();
+
+    try {
+      // 首先获取 Contract Payers 数据（包含 PayerId 和 LinkedContractChhaId 映射）
+      const { payers, payerIdWithContractChhaId } =
+        await getMessageContractPayers();
+      const payerIds = payers
+        ? payers
+            .split(",")
+            .map(Number)
+            .filter((n) => n > 0)
+        : [];
+
+      console.log(
+        "[VisitMonitor] getMessageReasonIds - fetching from:",
+        `${baseUrl}/api/PayerNotification/GetNotificationReasonsNewLook`
+      );
+      console.log(
+        "[VisitMonitor] getMessageReasonIds - using",
+        payerIds.length,
+        "payers"
+      );
+
+      const res = (await GM_fetch(
+        `${baseUrl}/api/PayerNotification/GetNotificationReasonsNewLook`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            appsecret: params.appSecret,
+            appname: params.appName,
+          },
+          body: JSON.stringify({
+            appVersion: params.appVersion,
+            version: params.version,
+            minorVersion: params.minorVersion,
+            userID: params.userID,
+            ListPayerId: payerIds,
+            InternalID: -1,
+            // 使用正确的映射：key = PayerId, value = LinkedContractChhaId
+            ListPayerIdWithContractChhaId: payerIdWithContractChhaId,
+            PayerCount: payerIds.length,
+            CommunicationType: 2, // Patient type - 这里用数字类型
+          }),
+        }
+      )) as Response & { rawBody: Blob };
+
+      const rawText = await res.rawBody.text();
+      console.log(
+        "[VisitMonitor] getMessageReasonIds - response status:",
+        res.status
+      );
+      const data = JSON.parse(rawText);
+      console.log(
+        "[VisitMonitor] getMessageReasonIds - data length:",
+        data?.length
+      );
+      const reasonIds = data
+        .map((r: { ReasonId: number }) => r.ReasonId)
+        .join(",");
+      console.log(
+        "[VisitMonitor] getMessageReasonIds - result:",
+        reasonIds.substring(0, 100) + "..."
+      );
+      messageApiCache.reasonIds = reasonIds;
+      return reasonIds;
+    } catch (error) {
+      console.error("[VisitMonitor] getMessageReasonIds - error:", error);
+      return "";
+    }
+  }
+
+  /**
+   * 获取消息 API 所需的 OfficeIDs
+   * 只包含 Type: "1" 的实际 Office，排除 Type: "0" 的分组/父级
+   */
+  async function getMessageOfficeIds(): Promise<string> {
+    if (messageApiCache.officeIds) return messageApiCache.officeIds;
+
+    const baseUrl = getMessageApiBaseUrl();
+    const params = getMessageApiParams();
+
+    try {
+      console.log(
+        "[VisitMonitor] getMessageOfficeIds - fetching from:",
+        `${baseUrl}/api/Common/GetAllOffices`
+      );
+      const res = (await GM_fetch(`${baseUrl}/api/Common/GetAllOffices`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          appsecret: params.appSecret,
+          appname: params.appName,
+        },
+        body: JSON.stringify({
+          appVersion: params.appVersion,
+          version: params.version,
+          minorVersion: params.minorVersion,
+          userID: params.userID,
+          SelectionType: "filter",
+          PermissionName: "Smart Map Beta",
+        }),
+      })) as Response & { rawBody: Blob };
+
+      const rawText = await res.rawBody.text();
+      console.log(
+        "[VisitMonitor] getMessageOfficeIds - response status:",
+        res.status
+      );
+      const data = JSON.parse(rawText);
+      console.log(
+        "[VisitMonitor] getMessageOfficeIds - data length:",
+        data?.length
+      );
+
+      // 只包含 Type: "1" 的实际 Office，排除 Type: "0" 的分组/父级（如 OfficeID 720）
+      const officeIds = data
+        .filter(
+          (o: { OfficeID: number; Type: string }) =>
+            o.OfficeID > 0 && o.Type === "1"
+        )
+        .map((o: { OfficeID: number }) => o.OfficeID)
+        .join(",");
+      console.log("[VisitMonitor] getMessageOfficeIds - result:", officeIds);
+      messageApiCache.officeIds = officeIds;
+      return officeIds;
+    } catch (error) {
+      console.error("[VisitMonitor] getMessageOfficeIds - error:", error);
+      return "";
+    }
+  }
+
+  /**
+   * 获取指定 Coordinator 的消息通知
+   * @param coordinatorId - Coordinator ID
+   * @returns TrackedData 包含消息数量和详情
+   */
+  async function fetchMessageReport(
+    coordinatorId: number
+  ): Promise<TrackedData> {
+    try {
+      const baseUrl = getMessageApiBaseUrl();
+      const params = getMessageApiParams();
+
+      // 先获取 payers（因为 reasonIds 依赖它）
+      const payers = await getMessagePayers();
+
+      // 然后并行获取 reasonIds 和 officeIds
+      const [reasonIds, officeIds] = await Promise.all([
+        getMessageReasonIds(),
+        getMessageOfficeIds(),
+      ]);
+
+      console.log(
+        "[VisitMonitor] fetchMessageReport - got payers:",
+        payers ? payers.substring(0, 50) + "..." : "(empty)"
+      );
+      console.log(
+        "[VisitMonitor] fetchMessageReport - got reasonIds:",
+        reasonIds ? reasonIds.substring(0, 50) + "..." : "(empty)"
+      );
+      console.log(
+        "[VisitMonitor] fetchMessageReport - got officeIds:",
+        officeIds || "(empty)"
+      );
+
+      const requestBody = {
+        appVersion: params.appVersion,
+        version: params.version,
+        minorVersion: params.minorVersion,
+        userID: params.userID,
+        MessageType: -1,
+        Status: "1", // 1 = Open, -1 = All (字符串类型)
+        ProviderId: "469", // VendorID - hardcoded for now, could be made dynamic
+        IsConversation: 0,
+        KeySearch: "",
+        Pagination: {
+          PageNumber: 1,
+          SortItem: "CreatedDate",
+          SortOrder: "DESC",
+          PageSize: "50",
+        },
+        IsNewLook: true,
+        CommunicationType: "2", // 2 = Patient type (字符串类型)
+        UserName: "", // Will be filled if needed
+        NoOfDays: 1,
+        UseMirrorConnection: true,
+        Internal: -1,
+        IsServicePortalNote: 0,
+        CoordinatorID: String(coordinatorId), // 转为字符串
+        Payers: payers,
+        FromDate: "",
+        ToDate: "",
+        OfficeIDs: officeIds,
+        ReasonIDs: reasonIds,
+      };
+
+      console.log(
+        "[VisitMonitor] fetchMessageReport - Request URL:",
+        `${baseUrl}/api/PayerNotification/PayerNotificationSearch`
+      );
+      console.log(
+        "[VisitMonitor] fetchMessageReport - Request Body:",
+        JSON.stringify(requestBody, null, 2)
+      );
+
+      const res = (await GM_fetch(
+        `${baseUrl}/api/PayerNotification/PayerNotificationSearch`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            appsecret: params.appSecret,
+            appname: params.appName,
+          },
+          body: JSON.stringify(requestBody),
+        }
+      )) as Response & { rawBody: Blob };
+
+      const rawText = await res.rawBody.text();
+      console.log(
+        "[VisitMonitor] fetchMessageReport - Response status:",
+        res.status
+      );
+      console.log(
+        "[VisitMonitor] fetchMessageReport - Response raw:",
+        rawText.substring(0, 500)
+      );
+
+      const data = JSON.parse(rawText);
+      console.log(
+        "[VisitMonitor] fetchMessageReport - Parsed data length:",
+        data?.length
+      );
+
+      // 解析消息数据
+      const details: MessageDetail[] = data.map((item: any) => {
+        const createdDate = item.CreatedDate || "";
+        const createdTime = item.CreatedTime || "";
+        const dateHoverDisplay = item.CreatedDateHoverDisplay || "";
+
+        // 格式化日期时间显示："MM/DD/YYYY HH:MM:SS AM/PM (Yesterday)"
+        let dateTimeDisplay = "";
+        if (dateHoverDisplay) {
+          // dateHoverDisplay 格式如 "Sat Dec 13 12:13 PM" 或 "Thu Dec 12 09:46 AM"
+          // 从 dateHoverDisplay 中提取实际日期
+          const now = new Date();
+          let actualDate: Date;
+
+          // 尝试从 dateHoverDisplay 中解析日期
+          // 格式: "DayOfWeek Month Day HH:MM AM/PM"
+          const dateMatch = dateHoverDisplay.match(
+            /\w{3}\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})\s+(\w{2})/
+          );
+
+          if (dateMatch) {
+            const [, monthStr, dayStr, hourStr, minuteStr, ampm] = dateMatch;
+            const monthMap: { [key: string]: number } = {
+              Jan: 0,
+              Feb: 1,
+              Mar: 2,
+              Apr: 3,
+              May: 4,
+              Jun: 5,
+              Jul: 6,
+              Aug: 7,
+              Sep: 8,
+              Oct: 9,
+              Nov: 10,
+              Dec: 11,
+            };
+
+            const month = monthMap[monthStr];
+            const day = parseInt(dayStr);
+            let year = now.getFullYear();
+
+            // 如果日期在未来（例如 12月底显示 1月初的消息），则是去年
+            if (
+              month > now.getMonth() ||
+              (month === now.getMonth() && day > now.getDate())
+            ) {
+              year--;
+            }
+
+            actualDate = new Date(year, month, day);
+          } else {
+            // 回退到原有逻辑
+            if (createdDate === "Yesterday") {
+              actualDate = new Date(now);
+              actualDate.setDate(actualDate.getDate() - 1);
+            } else if (createdDate === "Today") {
+              actualDate = new Date(now);
+            } else {
+              actualDate = new Date(createdDate);
+            }
+          }
+
+          // 格式化为 MM/DD/YYYY HH:MM:SS AM/PM
+          const month = String(actualDate.getMonth() + 1).padStart(2, "0");
+          const day = String(actualDate.getDate()).padStart(2, "0");
+          const year = actualDate.getFullYear();
+
+          // 从 createdTime 中提取时间部分（如 "12:13:26 PM"）
+          const timeStr = createdTime || "";
+
+          dateTimeDisplay = `${month}/${day}/${year} ${timeStr} (${createdDate})`;
+        } else {
+          dateTimeDisplay = `${createdDate} ${createdTime}`;
+        }
+
+        return {
+          notificationId: item.NotificationId,
+          patientId: item.PatientId,
+          memberName: item.MemberName?.trim() || "",
+          payerName: item.PayerName || "",
+          reason: item.Reason || "",
+          note: item.Note || "",
+          status: item.Status || "",
+          createdDate: createdDate,
+          createdTime: createdTime,
+          createdDateTimeDisplay: dateTimeDisplay,
+          createdDateHoverDisplay: dateHoverDisplay,
+          coordinatorName: item.CoordinatorName || "",
+          officeName: item.OfficeName || "",
+          fromUserName: item.FromUserName || "",
+          canReplyClose: item.CanReplyClose || false,
+          isPatientNote: item.IsPatientNote || false,
+        };
+      });
+
+      // TotalRecords 在每个 item 中都有，取第一个即可
+      const count = data.length > 0 ? data[0].TotalRecords || data.length : 0;
+
+      return {
+        count,
+        details,
+        timestamp: Date.now(),
+      };
+    } catch (error) {
+      console.error(
+        `Failed to fetch message report for coordinator ${coordinatorId}:`,
+        error
+      );
+      return {
+        count: 0,
+        details: [],
+        timestamp: Date.now(),
+      };
+    }
+  }
 
   /**
    * 获取并缓存所有 Office IDs
@@ -1374,12 +1984,15 @@ export const visitMonitor = async () => {
         const clockInData = statusDataCache.get(`${coordinator.id}-2`);
         const clockOutData = statusDataCache.get(`${coordinator.id}-3`);
         const anomalyData = statusDataCache.get(`${coordinator.id}-anomaly`);
+        const messageData = statusDataCache.get(`${coordinator.id}-message`);
         const clockInCount = clockInData?.count ?? 0;
         const clockOutCount = clockOutData?.count ?? 0;
         const anomalyCount = anomalyData?.count ?? 0;
+        const messageCount = messageData?.count ?? 0;
         const clockInStatus = clockInCount > 0 ? "status-error" : "status-ok";
         const clockOutStatus = clockOutCount > 0 ? "status-error" : "status-ok";
         const anomalyStatus = anomalyCount > 0 ? "status-error" : "status-ok";
+        const messageStatus = messageCount > 0 ? "status-error" : "status-ok";
 
         return `
                 <tr>
@@ -1396,9 +2009,9 @@ export const visitMonitor = async () => {
                     <td><div class="status-icon ${anomalyStatus}" data-coordinator-id="${
           coordinator.id
         }" data-call-type="anomaly">${anomalyCount}</div></td>
-                    <td><div class="status-icon status-ok" data-coordinator-id="${
-                      coordinator.id
-                    }" data-call-type="message">0</div></td>
+                    <td><div class="status-icon ${messageStatus}" data-coordinator-id="${
+          coordinator.id
+        }" data-call-type="message">${messageCount}</div></td>
                 </tr>`;
       })
       .join("");
@@ -1445,26 +2058,30 @@ export const visitMonitor = async () => {
 
     // --- Story 2: 缓存检查逻辑 ---
     const cached = tabSyncManager.getCachedData();
-    
+
     if (cached) {
       const decision = tabSyncManager.shouldFetchFresh(cached.timestamp);
-      console.log(`[Story2] Cache decision: ${decision}, age: ${Date.now() - cached.timestamp}ms`);
-      
-      if (decision === 'USE') {
+      console.log(
+        `[Story2] Cache decision: ${decision}, age: ${
+          Date.now() - cached.timestamp
+        }ms`
+      );
+
+      if (decision === "USE") {
         // 缓存新鲜（<30s），直接使用，跳过 API 请求
         restoreFromCache(cached.data);
         renderTrackingView();
         updateLastRefreshTime(cached.timestamp);
-        console.log('[Story2] Using fresh cache, skipping API call');
+        console.log("[Story2] Using fresh cache, skipping API call");
         return;
       }
-      
-      if (decision === 'USE_AND_REFRESH') {
+
+      if (decision === "USE_AND_REFRESH") {
         // 缓存可用但需刷新（30s-2min），先显示缓存数据
         restoreFromCache(cached.data);
         renderTrackingView();
         updateLastRefreshTime(cached.timestamp);
-        console.log('[Story2] Using stale cache, will refresh in background');
+        console.log("[Story2] Using stale cache, will refresh in background");
         // 继续执行下面的 API 调用进行后台刷新
       }
       // decision === 'REFRESH': 缓存过期，直接执行 API 调用
@@ -1499,23 +2116,33 @@ export const visitMonitor = async () => {
             })
             .catch((err) => console.error(err))
         );
+        // 消息监控
+        promises.push(
+          fetchMessageReport(coordinator.id)
+            .then((data) => {
+              statusDataCache.set(`${coordinator.id}-message`, data);
+            })
+            .catch((err) => console.error(err))
+        );
       }
       await Promise.allSettled(promises);
       renderTrackingView();
-      
+
       // --- Story 2 & 3: API 完成后保存缓存、广播并更新时间 ---
       const now = Date.now();
       tabSyncManager.setCachedData(statusDataCache);
-      
+
       // Story 3: 广播数据更新通知给其他 Tab
       tabSyncManager.broadcast({
-        type: 'DATA_UPDATED',
+        type: "DATA_UPDATED",
         sourceTabId: tabSyncManager.tabId,
-        timestamp: now
+        timestamp: now,
       });
-      
+
       updateLastRefreshTime(now);
-      console.log(`[Story3] Tracking update complete. Broadcasted to other tabs.`);
+      console.log(
+        `[Story3] Tracking update complete. Broadcasted to other tabs.`
+      );
     } catch (error) {
       console.error("Failed to run tracking update:", error);
       showToast("追踪数据更新失败", "error");
@@ -1574,6 +2201,157 @@ export const visitMonitor = async () => {
       isDragging = false;
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
+    };
+
+    handleElement.addEventListener("mousedown", onMouseDown);
+  }
+
+  /**
+   * 格式化Authorization Note内容
+   * 解析原始HTML表格，完整保留所有列（Edited Fields, Previous Value, New Value）
+   */
+  function formatAuthorizationNote(note: string): string {
+    if (!note) return "";
+
+    // 检查是否包含Authorization相关的HTML表格
+    if (
+      note.includes("<table") &&
+      (note.includes("Edited Fields") || note.includes("Previous Value"))
+    ) {
+      try {
+        // 创建临时DOM解析HTML
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = note;
+
+        // 提取表格前的文字描述
+        const textContent = note.replace(/<table[\s\S]*<\/table>/gi, "").trim();
+        const descriptionText = textContent.replace(/<[^>]+>/g, "").trim();
+
+        // 解析表格 - 获取表头和数据
+        const table = tempDiv.querySelector("table");
+        if (table) {
+          const headerRow = table.querySelector("tr");
+          const headers: string[] = [];
+          headerRow?.querySelectorAll("th, td").forEach((cell) => {
+            headers.push(cell.textContent?.trim() || "");
+          });
+
+          // 获取数据行
+          const dataRows = table.querySelectorAll("tr");
+          const tableData: { cells: string[] }[] = [];
+
+          dataRows.forEach((row, index) => {
+            if (index === 0 && row.querySelector("th")) return; // 跳过表头行
+            const cells: string[] = [];
+            row.querySelectorAll("td").forEach((cell) => {
+              cells.push(cell.textContent?.trim() || "");
+            });
+            if (cells.length > 0 && cells.some((c) => c)) {
+              tableData.push({ cells });
+            }
+          });
+
+          // 生成紧凑表格
+          if (tableData.length > 0) {
+            let result = descriptionText
+              ? `<div style="margin-bottom:6px;">${descriptionText}</div>`
+              : "";
+            result += '<table class="auth-note-table"><thead><tr>';
+
+            // 表头
+            headers.forEach((h) => {
+              result += `<th>${h}</th>`;
+            });
+            result += "</tr></thead><tbody>";
+
+            // 数据行
+            tableData.forEach((row) => {
+              result += "<tr>";
+              row.cells.forEach((cell) => {
+                result += `<td>${cell}</td>`;
+              });
+              result += "</tr>";
+            });
+            result += "</tbody></table>";
+            return result;
+          }
+        }
+      } catch (e) {
+        // 解析失败，回退到纯文本
+      }
+    }
+
+    // 如果不是Authorization表格或解析失败，移除HTML标签返回纯文本
+    return note
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  // 调整大小功能 (修复：移除最大尺寸限制，使用capture捕获事件，添加iframe遮罩)
+  function makeResizable(element: HTMLElement, handleElement: HTMLElement) {
+    let isResizing = false;
+    let startX = 0;
+    let startY = 0;
+    let startWidth = 0;
+    let startHeight = 0;
+    let overlay: HTMLDivElement | null = null;
+
+    handleElement.style.cursor = "nwse-resize";
+
+    const onMouseDown = (e: MouseEvent) => {
+      isResizing = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startWidth = element.offsetWidth;
+      startHeight = element.offsetHeight;
+
+      // 创建透明遮罩层覆盖整个页面，防止iframe或其他元素抦截鼠标事件
+      overlay = document.createElement("div");
+      overlay.style.cssText =
+        "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;cursor:nwse-resize;";
+      document.body.appendChild(overlay);
+
+      // 防止拖动时选中文字
+      document.body.style.userSelect = "none";
+      document.addEventListener("mousemove", onMouseMove, true);
+      document.addEventListener("mouseup", onMouseUp, true);
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+
+      // 计算新尺寸，只有最小限制，没有最大限制
+      const newWidth = Math.max(400, startWidth + deltaX);
+      const newHeight = Math.max(300, startHeight + deltaY);
+
+      element.style.width = `${newWidth}px`;
+      element.style.height = `${newHeight}px`;
+
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const onMouseUp = (e: MouseEvent) => {
+      if (!isResizing) return;
+      isResizing = false;
+      document.body.style.userSelect = "";
+
+      // 移除遮罩层
+      if (overlay) {
+        overlay.remove();
+        overlay = null;
+      }
+
+      document.removeEventListener("mousemove", onMouseMove, true);
+      document.removeEventListener("mouseup", onMouseUp, true);
+      e.preventDefault();
+      e.stopPropagation();
     };
 
     handleElement.addEventListener("mousedown", onMouseDown);
@@ -1701,6 +2479,35 @@ export const visitMonitor = async () => {
             </thead>
             <tbody>${tableRows}</tbody>
         `;
+    } else if (callType === "message") {
+      const details = data.details as MessageDetail[];
+      const tableRows = details
+        .map((d) => {
+          // 格式化Note内容：解析Authorization Note中的表格数据
+          const formattedNote = formatAuthorizationNote(d.note);
+          return `
+            <tr>
+                    <td style="color: #333 !important;">${d.memberName}</td>
+                    <td style="color: #333 !important;">${d.payerName}</td>
+                    <td style="color: #333 !important;">${d.reason}</td>
+                    <td style="color: #333 !important;" class="note-cell">${formattedNote}</td>
+                    <td style="color: #333 !important; white-space: nowrap;">${d.createdDateTimeDisplay}</td>
+                </tr>`;
+        })
+        .join("");
+
+      tableHtml = `
+            <thead>
+            <tr>
+                <th style="color: #333 !important;">Member Name</th>
+                <th style="color: #333 !important;">Payer</th>
+                <th style="color: #333 !important;">Reason</th>
+                <th style="color: #333 !important;">Note</th>
+                <th style="color: #333 !important;">DateTime</th>
+            </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+        `;
     } else {
       // 备用情况
       tableHtml = `<tbody><tr><td style="color: #333 !important;">未知的数据类型</td></tr></tbody>`;
@@ -1710,6 +2517,7 @@ export const visitMonitor = async () => {
     popover.innerHTML = `
         <div class="popover-header"><h4 style="color: #333 !important;">详情列表（只显示最新10条） (${data.count} 条记录)</h4><button class="popover-close-btn">&times;</button></div>
             <div class="popover-content"><table class="popover-table">${tableHtml}</table></div>
+            <div class="popover-resize-handle"></div>
         `;
 
     // --- 5. 注入与激活 ---
@@ -1721,6 +2529,14 @@ export const visitMonitor = async () => {
     ) as HTMLElement;
     if (popoverHeader) {
       makeDraggable(popover, popoverHeader);
+    }
+
+    // 激活调整大小功能
+    const resizeHandle = popover.querySelector(
+      ".popover-resize-handle"
+    ) as HTMLElement;
+    if (resizeHandle) {
+      makeResizable(popover, resizeHandle);
     }
 
     // 智能定位
@@ -1749,6 +2565,92 @@ export const visitMonitor = async () => {
 
     // 触发淡入动画
     requestAnimationFrame(() => popover.classList.add("visible"));
+  }
+
+  // --- NEW: Show message detail popup ---
+  function showMessageDetail(cell: HTMLElement) {
+    const popup = document.getElementById("message-detail-popup");
+    const backdrop = document.getElementById("message-detail-backdrop");
+    const title = document.getElementById("popup-title");
+    const content = document.getElementById("popup-content");
+    const closeBtn = document.getElementById("close-popup-btn");
+
+    if (!popup || !backdrop || !title || !content || !closeBtn) return;
+
+    const fullNote = cell.dataset.fullNote || "";
+    const member = cell.dataset.member || "";
+    const payer = cell.dataset.payer || "";
+    const reason = cell.dataset.reason || "";
+    const priority = cell.dataset.priority || "Normal";
+    const caregiver = cell.dataset.caregiver || "";
+    const patient = cell.dataset.patient || "";
+    const created = cell.dataset.created || "";
+
+    // Set title
+    title.textContent = payer || "Message Details";
+
+    // Build content HTML (similar to original popup structure)
+    const contentHtml = `
+      <div style="display: grid; grid-template-columns: 120px 1fr; gap: 10px; margin-bottom: 20px; font-size: 14px;">
+        <div style="font-weight: bold;">From</div>
+        <div>${payer}</div>
+        
+        <div style="font-weight: bold;">Created</div>
+        <div>${created}</div>
+        
+        <div style="font-weight: bold;">To</div>
+        <div>${member}</div>
+        
+        <div style="font-weight: bold;">Reason</div>
+        <div>${reason}</div>
+        
+        ${
+          caregiver
+            ? `<div style="font-weight: bold;">Caregiver</div><div>${caregiver}</div>`
+            : ""
+        }
+        
+        <div style="font-weight: bold;">Priority</div>
+        <div>${priority}</div>
+        
+        ${
+          patient
+            ? `<div style="font-weight: bold;">Patient</div><div>${patient}</div>`
+            : ""
+        }
+      </div>
+      
+      <div style="margin-top: 20px;">
+        <div style="font-weight: bold; margin-bottom: 10px;">Message</div>
+        <div style="padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; max-height: 400px; overflow: auto;">
+          ${fullNote}
+        </div>
+      </div>
+    `;
+
+    content.innerHTML = contentHtml;
+
+    // Show popup and backdrop
+    popup.style.display = "block";
+    backdrop.style.display = "block";
+
+    // Close handlers
+    const closePopup = () => {
+      popup.style.display = "none";
+      backdrop.style.display = "none";
+    };
+
+    closeBtn.onclick = closePopup;
+    backdrop.onclick = closePopup;
+
+    // ESC key to close
+    const escHandler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closePopup();
+        document.removeEventListener("keydown", escHandler);
+      }
+    };
+    document.addEventListener("keydown", escHandler);
   }
 
   // --- REFACTORED: 拖拽与点击逻辑 ---
@@ -1874,10 +2776,6 @@ export const visitMonitor = async () => {
         const callType = target.dataset.callType; // 类型断言
         if (!coordinatorId || !callType) return;
 
-        if (callType === "message") {
-          showToast("消息功能待开发", "success");
-          return;
-        }
         const cacheKey = `${coordinatorId}-${callType}`;
         const data = statusDataCache.get(cacheKey);
         if (data && data.count > 0) {
@@ -1896,26 +2794,35 @@ export const visitMonitor = async () => {
     loadTrackedCoordinators();
     renderTrackingView();
     attachAllEventListeners();
-    
+
     // --- Story 3: 注册 BroadcastChannel 消息监听 ---
     tabSyncManager.onMessage((msg) => {
       // 检查 sourceTabId 防止自我触发更新
-      if (msg.type === 'DATA_UPDATED' && msg.sourceTabId !== tabSyncManager.tabId) {
-        console.log(`[Story3] Tab ${tabSyncManager.tabId} received DATA_UPDATED from Tab ${msg.sourceTabId}`);
-        
+      if (
+        msg.type === "DATA_UPDATED" &&
+        msg.sourceTabId !== tabSyncManager.tabId
+      ) {
+        console.log(
+          `[Story3] Tab ${tabSyncManager.tabId} received DATA_UPDATED from Tab ${msg.sourceTabId}`
+        );
+
         // 从 localStorage 读取最新缓存数据
         const cached = tabSyncManager.getCachedData();
         if (cached) {
           restoreFromCache(cached.data);
           renderTrackingView();
           updateLastRefreshTime(cached.timestamp);
-          console.log(`[Story3] UI updated from broadcast, timestamp: ${new Date(cached.timestamp).toLocaleTimeString()}`);
+          console.log(
+            `[Story3] UI updated from broadcast, timestamp: ${new Date(
+              cached.timestamp
+            ).toLocaleTimeString()}`
+          );
         }
-      } else if (msg.type === 'TAB_CLOSING') {
+      } else if (msg.type === "TAB_CLOSING") {
         console.log(`[Story3] Tab ${msg.sourceTabId} is closing`);
       }
     });
-    
+
     runTrackingUpdate();
     setInterval(runTrackingUpdate, 120000); // 间隔已更新为 2 分钟
   }

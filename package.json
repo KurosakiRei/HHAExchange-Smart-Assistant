@@ -1,7 +1,7 @@
 {
   "name": "hhaexchange-smart-assistant",
-  "description": "There will be more buttons on the HHAeXchange page to improve your work efficiency",
-  "version": "3.1.0",
+  "description": "Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators",
+  "version": "3.2.0",
   "author": {
     "name": "KurosakiRei",
     "email": "kurosakirei@outlook.com"

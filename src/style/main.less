@@ -287,8 +287,8 @@
     z-index: 10001; /* Must be higher than the panel */
     /* MODIFIED: 增加宽度以容纳更多列 */
     width: 800px; 
-    max-width: 90vw;
-    max-height: 60vh;
+    max-width: 95vw;
+    max-height: 90vh; /* 提高最大高度限制 */
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
@@ -358,6 +358,69 @@
     background-color: #f9f9f9;
     position: sticky;
     top: 0;
+}
+
+/* --- Note Cell Styling --- */
+.popover-table td.note-cell {
+    white-space: normal !important; /* 允许换行 */
+    max-width: 350px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    vertical-align: top;
+}
+
+/* --- Authorization Note Table (格式化后的内容) --- */
+.auth-note-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-top: 6px;
+    font-size: 11px;
+}
+
+.auth-note-table th,
+.auth-note-table td {
+    border: 1px solid #dee2e6;
+    padding: 4px 8px;
+    text-align: left;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.auth-note-table th {
+    background: #e9ecef;
+    font-weight: 600;
+    color: #495057;
+}
+
+.auth-note-table td {
+    color: #212529;
+    background: #fff;
+}
+
+/* --- Popover Resize Handle --- */
+.popover-resize-handle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);
+    border-bottom-right-radius: 8px;
+}
+
+.popover-resize-handle::before {
+    content: '';
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 4px;
+    height: 4px;
+    background: #666;
+    border-radius: 1px;
 }
 
 /* --- 8. Phone Tooltip (新增) --- */

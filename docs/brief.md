@@ -199,7 +199,12 @@
    - 新 Tab 打开时检查缓存有效性，有效则不请求
    - 设置合理的缓存有效期（30秒内直接用，2分钟内可用但需刷新）
 
-2. **Visit Monitor 增强**
+2. **Visit Monitor 增强** ✅ (部分已实现)
+   - ✅ **UI/UX 优化** (v3.2.0 已完成)
+     - 列表标题国际化：将 "Coordinator (Ext.)" 改为 "辅导员 (Ext.)"
+     - Authorization Note 智能解析：将 HTML 表格内容解析为可读的格式化表格
+     - 拖拽调整大小优化：修复拖拽手柄响应问题，增加视窗最大限制
+     - 详见：[ADR-002: Visit Monitor UI增强](./adr/002-visit-monitor-ui-enhancements.md)
    - 面板标题显示上次数据更新时间（显示数据获取时间，判断是否过期）
    - **"消息"监控功能**
      - 监控协调员（Coordinator）的消息页是否有新消息
@@ -388,9 +393,9 @@ src/
 
 ---
 
-*Document Version: 1.2*
+*Document Version: 1.3*
 *Created: 2025-11-30*
-*Updated: 2025-12-07*
+*Updated: 2025-12-14*
 *Author: Mary (Business Analyst)*
 
 ### Version History
@@ -400,3 +405,4 @@ src/
 | 1.0 | 2025-11-30 | Initial draft |
 | 1.1 | 2025-12-07 | Added: Emergency Contacts data source details, Message monitoring requirements, Publication plans |
 | 1.2 | 2025-12-07 | Added: Multi-Tab sync solution decision (Plan D: localStorage + BroadcastChannel) with implementation architecture |
+| 1.3 | 2025-12-14 | Added: Visit Monitor UI/UX enhancements completion (v3.2.0) - i18n, Authorization Note parsing, resize optimization |
