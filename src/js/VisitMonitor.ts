@@ -39,6 +39,31 @@ interface TrackedData {
 // 定义追踪任务类型
 type CallType = 2 | 3 | "anomaly";
 
+// --- TAB SYNC TYPES (Story 1: Plan D 多 Tab 同步) ---
+/**
+ * 存储在 localStorage 中的缓存数据结构
+ */
+interface SyncCacheData {
+  /** 缓存的状态数据，使用 Record 便于 JSON 序列化 */
+  data: Record<string, TrackedData>;
+  /** 缓存时间戳 */
+  timestamp: number;
+  /** 产生此缓存的 Tab ID */
+  sourceTabId: string;
+}
+
+/**
+ * BroadcastChannel 消息结构
+ */
+interface SyncMessage {
+  /** 消息类型 */
+  type: 'DATA_UPDATED' | 'REQUEST_REFRESH' | 'TAB_CLOSING';
+  /** 发送消息的 Tab ID */
+  sourceTabId: string;
+  /** 消息时间戳 */
+  timestamp: number;
+}
+
 // 追踪结果的详情
 interface VisitDetail {
   patientName: string;
@@ -95,6 +120,337 @@ export const visitMonitor = async () => {
   // 新增：用于缓存追踪结果和 Office IDs
   const statusDataCache = new Map<string, TrackedData>();
   let officeIdString: string | null = null;
+
+  // --- TAB SYNC MANAGER (Story 1 & 4: Plan D 多 Tab 同步 + 边缘情况处理) ---
+  /**
+   * TabSyncManager - 管理多 Tab 之间的数据同步
+   * 
+   * 功能：
+   * - 使用 localStorage 存储共享数据，实现跨 Tab 数据持久化
+   * - 使用 BroadcastChannel 实时通知其他 Tab 数据更新
+   * - 提供缓存新鲜度判断，决定是否需要重新请求 API
+   * - Story 4: 边缘情况处理（降级、错误处理、storage 事件备用）
+   * 
+   * @see docs/adr/001-multi-tab-sync.md - 架构决策记录
+   * @see docs/stories/epic-1-multi-tab-sync.md - Epic 详情
+   */
+  class TabSyncManager {
+    /** 当前 Tab 的唯一标识符 */
+    public readonly tabId: string;
+    /** BroadcastChannel 实例，用于 Tab 间实时通信 */
+    private channel: BroadcastChannel | null = null;
+    /** 是否支持 BroadcastChannel API */
+    private readonly channelSupported: boolean;
+    /** storage 事件回调（用于 BroadcastChannel 不可用时的备用方案） */
+    private storageCallback: ((msg: SyncMessage) => void) | null = null;
+    
+    // --- 常量配置 ---
+    /** localStorage 缓存键名 */
+    private readonly CACHE_KEY = 'hha_visit_monitor_cache';
+    /** BroadcastChannel 频道名称 */
+    private readonly CHANNEL_NAME = 'hha-visit-monitor-sync';
+    /** 缓存新鲜阈值：30秒内视为新鲜，直接使用 */
+    private readonly FRESH_THRESHOLD = 30 * 1000;
+    /** 缓存过期阈值：2分钟后视为过期，必须刷新 */
+    private readonly STALE_THRESHOLD = 2 * 60 * 1000;
+
+    constructor() {
+      // 生成唯一的 Tab ID
+      this.tabId = `tab_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      
+      // 检测 BroadcastChannel 支持
+      this.channelSupported = typeof BroadcastChannel !== 'undefined';
+      
+      if (this.channelSupported) {
+        try {
+          this.channel = new BroadcastChannel(this.CHANNEL_NAME);
+          console.log(`[TabSyncManager] Tab ${this.tabId} initialized with BroadcastChannel`);
+        } catch (e) {
+          console.warn('[TabSyncManager] Failed to create BroadcastChannel:', e);
+          this.channel = null;
+        }
+      } else {
+        console.warn('[TabSyncManager] BroadcastChannel not supported, falling back to localStorage + storage event');
+      }
+      
+      // 注册 Tab 关闭清理
+      window.addEventListener('beforeunload', () => this.cleanup());
+    }
+
+    /**
+     * 从 localStorage 获取缓存的数据
+     * Story 4: 增强数据验证和错误处理
+     * @returns 缓存数据，如果不存在或解析失败则返回 null
+     */
+    getCachedData(): SyncCacheData | null {
+      try {
+        const stored = localStorage.getItem(this.CACHE_KEY);
+        if (!stored) return null;
+        
+        const parsed = JSON.parse(stored);
+        
+        // Story 4: 增强数据结构验证
+        if (!this.isValidCacheData(parsed)) {
+          console.warn('[TabSyncManager] Invalid cache structure, clearing corrupted data');
+          this.clearCache();
+          return null;
+        }
+        
+        return parsed as SyncCacheData;
+      } catch (e) {
+        // Story 4: JSON 解析错误处理
+        if (e instanceof SyntaxError) {
+          console.error('[TabSyncManager] JSON parse error, clearing corrupted cache:', e.message);
+          this.clearCache();
+        } else {
+          console.error('[TabSyncManager] Failed to read cached data:', e);
+        }
+        return null;
+      }
+    }
+
+    /**
+     * Story 4: 验证缓存数据结构是否有效
+     * @param data - 待验证的数据
+     */
+    private isValidCacheData(data: unknown): data is SyncCacheData {
+      if (!data || typeof data !== 'object') return false;
+      const obj = data as Record<string, unknown>;
+      
+      // 检查必需字段
+      if (typeof obj.timestamp !== 'number') return false;
+      if (typeof obj.sourceTabId !== 'string') return false;
+      if (!obj.data || typeof obj.data !== 'object') return false;
+      
+      // 检查 timestamp 是否合理（不超过 24 小时）
+      const age = Date.now() - (obj.timestamp as number);
+      if (age < 0 || age > 24 * 60 * 60 * 1000) {
+        console.warn('[TabSyncManager] Cache timestamp out of reasonable range');
+        return false;
+      }
+      
+      return true;
+    }
+
+    /**
+     * 将数据保存到 localStorage
+     * Story 4: 增强错误处理和重试机制
+     * @param data - Map<string, TrackedData> 格式的状态数据
+     */
+    setCachedData(data: Map<string, TrackedData>): void {
+      try {
+        // 将 Map 转换为普通对象以便 JSON 序列化
+        const dataObj: Record<string, TrackedData> = {};
+        data.forEach((value, key) => {
+          dataObj[key] = value;
+        });
+        
+        const cacheData: SyncCacheData = {
+          data: dataObj,
+          timestamp: Date.now(),
+          sourceTabId: this.tabId
+        };
+        
+        const jsonStr = JSON.stringify(cacheData);
+        
+        // Story 4: 检查数据大小（localStorage 限制约 5MB）
+        const sizeKB = new Blob([jsonStr]).size / 1024;
+        if (sizeKB > 4096) { // 4MB 警告阈值
+          console.warn(`[TabSyncManager] Cache size is large: ${sizeKB.toFixed(1)}KB`);
+        }
+        
+        localStorage.setItem(this.CACHE_KEY, jsonStr);
+        console.log(`[TabSyncManager] Cache updated by Tab ${this.tabId}, size: ${sizeKB.toFixed(1)}KB`);
+      } catch (e) {
+        this.handleStorageError(e as Error);
+      }
+    }
+
+    /**
+     * 通过 BroadcastChannel 向其他 Tab 广播消息
+     * @param message - 要广播的消息
+     */
+    broadcast(message: SyncMessage): void {
+      if (this.channel) {
+        try {
+          this.channel.postMessage(message);
+          console.log(`[TabSyncManager] Broadcasted ${message.type} from Tab ${this.tabId}`);
+        } catch (e) {
+          console.error('[TabSyncManager] Failed to broadcast message:', e);
+        }
+      }
+      // Story 4: BroadcastChannel 不可用时，storage 事件会自动触发其他 Tab
+      // 不需要额外操作，setCachedData 会触发 storage 事件
+    }
+
+    /**
+     * 注册消息监听器
+     * Story 4: 同时注册 BroadcastChannel 和 storage 事件（备用方案）
+     * @param callback - 收到消息时的回调函数
+     */
+    onMessage(callback: (msg: SyncMessage) => void): void {
+      this.storageCallback = callback;
+      
+      // 方案 1: BroadcastChannel（优先）
+      if (this.channel) {
+        this.channel.onmessage = (event: MessageEvent<SyncMessage>) => {
+          callback(event.data);
+        };
+        
+        // Story 4: 处理 BroadcastChannel 错误
+        this.channel.onmessageerror = (event) => {
+          console.error('[TabSyncManager] BroadcastChannel message error:', event);
+        };
+      }
+      
+      // 方案 2: storage 事件（备用，当 BroadcastChannel 不可用或出错时）
+      window.addEventListener('storage', (event: StorageEvent) => {
+        // 只关注我们的缓存键
+        if (event.key !== this.CACHE_KEY) return;
+        // 只处理其他 Tab 的修改
+        if (!event.newValue) return;
+        
+        try {
+          const newData = JSON.parse(event.newValue) as SyncCacheData;
+          // 防止自己触发自己
+          if (newData.sourceTabId === this.tabId) return;
+          
+          console.log(`[TabSyncManager] Storage event detected from Tab ${newData.sourceTabId}`);
+          
+          // 如果 BroadcastChannel 不可用，使用 storage 事件作为备用
+          if (!this.channel && this.storageCallback) {
+            this.storageCallback({
+              type: 'DATA_UPDATED',
+              sourceTabId: newData.sourceTabId,
+              timestamp: newData.timestamp
+            });
+          }
+        } catch (e) {
+          console.error('[TabSyncManager] Failed to parse storage event data:', e);
+        }
+      });
+      
+      console.log(`[TabSyncManager] Message listeners registered (BroadcastChannel: ${!!this.channel}, Storage: true)`);
+    }
+
+    /**
+     * 判断缓存的新鲜度，决定是否需要重新请求 API
+     * @param cachedTimestamp - 缓存的时间戳
+     * @returns 'USE' | 'USE_AND_REFRESH' | 'REFRESH'
+     *   - USE: 缓存新鲜（<30s），直接使用，不请求 API
+     *   - USE_AND_REFRESH: 缓存可用但需刷新（30s-2min），先显示再后台刷新
+     *   - REFRESH: 缓存过期（>2min），必须立即刷新
+     */
+    shouldFetchFresh(cachedTimestamp: number): 'USE' | 'USE_AND_REFRESH' | 'REFRESH' {
+      const age = Date.now() - cachedTimestamp;
+      
+      if (age < this.FRESH_THRESHOLD) {
+        return 'USE';
+      } else if (age < this.STALE_THRESHOLD) {
+        return 'USE_AND_REFRESH';
+      } else {
+        return 'REFRESH';
+      }
+    }
+
+    /**
+     * 清理资源，在 Tab 关闭时调用
+     */
+    cleanup(): void {
+      if (this.channel) {
+        // 通知其他 Tab 本 Tab 即将关闭
+        this.broadcast({
+          type: 'TAB_CLOSING',
+          sourceTabId: this.tabId,
+          timestamp: Date.now()
+        });
+        this.channel.close();
+        this.channel = null;
+      }
+      console.log(`[TabSyncManager] Tab ${this.tabId} cleanup complete`);
+    }
+
+    /**
+     * Story 4: 增强的 localStorage 存储错误处理
+     * @param error - 错误对象
+     */
+    private handleStorageError(error: Error): void {
+      console.error('[TabSyncManager] Storage error:', error.name, error.message);
+      
+      if (error.name === 'QuotaExceededError') {
+        console.warn('[TabSyncManager] Storage quota exceeded, attempting cleanup...');
+        this.clearCache();
+        
+        // 清理其他可能的旧数据（如果需要）
+        this.cleanupOldStorageData();
+      } else if (error.name === 'SecurityError') {
+        // 隐私模式或其他安全限制
+        console.error('[TabSyncManager] Storage access denied (possibly private browsing mode)');
+      }
+    }
+
+    /**
+     * Story 4: 清理旧的存储数据以释放空间
+     */
+    private cleanupOldStorageData(): void {
+      try {
+        // 清理与本应用相关的其他旧缓存
+        const keysToCheck = ['hha_visit_monitor_', 'hha_coordinator_'];
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key && keysToCheck.some(prefix => key.startsWith(prefix)) && key !== this.CACHE_KEY) {
+            // 检查是否是旧数据（超过 7 天）
+            try {
+              const data = localStorage.getItem(key);
+              if (data) {
+                const parsed = JSON.parse(data);
+                if (parsed.timestamp && Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
+                  localStorage.removeItem(key);
+                  console.log(`[TabSyncManager] Cleaned up old storage: ${key}`);
+                }
+              }
+            } catch {
+              // 无法解析的数据，可能是旧格式，删除
+              localStorage.removeItem(key);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[TabSyncManager] Failed to cleanup old storage data:', e);
+      }
+    }
+
+    /**
+     * 清除缓存数据
+     */
+    clearCache(): void {
+      try {
+        localStorage.removeItem(this.CACHE_KEY);
+        console.log('[TabSyncManager] Cache cleared');
+      } catch (e) {
+        console.error('[TabSyncManager] Failed to clear cache:', e);
+      }
+    }
+
+    /**
+     * Story 4: 获取调试信息
+     */
+    getDebugInfo(): object {
+      return {
+        tabId: this.tabId,
+        channelSupported: this.channelSupported,
+        channelActive: !!this.channel,
+        cacheKey: this.CACHE_KEY,
+        hasCachedData: !!this.getCachedData(),
+        cachedDataAge: this.getCachedData()?.timestamp 
+          ? `${((Date.now() - this.getCachedData()!.timestamp) / 1000).toFixed(1)}s`
+          : 'N/A'
+      };
+    }
+  }
+
+  // 实例化 TabSyncManager（供后续 Story 使用）
+  const tabSyncManager = new TabSyncManager();
 
   // --- REWRITTEN: 全新的 API 参数管理器 ---
   const apiParamProvider = {
@@ -217,7 +573,10 @@ export const visitMonitor = async () => {
   panel.id = "tracker-panel";
   panel.innerHTML = `
          <div id="tracking-view" class="tracker-view">
-            <div class="tracker-header"><h3 style="color: #333 !important;">各类状态追踪</h3><button id="edit-list-btn" class="tracker-header-btn">编辑追踪列表</button></div>
+            <div class="tracker-header">
+              <h3 style="color: #333 !important;">各类状态追踪<span id="last-refresh-time" style="font-size: 11px; color: #666; margin-left: 8px;"></span></h3>
+              <button id="edit-list-btn" class="tracker-header-btn">编辑追踪列表</button>
+            </div>
             <div class="tracker-content"><table class="tracker-table"><thead><tr>
                     <th style="width:40px;color: #333 !important;">编号</th>
                     <th style="width:40px;color: #333 !important;"class="col-coordinator">Coordinator (Ext.)</th>
@@ -250,6 +609,32 @@ export const visitMonitor = async () => {
   ) as HTMLDivElement;
 
   // --- 5. 核心功能逻辑 ---
+
+  // --- Story 2: 缓存恢复辅助函数 ---
+  /**
+   * 从缓存数据恢复到 statusDataCache
+   * @param data - Record<string, TrackedData> 格式的缓存数据
+   */
+  function restoreFromCache(data: Record<string, TrackedData>): void {
+    statusDataCache.clear();
+    for (const [key, value] of Object.entries(data)) {
+      statusDataCache.set(key, value);
+    }
+    console.log(`[Story2] Restored ${Object.keys(data).length} items from cache`);
+  }
+
+  /**
+   * 更新 UI 上的"上次更新时间"显示
+   * @param timestamp - 时间戳
+   */
+  function updateLastRefreshTime(timestamp: number): void {
+    const timeEl = document.getElementById('last-refresh-time');
+    if (timeEl) {
+      const date = new Date(timestamp);
+      timeEl.textContent = `（上次更新: ${date.toLocaleTimeString()}）`;
+    }
+  }
+
   function showToast(message: string, type: "success" | "error"): void {
     const toast = document.createElement("div");
     toast.className = `tracker-toast ${type}`;
@@ -1051,12 +1436,41 @@ export const visitMonitor = async () => {
     editingContent.innerHTML = tableHtml;
   }
 
-  // --- 追踪循环 (runTrackingUpdate 已更新) ---
+  // --- 追踪循环 (Story 2: 集成缓存检查逻辑) ---
   async function runTrackingUpdate() {
     if (trackedCoordinators.length === 0) return;
     console.log(
       `[${new Date().toLocaleTimeString()}] Running tracking update...`
     );
+
+    // --- Story 2: 缓存检查逻辑 ---
+    const cached = tabSyncManager.getCachedData();
+    
+    if (cached) {
+      const decision = tabSyncManager.shouldFetchFresh(cached.timestamp);
+      console.log(`[Story2] Cache decision: ${decision}, age: ${Date.now() - cached.timestamp}ms`);
+      
+      if (decision === 'USE') {
+        // 缓存新鲜（<30s），直接使用，跳过 API 请求
+        restoreFromCache(cached.data);
+        renderTrackingView();
+        updateLastRefreshTime(cached.timestamp);
+        console.log('[Story2] Using fresh cache, skipping API call');
+        return;
+      }
+      
+      if (decision === 'USE_AND_REFRESH') {
+        // 缓存可用但需刷新（30s-2min），先显示缓存数据
+        restoreFromCache(cached.data);
+        renderTrackingView();
+        updateLastRefreshTime(cached.timestamp);
+        console.log('[Story2] Using stale cache, will refresh in background');
+        // 继续执行下面的 API 调用进行后台刷新
+      }
+      // decision === 'REFRESH': 缓存过期，直接执行 API 调用
+    }
+
+    // --- 原有的 API 调用逻辑 ---
     try {
       const officeIds = await getOfficeIds();
       const promises: Promise<void>[] = [];
@@ -1088,7 +1502,20 @@ export const visitMonitor = async () => {
       }
       await Promise.allSettled(promises);
       renderTrackingView();
-      console.log("Tracking update complete.");
+      
+      // --- Story 2 & 3: API 完成后保存缓存、广播并更新时间 ---
+      const now = Date.now();
+      tabSyncManager.setCachedData(statusDataCache);
+      
+      // Story 3: 广播数据更新通知给其他 Tab
+      tabSyncManager.broadcast({
+        type: 'DATA_UPDATED',
+        sourceTabId: tabSyncManager.tabId,
+        timestamp: now
+      });
+      
+      updateLastRefreshTime(now);
+      console.log(`[Story3] Tracking update complete. Broadcasted to other tabs.`);
     } catch (error) {
       console.error("Failed to run tracking update:", error);
       showToast("追踪数据更新失败", "error");
@@ -1464,11 +1891,31 @@ export const visitMonitor = async () => {
     });
   }
 
-  // --- 初始化 (initialize 已更新) ---
+  // --- 初始化 (Story 3: 添加跨 Tab 消息监听) ---
   function initialize() {
     loadTrackedCoordinators();
     renderTrackingView();
     attachAllEventListeners();
+    
+    // --- Story 3: 注册 BroadcastChannel 消息监听 ---
+    tabSyncManager.onMessage((msg) => {
+      // 检查 sourceTabId 防止自我触发更新
+      if (msg.type === 'DATA_UPDATED' && msg.sourceTabId !== tabSyncManager.tabId) {
+        console.log(`[Story3] Tab ${tabSyncManager.tabId} received DATA_UPDATED from Tab ${msg.sourceTabId}`);
+        
+        // 从 localStorage 读取最新缓存数据
+        const cached = tabSyncManager.getCachedData();
+        if (cached) {
+          restoreFromCache(cached.data);
+          renderTrackingView();
+          updateLastRefreshTime(cached.timestamp);
+          console.log(`[Story3] UI updated from broadcast, timestamp: ${new Date(cached.timestamp).toLocaleTimeString()}`);
+        }
+      } else if (msg.type === 'TAB_CLOSING') {
+        console.log(`[Story3] Tab ${msg.sourceTabId} is closing`);
+      }
+    });
+    
     runTrackingUpdate();
     setInterval(runTrackingUpdate, 120000); // 间隔已更新为 2 分钟
   }
