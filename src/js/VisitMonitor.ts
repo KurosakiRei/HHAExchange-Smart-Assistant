@@ -747,49 +747,39 @@ export const visitMonitor = async () => {
     toView: HTMLElement,
     direction: "forward" | "backward" = "forward"
   ): void {
-    // 清理所有动画类
-    fromView.classList.remove(
-      "slide-in",
-      "slide-out",
-      "slide-out-to-right",
-      "slide-in-from-right",
-      "slide-in-from-left"
-    );
-    toView.classList.remove(
-      "slide-in",
-      "slide-out",
-      "slide-out-to-right",
-      "slide-in-from-right",
-      "slide-in-from-left"
-    );
-
     toView.classList.remove("hidden");
 
     if (direction === "forward") {
       // 前进动画：从右往左
-      toView.classList.add("slide-in-from-right");
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          fromView.classList.add("slide-out");
-          toView.classList.remove("slide-in-from-right");
-          toView.classList.add("slide-in");
-        });
-      });
+      // 1. 设置 toView 初始位置在右边
+      toView.style.transform = "translateX(100%)";
+      // 2. 强制浏览器渲染
+      toView.offsetHeight;
+      // 3. 添加 transition 并移动到中间
+      toView.style.transition = "transform 0.3s ease-in-out";
+      toView.style.transform = "translateX(0)";
+      // 4. fromView 向左滑出
+      fromView.style.transition = "transform 0.3s ease-in-out";
+      fromView.style.transform = "translateX(-100%)";
     } else {
       // 后退动画：从左往右
-      toView.classList.add("slide-in-from-left");
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          fromView.classList.add("slide-out-to-right");
-          toView.classList.remove("slide-in-from-left");
-          toView.classList.add("slide-in");
-        });
-      });
+      // 1. 设置 toView 初始位置在左边
+      toView.style.transform = "translateX(-100%)";
+      // 2. 强制浏览器渲染
+      toView.offsetHeight;
+      // 3. 添加 transition 并移动到中间
+      toView.style.transition = "transform 0.3s ease-in-out";
+      toView.style.transform = "translateX(0)";
+      // 4. fromView 向右滑出
+      fromView.style.transition = "transform 0.3s ease-in-out";
+      fromView.style.transform = "translateX(100%)";
     }
 
     setTimeout(() => {
-      fromView.classList.remove("slide-in", "slide-out", "slide-out-to-right");
       fromView.classList.add("hidden");
+      // 清理 inline styles
+      fromView.style.transform = "";
+      fromView.style.transition = "";
     }, 300);
   }
 
