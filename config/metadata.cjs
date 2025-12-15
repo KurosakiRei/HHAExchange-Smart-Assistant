@@ -22,7 +22,7 @@ module.exports = {
     // 使用具体版本号确保兼容性
     `https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js`,
   ],
-  grant: ["GM.xmlHttpRequest","GM_openInTab", "GM_addStyle"],
+  grant: ["GM.xmlHttpRequest","GM_openInTab", "GM_addStyle", "GM_setValue", "GM_getValue"],
   connect: ["app.hhaexchange.com"],
   "run-at": "document-idle",
 };

@@ -1,7 +1,8 @@
 # ADR-003: Prebilling Selector 配置化改进方案
 
 ## 状态
-已决定 (2024-12-14)
+✅ 已实现 (2024-12-14)
+🐛 Bug 2 修复完成 (2024-12-15)
 
 ## 背景
 
@@ -167,11 +168,46 @@ $('#ddlCoordinatorMul').multipleSelect('checkAll')         // 全选
 
 ## 成功标准
 
-- [ ] 任何用户都能配置自己的 coordinator 列表
-- [ ] 配置在页面刷新后保持
-- [ ] 按钮可以重复使用，不再有一次性 Bug
-- [ ] Hover 卡片操作流畅，响应及时
-- [ ] 向后兼容，默认配置为 Tao Yang（保持现有行为）
+- [x] 任何用户都能配置自己的 coordinator 列表
+- [x] 配置在页面刷新后保持
+- [x] 按钮可以重复使用，不再有一次性 Bug
+- [x] Hover 卡片操作流畅，响应及时
+- [x] 向后兼容，默认配置为 Tao Yang（保持现有行为）
+
+## Bug 修复记录
+
+### Bug 2: 保存配置后刷新页面 Filter 显示 'Loading...'
+
+**问题描述**：
+用户保存配置后刷新页面，Coordinator filter 显示为 "Loading..."，搜索时返回所有 coordinator 的结果（3171条），而不是只返回选中的 coordinator 结果（54条）。
+
+**根本原因**：
+1. 页面刷新后，`multipleSelect` 控件的 `isEnabled()` 返回 `false`
+2. 页面的 `GetSelectedIDsJSON()` 函数在 `isEnabled()` 为 false 时返回 `null`
+3. 导致 API 请求中 `CoordinatorMulFrm: "null"`，相当于搜索所有 coordinator
+
+**修复方案**：
+在 `selectCoordinatorByAPI()` 和 `selectDisciplineByAPI()` 函数中，调用 `setSelects()` 后添加 `.multipleSelect('enable')` 调用：
+
+```typescript
+// 设置选中值
+($select as any).multipleSelect("setSelects", coordinatorIds);
+
+// 关键修复：启用控件，确保 GetSelectedIDsJSON 返回正确值
+($select as any).multipleSelect("enable");
+```
+
+**修复文件**：
+- `src/js/Prebilling.ts` - 第 220行和第 267行
+
+**验证结果**：
+- ✅ 刷新页面后 `isEnabled()` 返回 `true`
+- ✅ `GetSelectedIDsJSON()` 返回正确的 coordinator ID 数组
+- ✅ API 请求携带正确的 `CoordinatorMulFrm` 参数
+- ✅ 搜索结果从 3171 条减少到 54 条（正确筛选）
+
+**影响范围**：
+- Coordinator 和 Discipline 筛选器在页面刷新后保持正确状态
 
 ## 参考资料
 

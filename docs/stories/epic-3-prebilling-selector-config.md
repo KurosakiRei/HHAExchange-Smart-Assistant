@@ -7,7 +7,7 @@
 | **Epic ID** | EPIC-003 |
 | **标题** | Prebilling Selector 配置化功能 |
 | **优先级** | P1 - 功能增强 |
-| **状态** | 待开发 |
+| **状态** | ✅ 已完成 |
 | **预计工作量** | 3 个 Story |
 | **关联 ADR** | [ADR-003](../adr/003-prebilling-selector-config.md) |
 
@@ -29,12 +29,29 @@ Prebilling Selector 按钮硬编码为 Tao Yang，导致：
 
 ## 验收标准 (Epic 级别)
 
-- [ ] 按钮可重复使用，不再有一次性 Bug
-- [ ] 用户能通过 Hover 卡片选择 coordinator
-- [ ] 配置保存到 localStorage，刷新页面后保持
-- [ ] 默认配置为 Tao Yang（向后兼容）
-- [ ] 支持多选 coordinator
-- [ ] 不再使用模拟点击，改用 multipleSelect API
+- [x] 按钮可重复使用，不再有一次性 Bug
+- [x] 用户能通过 Hover 卡片选择 coordinator
+- [x] 配置保存到 GM_storage，刷新页面后保持
+- [x] 默认配置为 Tao Yang（向后兼容）
+- [x] 支持多选 coordinator
+- [x] 不再使用模拟点击，改用 multipleSelect API
+
+## Bug 修复追踪
+
+### Bug 2: 页面刷新后 Coordinator 筛选失效 (已修复 ✅)
+
+**问题**：保存配置后刷新页面，Coordinator filter 显示 "Loading..."，搜索返回全部结果而非筛选结果。
+
+**修复日期**：2024-12-15
+
+**修复方案**：在 `selectCoordinatorByAPI()` 和 `selectDisciplineByAPI()` 中调用 `.multipleSelect('enable')` 启用控件。
+
+**验证**：
+- 页面刷新后 coordinator 筛选正常工作
+- 搜索结果正确（54条 vs 之前的 3171条）
+- 所有搜索结果的 Coordinator 列均为选中的 coordinator
+
+详细技术分析见 [ADR-003](../adr/003-prebilling-selector-config.md#bug-修复记录)
 
 ---
 

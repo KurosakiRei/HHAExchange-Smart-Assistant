@@ -11,7 +11,7 @@ import { assignIntervalTimer } from "./utils/util";
 import { POCResolver } from "./js/POC";
 import { copyAttachmentToDescrp } from "./js/DocManagement";
 import { createNewQA, createWelcomeCall } from "./js/NewMessageHandler";
-import { prebillingSelector } from "./js/Prebilling";
+import { prebillingSelector, initConfigCardUI } from "./js/Prebilling";
 import { missedCallResolver } from "./js/MissedCall";
 import { incomingCallHandler } from "./js/IncomingCallHandler";
 import { highlight2Call } from "./js/Highlight2Call";
@@ -119,8 +119,8 @@ async function main() {
     type: "button",
     id: "prebillingSelector",
     name: "prebillingSelector",
-    class: "button hollow",
-    value: "Prebilling Selector: Tao",
+    class: "button hollow prebilling-selector-btn",
+    value: "Search by Coordinator(s)",
   });
 
   let $HomePageSelector = $("<input/>").text("").attr({
@@ -144,6 +144,9 @@ async function main() {
     "#prebillingSelector",
     prebillingSelector
   );
+
+  // 初始化 Prebilling 配置卡片 UI (Story 3)
+  initConfigCardUI();
 
   assignIntervalTimer(
     newMessageButtonSelector,
@@ -194,7 +197,6 @@ async function main() {
 
   visitMonitor();
   highlight2Call();
-
 
   /* async function sendStaticPostRequest2() {
 
@@ -311,8 +313,6 @@ async function main() {
   sendStaticPostRequest1().then(result => {
     console.log("Request1 finished.");
   }); */
-
-
 }
 
 main().catch((e) => {
