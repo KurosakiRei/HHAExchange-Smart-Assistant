@@ -2310,23 +2310,30 @@ const visitMonitor = async () => {
         }, 2500);
     }
     function switchView(fromView, toView, direction = "forward") {
+        // 清理所有动画类
+        fromView.classList.remove("slide-in", "slide-out", "slide-out-to-right", "slide-in-from-right", "slide-in-from-left");
+        toView.classList.remove("slide-in", "slide-out", "slide-out-to-right", "slide-in-from-right", "slide-in-from-left");
         toView.classList.remove("hidden");
         if (direction === "forward") {
             // 前进动画：从右往左
             toView.classList.add("slide-in-from-right");
             requestAnimationFrame(() => {
-                fromView.classList.add("slide-out");
-                toView.classList.add("slide-in");
-                toView.classList.remove("slide-in-from-right");
+                requestAnimationFrame(() => {
+                    fromView.classList.add("slide-out");
+                    toView.classList.remove("slide-in-from-right");
+                    toView.classList.add("slide-in");
+                });
             });
         }
         else {
             // 后退动画：从左往右
             toView.classList.add("slide-in-from-left");
             requestAnimationFrame(() => {
-                fromView.classList.add("slide-out-to-right");
-                toView.classList.add("slide-in");
-                toView.classList.remove("slide-in-from-left");
+                requestAnimationFrame(() => {
+                    fromView.classList.add("slide-out-to-right");
+                    toView.classList.remove("slide-in-from-left");
+                    toView.classList.add("slide-in");
+                });
             });
         }
         setTimeout(() => {
