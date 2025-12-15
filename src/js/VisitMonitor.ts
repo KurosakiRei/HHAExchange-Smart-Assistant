@@ -742,16 +742,33 @@ export const visitMonitor = async () => {
     }, 2500);
   }
 
-  function switchView(fromView: HTMLElement, toView: HTMLElement): void {
+  function switchView(
+    fromView: HTMLElement,
+    toView: HTMLElement,
+    direction: "forward" | "backward" = "forward"
+  ): void {
     toView.classList.remove("hidden");
-    toView.classList.add("slide-in-from-right");
-    requestAnimationFrame(() => {
-      fromView.classList.add("slide-out");
-      toView.classList.add("slide-in");
-      toView.classList.remove("slide-in-from-right");
-    });
+
+    if (direction === "forward") {
+      // 前进动画：从右往左
+      toView.classList.add("slide-in-from-right");
+      requestAnimationFrame(() => {
+        fromView.classList.add("slide-out");
+        toView.classList.add("slide-in");
+        toView.classList.remove("slide-in-from-right");
+      });
+    } else {
+      // 后退动画：从左往右
+      toView.classList.add("slide-in-from-left");
+      requestAnimationFrame(() => {
+        fromView.classList.add("slide-out-to-right");
+        toView.classList.add("slide-in");
+        toView.classList.remove("slide-in-from-left");
+      });
+    }
+
     setTimeout(() => {
-      fromView.classList.remove("slide-in", "slide-out");
+      fromView.classList.remove("slide-in", "slide-out", "slide-out-to-right");
       fromView.classList.add("hidden");
     }, 300);
   }
@@ -2742,7 +2759,7 @@ export const visitMonitor = async () => {
     });
 
     const handleGoBack = () => {
-      switchView(editingView, trackingView);
+      switchView(editingView, trackingView, "backward");
       editingContent.innerHTML = "";
     };
 
