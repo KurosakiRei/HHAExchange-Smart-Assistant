@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.2.1
+// @version             3.3.0
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -16,6 +16,8 @@
 // @grant               GM.xmlHttpRequest
 // @grant               GM_openInTab
 // @grant               GM_addStyle
+// @grant               GM_setValue
+// @grant               GM_getValue
 // @connect             app.hhaexchange.com
 // @run-at              document-idle
 // ==/UserScript==
@@ -40,6 +42,28 @@
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
 ___CSS_LOADER_EXPORT___.push([module.id, "#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n/* --- General Container --- */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background-color: #007bff;\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: move;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);\n  font-size: 24px;\n  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n}\n/* --- Panel & Views --- */\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  min-height: 500px;\n  background: #f9f9f9;\n  border: 1px solid #ccc;\n  border-radius: 8px;\n  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333;\n  overflow: hidden;\n}\n.tracker-view {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: column;\n  transition: transform 0.3s ease-in-out;\n}\n.tracker-view.hidden {\n  display: none;\n}\n/* View Transition Animations */\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n/* --- Header --- */\n.tracker-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n}\n.tracker-header-btn {\n  background: #e0e0e0;\n  border: 1px solid #ccc;\n  padding: 4px 10px;\n  border-radius: 5px;\n  cursor: pointer;\n}\n.tracker-header-btn:hover {\n  background: #d4d4d4;\n}\n.back-btn {\n  font-size: 20px;\n  padding: 0 10px;\n}\n/* --- 4. 内容与表格 --- */\n.tracker-content {\n  flex-grow: 1;\n  padding: 10px;\n  overflow-y: auto;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n}\n.tracker-table th,\n.tracker-table td {\n  border: 1px solid #ddd;\n  padding: 8px 12px;\n  text-align: center;\n  vertical-align: middle;\n}\n.tracker-table th {\n  background-color: #e9ecef;\n  font-size: 14px;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: bold;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.status-icon:hover {\n  opacity: 0.8;\n  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n  100% {\n    opacity: 1;\n  }\n}\n/* --- Edit View Specifics --- */\n.edit-list-actions button {\n  font-size: 18px;\n  width: 36px;\n  height: 36px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button:disabled {\n  background-color: #ccc;\n  cursor: not-allowed;\n}\n.tracker-footer {\n  padding: 10px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #ddd;\n  background: #f1f1f1;\n  flex-shrink: 0;\n}\n/* --- Loader --- */\n.loader {\n  text-align: center;\n  padding: 40px;\n}\n.spinner {\n  border: 4px solid #f3f3f3;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n/* --- Toast Notification --- */\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 5px;\n  z-index: 10000;\n  opacity: 0;\n  transition: opacity 0.3s, bottom 0.3s;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n/* --- 7. Details Popover (气泡) --- */\n#details-popover {\n  position: fixed;\n  z-index: 10001;\n  /* Must be higher than the panel */\n  /* MODIFIED: 增加宽度以容纳更多列 */\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  /* 提高最大高度限制 */\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  /* Initial state for fade-in animation */\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n  /* FIX: 提高 z-index, 确保它在所有元素之上 */\n  z-index: 100001;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n  /* ADDED: 让用户知道这里可以拖动 */\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* --- Note Cell Styling --- */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  /* 允许换行 */\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* --- Authorization Note Table (格式化后的内容) --- */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* --- Popover Resize Handle --- */\n.popover-resize-handle {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 16px;\n  height: 16px;\n  cursor: nwse-resize;\n  background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n  border-bottom-right-radius: 8px;\n}\n.popover-resize-handle::before {\n  content: '';\n  position: absolute;\n  right: 4px;\n  bottom: 4px;\n  width: 4px;\n  height: 4px;\n  background: #666;\n  border-radius: 1px;\n}\n/* --- 8. Phone Tooltip (新增) --- */\n.phone-icon-wrapper {\n  position: relative;\n  /* 为内部的 tooltip 提供定位上下文 */\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  /* 默认隐藏 */\n  position: absolute;\n  top: 100%;\n  /* 显示在图标正下方 */\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n  /* 确保在气泡本身之上 */\n}\n/* 核心交互：当鼠标悬浮在 wrapper 上时，显示 tooltip */\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
+// Exports
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/dist/cjs.js!./node_modules/less-loader/dist/cjs.js!./src/style/prebilling-config-card.less":
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   A: () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/css-loader/dist/runtime/noSourceMaps.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./node_modules/css-loader/dist/runtime/api.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__);
+// Imports
+
+
+var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
+// Module
+___CSS_LOADER_EXPORT___.push([module.id, "#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -1124,7 +1148,39 @@ async function messageHandler(reason, notes) {
     $(newMessageNoteSelector)[0].dispatchEvent(new Event("change"));
 }
 
+// EXTERNAL MODULE: ./node_modules/css-loader/dist/cjs.js!./node_modules/less-loader/dist/cjs.js!./src/style/prebilling-config-card.less
+var prebilling_config_card = __webpack_require__("./node_modules/css-loader/dist/cjs.js!./node_modules/less-loader/dist/cjs.js!./src/style/prebilling-config-card.less");
+;// ./src/style/prebilling-config-card.less
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
+var prebilling_config_card_options = {};
+
+prebilling_config_card_options.styleTagTransform = (styleTagTransform_default());
+prebilling_config_card_options.setAttributes = (setAttributesWithoutAttributes_default());
+
+      prebilling_config_card_options.insert = insertBySelector_default().bind(null, "head");
+    
+prebilling_config_card_options.domAPI = (styleDomAPI_default());
+prebilling_config_card_options.insertStyleElement = (insertStyleElement_default());
+
+var prebilling_config_card_update = injectStylesIntoStyleTag_default()(prebilling_config_card/* default */.A, prebilling_config_card_options);
+
+
+
+
+       /* harmony default export */ const style_prebilling_config_card = (prebilling_config_card/* default */.A && prebilling_config_card/* default */.A.locals ? prebilling_config_card/* default */.A.locals : undefined);
+
 ;// ./src/js/Prebilling.ts
+
 
 
 // ============================================================================
@@ -1133,17 +1189,31 @@ async function messageHandler(reason, notes) {
 // 获取页面上的 jQuery (UserScript 沙箱环境需要 unsafeWindow)
 const pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
 const page$ = pageWindow.$;
-// localStorage key
+// GM_storage key（使用 Tampermonkey 的持久化存储，不受网站 logout 影响）
 const PREBILLING_CONFIG_KEY = "hha_prebilling_config";
 // 默认 Coordinator IDs（向后兼容：Tao Yang）
 const DEFAULT_COORDINATOR_IDS = ["75207"];
 // 默认 Discipline IDs (Non Skilled=-1, PCA=-2, HHA=1)
 const DEFAULT_DISCIPLINE_IDS = ["-1", "-2", "1"];
+// 默认配置对象
+const DEFAULT_CONFIG = {
+    coordinators: DEFAULT_COORDINATOR_IDS,
+    disciplines: DEFAULT_DISCIPLINE_IDS,
+    lastUpdated: Date.now(),
+};
+// 内存存储 fallback（当 GM_storage 不可用时）
+let memoryConfigFallback = null;
 // 元素选择器
 const COORDINATOR_SELECT_ID = "ddlCoordinatorMul";
 const COORDINATOR_HIDDEN_ID = "ctl00_ContentPlaceHolder1_hdCoordinatorMul";
 const DISCIPLINE_SELECT_ID = "ddlDiscipline";
 const DISCIPLINE_HIDDEN_ID = "ctl00_ContentPlaceHolder1_hdDiscipline";
+/**
+ * 检测 GM_storage API 是否可用
+ */
+function isGMStorageAvailable() {
+    return typeof GM_setValue === "function" && typeof GM_getValue === "function";
+}
 /**
  * 检测 multipleSelect 插件是否可用
  */
@@ -1155,55 +1225,125 @@ function isMultipleSelectAvailable() {
 }
 /**
  * 获取当前保存的配置
+ * 优先从 GM_storage 读取，若不可用则从内存 fallback 读取
+ * 使用 GM_storage 替代 localStorage，因为网站 logout 会清除 localStorage
  */
 function getPrebillingConfig() {
-    try {
-        const stored = localStorage.getItem(PREBILLING_CONFIG_KEY);
-        if (stored) {
-            return JSON.parse(stored);
+    // 优先尝试 GM_storage（Tampermonkey 持久化存储，不受网站影响）
+    if (isGMStorageAvailable()) {
+        try {
+            const stored = GM_getValue(PREBILLING_CONFIG_KEY, null);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // 验证配置数据结构完整性
+                if (parsed.coordinators && parsed.disciplines) {
+                    console.log("[Prebilling] Config loaded from GM_storage:", parsed);
+                    return parsed;
+                }
+                console.warn("[Prebilling] Config data incomplete, using default");
+            }
+        }
+        catch (e) {
+            console.warn("[Prebilling] Failed to parse config from GM_storage:", e);
         }
     }
-    catch (e) {
-        console.warn("[Prebilling] Failed to load config from localStorage:", e);
+    else {
+        // GM_storage 不可用，使用内存 fallback
+        if (memoryConfigFallback) {
+            console.log("[Prebilling] Config loaded from memory fallback:", memoryConfigFallback);
+            return memoryConfigFallback;
+        }
+        console.warn("[Prebilling] GM_storage unavailable, using default config");
     }
-    // 返回默认配置
-    return {
-        coordinators: DEFAULT_COORDINATOR_IDS,
-        disciplines: DEFAULT_DISCIPLINE_IDS,
-        lastUpdated: Date.now(),
-    };
+    // 返回默认配置的副本
+    return { ...DEFAULT_CONFIG, lastUpdated: Date.now() };
 }
 /**
- * 保存配置到 localStorage
+ * 保存配置
+ * 优先保存到 GM_storage，若不可用则保存到内存 fallback
  */
 function savePrebillingConfig(config) {
-    try {
-        const current = getPrebillingConfig();
-        const updated = {
-            ...current,
-            ...config,
-            lastUpdated: Date.now(),
-        };
-        localStorage.setItem(PREBILLING_CONFIG_KEY, JSON.stringify(updated));
-        console.log("[Prebilling] Config saved:", updated);
+    const current = getPrebillingConfig();
+    const updated = {
+        ...current,
+        ...config,
+        lastUpdated: Date.now(),
+    };
+    if (isGMStorageAvailable()) {
+        try {
+            GM_setValue(PREBILLING_CONFIG_KEY, JSON.stringify(updated));
+            console.log("[Prebilling] Config saved to GM_storage:", updated);
+        }
+        catch (e) {
+            console.error("[Prebilling] Failed to save config to GM_storage:", e);
+            // 降级到内存存储
+            memoryConfigFallback = updated;
+            console.log("[Prebilling] Config saved to memory fallback:", updated);
+        }
     }
-    catch (e) {
-        console.error("[Prebilling] Failed to save config:", e);
+    else {
+        // GM_storage 不可用，保存到内存
+        memoryConfigFallback = updated;
+        console.log("[Prebilling] Config saved to memory fallback:", updated);
     }
+}
+/**
+ * 初始化配置
+ * 首次使用时保存默认配置，确保配置存在
+ */
+function initPrebillingConfig() {
+    // 检查是否已存在配置
+    if (isGMStorageAvailable()) {
+        const existing = GM_getValue(PREBILLING_CONFIG_KEY, null);
+        if (existing) {
+            try {
+                const parsed = JSON.parse(existing);
+                if (parsed.coordinators && parsed.disciplines) {
+                    console.log("[Prebilling] Existing config found:", parsed);
+                    return parsed;
+                }
+            }
+            catch (e) {
+                console.warn("[Prebilling] Existing config corrupted, resetting");
+            }
+        }
+    }
+    else if (memoryConfigFallback) {
+        console.log("[Prebilling] Using existing memory fallback config:", memoryConfigFallback);
+        return memoryConfigFallback;
+    }
+    // 保存默认配置
+    const defaultConfig = { ...DEFAULT_CONFIG, lastUpdated: Date.now() };
+    savePrebillingConfig(defaultConfig);
+    console.log("[Prebilling] Default config initialized:", defaultConfig);
+    return defaultConfig;
+}
+/**
+ * 重置配置为默认值
+ */
+function resetPrebillingConfig() {
+    const defaultConfig = { ...DEFAULT_CONFIG, lastUpdated: Date.now() };
+    savePrebillingConfig(defaultConfig);
+    console.log("[Prebilling] Config reset to default:", defaultConfig);
+    return defaultConfig;
 }
 /**
  * 获取所有可用的 Coordinator 选项
+ * 使用原生 DOM API 避免触发 jQuery/multipleSelect 的事件
  */
 function getCoordinatorOptions() {
     const options = [];
-    const $select = page$(`#${COORDINATOR_SELECT_ID}`);
-    if (!$select || $select.length === 0) {
+    // 使用原生 DOM API 而不是 jQuery，避免触发任何插件事件
+    const selectEl = document.getElementById(COORDINATOR_SELECT_ID);
+    if (!selectEl) {
         console.warn("[Prebilling] Coordinator select not found");
         return options;
     }
-    $select.find("option").each(function () {
-        const value = page$(this).val();
-        const text = page$(this).text();
+    // 直接遍历原生 option 元素
+    const optionEls = selectEl.querySelectorAll("option");
+    optionEls.forEach((opt) => {
+        const value = opt.value;
+        const text = opt.textContent || "";
         if (value && value !== "") {
             options.push({ value, text });
         }
@@ -1229,12 +1369,17 @@ function selectCoordinatorByAPI(coordinatorIds) {
         $select.multipleSelect("uncheckAll");
         // 2. 设置指定的 coordinator
         $select.multipleSelect("setSelects", coordinatorIds);
-        // 3. 同步更新隐藏字段
+        // 3. 关键修复：启用 multipleSelect 控件
+        // 页面的 GetSelectedIDsJSON() 函数检查 isEnabled 状态
+        // 如果 isEnabled 为 false，它会返回 null 而不是实际选择的值
+        // 这会导致搜索时 CoordinatorMulFrm:"null"，忽略 coordinator 过滤
+        $select.multipleSelect("enable");
+        // 4. 同步更新隐藏字段
         const hdCoord = document.getElementById(COORDINATOR_HIDDEN_ID);
         if (hdCoord) {
             hdCoord.value = coordinatorIds.join(",");
         }
-        console.log("[Prebilling] Coordinator selected:", coordinatorIds);
+        console.log("[Prebilling] Coordinator selected and enabled:", coordinatorIds);
         return true;
     }
     catch (e) {
@@ -1261,12 +1406,16 @@ function selectDisciplineByAPI(disciplineIds) {
         $select.multipleSelect("uncheckAll");
         // 2. 设置指定的 discipline
         $select.multipleSelect("setSelects", disciplineIds);
-        // 3. 同步更新隐藏字段
+        // 3. 关键修复：启用 multipleSelect 控件
+        // 页面的 GetSelectedIDsJSON() 函数检查 isEnabled 状态
+        // 如果 isEnabled 为 false，它会返回 null 而不是实际选择的值
+        $select.multipleSelect("enable");
+        // 4. 同步更新隐藏字段
         const hdDiscipline = document.getElementById(DISCIPLINE_HIDDEN_ID);
         if (hdDiscipline) {
             hdDiscipline.value = disciplineIds.join(",");
         }
-        console.log("[Prebilling] Discipline selected:", disciplineIds);
+        console.log("[Prebilling] Discipline selected and enabled:", disciplineIds);
         return true;
     }
     catch (e) {
@@ -1279,27 +1428,357 @@ function selectDisciplineByAPI(disciplineIds) {
  * 使用 multipleSelect API 设置筛选条件并执行搜索
  */
 const prebillingSelector = async () => {
+    // 初始化配置（确保配置存在）
+    initPrebillingConfig();
     // 设置日期为昨天
     page$(prebillingToDateSelector).val(getYesterdayFormatted());
-    // 展开高级筛选
-    await sleep(100);
-    page$(prebillingAdvancedFilterButtonSelector)[0].click();
-    await sleep(200);
     // 加载配置
     const config = getPrebillingConfig();
-    // 使用 API 设置 Discipline
+    // 使用 API 设置 Discipline（无需展开面板，直接通过 API 操作）
     selectDisciplineByAPI(config.disciplines);
-    // 使用 API 设置 Coordinator
+    // 使用 API 设置 Coordinator（无需展开面板，直接通过 API 操作）
     selectCoordinatorByAPI(config.coordinators);
     // 等待 UI 更新
     await sleep(100);
     // 点击搜索
     page$(prebillingSearchButtonSelector)[0].click();
-    // 收起高级筛选
-    await sleep(100);
-    page$(prebillingAdvancedFilterButtonSelector)[0].click();
+    // 保持高级筛选展开状态（不再收起，避免闪烁）
+    // await sleep(100);
+    // page$(prebillingAdvancedFilterButtonSelector)[0].click();
     console.log("[Prebilling] Search executed with config:", config);
 };
+// ============================================================================
+// Story 3: Hover 配置卡片 UI
+// ============================================================================
+/** 临时选中的 coordinator IDs（用于配置卡片中的选择状态） */
+let tempSelectedCoordinators = [];
+/**
+ * 创建配置卡片 DOM 结构
+ */
+function createConfigCardDOM() {
+    const card = document.createElement("div");
+    card.id = "prebilling-config-card";
+    card.innerHTML = `
+    <div class="config-card-header">
+      <h3>📋 Prebilling Selector 配置</h3>
+      <button class="config-close-btn" id="config-close-x">×</button>
+    </div>
+    <div class="config-card-body">
+      <label>Coordinator 选择:</label>
+      <input 
+        type="text" 
+        id="coordinator-search" 
+        placeholder="🔍 搜索 coordinator..."
+        class="config-search-input"
+      />
+      <div class="coordinator-list" id="coordinator-options">
+        <!-- 动态生成 checkbox 列表 -->
+      </div>
+      <div class="config-summary">
+        已选择: <span id="selected-count">0</span> 个 coordinator
+      </div>
+    </div>
+    <div class="config-card-footer">
+      <button id="save-config-btn" class="btn-primary">💾 保存配置</button>
+      <button id="cancel-config-btn" class="btn-secondary">❌ 取消</button>
+    </div>
+  `;
+    return card;
+}
+/**
+ * 渲染 coordinator 列表到配置卡片
+ */
+function renderCoordinatorList(options, selectedIds) {
+    const container = document.getElementById("coordinator-options");
+    if (!container)
+        return;
+    container.innerHTML = "";
+    options.forEach((opt) => {
+        const checked = selectedIds.includes(opt.value) ? "checked" : "";
+        const div = document.createElement("div");
+        div.className = "coordinator-option";
+        div.innerHTML = `
+      <input 
+        type="checkbox" 
+        id="coord-${opt.value}" 
+        value="${opt.value}"
+        ${checked}
+      />
+      <label for="coord-${opt.value}">${opt.text}</label>
+    `;
+        container.appendChild(div);
+    });
+    updateSelectedCount();
+}
+/**
+ * 更新已选择的 coordinator 数量显示
+ */
+function updateSelectedCount() {
+    const checkboxes = document.querySelectorAll("#coordinator-options input[type='checkbox']:checked");
+    const countEl = document.getElementById("selected-count");
+    if (countEl) {
+        countEl.textContent = String(checkboxes.length);
+    }
+}
+/**
+ * 搜索过滤 coordinator 列表
+ */
+function filterCoordinators(searchTerm) {
+    const term = searchTerm.toLowerCase();
+    const options = document.querySelectorAll(".coordinator-option");
+    options.forEach((opt) => {
+        const text = opt.textContent?.toLowerCase() || "";
+        opt.style.display = text.includes(term) ? "" : "none";
+    });
+}
+/**
+ * 显示配置卡片
+ */
+function showConfigCard() {
+    const card = document.getElementById("prebilling-config-card");
+    if (card) {
+        // 加载当前配置
+        const config = getPrebillingConfig();
+        tempSelectedCoordinators = [...config.coordinators];
+        // 检查页面组件是否已完全加载（选项已填充）
+        const options = getCoordinatorOptions();
+        if (options.length === 0) {
+            // 组件还在加载中，显示加载提示
+            const container = document.getElementById("coordinator-options");
+            if (container) {
+                container.innerHTML = `
+          <div style="padding: 20px; text-align: center; color: #666;">
+            ⏳ 正在加载 Coordinator 列表...<br/>
+            <small>请稍后再试，或等待页面完全加载后再打开此配置卡片</small>
+          </div>
+        `;
+            }
+        }
+        else {
+            // 组件已加载，渲染列表
+            renderCoordinatorList(options, tempSelectedCoordinators);
+        }
+        // 清空搜索框
+        const searchInput = document.getElementById("coordinator-search");
+        if (searchInput) {
+            searchInput.value = "";
+        }
+        card.classList.add("show");
+        console.log("[Prebilling] Config card shown");
+    }
+}
+/**
+ * 隐藏配置卡片
+ */
+function hideConfigCard() {
+    const card = document.getElementById("prebilling-config-card");
+    if (card) {
+        card.classList.remove("show");
+        console.log("[Prebilling] Config card hidden");
+    }
+}
+/**
+ * 保存配置卡片中的选择
+ */
+function saveConfigFromCard() {
+    const selectedIds = [];
+    const checkboxes = document.querySelectorAll("#coordinator-options input[type='checkbox']:checked");
+    checkboxes.forEach((cb) => {
+        selectedIds.push(cb.value);
+    });
+    if (selectedIds.length === 0) {
+        alert("⚠️ 请至少选择一个 Coordinator");
+        return;
+    }
+    // 只保存到 GM_storage，不修改页面组件
+    // 配置会在用户点击搜索按钮时应用
+    savePrebillingConfig({ coordinators: selectedIds });
+    hideConfigCard();
+    // 更新按钮文字显示选中数量
+    updateButtonText(selectedIds.length);
+    // 显示保存成功提示
+    console.log(`[Prebilling] Config saved! Selected ${selectedIds.length} coordinators:`, selectedIds);
+}
+/**
+ * 更新按钮文字
+ */
+function updateButtonText(count) {
+    const btn = document.getElementById("prebillingSelector");
+    if (btn) {
+        btn.value = `Search by Coordinator(s) [${count}]`;
+    }
+}
+/**
+ * 初始化配置卡片事件监听
+ */
+function initConfigCardEvents() {
+    let hoverTimer = null;
+    let isCardHovered = false;
+    const btn = document.querySelector(".prebilling-selector-btn");
+    const card = document.getElementById("prebilling-config-card");
+    if (!btn || !card) {
+        console.warn("[Prebilling] Button or card not found for event binding");
+        return;
+    }
+    // 按钮 hover 显示卡片
+    btn.addEventListener("mouseenter", () => {
+        hoverTimer = window.setTimeout(() => {
+            showConfigCard();
+        }, 300);
+    });
+    btn.addEventListener("mouseleave", () => {
+        if (hoverTimer) {
+            clearTimeout(hoverTimer);
+            hoverTimer = null;
+        }
+        // 延迟检查是否应该隐藏卡片
+        setTimeout(() => {
+            if (!isCardHovered) {
+                hideConfigCard();
+            }
+        }, 200);
+    });
+    // 卡片 hover 保持显示
+    card.addEventListener("mouseenter", () => {
+        isCardHovered = true;
+    });
+    card.addEventListener("mouseleave", () => {
+        isCardHovered = false;
+        setTimeout(() => {
+            if (!isCardHovered) {
+                hideConfigCard();
+            }
+        }, 200);
+    });
+    // 搜索框输入过滤
+    const searchInput = document.getElementById("coordinator-search");
+    if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+            filterCoordinators(e.target.value);
+        });
+    }
+    // Checkbox 变化更新计数
+    const optionsContainer = document.getElementById("coordinator-options");
+    if (optionsContainer) {
+        optionsContainer.addEventListener("change", (e) => {
+            if (e.target.tagName === "INPUT") {
+                updateSelectedCount();
+            }
+        });
+    }
+    // 保存按钮
+    const saveBtn = document.getElementById("save-config-btn");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", () => {
+            saveConfigFromCard();
+        });
+    }
+    // 取消按钮
+    const cancelBtn = document.getElementById("cancel-config-btn");
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", () => {
+            hideConfigCard();
+        });
+    }
+    // 关闭 X 按钮
+    const closeBtn = document.getElementById("config-close-x");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+            hideConfigCard();
+        });
+    }
+    console.log("[Prebilling] Config card events initialized");
+}
+/**
+ * 初始化配置卡片 UI
+ * 在按钮插入后调用
+ */
+function initConfigCardUI() {
+    // 等待按钮存在
+    const checkBtn = setInterval(() => {
+        const btn = document.querySelector(".prebilling-selector-btn");
+        if (btn) {
+            clearInterval(checkBtn);
+            // 创建包装容器
+            const wrapper = document.createElement("div");
+            wrapper.id = "prebilling-selector-wrapper";
+            wrapper.style.cssText = "position: relative; display: inline-block;";
+            // 将按钮移入容器
+            btn.parentNode?.insertBefore(wrapper, btn);
+            wrapper.appendChild(btn);
+            // 创建配置卡片并添加到容器
+            const card = createConfigCardDOM();
+            wrapper.appendChild(card);
+            // 初始化事件
+            initConfigCardEvents();
+            // 更新按钮文字显示当前配置的 coordinator 数量
+            const config = getPrebillingConfig();
+            updateButtonText(config.coordinators.length);
+            // 修复 multipleSelect UI 不刷新的问题（Bug 2 fix）
+            // 在某些情况下（如 bfcache 恢复），multipleSelect 显示层不会自动更新
+            fixMultipleSelectUI();
+            console.log("[Prebilling] Config card UI initialized");
+        }
+    }, 500);
+    // 10 秒后停止检查
+    setTimeout(() => clearInterval(checkBtn), 10000);
+}
+/**
+ * 修复 multipleSelect 组件 UI 不刷新的问题，并重新应用保存的配置
+ * 当页面从 bfcache 恢复或刷新时：
+ * 1. 刷新 multipleSelect UI 显示层
+ * 2. 重新应用用户保存的 coordinator 和 discipline 配置
+ */
+function fixMultipleSelectUI() {
+    // 延迟执行，等待页面完全加载
+    setTimeout(() => {
+        if (!isMultipleSelectAvailable()) {
+            console.log("[Prebilling] multipleSelect not available, skipping UI fix");
+            return;
+        }
+        try {
+            // 1. 先刷新主要的 multipleSelect 组件 UI
+            const selectIds = [
+                "ddlContract",
+                "ddlCoordinatorMul",
+                "ddlDiscipline",
+                "ddlPatientTeam",
+                "ddlPatientLocation",
+            ];
+            selectIds.forEach((id) => {
+                const $select = page$(`#${id}`);
+                if ($select && $select.length > 0) {
+                    try {
+                        $select.multipleSelect("refresh");
+                    }
+                    catch (e) {
+                        // 某些组件可能还没初始化，忽略错误
+                    }
+                }
+            });
+            console.log("[Prebilling] multipleSelect UI refresh completed");
+            // 2. 重新应用保存的配置（关键修复！）
+            // 页面刷新后，组件会恢复到默认的 "All selected" 状态
+            // 我们需要重新设置用户保存的 coordinator 和 discipline 选择
+            const config = getPrebillingConfig();
+            // 应用 Coordinator 配置
+            if (config.coordinators && config.coordinators.length > 0) {
+                selectCoordinatorByAPI(config.coordinators);
+                console.log("[Prebilling] Coordinator config re-applied:", config.coordinators);
+            }
+            // 应用 Discipline 配置
+            if (config.disciplines && config.disciplines.length > 0) {
+                selectDisciplineByAPI(config.disciplines);
+                console.log("[Prebilling] Discipline config re-applied:", config.disciplines);
+            }
+            // 更新按钮显示
+            updateButtonText(config.coordinators.length);
+        }
+        catch (e) {
+            console.warn("[Prebilling] Failed to fix multipleSelect UI:", e);
+        }
+    }, 1500); // 延迟 1.5 秒，确保页面 AJAX 数据已加载
+}
 
 ;// ./src/js/MissedCall.ts
 
@@ -4143,8 +4622,8 @@ async function src_main() {
         type: "button",
         id: "prebillingSelector",
         name: "prebillingSelector",
-        class: "button hollow",
-        value: "Prebilling Selector: Tao",
+        class: "button hollow prebilling-selector-btn",
+        value: "Search by Coordinator(s)",
     });
     let $HomePageSelector = $("<input/>").text("").attr({
         type: "button",
@@ -4155,6 +4634,8 @@ async function src_main() {
     });
     assignIntervalTimer(homePageSearchButtonSelector, $HomePageSelector, "#homePageSelector", homePageSelector);
     assignIntervalTimer(prebillingSearchButtonSelector, $prebillingSelector, "#prebillingSelector", prebillingSelector);
+    // 初始化 Prebilling 配置卡片 UI (Story 3)
+    initConfigCardUI();
     assignIntervalTimer(newMessageButtonSelector, $newQABtn, "#newQABtn", createNewQA);
     assignIntervalTimer(newMessageButtonSelector, $newWelcomeCall, "#newWelcomecallBtn", createWelcomeCall);
     assignIntervalTimer(saveButtonSelector, $POCBtn, "#uxBtnPOC", POCResolver);
