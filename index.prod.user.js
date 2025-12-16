@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.3.0
+// @version             3.4.0
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -2442,36 +2442,48 @@ const visitMonitor = async () => {
     // 新增：用于缓存追踪结果和 Office IDs
     const statusDataCache = new Map();
     let officeIdString = null;
-    // --- TAB SYNC MANAGER (Story 1 & 4: Plan D 多 Tab 同步 + 边缘情况处理) ---
+    // --- TAB SYNC MANAGER (升级版：支持跨域名多 Tab 同步) ---
     /**
-     * TabSyncManager - 管理多 Tab 之间的数据同步
+     * TabSyncManager - 管理多 Tab 之间的数据同步（支持跨域名）
      *
      * 功能：
-     * - 使用 localStorage 存储共享数据，实现跨 Tab 数据持久化
-     * - 使用 BroadcastChannel 实时通知其他 Tab 数据更新
+     * - 使用 GM_setValue/GM_getValue 存储共享数据，实现跨域名数据持久化
+     * - 使用 BroadcastChannel 实时通知同域名内的其他 Tab
+     * - 使用轮询机制检测跨域名的数据更新
      * - 提供缓存新鲜度判断，决定是否需要重新请求 API
-     * - Story 4: 边缘情况处理（降级、错误处理、storage 事件备用）
+     * - 边缘情况处理（降级、错误处理）
+     *
+     * 升级说明：
+     * - 从 localStorage 升级到 GM_setValue，实现 app.hhaexchange.com 和 mt3.1voicetech.com 之间的数据共享
+     * - BroadcastChannel 仍用于同域名实时通知，跨域通过轮询实现
      *
      * @see docs/adr/001-multi-tab-sync.md - 架构决策记录
      * @see docs/stories/epic-1-multi-tab-sync.md - Epic 详情
      */
     class TabSyncManager {
         constructor() {
-            /** BroadcastChannel 实例，用于 Tab 间实时通信 */
+            /** BroadcastChannel 实例，用于同域名 Tab 间实时通信 */
             this.channel = null;
-            /** storage 事件回调（用于 BroadcastChannel 不可用时的备用方案） */
-            this.storageCallback = null;
+            /** 消息回调函数 */
+            this.messageCallback = null;
+            /** 跨域轮询定时器 ID */
+            this.pollIntervalId = null;
+            /** 上次检查的缓存时间戳（用于检测跨域更新） */
+            this.lastKnownTimestamp = 0;
             // --- 常量配置 ---
-            /** localStorage 缓存键名 */
+            /** GM_setValue 缓存键名（跨域共享） */
             this.CACHE_KEY = "hha_visit_monitor_cache";
-            /** BroadcastChannel 频道名称 */
+            /** BroadcastChannel 频道名称（同域名内使用） */
             this.CHANNEL_NAME = "hha-visit-monitor-sync";
             /** 缓存新鲜阈值：30秒内视为新鲜，直接使用 */
             this.FRESH_THRESHOLD = 30 * 1000;
             /** 缓存过期阈值：2分钟后视为过期，必须刷新 */
             this.STALE_THRESHOLD = 2 * 60 * 1000;
-            // 生成唯一的 Tab ID
-            this.tabId = `tab_${Date.now()}_${Math.random()
+            /** 跨域轮询间隔：5秒检查一次是否有其他域名的更新 */
+            this.POLL_INTERVAL = 5 * 1000;
+            // 生成唯一的 Tab ID（包含域名信息以便调试）
+            const domain = window.location.hostname.split(".")[0];
+            this.tabId = `${domain}_${Date.now()}_${Math.random()
                 .toString(36)
                 .substring(2, 9)}`;
             // 检测 BroadcastChannel 支持
@@ -2479,7 +2491,7 @@ const visitMonitor = async () => {
             if (this.channelSupported) {
                 try {
                     this.channel = new BroadcastChannel(this.CHANNEL_NAME);
-                    console.log(`[TabSyncManager] Tab ${this.tabId} initialized with BroadcastChannel`);
+                    console.log(`[TabSyncManager] Tab ${this.tabId} initialized with BroadcastChannel (same-origin realtime)`);
                 }
                 catch (e) {
                     console.warn("[TabSyncManager] Failed to create BroadcastChannel:", e);
@@ -2487,23 +2499,28 @@ const visitMonitor = async () => {
                 }
             }
             else {
-                console.warn("[TabSyncManager] BroadcastChannel not supported, falling back to localStorage + storage event");
+                console.warn("[TabSyncManager] BroadcastChannel not supported, using polling only");
+            }
+            // 初始化时记录当前缓存时间戳
+            const cached = this.getCachedData();
+            if (cached) {
+                this.lastKnownTimestamp = cached.timestamp;
             }
             // 注册 Tab 关闭清理
             window.addEventListener("beforeunload", () => this.cleanup());
+            console.log(`[TabSyncManager] Initialized with cross-domain support via GM_setValue`);
         }
         /**
-         * 从 localStorage 获取缓存的数据
-         * Story 4: 增强数据验证和错误处理
+         * 从 GM_getValue 获取缓存的数据（跨域共享）
          * @returns 缓存数据，如果不存在或解析失败则返回 null
          */
         getCachedData() {
             try {
-                const stored = localStorage.getItem(this.CACHE_KEY);
+                const stored = GM_getValue(this.CACHE_KEY, "");
                 if (!stored)
                     return null;
                 const parsed = JSON.parse(stored);
-                // Story 4: 增强数据结构验证
+                // 增强数据结构验证
                 if (!this.isValidCacheData(parsed)) {
                     console.warn("[TabSyncManager] Invalid cache structure, clearing corrupted data");
                     this.clearCache();
@@ -2512,7 +2529,7 @@ const visitMonitor = async () => {
                 return parsed;
             }
             catch (e) {
-                // Story 4: JSON 解析错误处理
+                // JSON 解析错误处理
                 if (e instanceof SyntaxError) {
                     console.error("[TabSyncManager] JSON parse error, clearing corrupted cache:", e.message);
                     this.clearCache();
@@ -2524,7 +2541,7 @@ const visitMonitor = async () => {
             }
         }
         /**
-         * Story 4: 验证缓存数据结构是否有效
+         * 验证缓存数据结构是否有效
          * @param data - 待验证的数据
          */
         isValidCacheData(data) {
@@ -2547,8 +2564,7 @@ const visitMonitor = async () => {
             return true;
         }
         /**
-         * 将数据保存到 localStorage
-         * Story 4: 增强错误处理和重试机制
+         * 将数据保存到 GM_setValue（跨域共享）
          * @param data - Map<string, TrackedData> 格式的状态数据
          */
         setCachedData(data) {
@@ -2564,82 +2580,95 @@ const visitMonitor = async () => {
                     sourceTabId: this.tabId,
                 };
                 const jsonStr = JSON.stringify(cacheData);
-                // Story 4: 检查数据大小（localStorage 限制约 5MB）
+                // 检查数据大小
                 const sizeKB = new Blob([jsonStr]).size / 1024;
                 if (sizeKB > 4096) {
                     // 4MB 警告阈值
                     console.warn(`[TabSyncManager] Cache size is large: ${sizeKB.toFixed(1)}KB`);
                 }
-                localStorage.setItem(this.CACHE_KEY, jsonStr);
-                console.log(`[TabSyncManager] Cache updated by Tab ${this.tabId}, size: ${sizeKB.toFixed(1)}KB`);
+                GM_setValue(this.CACHE_KEY, jsonStr);
+                this.lastKnownTimestamp = cacheData.timestamp;
+                console.log(`[TabSyncManager] Cache updated by Tab ${this.tabId}, size: ${sizeKB.toFixed(1)}KB (cross-domain shared)`);
             }
             catch (e) {
-                this.handleStorageError(e);
+                console.error("[TabSyncManager] Failed to save cache:", e);
             }
         }
         /**
-         * 通过 BroadcastChannel 向其他 Tab 广播消息
+         * 通过 BroadcastChannel 向同域名的其他 Tab 广播消息
+         * 注意：跨域名的 Tab 通过轮询机制获取更新
          * @param message - 要广播的消息
          */
         broadcast(message) {
             if (this.channel) {
                 try {
                     this.channel.postMessage(message);
-                    console.log(`[TabSyncManager] Broadcasted ${message.type} from Tab ${this.tabId}`);
+                    console.log(`[TabSyncManager] Broadcasted ${message.type} from Tab ${this.tabId} (same-origin)`);
                 }
                 catch (e) {
                     console.error("[TabSyncManager] Failed to broadcast message:", e);
                 }
             }
-            // Story 4: BroadcastChannel 不可用时，storage 事件会自动触发其他 Tab
-            // 不需要额外操作，setCachedData 会触发 storage 事件
+            // 跨域名的 Tab 会通过轮询机制检测到 GM_setValue 的更新
         }
         /**
          * 注册消息监听器
-         * Story 4: 同时注册 BroadcastChannel 和 storage 事件（备用方案）
+         * - BroadcastChannel: 用于同域名实时通知
+         * - 轮询: 用于跨域名数据同步检测
          * @param callback - 收到消息时的回调函数
          */
         onMessage(callback) {
-            this.storageCallback = callback;
-            // 方案 1: BroadcastChannel（优先）
+            this.messageCallback = callback;
+            // 方案 1: BroadcastChannel（同域名实时通知）
             if (this.channel) {
                 this.channel.onmessage = (event) => {
                     callback(event.data);
                 };
-                // Story 4: 处理 BroadcastChannel 错误
                 this.channel.onmessageerror = (event) => {
                     console.error("[TabSyncManager] BroadcastChannel message error:", event);
                 };
             }
-            // 方案 2: storage 事件（备用，当 BroadcastChannel 不可用或出错时）
-            window.addEventListener("storage", (event) => {
-                // 只关注我们的缓存键
-                if (event.key !== this.CACHE_KEY)
-                    return;
-                // 只处理其他 Tab 的修改
-                if (!event.newValue)
-                    return;
-                try {
-                    const newData = JSON.parse(event.newValue);
-                    // 防止自己触发自己
-                    if (newData.sourceTabId === this.tabId)
-                        return;
-                    console.log(`[TabSyncManager] Storage event detected from Tab ${newData.sourceTabId}`);
-                    // 如果 BroadcastChannel 不可用，使用 storage 事件作为备用
-                    if (!this.channel && this.storageCallback) {
-                        this.storageCallback({
-                            type: "DATA_UPDATED",
-                            sourceTabId: newData.sourceTabId,
-                            timestamp: newData.timestamp,
-                        });
-                    }
-                }
-                catch (e) {
-                    console.error("[TabSyncManager] Failed to parse storage event data:", e);
-                }
-            });
+            // 方案 2: 轮询（跨域名数据同步）
+            // GM_setValue 的变化不会触发事件，所以需要轮询检测
+            this.startCrossOriginPolling();
             console.log(`[TabSyncManager] Message listeners registered (BroadcastChannel: ${!!this
-                .channel}, Storage: true)`);
+                .channel}, CrossOriginPolling: ${this.POLL_INTERVAL}ms)`);
+        }
+        /**
+         * 启动跨域轮询，定期检查是否有其他域名的更新
+         */
+        startCrossOriginPolling() {
+            if (this.pollIntervalId) {
+                clearInterval(this.pollIntervalId);
+            }
+            this.pollIntervalId = window.setInterval(() => {
+                this.checkForCrossOriginUpdates();
+            }, this.POLL_INTERVAL);
+            console.log(`[TabSyncManager] Cross-origin polling started (interval: ${this.POLL_INTERVAL}ms)`);
+        }
+        /**
+         * 检查是否有跨域更新
+         * 如果检测到其他 Tab（可能来自其他域名）更新了数据，则触发回调
+         */
+        checkForCrossOriginUpdates() {
+            const cached = this.getCachedData();
+            if (!cached)
+                return;
+            // 检查是否有新的更新（时间戳变化 + 不是自己更新的）
+            if (cached.timestamp > this.lastKnownTimestamp &&
+                cached.sourceTabId !== this.tabId) {
+                console.log(`[TabSyncManager] Cross-origin update detected from Tab ${cached.sourceTabId}`);
+                // 更新已知时间戳
+                this.lastKnownTimestamp = cached.timestamp;
+                // 触发回调
+                if (this.messageCallback) {
+                    this.messageCallback({
+                        type: "DATA_UPDATED",
+                        sourceTabId: cached.sourceTabId,
+                        timestamp: cached.timestamp,
+                    });
+                }
+            }
         }
         /**
          * 判断缓存的新鲜度，决定是否需要重新请求 API
@@ -2662,11 +2691,23 @@ const visitMonitor = async () => {
             }
         }
         /**
+         * 停止跨域轮询
+         */
+        stopCrossOriginPolling() {
+            if (this.pollIntervalId) {
+                clearInterval(this.pollIntervalId);
+                this.pollIntervalId = null;
+                console.log(`[TabSyncManager] Cross-origin polling stopped`);
+            }
+        }
+        /**
          * 清理资源，在 Tab 关闭时调用
          */
         cleanup() {
+            // 停止跨域轮询
+            this.stopCrossOriginPolling();
             if (this.channel) {
-                // 通知其他 Tab 本 Tab 即将关闭
+                // 通知同域名的其他 Tab 本 Tab 即将关闭
                 this.broadcast({
                     type: "TAB_CLOSING",
                     sourceTabId: this.tabId,
@@ -2678,71 +2719,20 @@ const visitMonitor = async () => {
             console.log(`[TabSyncManager] Tab ${this.tabId} cleanup complete`);
         }
         /**
-         * Story 4: 增强的 localStorage 存储错误处理
-         * @param error - 错误对象
-         */
-        handleStorageError(error) {
-            console.error("[TabSyncManager] Storage error:", error.name, error.message);
-            if (error.name === "QuotaExceededError") {
-                console.warn("[TabSyncManager] Storage quota exceeded, attempting cleanup...");
-                this.clearCache();
-                // 清理其他可能的旧数据（如果需要）
-                this.cleanupOldStorageData();
-            }
-            else if (error.name === "SecurityError") {
-                // 隐私模式或其他安全限制
-                console.error("[TabSyncManager] Storage access denied (possibly private browsing mode)");
-            }
-        }
-        /**
-         * Story 4: 清理旧的存储数据以释放空间
-         */
-        cleanupOldStorageData() {
-            try {
-                // 清理与本应用相关的其他旧缓存
-                const keysToCheck = ["hha_visit_monitor_", "hha_coordinator_"];
-                for (let i = localStorage.length - 1; i >= 0; i--) {
-                    const key = localStorage.key(i);
-                    if (key &&
-                        keysToCheck.some((prefix) => key.startsWith(prefix)) &&
-                        key !== this.CACHE_KEY) {
-                        // 检查是否是旧数据（超过 7 天）
-                        try {
-                            const data = localStorage.getItem(key);
-                            if (data) {
-                                const parsed = JSON.parse(data);
-                                if (parsed.timestamp &&
-                                    Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
-                                    localStorage.removeItem(key);
-                                    console.log(`[TabSyncManager] Cleaned up old storage: ${key}`);
-                                }
-                            }
-                        }
-                        catch {
-                            // 无法解析的数据，可能是旧格式，删除
-                            localStorage.removeItem(key);
-                        }
-                    }
-                }
-            }
-            catch (e) {
-                console.error("[TabSyncManager] Failed to cleanup old storage data:", e);
-            }
-        }
-        /**
-         * 清除缓存数据
+         * 清除缓存（跨域共享）
          */
         clearCache() {
             try {
-                localStorage.removeItem(this.CACHE_KEY);
-                console.log("[TabSyncManager] Cache cleared");
+                GM_setValue(this.CACHE_KEY, "");
+                this.lastKnownTimestamp = 0;
+                console.log(`[TabSyncManager] Cache cleared`);
             }
             catch (e) {
                 console.error("[TabSyncManager] Failed to clear cache:", e);
             }
         }
         /**
-         * Story 4: 获取调试信息
+         * 获取调试信息
          */
         getDebugInfo() {
             return {
@@ -2754,6 +2744,8 @@ const visitMonitor = async () => {
                 cachedDataAge: this.getCachedData()?.timestamp
                     ? `${((Date.now() - this.getCachedData().timestamp) / 1000).toFixed(1)}s`
                     : "N/A",
+                crossOriginPolling: !!this.pollIntervalId,
+                lastKnownTimestamp: this.lastKnownTimestamp,
             };
         }
     }
@@ -2949,20 +2941,22 @@ const visitMonitor = async () => {
     }
     function loadTrackedCoordinators() {
         try {
-            const stored = localStorage.getItem(STORAGE_KEY);
+            // 使用 GM_getValue 实现跨域名同步（在 mt3.1voicetech.com 和 app.hhaexchange.com 之间共享）
+            const stored = GM_getValue(STORAGE_KEY, "");
             trackedCoordinators = stored ? JSON.parse(stored) : [];
         }
         catch (error) {
-            console.error("Failed to load or parse tracked coordinators from localStorage:", error);
+            console.error("Failed to load or parse tracked coordinators from GM_getValue:", error);
             trackedCoordinators = [];
         }
     }
     function saveTrackedCoordinators() {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(trackedCoordinators));
+            // 使用 GM_setValue 实现跨域名同步
+            GM_setValue(STORAGE_KEY, JSON.stringify(trackedCoordinators));
         }
         catch (error) {
-            console.error("Failed to save tracked coordinators to localStorage:", error);
+            console.error("Failed to save tracked coordinators to GM_setValue:", error);
             showToast("保存失败", "error");
         }
     }
@@ -3018,16 +3012,22 @@ const visitMonitor = async () => {
         officeIds: null,
         timestamp: 0,
     };
+    // 缓存从 app.hhaexchange.com 获取的 API 参数
+    let cachedMessageApiParams = null;
     /**
-     * 获取消息 API 所需的基础参数（从页面全局变量获取）
-     * 这些变量在 HHAExchange 页面加载时已经存在
-     * 注意：由于 Tampermonkey 运行在沙盒中，需要使用 unsafeWindow 访问页面全局变量
+     * 获取消息 API 所需的基础参数
+     * 优先从页面全局变量获取，如果不存在则从 app.hhaexchange.com 动态获取
+     * 这解决了在 mt3.1voicetech.com 上无法获取认证参数的问题
      */
-    function getMessageApiParams() {
-        // 尝试使用 unsafeWindow（Tampermonkey 提供的真实页面 window）
-        // 如果不可用，回退到普通 window
+    async function getMessageApiParams() {
+        // 如果已缓存，直接返回
+        if (cachedMessageApiParams) {
+            console.log("[VisitMonitor] getMessageApiParams: using cached params");
+            return cachedMessageApiParams;
+        }
+        // 尝试从页面全局变量获取
         const win = (typeof unsafeWindow !== "undefined" ? unsafeWindow : window);
-        const params = {
+        let params = {
             appVersion: win.gnAppVersion || "ENT",
             version: win.gnVersion || "25.07",
             minorVersion: win.gnMinorVersion || "1.0",
@@ -3035,14 +3035,43 @@ const visitMonitor = async () => {
             appSecret: win.gnApSc || "",
             appName: win.gnApNm || "ENT",
         };
+        // 如果关键参数缺失（如在 mt3.1voicetech.com 上），则从 app.hhaexchange.com 动态获取
+        if (!params.userID || !params.appSecret) {
+            console.log("[VisitMonitor] getMessageApiParams: page params missing, fetching from app.hhaexchange.com...");
+            try {
+                const initialUrl = "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+                const r = (await GM_fetch(initialUrl, { method: "GET" }));
+                const textResult = await r.rawBody.text();
+                const getParam = (name) => textResult.match(new RegExp(`var\\s+${name}\\s*=\\s*['"]([^'"]+)['"];`))?.[1];
+                params = {
+                    userID: getParam("gnUserID") || "",
+                    appSecret: getParam("gnApSc") || "",
+                    appVersion: getParam("gnAppVersion") || "ENT",
+                    version: getParam("gnVersion") || "25.07",
+                    minorVersion: getParam("gnMinorVersion") || "1.0",
+                    appName: getParam("gnApNm") || "ENT",
+                };
+                if (!params.userID || !params.appSecret) {
+                    console.error("[VisitMonitor] getMessageApiParams: Failed to extract params from app.hhaexchange.com");
+                }
+                else {
+                    console.log("[VisitMonitor] getMessageApiParams: Successfully fetched from app.hhaexchange.com");
+                }
+            }
+            catch (error) {
+                console.error("[VisitMonitor] getMessageApiParams: Error fetching from app.hhaexchange.com:", error);
+            }
+        }
+        // 缓存参数
+        cachedMessageApiParams = params;
         console.log("[VisitMonitor] getMessageApiParams:", params);
         return params;
     }
     /**
      * 获取消息 API 的 base URL
      */
-    function getMessageApiBaseUrl() {
-        const params = getMessageApiParams();
+    async function getMessageApiBaseUrl() {
+        const params = await getMessageApiParams();
         return `https://app.hhaexchange.com/ENTP${params.version.replace(".", "")}010000`;
     }
     /**
@@ -3066,8 +3095,8 @@ const visitMonitor = async () => {
                 payerIdWithContractChhaId: messageApiCache.payerIdWithContractChhaId,
             };
         }
-        const baseUrl = getMessageApiBaseUrl();
-        const params = getMessageApiParams();
+        const baseUrl = await getMessageApiBaseUrl();
+        const params = await getMessageApiParams();
         const officeIds = await getMessageOfficeIdsArray();
         console.log("[VisitMonitor] getMessageContractPayers - fetching from:", `${baseUrl}/api/PayerNotification/GetContractPayersList`);
         console.log("[VisitMonitor] getMessageContractPayers - using officeIds:", officeIds);
@@ -3090,8 +3119,13 @@ const visitMonitor = async () => {
         }));
         const rawText = await res.rawBody.text();
         console.log("[VisitMonitor] getMessageContractPayers - response status:", res.status);
+        // 检查 API 状态码 - 非 200 时返回空数据
+        if (res.status !== 200) {
+            console.warn(`[VisitMonitor] getMessageContractPayers - API returned status ${res.status}, skipping`);
+            return { payers: "", payerIdWithContractChhaId: [] };
+        }
         const data = JSON.parse(rawText);
-        const payerList = data.ListPayers || [];
+        const payerList = data?.ListPayers || [];
         console.log("[VisitMonitor] getMessageContractPayers - payer count:", payerList.length);
         // 提取 PayerId 列表
         const payerIds = payerList
@@ -3120,8 +3154,8 @@ const visitMonitor = async () => {
     async function getMessageReasonIds() {
         if (messageApiCache.reasonIds)
             return messageApiCache.reasonIds;
-        const baseUrl = getMessageApiBaseUrl();
-        const params = getMessageApiParams();
+        const baseUrl = await getMessageApiBaseUrl();
+        const params = await getMessageApiParams();
         try {
             // 首先获取 Contract Payers 数据（包含 PayerId 和 LinkedContractChhaId 映射）
             const { payers, payerIdWithContractChhaId } = await getMessageContractPayers();
@@ -3155,8 +3189,18 @@ const visitMonitor = async () => {
             }));
             const rawText = await res.rawBody.text();
             console.log("[VisitMonitor] getMessageReasonIds - response status:", res.status);
+            // 检查 API 状态码 - 非 200 时返回空数据
+            if (res.status !== 200) {
+                console.warn(`[VisitMonitor] getMessageReasonIds - API returned status ${res.status}, skipping`);
+                return "";
+            }
             const data = JSON.parse(rawText);
             console.log("[VisitMonitor] getMessageReasonIds - data length:", data?.length);
+            // 检查 data 是否为数组
+            if (!Array.isArray(data)) {
+                console.warn("[VisitMonitor] getMessageReasonIds - data is not an array, skipping", typeof data);
+                return "";
+            }
             const reasonIds = data
                 .map((r) => r.ReasonId)
                 .join(",");
@@ -3176,8 +3220,8 @@ const visitMonitor = async () => {
     async function getMessageOfficeIds() {
         if (messageApiCache.officeIds)
             return messageApiCache.officeIds;
-        const baseUrl = getMessageApiBaseUrl();
-        const params = getMessageApiParams();
+        const baseUrl = await getMessageApiBaseUrl();
+        const params = await getMessageApiParams();
         try {
             console.log("[VisitMonitor] getMessageOfficeIds - fetching from:", `${baseUrl}/api/Common/GetAllOffices`);
             const res = (await GM_fetch(`${baseUrl}/api/Common/GetAllOffices`, {
@@ -3198,8 +3242,18 @@ const visitMonitor = async () => {
             }));
             const rawText = await res.rawBody.text();
             console.log("[VisitMonitor] getMessageOfficeIds - response status:", res.status);
+            // 检查 API 状态码 - 非 200 时返回空数据（常见于跨域认证问题）
+            if (res.status !== 200) {
+                console.warn(`[VisitMonitor] getMessageOfficeIds - API returned status ${res.status}, skipping message tracking`);
+                return "";
+            }
             const data = JSON.parse(rawText);
             console.log("[VisitMonitor] getMessageOfficeIds - data length:", data?.length);
+            // 检查 data 是否为数组
+            if (!Array.isArray(data)) {
+                console.warn("[VisitMonitor] getMessageOfficeIds - data is not an array, skipping", typeof data);
+                return "";
+            }
             // 只包含 Type: "1" 的实际 Office，排除 Type: "0" 的分组/父级（如 OfficeID 720）
             const officeIds = data
                 .filter((o) => o.OfficeID > 0 && o.Type === "1")
@@ -3221,8 +3275,8 @@ const visitMonitor = async () => {
      */
     async function fetchMessageReport(coordinatorId) {
         try {
-            const baseUrl = getMessageApiBaseUrl();
-            const params = getMessageApiParams();
+            const baseUrl = await getMessageApiBaseUrl();
+            const params = await getMessageApiParams();
             // 先获取 payers（因为 reasonIds 依赖它）
             const payers = await getMessagePayers();
             // 然后并行获取 reasonIds 和 officeIds
