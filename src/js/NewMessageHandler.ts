@@ -8,7 +8,7 @@ import {
 export const createNewQA = async () =>
   await messageHandler(
     "Quality Assurance",
-    "Today, I made a random call with the patient. The patient is well and very satisfied with the services."
+    "Quality call made to pt, confirmed pt has not been admitted to hospital or rehab within the last 30 days. Pt is satisfied with current aide and or hours OR pt is interested in increase"
   );
 
 export const createWelcomeCall = async () => {
