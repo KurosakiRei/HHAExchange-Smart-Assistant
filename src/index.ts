@@ -16,7 +16,11 @@ import { missedCallResolver } from "./js/MissedCall";
 import { incomingCallHandler } from "./js/IncomingCallHandler";
 import { highlight2Call } from "./js/Highlight2Call";
 import { visitMonitor } from "./js/VisitMonitor";
-import { homePageSelector } from "./js/HomePage";
+import {
+  homePageSelector,
+  initHashChangeListener,
+  initHomePageConfigCardUI,
+} from "./js/HomePage";
 
 async function main() {
   console.log("HHA Exchange Smart Assistant: script start");
@@ -127,15 +131,19 @@ async function main() {
     type: "button",
     id: "homePageSelector",
     name: "homePageSelector",
-    class: "button hollow",
-    value: "Home Page Selector: Tao",
+    class: "button hollow homepage-selector-btn",
+    value: "Search by Coordinator",
   });
 
   assignIntervalTimer(
     homePageSearchButtonSelector,
     $HomePageSelector,
     "#homePageSelector",
-    homePageSelector
+    homePageSelector,
+    [],
+    "left",
+    () => window.location.hash === "#msg", // 只在 #msg 锚点显示
+    "#ctl00_ContentPlaceHolder1_iframemsg" // iframe 选择器
   );
 
   assignIntervalTimer(
@@ -147,6 +155,12 @@ async function main() {
 
   // 初始化 Prebilling 配置卡片 UI (Story 3)
   initConfigCardUI();
+
+  // 初始化 HomePage hashchange 监听器 (Epic 4, Story 1)
+  initHashChangeListener();
+
+  // 初始化 HomePage 配置卡片 UI (Epic 4, Story 3)
+  initHomePageConfigCardUI();
 
   assignIntervalTimer(
     newMessageButtonSelector,

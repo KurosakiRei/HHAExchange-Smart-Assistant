@@ -131,14 +131,47 @@ export const assignIntervalTimer = (
   elId,
   bindFunc,
   param,
-  direction = "left"
+  direction = "left",
+  conditionFunc = null, // 自定义条件函数
+  iframeSelector = null // 新增：iframe 选择器（如 '#ctl00_ContentPlaceHolder1_iframemsg'）
 ) => {
   // let intervalbtnGroup: string | number | NodeJS.Timer;
   let $btnGroup;
 
   setInterval(() => {
-    $btnGroup = $(originBtnSelector).parent();
-    if ($btnGroup && $(elId).length <= 0) {
+    // 获取查询上下文（主页面或 iframe）
+    let context = document;
+    if (iframeSelector) {
+      const iframe = document.querySelector(iframeSelector);
+      if (iframe && iframe.contentDocument) {
+        context = iframe.contentDocument;
+      } else {
+        // iframe 还未加载，跳过本次检查
+        return;
+      }
+    }
+
+    // 在正确的上下文中查询原始按钮
+    $btnGroup = $(originBtnSelector, context).parent();
+
+    // 检查自定义条件（如果提供）
+    const shouldShow = conditionFunc ? conditionFunc() : true;
+
+    // 检查按钮是否已存在（在相同上下文中查询）
+    const existingBtn = $(elId, context);
+
+    // 如果条件不满足，隐藏已存在的按钮
+    if (!shouldShow && existingBtn.length > 0) {
+      existingBtn.hide();
+      return;
+    }
+
+    // 如果条件满足，显示已存在的按钮
+    if (shouldShow && existingBtn.length > 0) {
+      existingBtn.show();
+    }
+
+    if ($btnGroup && existingBtn.length <= 0 && shouldShow) {
       if (direction == "left") {
         $btnGroup.prepend(JQel);
       } else if (direction == "right") {
