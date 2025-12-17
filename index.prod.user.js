@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.4.1
+// @version             3.5.0
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -41,7 +41,7 @@
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n/* --- General Container --- */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background-color: #007bff;\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: move;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);\n  font-size: 24px;\n  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n}\n/* --- Panel & Views --- */\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  min-height: 500px;\n  background: #f9f9f9;\n  border: 1px solid #ccc;\n  border-radius: 8px;\n  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333;\n  overflow: hidden;\n}\n.tracker-view {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: column;\n  transition: transform 0.3s ease-in-out;\n}\n.tracker-view.hidden {\n  display: none;\n}\n/* View Transition Animations */\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n/* --- Header --- */\n.tracker-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n}\n.tracker-header-btn {\n  background: #e0e0e0;\n  border: 1px solid #ccc;\n  padding: 4px 10px;\n  border-radius: 5px;\n  cursor: pointer;\n}\n.tracker-header-btn:hover {\n  background: #d4d4d4;\n}\n.back-btn {\n  font-size: 20px;\n  padding: 0 10px;\n}\n/* --- 4. 内容与表格 --- */\n.tracker-content {\n  flex-grow: 1;\n  padding: 10px;\n  overflow-y: auto;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n}\n.tracker-table th,\n.tracker-table td {\n  border: 1px solid #ddd;\n  padding: 8px 12px;\n  text-align: center;\n  vertical-align: middle;\n}\n.tracker-table th {\n  background-color: #e9ecef;\n  font-size: 14px;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: bold;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.status-icon:hover {\n  opacity: 0.8;\n  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n  100% {\n    opacity: 1;\n  }\n}\n/* --- Edit View Specifics --- */\n.edit-list-actions button {\n  font-size: 18px;\n  width: 36px;\n  height: 36px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button:disabled {\n  background-color: #ccc;\n  cursor: not-allowed;\n}\n.tracker-footer {\n  padding: 10px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #ddd;\n  background: #f1f1f1;\n  flex-shrink: 0;\n}\n/* --- Loader --- */\n.loader {\n  text-align: center;\n  padding: 40px;\n}\n.spinner {\n  border: 4px solid #f3f3f3;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n/* --- Toast Notification --- */\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 5px;\n  z-index: 10000;\n  opacity: 0;\n  transition: opacity 0.3s, bottom 0.3s;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n/* --- 7. Details Popover (气泡) --- */\n#details-popover {\n  position: fixed;\n  z-index: 10001;\n  /* Must be higher than the panel */\n  /* MODIFIED: 增加宽度以容纳更多列 */\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  /* 提高最大高度限制 */\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  /* Initial state for fade-in animation */\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n  /* FIX: 提高 z-index, 确保它在所有元素之上 */\n  z-index: 100001;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n  /* ADDED: 让用户知道这里可以拖动 */\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* --- Note Cell Styling --- */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  /* 允许换行 */\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* --- Authorization Note Table (格式化后的内容) --- */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* --- Popover Resize Handle --- */\n.popover-resize-handle {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 16px;\n  height: 16px;\n  cursor: nwse-resize;\n  background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n  border-bottom-right-radius: 8px;\n}\n.popover-resize-handle::before {\n  content: '';\n  position: absolute;\n  right: 4px;\n  bottom: 4px;\n  width: 4px;\n  height: 4px;\n  background: #666;\n  border-radius: 1px;\n}\n/* --- 8. Phone Tooltip (新增) --- */\n.phone-icon-wrapper {\n  position: relative;\n  /* 为内部的 tooltip 提供定位上下文 */\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  /* 默认隐藏 */\n  position: absolute;\n  top: 100%;\n  /* 显示在图标正下方 */\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n  /* 确保在气泡本身之上 */\n}\n/* 核心交互：当鼠标悬浮在 wrapper 上时，显示 tooltip */\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/* --- General Container --- */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background-color: #007bff;\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: move;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);\n  font-size: 24px;\n  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n}\n/* --- Panel & Views --- */\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  min-height: 500px;\n  background: #f9f9f9;\n  border: 1px solid #ccc;\n  border-radius: 8px;\n  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333;\n  overflow: hidden;\n}\n.tracker-view {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: column;\n  transition: transform 0.3s ease-in-out;\n}\n.tracker-view.hidden {\n  display: none;\n}\n/* View Transition Animations */\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n/* --- Header --- */\n.tracker-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n}\n.tracker-header-btn {\n  background: #e0e0e0;\n  border: 1px solid #ccc;\n  padding: 4px 10px;\n  border-radius: 5px;\n  cursor: pointer;\n}\n.tracker-header-btn:hover {\n  background: #d4d4d4;\n}\n.back-btn {\n  font-size: 20px;\n  padding: 0 10px;\n}\n/* --- 4. 内容与表格 --- */\n.tracker-content {\n  flex-grow: 1;\n  padding: 10px;\n  overflow-y: auto;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n}\n.tracker-table th,\n.tracker-table td {\n  border: 1px solid #ddd;\n  padding: 8px 12px;\n  text-align: center;\n  vertical-align: middle;\n}\n.tracker-table th {\n  background-color: #e9ecef;\n  font-size: 14px;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: bold;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.status-icon:hover {\n  opacity: 0.8;\n  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n  100% {\n    opacity: 1;\n  }\n}\n/* --- Edit View Specifics --- */\n.edit-list-actions button {\n  font-size: 18px;\n  width: 36px;\n  height: 36px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button:disabled {\n  background-color: #ccc;\n  cursor: not-allowed;\n}\n.tracker-footer {\n  padding: 10px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #ddd;\n  background: #f1f1f1;\n  flex-shrink: 0;\n}\n/* --- Loader --- */\n.loader {\n  text-align: center;\n  padding: 40px;\n}\n.spinner {\n  border: 4px solid #f3f3f3;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n/* --- Toast Notification --- */\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 5px;\n  z-index: 10000;\n  opacity: 0;\n  transition: opacity 0.3s, bottom 0.3s;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n/* --- 7. Details Popover (气泡) --- */\n#details-popover {\n  position: fixed;\n  z-index: 10001;\n  /* Must be higher than the panel */\n  /* MODIFIED: 增加宽度以容纳更多列 */\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  /* 提高最大高度限制 */\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  /* Initial state for fade-in animation */\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n  /* FIX: 提高 z-index, 确保它在所有元素之上 */\n  z-index: 100001;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n  /* ADDED: 让用户知道这里可以拖动 */\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* --- Note Cell Styling --- */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  /* 允许换行 */\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* --- Authorization Note Table (格式化后的内容) --- */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* --- Popover Resize Handle --- */\n.popover-resize-handle {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 16px;\n  height: 16px;\n  cursor: nwse-resize;\n  background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n  border-bottom-right-radius: 8px;\n}\n.popover-resize-handle::before {\n  content: '';\n  position: absolute;\n  right: 4px;\n  bottom: 4px;\n  width: 4px;\n  height: 4px;\n  background: #666;\n  border-radius: 1px;\n}\n/* --- 8. Phone Tooltip (新增) --- */\n.phone-icon-wrapper {\n  position: relative;\n  /* 为内部的 tooltip 提供定位上下文 */\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  /* 默认隐藏 */\n  position: absolute;\n  top: 100%;\n  /* 显示在图标正下方 */\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n  /* 确保在气泡本身之上 */\n}\n/* 核心交互：当鼠标悬浮在 wrapper 上时，显示 tooltip */\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -831,13 +831,13 @@ const tlsSigAlgs = (/* unused pure expression or super */ null && ([
 ]));
 
 // all my homies hate node-fetch
-const fetch = (url, options = {}) => {
+const util_fetch = (url, options = {}) => {
   console.log(
     "Fetching url " + url.substring(0, 200) + (url.length > 200 ? "..." : "")
   );
 
   return new Promise((resolve, reject) => {
-    const req = fetch(
+    const req = util_fetch(
       url,
       {
         agent: options.proxy,
@@ -929,14 +929,47 @@ const assignIntervalTimer = (
   elId,
   bindFunc,
   param,
-  direction = "left"
+  direction = "left",
+  conditionFunc = null, // 自定义条件函数
+  iframeSelector = null // 新增：iframe 选择器（如 '#ctl00_ContentPlaceHolder1_iframemsg'）
 ) => {
   // let intervalbtnGroup: string | number | NodeJS.Timer;
   let $btnGroup;
 
   setInterval(() => {
-    $btnGroup = $(originBtnSelector).parent();
-    if ($btnGroup && $(elId).length <= 0) {
+    // 获取查询上下文（主页面或 iframe）
+    let context = document;
+    if (iframeSelector) {
+      const iframe = document.querySelector(iframeSelector);
+      if (iframe && iframe.contentDocument) {
+        context = iframe.contentDocument;
+      } else {
+        // iframe 还未加载，跳过本次检查
+        return;
+      }
+    }
+
+    // 在正确的上下文中查询原始按钮
+    $btnGroup = $(originBtnSelector, context).parent();
+
+    // 检查自定义条件（如果提供）
+    const shouldShow = conditionFunc ? conditionFunc() : true;
+
+    // 检查按钮是否已存在（在相同上下文中查询）
+    const existingBtn = $(elId, context);
+
+    // 如果条件不满足，隐藏已存在的按钮
+    if (!shouldShow && existingBtn.length > 0) {
+      existingBtn.hide();
+      return;
+    }
+
+    // 如果条件满足，显示已存在的按钮
+    if (shouldShow && existingBtn.length > 0) {
+      existingBtn.show();
+    }
+
+    if ($btnGroup && existingBtn.length <= 0 && shouldShow) {
       if (direction == "left") {
         $btnGroup.prepend(JQel);
       } else if (direction == "right") {
@@ -4544,38 +4577,803 @@ const visitMonitor = async () => {
 ;// ./src/js/HomePage.ts
 
 
-const homePageSelector = async () => {
-    await sleep(100);
-    let communicationType = $(homePageCommunicationTypeSelector);
-    for (const option of $(homePageCommunicationTypeOptionSelector)) {
-        if ("Patient" == option.innerText) {
-            communicationType.val(option.getAttribute("value"));
-            communicationType[0].dispatchEvent(new Event("change"));
-            break;
-        }
-    }
-    await sleep(500);
-    let coordinator = $(homePageCoordinatorSelector);
-    for (const option of $(homePageCoordinatorOptionSelector)) {
-        if ("Tao Yang ext.503 TYang@alwaysNY.net" == option.innerText) {
-            coordinator.val(option.getAttribute("value"));
-            coordinator[0].dispatchEvent(new Event("change"));
-            break;
-        }
-    }
-    await sleep(300);
-    let status = $(homePagestatusSelector);
-    for (const option of $(homePagestatusOptionSelector)) {
-        console.log(option);
-        if ("Open" == option.innerText) {
-            status.val(option.getAttribute("value"));
-            status[0].dispatchEvent(new Event("change"));
-            break;
-        }
-    }
-    await sleep(100);
-    $(homePageSearchButtonSelector)[0].click();
+// GM_storage keys
+const HOMEPAGE_CONFIG_KEY = "hha_homepage_config";
+const COORDINATOR_CACHE_KEY = "hha_coordinator_cache";
+const CACHE_TTL = 5 * 60 * 1000; // 5 分钟
+// 标志：是否已经加载过coordinators
+let coordinatorsLoadedOnce = false;
+// 默认配置（向后兼容：Tao Yang）
+const HomePage_DEFAULT_CONFIG = {
+    coordinatorID: "75207",
+    coordinatorText: "Tao Yang ext.503 TYang@alwaysNY.net",
+    status: "-1", // All
+    lastUpdated: Date.now(),
 };
+// ============================================================================
+// Story 2: GM_storage 配置管理函数
+// ============================================================================
+/**
+ * 检测 GM_storage API 是否可用
+ */
+function HomePage_isGMStorageAvailable() {
+    return typeof GM_setValue === "function" && typeof GM_getValue === "function";
+}
+/**
+ * 获取当前保存的配置
+ */
+function getHomePageConfig() {
+    if (HomePage_isGMStorageAvailable()) {
+        try {
+            const stored = GM_getValue(HOMEPAGE_CONFIG_KEY);
+            if (stored) {
+                const config = JSON.parse(stored);
+                console.log("[HomePage] Config loaded from GM_storage:", config);
+                return config;
+            }
+        }
+        catch (error) {
+            console.error("[HomePage] Failed to load config from GM_storage:", error);
+        }
+    }
+    console.log("[HomePage] Using default config");
+    return { ...HomePage_DEFAULT_CONFIG, lastUpdated: Date.now() };
+}
+/**
+ * 保存配置
+ */
+function saveHomePageConfig(config) {
+    const current = getHomePageConfig();
+    const updated = {
+        ...current,
+        ...config,
+        lastUpdated: Date.now(),
+    };
+    if (HomePage_isGMStorageAvailable()) {
+        try {
+            GM_setValue(HOMEPAGE_CONFIG_KEY, JSON.stringify(updated));
+            console.log("[HomePage] Config saved to GM_storage:", updated);
+        }
+        catch (error) {
+            console.error("[HomePage] Failed to save config to GM_storage:", error);
+        }
+    }
+}
+/**
+ * 重置为默认配置
+ */
+function resetHomePageConfig() {
+    saveHomePageConfig(HomePage_DEFAULT_CONFIG);
+    console.log("[HomePage] Config reset to default");
+}
+// ============================================================================
+// Story 2: API 数据获取函数
+// ============================================================================
+/**
+ * 从页面获取 AppSecret（从任意请求头中提取）
+ */
+function getAppSecretFromPage() {
+    // 方法1: 从 meta 标签读取
+    const metaSecret = document.querySelector('meta[name="appsecret"]');
+    if (metaSecret) {
+        const content = metaSecret.getAttribute("content");
+        if (content)
+            return content;
+    }
+    // 方法2: 从全局变量读取（如果页面有暴露）
+    const win = window;
+    if (win.AppSecret) {
+        return win.AppSecret;
+    }
+    // 方法3: 使用实测默认值
+    return "79BB4FCD-9884-4652-B77F-6077F363193D";
+}
+/**
+ * 获取当前用户 ID（从页面 cookie 或全局变量）
+ */
+function getUserIDFromPage() {
+    // 方法1: 从 hhaKeyWordConfiguration cookie 读取
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split("=");
+        if (name === "hhaKeyWordConfiguration") {
+            const match = value.match(/UserId=(\d+)/);
+            if (match) {
+                console.log("[HomePage] UserID from cookie:", match[1]);
+                return match[1];
+            }
+        }
+    }
+    // 方法2: 从全局变量读取
+    const win = window;
+    if (win.currentUserID) {
+        console.log("[HomePage] UserID from window.currentUserID:", win.currentUserID.toString());
+        return win.currentUserID.toString();
+    }
+    // 方法3: 尝试从顶层window读取
+    try {
+        const topWin = window.top;
+        if (topWin && topWin !== window) {
+            // 尝试从top window的cookie读取
+            const topCookies = topWin.document.cookie.split(";");
+            for (const cookie of topCookies) {
+                const [name, value] = cookie.trim().split("=");
+                if (name === "hhaKeyWordConfiguration") {
+                    const match = value.match(/UserId=(\d+)/);
+                    if (match) {
+                        console.log("[HomePage] UserID from top window cookie:", match[1]);
+                        return match[1];
+                    }
+                }
+            }
+            // 尝试从top window全局变量读取
+            if (topWin.currentUserID) {
+                console.log("[HomePage] UserID from top window.currentUserID:", topWin.currentUserID.toString());
+                return topWin.currentUserID.toString();
+            }
+        }
+    }
+    catch (e) {
+        // 跨域限制，无法访问top window
+        console.warn("[HomePage] Cannot access top window:", e);
+    }
+    // 使用实测默认值
+    console.warn("[HomePage] Using hardcoded userID fallback: 184885");
+    return "184885";
+}
+/**
+ * 获取 Office IDs（从页面上下文）
+ */
+function getOfficeIDsFromPage() {
+    // 尝试从页面全局变量获取
+    const win = window;
+    // 如果页面有 offices 数组
+    if (win.offices && Array.isArray(win.offices)) {
+        const ids = win.offices.map((o) => o.OfficeID || o.id);
+        return {
+            OfficeIDs: ids.join(","),
+            OfficeXML: ids.map((id) => ({ OfficeID: id })),
+        };
+    }
+    // 使用实测默认值（从成功请求中提取）
+    return {
+        OfficeIDs: "469,5137,5139,6475,14849",
+        OfficeXML: [
+            { OfficeID: 469 },
+            { OfficeID: 5137 },
+            { OfficeID: 5139 },
+            { OfficeID: 6475 },
+            { OfficeID: 14849 },
+        ],
+    };
+}
+/**
+ * 从 API 获取所有 Coordinators
+ * API: POST /api/Common/GetAllCoordinators
+ * 实测返回: 26 个 coordinator 对象
+ */
+async function fetchCoordinatorsFromAPI() {
+    const apiUrl = "/ENTP2507010000//api/Common//GetAllCoordinators";
+    try {
+        const appSecret = getAppSecretFromPage();
+        const userID = getUserIDFromPage();
+        const officeData = getOfficeIDsFromPage();
+        // 构建完整的请求体（与成功请求一致）
+        const requestBody = {
+            appVersion: "ENT",
+            version: "25.07",
+            minorVersion: "1.0",
+            userID: userID,
+            OfficeIDs: officeData.OfficeIDs,
+            OfficeXML: officeData.OfficeXML,
+        };
+        console.log("[HomePage] Fetching coordinators with body:", requestBody);
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                AppSecret: appSecret,
+                AppName: "ENT",
+            },
+            body: JSON.stringify(requestBody),
+        });
+        if (response.ok) {
+            const data = await response.json();
+            console.log(`[HomePage] Fetched ${data.length} coordinators from API`);
+            return data;
+        }
+        else {
+            console.error("[HomePage] API returned error:", response.status, response.statusText);
+        }
+    }
+    catch (error) {
+        console.error("[HomePage] Failed to fetch coordinators:", error);
+    }
+    return [];
+}
+/**
+ * 强制清除coordinator缓存
+ */
+function clearCoordinatorCache() {
+    if (HomePage_isGMStorageAvailable()) {
+        GM_setValue(COORDINATOR_CACHE_KEY, "");
+        console.log("[HomePage] Coordinator cache cleared");
+    }
+}
+/**
+ * 带缓存的 Coordinator 获取（避免重复请求）
+ */
+async function getCoordinators(forceRefresh = false) {
+    const now = Date.now();
+    // 如果强制刷新，先清除缓存
+    if (forceRefresh) {
+        clearCoordinatorCache();
+        console.log("[HomePage] Force refresh: clearing cache");
+    }
+    // 1. 先从缓存读取
+    if (!forceRefresh && HomePage_isGMStorageAvailable()) {
+        try {
+            const cached = GM_getValue(COORDINATOR_CACHE_KEY);
+            if (cached) {
+                const cacheData = JSON.parse(cached);
+                // 检查缓存是否过期
+                if (now - cacheData.timestamp < CACHE_TTL) {
+                    console.log(`[HomePage] Using cached coordinators (${cacheData.data.length} items)`);
+                    return cacheData.data;
+                }
+                console.log("[HomePage] Cache expired, fetching from API...");
+            }
+        }
+        catch (error) {
+            console.error("[HomePage] Failed to read cache:", error);
+        }
+    }
+    // 2. 缓存过期或不存在，从 API 获取
+    const coordinators = await fetchCoordinatorsFromAPI();
+    // 3. 保存到缓存
+    if (coordinators.length > 0 && HomePage_isGMStorageAvailable()) {
+        const cacheData = {
+            data: coordinators,
+            timestamp: now,
+        };
+        GM_setValue(COORDINATOR_CACHE_KEY, JSON.stringify(cacheData));
+        console.log("[HomePage] Coordinators cached successfully");
+    }
+    return coordinators;
+}
+// ============================================================================
+// Story 4: API-First 搜索实现
+// ============================================================================
+/**
+ * 获取目标 iframe（#ctl00_ContentPlaceHolder1_iframemsg）
+ */
+function getTargetIframe() {
+    return document.getElementById("ctl00_ContentPlaceHolder1_iframemsg");
+}
+/**
+ * 直接调用 PayerNotificationSearch API 执行搜索
+ * 优点：绕过 UI 级联依赖，速度快（< 500ms）
+ *
+ * @returns 成功返回 true，失败返回 false
+ */
+async function executeSearchByAPI() {
+    const config = getHomePageConfig();
+    try {
+        const appSecret = getAppSecretFromPage();
+        const userID = getUserIDFromPage();
+        const officeData = getOfficeIDsFromPage();
+        const apiUrl = "/ENTP2507010000/api/PayerNotification/PayerNotificationSearch";
+        // 构建请求体（匹配成功的请求格式）
+        const requestBody = {
+            appVersion: "ENT",
+            version: "25.07",
+            minorVersion: "1.0",
+            userID: userID,
+            MessageType: -1,
+            Status: parseInt(config.status),
+            ProviderId: "469", // 从 officeData 提取主 office ID
+            IsConversation: 0,
+            KeySearch: "",
+            Pagination: {
+                PageNumber: 1,
+                SortItem: "CreatedDate",
+                SortOrder: "DESC",
+                PageSize: "50",
+            },
+            IsNewLook: true,
+            CommunicationType: 1, // 1=Non-Patient, 2=Patient
+            UserName: "", // 留空或从页面获取
+            NoOfDays: 1,
+            UseMirrorConnection: true,
+            Internal: 2,
+            IsServicePortalNote: 0,
+            CoordinatorID: parseInt(config.coordinatorID),
+            Payers: "", // 留空表示 All
+            FromDate: "",
+            ToDate: "",
+            OfficeIDs: officeData.OfficeIDs,
+            ReasonIDs: "", // 留空表示 All
+        };
+        console.log("[HomePage] API request:", requestBody);
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                AppSecret: appSecret,
+                AppName: "ENT",
+            },
+            body: JSON.stringify(requestBody),
+        });
+        if (response.ok) {
+            const data = await response.json();
+            console.log("[HomePage] API search succeeded, results:", data);
+            // 触发页面刷新以显示搜索结果
+            // Angular 应用会自动更新 UI
+            return true;
+        }
+        else {
+            console.error("[HomePage] API search failed:", response.status, response.statusText);
+            return false;
+        }
+    }
+    catch (error) {
+        console.error("[HomePage] API search error:", error);
+        return false;
+    }
+}
+/**
+ * 传统 UI 自动化方式（回退方案）
+ * 保留原有逻辑作为 API 失败时的 fallback
+ */
+async function legacyUIAutomation() {
+    const config = getHomePageConfig();
+    const iframe = getTargetIframe();
+    if (!iframe) {
+        console.error("[HomePage] Iframe not found");
+        return false;
+    }
+    const doc = iframe.contentDocument;
+    if (!doc) {
+        console.error("[HomePage] Iframe document not accessible");
+        return false;
+    }
+    try {
+        await sleep(100);
+        // 使用 iframe 的 document 作为 jQuery context
+        const $iframe = (selector) => $(selector, doc);
+        // 1. 设置 Communication Type = "Patient"
+        const communicationType = $iframe(homePageCommunicationTypeSelector);
+        for (const option of $iframe(homePageCommunicationTypeOptionSelector)) {
+            if ("Patient" == option.innerText) {
+                communicationType.val(option.getAttribute("value"));
+                communicationType[0].dispatchEvent(new Event("change"));
+                console.log("[HomePage] Communication Type set to Patient");
+                break;
+            }
+        }
+        // 等待 Coordinator 下拉菜单出现（最多等待 3 秒）
+        let coordinator = $iframe(homePageCoordinatorSelector);
+        let retries = 0;
+        const maxRetries = 30; // 30 * 100ms = 3 秒
+        while (coordinator.length === 0 && retries < maxRetries) {
+            await sleep(100);
+            coordinator = $iframe(homePageCoordinatorSelector);
+            retries++;
+        }
+        if (coordinator.length === 0) {
+            console.error("[HomePage] Coordinator dropdown not found after waiting");
+            return false;
+        }
+        console.log("[HomePage] Coordinator dropdown found after", retries * 100, "ms");
+        // 2. 设置 Coordinator（使用配置的 ID）
+        // 注意：Angular 下拉菜单的 option value 是 coordinatorID（如 "8058"）
+        let coordinatorFound = false;
+        for (const option of $iframe(homePageCoordinatorOptionSelector)) {
+            const optionValue = option.getAttribute("value");
+            // 使用 coordinatorID 来匹配
+            if (optionValue === config.coordinatorID) {
+                coordinator.val(optionValue);
+                coordinator[0].dispatchEvent(new Event("change"));
+                coordinatorFound = true;
+                console.log("[HomePage] Coordinator set via UI:", config.coordinatorText, "(ID:", config.coordinatorID, ")");
+                break;
+            }
+        }
+        if (!coordinatorFound) {
+            console.error("[HomePage] Coordinator not found in dropdown. ID:", config.coordinatorID, "Text:", config.coordinatorText);
+            // 输出所有可用选项以便调试
+            const availableOptions = $iframe(homePageCoordinatorOptionSelector)
+                .map((i, el) => $(el).val())
+                .get();
+            console.error("[HomePage] Available coordinator IDs:", availableOptions);
+            return false;
+        }
+        await sleep(300);
+        // 3. 设置 Status（使用配置的 status）
+        const status = $iframe(homePagestatusSelector);
+        const statusMap = {
+            "-1": "All",
+            "1": "Open",
+            "2": "Closed",
+        };
+        const statusText = statusMap[config.status] || "All";
+        for (const option of $iframe(homePagestatusOptionSelector)) {
+            if (statusText == option.innerText) {
+                status.val(option.getAttribute("value"));
+                status[0].dispatchEvent(new Event("change"));
+                break;
+            }
+        }
+        await sleep(100);
+        // 4. 点击搜索按钮
+        $iframe(homePageSearchButtonSelector)[0].click();
+        console.log("[HomePage] UI automation search triggered");
+        return true;
+    }
+    catch (error) {
+        console.error("[HomePage] Legacy UI automation error:", error);
+        return false;
+    }
+}
+/**
+ * HomePage Selector 主函数（UI-First 策略）
+ * 使用 UI 自动化触发 Angular 原生搜索，确保结果正确显示
+ * 注意：直接 API 调用不会触发 Angular 数据绑定更新 UI
+ */
+const homePageSelector = async () => {
+    console.log("[HomePage] ========== Button Clicked ==========");
+    console.log("[HomePage] Selector started (UI-First mode)");
+    // 检查配置
+    const config = getHomePageConfig();
+    console.log("[HomePage] Current config:", config);
+    if (!config.coordinatorID) {
+        console.error("[HomePage] No coordinator configured");
+        alert("⚠️ Please configure a coordinator first (hover over the button)");
+        return;
+    }
+    // 使用 UI 自动化触发搜索（Angular 应用需要通过原生 UI 交互来更新视图）
+    console.log("[HomePage] Using UI automation to trigger Angular search...");
+    const uiSuccess = await legacyUIAutomation();
+    if (uiSuccess) {
+        console.log("[HomePage] ✅ UI automation search succeeded");
+    }
+    else {
+        console.error("[HomePage] ❌ UI automation failed");
+        alert("❌ Search failed. Please try again or search manually.");
+    }
+    console.log("[HomePage] =========================================");
+};
+/**
+ * 检测当前是否在 Linked Communication Tab (#msg)
+ */
+function isLinkedCommunicationTab() {
+    return window.location.hash === "#msg";
+}
+/**
+ * 初始化 hashchange 监听器
+ * 当用户切换 Tab 时，自动显示/隐藏按钮
+ */
+function initHashChangeListener() {
+    window.addEventListener("hashchange", () => {
+        const btn = document.getElementById("homePageSelector");
+        if (btn) {
+            btn.style.display = isLinkedCommunicationTab() ? "" : "none";
+        }
+    });
+    console.log("[HomePage] Hash change listener initialized");
+}
+// ============================================================================
+// Story 3: 配置卡片 UI 函数
+// ============================================================================
+/**
+ * 渲染 coordinator 列表（单选 radio）
+ */
+function HomePage_renderCoordinatorList(options, selectedId) {
+    const container = document.getElementById("hp-coordinator-options");
+    if (!container)
+        return;
+    container.innerHTML = "";
+    if (options.length === 0) {
+        container.innerHTML =
+            '<div class="no-results">⚠️ No coordinators available</div>';
+        return;
+    }
+    options.forEach((opt) => {
+        // Use String() to ensure consistent type comparison
+        const checked = String(opt.CoordinatorID) === String(selectedId) ? "checked" : "";
+        const div = document.createElement("div");
+        div.className = "coordinator-option";
+        div.setAttribute("data-coordinator-id", opt.CoordinatorID);
+        div.setAttribute("data-coordinator-name", opt.CoordinatorName);
+        div.innerHTML = `
+      <input type="radio" 
+             name="hp-coordinator" 
+             id="hp-coord-${opt.CoordinatorID}" 
+             value="${opt.CoordinatorID}"
+             aria-label="${opt.CoordinatorName}"
+             ${checked}>
+      <label class="coordinator-label" for="hp-coord-${opt.CoordinatorID}">
+        ${opt.CoordinatorName}
+      </label>
+    `;
+        container.appendChild(div);
+    });
+}
+/**
+ * 初始化搜索/过滤功能
+ */
+function initCoordinatorSearch() {
+    const searchInput = document.getElementById("hp-coordinator-search");
+    if (!searchInput)
+        return;
+    searchInput.addEventListener("input", () => {
+        const query = searchInput.value.toLowerCase().trim();
+        const options = document.querySelectorAll(".coordinator-option");
+        let visibleCount = 0;
+        options.forEach((option) => {
+            const name = option.getAttribute("data-coordinator-name") || "";
+            if (name.toLowerCase().includes(query)) {
+                option.classList.remove("hidden");
+                visibleCount++;
+            }
+            else {
+                option.classList.add("hidden");
+            }
+        });
+        // 显示无结果提示
+        const container = document.getElementById("hp-coordinator-options");
+        if (container) {
+            const noResults = container.querySelector(".no-results");
+            if (visibleCount === 0 && !noResults) {
+                const div = document.createElement("div");
+                div.className = "no-results";
+                div.textContent = "🔍 No coordinators found";
+                container.appendChild(div);
+            }
+            else if (visibleCount > 0 && noResults) {
+                noResults.remove();
+            }
+        }
+    });
+}
+/**
+ * 更新按钮文本显示选中的 Coordinator
+ */
+function HomePage_updateButtonText(btn, coordinatorText) {
+    // 提取前两个单词作为按钮显示（如 "Tao Yang"）
+    const words = coordinatorText.split(/\s+/);
+    const shortName = words.slice(0, 2).join(" ");
+    btn.value = `Search: ${shortName}`;
+}
+/**
+ * 保存配置按钮处理
+ */
+function handleSaveConfiguration() {
+    console.log("[HomePage] handleSaveConfiguration called");
+    const selectedRadio = document.querySelector('input[name="hp-coordinator"]:checked');
+    if (!selectedRadio) {
+        console.warn("[HomePage] No coordinator selected");
+        alert("⚠️ Please select a coordinator");
+        return;
+    }
+    const coordinatorID = selectedRadio.value;
+    const optionDiv = selectedRadio.closest(".coordinator-option");
+    const coordinatorText = optionDiv?.getAttribute("data-coordinator-name") || "";
+    console.log("[HomePage] Saving config:", { coordinatorID, coordinatorText });
+    // 保存配置
+    saveHomePageConfig({
+        coordinatorID,
+        coordinatorText,
+        status: "1", // 默认使用 Open 状态
+    });
+    // 更新按钮文本
+    const btn = document.getElementById("homePageSelector");
+    if (btn) {
+        HomePage_updateButtonText(btn, coordinatorText);
+        console.log("[HomePage] Button text updated to:", btn.value);
+    }
+    // 关闭配置卡片
+    HomePage_hideConfigCard();
+    console.log("[HomePage] ✅ Configuration saved successfully");
+    // Note: No alert popup - user feedback via button text update
+}
+/**
+ * 取消/关闭配置卡片
+ */
+function HomePage_hideConfigCard() {
+    const card = document.getElementById("homepage-config-card");
+    if (card) {
+        card.classList.remove("show");
+        setTimeout(() => {
+            card.style.display = "none";
+        }, 200);
+    }
+    // 重置搜索框
+    const searchInput = document.getElementById("hp-coordinator-search");
+    if (searchInput) {
+        searchInput.value = "";
+        // 触发 input 事件重置过滤
+        searchInput.dispatchEvent(new Event("input"));
+    }
+}
+/**
+ * 显示配置卡片
+ */
+async function HomePage_showConfigCard() {
+    const card = document.getElementById("homepage-config-card");
+    if (!card) {
+        console.error("[HomePage] Config card not found");
+        return;
+    }
+    console.log("[HomePage] Showing config card...");
+    // 获取配置
+    const config = getHomePageConfig();
+    // 第一次显示时强制刷新缓存
+    const forceRefresh = !coordinatorsLoadedOnce;
+    if (forceRefresh) {
+        console.log("[HomePage] First time showing card, forcing cache refresh");
+        coordinatorsLoadedOnce = true;
+    }
+    // 获取 Coordinator 列表
+    const options = await getCoordinators(forceRefresh);
+    if (options.length > 0) {
+        HomePage_renderCoordinatorList(options, config.coordinatorID);
+    }
+    else {
+        const container = document.getElementById("hp-coordinator-options");
+        if (container) {
+            container.innerHTML =
+                '<div class="no-results">⚠️ Failed to load coordinators</div>';
+        }
+    }
+    // 显示卡片 - CRITICAL: 必须先设置display再添加class
+    card.style.display = "block";
+    setTimeout(() => {
+        card.classList.add("show");
+    }, 10);
+    console.log("[HomePage] Config card displayed");
+}
+/**
+ * 初始化配置卡片事件监听
+ * - Hover 显示/隐藏逻辑
+ * - 保存/取消按钮事件
+ * - 键盘导航支持
+ */
+function HomePage_initConfigCardEvents() {
+    let hoverTimer = null;
+    let hideTimer = null;
+    let isCardHovered = false;
+    const btn = document.getElementById("homePageSelector");
+    const card = document.getElementById("homepage-config-card");
+    if (!btn || !card)
+        return;
+    // 按钮 hover 显示卡片（延迟 300ms）
+    btn.addEventListener("mouseenter", () => {
+        if (hideTimer) {
+            clearTimeout(hideTimer);
+            hideTimer = null;
+        }
+        hoverTimer = window.setTimeout(() => {
+            HomePage_showConfigCard();
+        }, 300);
+    });
+    btn.addEventListener("mouseleave", () => {
+        if (hoverTimer) {
+            clearTimeout(hoverTimer);
+            hoverTimer = null;
+        }
+        if (!isCardHovered) {
+            hideTimer = window.setTimeout(() => {
+                HomePage_hideConfigCard();
+            }, 200);
+        }
+    });
+    // 卡片 hover 保持显示
+    card.addEventListener("mouseenter", () => {
+        isCardHovered = true;
+        if (hideTimer) {
+            clearTimeout(hideTimer);
+            hideTimer = null;
+        }
+    });
+    card.addEventListener("mouseleave", () => {
+        isCardHovered = false;
+        hideTimer = window.setTimeout(() => {
+            HomePage_hideConfigCard();
+        }, 200);
+    });
+    // 保存按钮
+    const saveBtn = document.getElementById("hp-save-config-btn");
+    saveBtn?.addEventListener("click", handleSaveConfiguration);
+    // 取消/关闭按钮
+    const cancelBtn = document.getElementById("hp-cancel-config-btn");
+    const closeBtn = document.getElementById("hp-config-close-x");
+    cancelBtn?.addEventListener("click", HomePage_hideConfigCard);
+    closeBtn?.addEventListener("click", HomePage_hideConfigCard);
+    // 键盘支持（Escape 关闭卡片）
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && card.classList.contains("show")) {
+            HomePage_hideConfigCard();
+        }
+    });
+    // Enter 键保存（当焦点在配置卡片内时）
+    card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" &&
+            e.target instanceof HTMLInputElement &&
+            e.target.type === "radio") {
+            handleSaveConfiguration();
+        }
+    });
+    // 初始化搜索过滤
+    initCoordinatorSearch();
+    console.log("[HomePage] Config card events initialized");
+}
+/**
+ * 初始化配置卡片 UI
+ * 创建 HTML 结构并附加到按钮
+ */
+function initHomePageConfigCardUI() {
+    // 等待按钮创建
+    const checkBtn = setInterval(() => {
+        const btn = document.getElementById("homePageSelector");
+        if (btn) {
+            clearInterval(checkBtn);
+            // 检查是否已创建配置卡片
+            if (document.getElementById("homepage-config-card")) {
+                console.log("[HomePage] Config card already exists");
+                return;
+            }
+            // 创建配置卡片 HTML
+            const cardHTML = `
+        <div id="homepage-config-card" role="dialog" aria-label="Coordinator Selection">
+          <div class="config-card-header">
+            <h3>🔍 Search by Coordinator 配置</h3>
+            <button class="config-close-btn" id="hp-config-close-x" aria-label="Close configuration">×</button>
+          </div>
+          <div class="config-card-body">
+            <label for="hp-coordinator-search">选择 Coordinator:</label>
+            <input type="text" 
+                   id="hp-coordinator-search" 
+                   class="config-search-input" 
+                   placeholder="搜索 Coordinator..."
+                   aria-label="Search coordinators">
+            <div id="hp-coordinator-options" 
+                 class="coordinator-list" 
+                 role="radiogroup" 
+                 aria-label="Coordinator options">
+              <!-- Coordinator options will be rendered here -->
+            </div>
+          </div>
+          <div class="config-card-footer">
+            <button id="hp-save-config-btn" class="btn-primary" aria-label="Save configuration">💾 保存配置</button>
+            <button id="hp-cancel-config-btn" class="btn-secondary" aria-label="Cancel">❌ 取消</button>
+          </div>
+        </div>
+      `;
+            // 将卡片附加到按钮的父元素
+            const btnParent = btn.parentElement;
+            if (btnParent) {
+                // 创建临时容器
+                const tempDiv = document.createElement("div");
+                tempDiv.innerHTML = cardHTML;
+                const card = tempDiv.firstElementChild;
+                if (card) {
+                    btnParent.appendChild(card);
+                    console.log("[HomePage] Config card UI created");
+                    // 初始化事件监听
+                    HomePage_initConfigCardEvents();
+                    // 根据当前配置更新按钮文本
+                    const config = getHomePageConfig();
+                    // Update button text if coordinatorID is configured (any saved coordinator)
+                    if (config.coordinatorID && config.coordinatorText) {
+                        HomePage_updateButtonText(btn, config.coordinatorText);
+                        console.log("[HomePage] Button text restored from saved config:", config.coordinatorText);
+                    }
+                }
+            }
+        }
+    }, 1000);
+}
 
 ;// ./src/index.ts
 
@@ -4683,13 +5481,19 @@ async function src_main() {
         type: "button",
         id: "homePageSelector",
         name: "homePageSelector",
-        class: "button hollow",
-        value: "Home Page Selector: Tao",
+        class: "button hollow homepage-selector-btn",
+        value: "Search by Coordinator",
     });
-    assignIntervalTimer(homePageSearchButtonSelector, $HomePageSelector, "#homePageSelector", homePageSelector);
+    assignIntervalTimer(homePageSearchButtonSelector, $HomePageSelector, "#homePageSelector", homePageSelector, [], "left", () => window.location.hash === "#msg", // 只在 #msg 锚点显示
+    "#ctl00_ContentPlaceHolder1_iframemsg" // iframe 选择器
+    );
     assignIntervalTimer(prebillingSearchButtonSelector, $prebillingSelector, "#prebillingSelector", prebillingSelector);
     // 初始化 Prebilling 配置卡片 UI (Story 3)
     initConfigCardUI();
+    // 初始化 HomePage hashchange 监听器 (Epic 4, Story 1)
+    initHashChangeListener();
+    // 初始化 HomePage 配置卡片 UI (Epic 4, Story 3)
+    initHomePageConfigCardUI();
     assignIntervalTimer(newMessageButtonSelector, $newQABtn, "#newQABtn", createNewQA);
     assignIntervalTimer(newMessageButtonSelector, $newWelcomeCall, "#newWelcomecallBtn", createWelcomeCall);
     assignIntervalTimer(saveButtonSelector, $POCBtn, "#uxBtnPOC", POCResolver);
