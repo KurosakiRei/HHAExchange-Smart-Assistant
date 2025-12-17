@@ -350,10 +350,10 @@ window.addEventListener('hashchange', () => {
 ```
 
 ### 验收标准
-- [ ] 按钮只在 URL 包含 `#msg` 时显示
-- [ ] 切换到其他 Tab（如 `#visits`）按钮自动隐藏
-- [ ] 从其他 Tab 切换回 `#msg` 按钮自动显示
-- [ ] 页面刷新后检测逻辑正常工作
+- [x] 按钮只在 URL 包含 `#msg` 时显示
+- [x] 切换到其他 Tab（如 `#visits`）按钮自动隐藏
+- [x] 从其他 Tab 切换回 `#msg` 按钮自动显示
+- [x] 页面刷新后检测逻辑正常工作
 
 ### 技术要点
 - 使用 `window.location.hash` 检测当前锚点
@@ -564,24 +564,24 @@ export function resetHomePageConfig(): void {
 ### 验收标准（完整测试场景）
 
 **配置持久化**:
-- [ ] 配置保存到 GM_storage（key: `hha_homepage_config`）
-- [ ] 页面刷新后配置保持（F5 测试）
-- [ ] 网站登出后重新登录，配置依然存在
-- [ ] 首次使用时自动初始化默认配置（Tao Yang ID: 75207）
-- [ ] `resetHomePageConfig()` 可重置为默认值
+- [x] 配置保存到 GM_storage（key: `hha_homepage_config`）
+- [x] 页面刷新后配置保持（F5 测试）
+- [x] 网站登出后重新登录，配置依然存在
+- [x] 首次使用时自动初始化默认配置（Tao Yang ID: 75207）
+- [x] `resetHomePageConfig()` 可重置为默认值
 
 **API 数据获取**:
-- [ ] 成功从 `/api/Common/GetAllCoordinators` 获取 26 个 coordinator
-- [ ] API 请求失败时返回空数组，不影响功能
-- [ ] Coordinator 列表缓存 5 分钟，减少 API 调用
-- [ ] 缓存过期后自动重新获取最新列表
-- [ ] 缓存数据保存到 GM_storage（key: `hha_coordinator_cache`）
+- [x] 成功从 `/api/Common/GetAllCoordinators` 获取 26 个 coordinator
+- [x] API 请求失败时返回空数组，不影响功能
+- [x] Coordinator 列表缓存 5 分钟，减少 API 调用
+- [x] 缓存过期后自动重新获取最新列表
+- [x] 缓存数据保存到 GM_storage（key: `hha_coordinator_cache`）
 
 **错误处理**:
-- [ ] GM_storage 不可用时使用内存 fallback
-- [ ] JSON 解析失败时返回默认配置
-- [ ] API 请求超时/失败时优雅降级
-- [ ] 网络错误时使用缓存数据（即使过期）
+- [x] GM_storage 不可用时使用内存 fallback
+- [x] JSON 解析失败时返回默认配置
+- [x] API 请求超时/失败时优雅降级
+- [x] 网络错误时使用缓存数据（即使过期）
 
 ### 技术要点
 - 使用 `GM_setValue` / `GM_getValue`（Tampermonkey API）
@@ -1150,52 +1150,52 @@ async function triggerCommunicationTypeLoad(): Promise<void> {
 ### 验收标准（完整交互测试）
 
 **Hover 行为**:
-- [ ] 鼠标悬停在按钮上 300ms 后显示配置卡片
-- [ ] 鼠标移出按钮且不在卡片上，卡片自动隐藏（200ms 延迟）
-- [ ] 鼠标在卡片上时，卡片保持显示
-- [ ] 鼠标移出按钮和卡片区域后，卡片自动隐藏
+- [x] 鼠标悬停在按钮上 300ms 后显示配置卡片
+- [x] 鼠标移出按钮且不在卡片上，卡片自动隐藏（200ms 延迟）
+- [x] 鼠标在卡片上时，卡片保持显示
+- [x] 鼠标移出按钮和卡片区域后，卡片自动隐藏
 
 **Coordinator 列表显示**:
-- [ ] 配置卡片显示所有可用 Coordinator（单选 Radio）
-- [ ] 当前配置的 Coordinator 自动选中（checked）
-- [ ] 如果列表为空，显示 "Loading coordinators..." 或 "⚠️ No coordinators available"
-- [ ] 列表支持垂直滚动（超过 350px 高度时）
-- [ ] 滚动条样式符合页面风格
+- [x] 配置卡片显示所有可用 Coordinator（单选 Radio）
+- [x] 当前配置的 Coordinator 自动选中（checked）
+- [x] 如果列表为空，显示 "Loading coordinators..." 或 "⚠️ No coordinators available"
+- [x] 列表支持垂直滚动（超过 350px 高度时）
+- [x] 滚动条样式符合页面风格
 
 **搜索/过滤功能**:
-- [ ] 在搜索框输入关键字，Coordinator 列表实时过滤
-- [ ] 搜索不区分大小写（toLowerCase）
-- [ ] 搜索支持部分匹配（包含关键字即可）
-- [ ] 清空搜索框，显示所有 Coordinator
-- [ ] 没有匹配结果时显示 "🔍 No coordinators found"
+- [x] 在搜索框输入关键字，Coordinator 列表实时过滤
+- [x] 搜索不区分大小写（toLowerCase）
+- [x] 搜索支持部分匹配（包含关键字即可）
+- [x] 清空搜索框，显示所有 Coordinator
+- [x] 没有匹配结果时显示 "🔍 No coordinators found"
 
 **保存/取消按钮**:
-- [ ] 点击 "Save" 按钮，保存选中的 Coordinator 到 GM_storage
-- [ ] 按钮文本更新为 "Search: {名字前两个单词}"（如 "Search: Tao Yang"）
-- [ ] 未选中 Coordinator 时点击 Save，显示警告提示
-- [ ] 点击 "Cancel" 或 "×" 关闭卡片，不保存更改
-- [ ] 关闭卡片后搜索框自动重置为空
-- [ ] 保存成功后卡片渐隐效果（0.2s）
+- [x] 点击 "Save" 按钮，保存选中的 Coordinator 到 GM_storage
+- [x] 按钮文本更新为 "Search: {名字前两个单词}"（如 "Search: Tao Yang"）
+- [x] 未选中 Coordinator 时点击 Save，显示警告提示
+- [x] 点击 "Cancel" 或 "×" 关闭卡片，不保存更改
+- [x] 关闭卡片后搜索框自动重置为空
+- [x] 保存成功后卡片渐隐效果（0.2s）
 
 **键盘导航支持**:
-- [ ] Tab 键可以在搜索框、Radio 按钮、Save/Cancel 按钮间切换
-- [ ] 按 Escape 键关闭配置卡片
-- [ ] 按 Enter 键在选中 Radio 后保存配置
-- [ ] 焦点样式清楚可见（outline: 2px solid #4CAF50）
-- [ ] 键盘关闭卡片后，焦点返回到按钮
+- [x] Tab 键可以在搜索框、Radio 按钮、Save/Cancel 按钮间切换
+- [x] 按 Escape 键关闭配置卡片
+- [x] 按 Enter 键在选中 Radio 后保存配置
+- [x] 焦点样式清楚可见（outline: 2px solid #4CAF50）
+- [x] 键盘关闭卡片后，焦点返回到按钮
 
 **无障碍功能**:
-- [ ] 配置卡片带 `role="dialog"` 和 `aria-label="Coordinator Selection"`
-- [ ] Radio 按钮带 `aria-label`（Coordinator 名称）
-- [ ] Radio group 带 `role="radiogroup"` 和 `aria-label="Coordinator options"`
-- [ ] 搜索框带 `aria-label="Search coordinators"`
-- [ ] 按钮带 `aria-label`（Save / Cancel / Close）
-- [ ] 屏幕阅读器能正确读取所有元素
+- [x] 配置卡片带 `role="dialog"` 和 `aria-label="Coordinator Selection"`
+- [x] Radio 按钮带 `aria-label`（Coordinator 名称）
+- [x] Radio group 带 `role="radiogroup"` 和 `aria-label="Coordinator options"`
+- [x] 搜索框带 `aria-label="Search coordinators"`
+- [x] 按钮带 `aria-label`（Save / Cancel / Close）
+- [x] 屏幕阅读器能正确读取所有元素
 
 **响应式设计**:
-- [ ] 配置卡片宽度固定 350px，适配小屏幕
-- [ ] 卡片位置在按钮下方（`top: 100%`）
-- [ ] 卡片不超出视口范围（如需要调整 left 值）
+- [x] 配置卡片宽度固定 350px，适配小屏幕
+- [x] 卡片位置在按钮下方（`top: 100%`）
+- [x] 卡片不超出视口范围（如需要调整 left 值）
 
 ### CSS 样式引用
 - 新增样式文件 `src/style/homepage-config-card.less`
@@ -1518,54 +1518,54 @@ function updateButtonText(btn: HTMLElement, coordinatorText: string): void {
 ### 验收标准（完整测试场景）
 
 **API-First 搜索**:
-- [ ] 点击按钮后优先调用 PayerNotificationSearch API
-- [ ] API 请求包含正确的参数：
+- [x] 点击按钮后优先调用 PayerNotificationSearch API
+- [x] API 请求包含正确的参数：
   - CoordinatorID 从配置读取（如 75207）
   - CommunicationType 固定为 2 (Patient)
   - Status 从配置读取（默认 -1=All）
   - Pagination, OfficeIDs, Payers, ReasonIDs 正确传递
-- [ ] API 成功后在控制台输出 "✅ API search succeeded"
-- [ ] API 成功后页面自动刷新搜索结果（Angular）
-- [ ] 搜索速度 < 500ms（API 方式）
+- [x] API 成功后在控制台输出 "✅ API search succeeded"
+- [x] API 成功后页面自动刷新搜索结果（Angular）
+- [x] 搜索速度 < 500ms（API 方式）
 
 **参数提取**:
-- [ ] getAppSecretFromPage() 能从 meta 标签或全局变量获取 AppSecret
-- [ ] getAppSecretFromPage() 无法获取时使用默认值 '79BB4FCD-9884-4652-B77F-6077F363193D'
-- [ ] getCurrentUserID() 从全局变量读取当前用户 ID
-- [ ] getCurrentOfficeIDs() 返回当前选中的 Office IDs（或空数组表示 All）
-- [ ] getCurrentPayers() 和 getCurrentReasonIDs() 同上
+- [x] getAppSecretFromPage() 能从 meta 标签或全局变量获取 AppSecret
+- [x] getAppSecretFromPage() 无法获取时使用默认值 '79BB4FCD-9884-4652-B77F-6077F363193D'
+- [x] getCurrentUserID() 从全局变量读取当前用户 ID
+- [x] getCurrentOfficeIDs() 返回当前选中的 Office IDs（或空数组表示 All）
+- [x] getCurrentPayers() 和 getCurrentReasonIDs() 同上
 
 **UI 自动化回退**:
-- [ ] API 失败时自动触发 legacyUIAutomation()
-- [ ] 控制台输出 "⚠️ API search failed, falling back to UI automation"
-- [ ] UI 自动化按顺序执行：Communication Type → Coordinator → Status → Search
-- [ ] UI 自动化成功后输出 "✅ UI automation succeeded"
-- [ ] UI 自动化使用配置中的 coordinatorID 而非硬编码值
+- [x] API 失败时自动触发 legacyUIAutomation()
+- [x] 控制台输出 "⚠️ API search failed, falling back to UI automation"
+- [x] UI 自动化按顺序执行：Communication Type → Coordinator → Status → Search
+- [x] UI 自动化成功后输出 "✅ UI automation succeeded"
+- [x] UI 自动化使用配置中的 coordinatorID 而非硬编码值
 
 **错误处理**:
-- [ ] API fetch 异常时 catch 并返回 false
-- [ ] 未配置 Coordinator 时弹出警告："⚠️ Please configure a coordinator first"
-- [ ] API 和 UI 都失败时弹出错误："❌ Search failed. Please try again or search manually."
-- [ ] 所有错误都记录到控制台（console.error）
+- [x] API fetch 异常时 catch 并返回 false
+- [x] 未配置 Coordinator 时弹出警告："⚠️ Please configure a coordinator first"
+- [x] API 和 UI 都失败时弹出错误："❌ Search failed. Please try again or search manually."
+- [x] 所有错误都记录到控制台（console.error）
 
 **按钮行为**:
-- [ ] 按钮默认文字为 "Search by Coordinator"
-- [ ] 保存配置后按钮文字更新为 "Search: {名字}"（如 "Search: Tao Yang"）
-- [ ] 按钮只在 #msg 页面显示（锚点检测，Story 1）
-- [ ] 按钮支持 hover 显示配置卡片（Story 3）
+- [x] 按钮默认文字为 "Search by Coordinator"
+- [x] 保存配置后按钮文字更新为 "Search: {名字}"（如 "Search: Tao Yang"）
+- [x] 按钮只在 #msg 页面显示（锚点检测，Story 1）
+- [x] 按钮支持 hover 显示配置卡片（Story 3）
 
 **日志输出**:
-- [ ] 搜索开始时输出 "[HomePage] Selector started (API-First mode)"
-- [ ] API 尝试时输出 "[HomePage] Attempting API-First search..."
-- [ ] API 成功时输出 "[HomePage] ✅ API search succeeded"
-- [ ] API 失败时输出 "[HomePage] ⚠️ API search failed, falling back to UI automation"
-- [ ] UI 成功时输出 "[HomePage] ✅ UI automation succeeded"
-- [ ] 完全失败时输出 "[HomePage] ❌ Both API and UI automation failed"
+- [x] 搜索开始时输出 "[HomePage] Selector started (API-First mode)"
+- [x] API 尝试时输出 "[HomePage] Attempting API-First search..."
+- [x] API 成功时输出 "[HomePage] ✅ API search succeeded"
+- [x] API 失败时输出 "[HomePage] ⚠️ API search failed, falling back to UI automation"
+- [x] UI 成功时输出 "[HomePage] ✅ UI automation succeeded"
+- [x] 完全失败时输出 "[HomePage] ❌ Both API and UI automation failed"
 
 **性能对比**:
-- [ ] API-First 搜索速度 < 500ms
-- [ ] UI 自动化回退速度约 2-3秒
-- [ ] 性能提升约 4-6 倍
+- [x] API-First 搜索速度 < 500ms
+- [x] UI 自动化回退速度约 2-3秒
+- [x] 性能提升约 4-6 倍
 
 ### 技术要点
 - **API-First 策略**: 优先调用 PayerNotificationSearch API，绕过 UI 级联依赖
@@ -1575,12 +1575,12 @@ function updateButtonText(btn: HTMLElement, coordinatorText: string): void {
 - **详细日志**: 每个步骤都有清晰的日志输出便于调试
 - **错误处理**: 完善的 try-catch 和用户提示
 - **原生 DOM API**: 使用 fetch 和 document.querySelector 替代 jQuery
-- [ ] `homePageSelector()` 从配置读取 Coordinator ID
-- [ ] 使用原生 DOM API 设置 select 值
-- [ ] 按钮默认文字为 "Search by Coordinator"
-- [ ] 保存配置后按钮文字更新为 "Search: {Coordinator名}"（如 "Search: Tao Yang"）
-- [ ] 添加日志输出便于调试
-- [ ] 优化等待逻辑，使用轮询替代固定 sleep
+- [x] `homePageSelector()` 从配置读取 Coordinator ID
+- [x] 使用原生 DOM API 设置 select 值
+- [x] 按钮默认文字为 "Search by Coordinator"
+- [x] 保存配置后按钮文字更新为 "Search: {Coordinator名}"（如 "Search: Tao Yang"）
+- [x] 添加日志输出便于调试
+- [x] 优化等待逻辑，使用轮询替代固定 sleep
 
 ### 技术要点
 - 使用 `document.querySelector` 替代 jQuery `$()`

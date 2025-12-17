@@ -108,12 +108,12 @@ function selectCoordinator(coordinatorIds: string[]) {
 ```
 
 ### 验收标准
-- [ ] 移除所有模拟点击和 sleep 逻辑
-- [ ] 使用 `$('#ddlCoordinatorMul').multipleSelect('uncheckAll')` 清空选择
-- [ ] 使用 `$('#ddlCoordinatorMul').multipleSelect('setSelects', ids)` 设置值
-- [ ] 更新隐藏字段 `ctl00_ContentPlaceHolder1_hdCoordinatorMul`
-- [ ] 按钮可以重复使用，不再有一次性 Bug
-- [ ] 添加错误处理，检测 multipleSelect 插件是否可用
+- [x] 移除所有模拟点击和 sleep 逻辑
+- [x] 使用 `$('#ddlCoordinatorMul').multipleSelect('uncheckAll')` 清空选择
+- [x] 使用 `$('#ddlCoordinatorMul').multipleSelect('setSelects', ids)` 设置值
+- [x] 更新隐藏字段 `ctl00_ContentPlaceHolder1_hdCoordinatorMul`
+- [x] 按钮可以重复使用，不再有一次性 Bug
+- [x] 添加错误处理，检测 multipleSelect 插件是否可用
 
 ### 技术要点
 
@@ -228,13 +228,13 @@ export async function prebillingSelector() {
 ```
 
 ### 验收标准
-- [ ] 创建配置数据结构 `PrebillingConfig`
-- [ ] 实现 `savePrebillingConfig()` 保存到 localStorage
-- [ ] 实现 `loadPrebillingConfig()` 加载配置
-- [ ] 实现 `initPrebillingConfig()` 初始化默认配置
-- [ ] `prebillingSelector()` 使用加载的配置
-- [ ] localStorage 被禁用时优雅降级（使用内存存储）
-- [ ] 添加完整的错误处理和日志输出
+- [x] 创建配置数据结构 `PrebillingConfig`
+- [x] 实现 `savePrebillingConfig()` 保存到 localStorage
+- [x] 实现 `loadPrebillingConfig()` 加载配置
+- [x] 实现 `initPrebillingConfig()` 初始化默认配置
+- [x] `prebillingSelector()` 使用加载的配置
+- [x] localStorage 被禁用时优雅降级（使用内存存储）
+- [x] 添加完整的错误处理和日志输出
 
 ### 测试场景
 1. **首次使用**：自动保存默认配置（Tao Yang）
@@ -582,16 +582,16 @@ $(async () => {
 ```
 
 ### 验收标准
-- [ ] 在 Prebilling Review 页面创建配置卡片 DOM
-- [ ] 鼠标 hover 按钮 300ms 后显示卡片
-- [ ] 卡片显示所有可用的 coordinator（排除 "No Coordinator"）
-- [ ] 搜索框能实时过滤 coordinator 列表
-- [ ] Checkbox 能正确反映当前配置
-- [ ] 实时显示已选择的数量
-- [ ] 点击"保存配置"按钮保存到 localStorage
-- [ ] 点击"取消"按钮关闭卡片
-- [ ] 鼠标移出卡片 200ms 后自动关闭
-- [ ] 配置保存后显示成功提示
+- [x] 在 Prebilling Review 页面创建配置卡片 DOM
+- [x] 鼠标 hover 按钮 300ms 后显示卡片
+- [x] 卡片显示所有可用的 coordinator（排除 "No Coordinator"）
+- [x] 搜索框能实时过滤 coordinator 列表
+- [x] Checkbox 能正确反映当前配置
+- [x] 实时显示已选择的数量
+- [x] 点击"保存配置"按钮保存到 localStorage
+- [x] 点击"取消"按钮关闭卡片
+- [x] 鼠标移出卡片 200ms 后自动关闭
+- [x] 配置保存后显示成功提示
 
 ### 测试场景
 1. **Hover 显示**：鼠标悬停按钮 0.3s 后卡片显示
@@ -606,26 +606,26 @@ $(async () => {
 ## Epic 完成标准
 
 ### 功能验收
-- [ ] 所有 3 个 Story 已完成
-- [ ] 按钮可重复使用，无 Bug
-- [ ] 配置保存和加载正常
-- [ ] Hover 卡片 UI 流畅美观
-- [ ] 默认配置为 Tao Yang（向后兼容）
+- [x] 所有 3 个 Story 已完成
+- [x] 按钮可重复使用，无 Bug
+- [x] 配置保存和加载正常
+- [x] Hover 卡片 UI 流畅美观
+- [x] 默认配置为 Tao Yang（向后兼容）
 
 ### 代码质量
-- [ ] 所有函数有 TypeScript 类型定义
-- [ ] 添加 JSDoc 注释
-- [ ] 错误处理完整
-- [ ] 日志输出清晰
+- [x] 所有函数有 TypeScript 类型定义
+- [x] 添加 JSDoc 注释
+- [x] 错误处理完整
+- [x] 日志输出清晰
 
 ### 测试覆盖
-- [ ] 手动测试所有场景通过
-- [ ] 兼容性测试（Chrome, Firefox）
-- [ ] 边界条件测试（localStorage 禁用等）
+- [x] 手动测试所有场景通过
+- [x] 兼容性测试（Chrome, Firefox）
+- [x] 边界条件测试（localStorage 禁用等）
 
 ### 文档更新
-- [ ] 更新 README 说明新功能
-- [ ] 添加使用说明截图
+- [x] 更新 README 说明新功能
+- [x] 添加使用说明截图
 
 ## 风险与依赖
 

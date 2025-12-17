@@ -54,11 +54,11 @@ Visit Monitor 在多标签页场景下，每个标签页独立发起 API 请求�
 > **理由**: Tampermonkey 脚本最终打包为单文件，避免不必要的模块拆分和重构风险。
 
 ### 验收标准
-- [ ] 在 `VisitMonitor.ts` 内部创建 `TabSyncManager` 类
-- [ ] 实现 Tab ID 生成和管理
-- [ ] 实现 localStorage 读写封装
-- [ ] 实现 BroadcastChannel 消息发送/接收
-- [ ] 包含完整的 TypeScript 类型定义和 JSDoc 注释
+- [x] 在 `VisitMonitor.ts` 内部创建 `TabSyncManager` 类
+- [x] 实现 Tab ID 生成和管理
+- [x] 实现 localStorage 读写封装
+- [x] 实现 BroadcastChannel 消息发送/接收
+- [x] 包含完整的 TypeScript 类型定义和 JSDoc 注释
 
 ### 技术要点
 
@@ -103,10 +103,10 @@ class TabSyncManager {
 ```
 
 ### 任务清单
-- [ ] 在 `src/js/VisitMonitor.ts` 顶部添加 Sync 相关类型定义
-- [ ] 在 `visitMonitor` 函数内部实现 `TabSyncManager` 类
-- [ ] 为所有方法添加 JSDoc 注释
-- [ ] 实例化 `tabSyncManager` 变量供后续 Story 使用
+- [x] 在 `src/js/VisitMonitor.ts` 顶部添加 Sync 相关类型定义
+- [x] 在 `visitMonitor` 函数内部实现 `TabSyncManager` 类
+- [x] 为所有方法添加 JSDoc 注释
+- [x] 实例化 `tabSyncManager` 变量供后续 Story 使用
 
 ---
 
@@ -116,11 +116,11 @@ class TabSyncManager {
 作为用户，当我打开新标签页时，应该立即看到已有的监控数据，而不是等待 API 请求。
 
 ### 验收标准
-- [ ] 面板打开时首先检查 localStorage 缓存
-- [ ] 缓存 < 30 秒：直接使用，不发起 API
-- [ ] 缓存 30s-2min：显示缓存数据，后台排队刷新
-- [ ] 缓存 > 2min 或无缓存：立即刷新
-- [ ] UI 显示"上次更新时间"
+- [x] 面板打开时首先检查 localStorage 缓存
+- [x] 缓存 < 30 秒：直接使用，不发起 API
+- [x] 缓存 30s-2min：显示缓存数据，后台排队刷新
+- [x] 缓存 > 2min 或无缓存：立即刷新
+- [x] UI 显示"上次更新时间"
 
 ### 技术要点
 
@@ -173,12 +173,12 @@ function updateLastRefreshTime(timestamp: number): void {
 ```
 
 ### 任务清单
-- [ ] 修改 `initialize()` 函数，实例化 `tabSyncManager`
-- [ ] 修改 `runTrackingUpdate()` 函数，添加缓存检查逻辑
-- [ ] 添加 `restoreFromCache()` 辅助函数
-- [ ] 在 panel header 添加"上次更新时间"显示元素
-- [ ] 添加 `updateLastRefreshTime()` 辅助函数
-- [ ] 测试三种缓存场景 (USE / USE_AND_REFRESH / REFRESH)
+- [x] 修改 `initialize()` 函数，实例化 `tabSyncManager`
+- [x] 修改 `runTrackingUpdate()` 函数，添加缓存检查逻辑
+- [x] 添加 `restoreFromCache()` 辅助函数
+- [x] 在 panel header 添加"上次更新时间"显示元素
+- [x] 添加 `updateLastRefreshTime()` 辅助函数
+- [x] 测试三种缓存场景 (USE / USE_AND_REFRESH / REFRESH)
 
 ---
 
@@ -188,10 +188,10 @@ function updateLastRefreshTime(timestamp: number): void {
 作为用户，当一个标签页获取到新数据时，其他标签页应该自动更新。
 
 ### 验收标准
-- [ ] API 请求完成后，数据写入 localStorage
-- [ ] 通过 BroadcastChannel 通知其他 Tab
-- [ ] 其他 Tab 收到通知后更新 UI
-- [ ] 防止循环更新（检查 sourceTabId）
+- [x] API 请求完成后，数据写入 localStorage
+- [x] 通过 BroadcastChannel 通知其他 Tab
+- [x] 其他 Tab 收到通知后更新 UI
+- [x] 防止循环更新（检查 sourceTabId）
 
 ### 技术要点
 
@@ -236,10 +236,10 @@ function initialize() {
 ```
 
 ### 任务清单
-- [ ] 在 `runTrackingUpdate()` API 完成后调用 `setCachedData()` 和 `broadcast()`
-- [ ] 在 `initialize()` 中调用 `tabSyncManager.onMessage()` 注册监听
-- [ ] 添加 `sourceTabId` 检查防止自我触发更新
-- [ ] 添加 console.log 调试信息便于验证
+- [x] 在 `runTrackingUpdate()` API 完成后调用 `setCachedData()` 和 `broadcast()`
+- [x] 在 `initialize()` 中调用 `tabSyncManager.onMessage()` 注册监听
+- [x] 添加 `sourceTabId` 检查防止自我触发更新
+- [x] 添加 console.log 调试信息便于验证
 
 ---
 
@@ -249,11 +249,11 @@ function initialize() {
 作为开发者，我需要处理各种边缘情况，确保功能稳定可靠。
 
 ### 验收标准
-- [ ] 处理 BroadcastChannel 不支持的情况（降级到仅 localStorage）
-- [ ] 处理 localStorage 满的情况（清理旧数据）
-- [ ] 处理 JSON 解析错误
-- [ ] Tab 关闭时的清理逻辑
-- [ ] 添加错误日志
+- [x] 处理 BroadcastChannel 不支持的情况（降级到仅 localStorage）
+- [x] 处理 localStorage 满的情况（清理旧数据）
+- [x] 处理 JSON 解析错误
+- [x] Tab 关闭时的清理逻辑
+- [x] 添加错误日志
 
 ### 技术要点
 
@@ -284,11 +284,11 @@ class TabSyncManager {
 ```
 
 ### 任务清单
-- [ ] 添加 BroadcastChannel 特性检测
-- [ ] 实现 localStorage 错误处理
-- [ ] 实现缓存清理策略
-- [ ] 添加 `beforeunload` 清理
-- [ ] 添加调试日志
+- [x] 添加 BroadcastChannel 特性检测
+- [x] 实现 localStorage 错误处理
+- [x] 实现缓存清理策略
+- [x] 添加 `beforeunload` 清理
+- [x] 添加调试日志
 
 ---
 
@@ -309,11 +309,11 @@ class TabSyncManager {
 
 ## 完成定义 (DoD)
 
-- [ ] 所有 Story 验收标准通过
-- [ ] 代码已添加 JSDoc 注释
-- [ ] 无 TypeScript 编译错误
-- [ ] 手动测试多 Tab 场景通过
-- [ ] 单 Tab 场景回归测试通过
+- [x] 所有 Story 验收标准通过
+- [x] 代码已添加 JSDoc 注释
+- [x] 无 TypeScript 编译错误
+- [x] 手动测试多 Tab 场景通过
+- [x] 单 Tab 场景回归测试通过
 
 ## 变更日志
 
