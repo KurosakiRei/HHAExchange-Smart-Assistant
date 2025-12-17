@@ -45,7 +45,7 @@ let coordinatorsLoadedOnce = false;
 const DEFAULT_CONFIG: HomePageConfig = {
   coordinatorID: "75207",
   coordinatorText: "Tao Yang ext.503 TYang@alwaysNY.net",
-  status: "-1", // All
+  status: "1", // Open
   lastUpdated: Date.now(),
 };
 
@@ -539,7 +539,7 @@ async function legacyUIAutomation(): Promise<boolean> {
       "1": "Open",
       "2": "Closed",
     };
-    const statusText = statusMap[config.status] || "All";
+    const statusText = statusMap[config.status] || "Open";
 
     for (const option of $iframe(homePagestatusOptionSelector)) {
       if (statusText == option.innerText) {
