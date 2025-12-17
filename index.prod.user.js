@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.5.0
+// @version             3.5.1
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -4587,7 +4587,7 @@ let coordinatorsLoadedOnce = false;
 const HomePage_DEFAULT_CONFIG = {
     coordinatorID: "75207",
     coordinatorText: "Tao Yang ext.503 TYang@alwaysNY.net",
-    status: "-1", // All
+    status: "1", // Open
     lastUpdated: Date.now(),
 };
 // ============================================================================
@@ -4996,7 +4996,7 @@ async function legacyUIAutomation() {
             "1": "Open",
             "2": "Closed",
         };
-        const statusText = statusMap[config.status] || "All";
+        const statusText = statusMap[config.status] || "Open";
         for (const option of $iframe(homePagestatusOptionSelector)) {
             if (statusText == option.innerText) {
                 status.val(option.getAttribute("value"));
