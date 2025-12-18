@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.5.1
+// @version             3.6.0
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -2018,15 +2018,37 @@ function getScheduleTime() {
 ;// ./src/js/IncomingCallHandler.ts
 
 
-// --- 配置区域 (请根据需要修改) ---
+// ==================== 常量定义 ====================
+/** Active 状态列表 (包括 Hospitalized，因为需要同等关注) */
+const ACTIVE_STATUSES = [
+    "Active",
+    "Hospitalized",
+];
+/** Non-Active 状态列表 */
+const NON_ACTIVE_STATUSES = [
+    "Discharged",
+    "Hold",
+    "Waiting",
+];
+// ==================== 配置区域 ====================
 const AIDE_SEARCH_URL = "https://app.hhaexchange.com/ENT2507010000/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=";
 const AIDE_SEARCH_PARAMS = "&LastName=&Type=-1&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=";
 const AIDE_PROFILE_URL_TEMPLATE = "https://app.hhaexchange.com/ENT2507010000/Aide/Aide_ns.aspx?AideId={ID}";
 const PATIENT_SEARCH_URL = "https://app.hhaexchange.com/ENT2507010000/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=";
 const PATIENT_SEARCH_PARAMS = "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-1&DisciplineID=0&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
 const PATIENT_PROFILE_URL_TEMPLATE = "https://app.hhaexchange.com/ENT2507010000/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}";
-// --- 脚本核心逻辑 ---
+// ==================== 状态变量 ====================
 let lastCallWasIncoming = false;
+// ==================== 工具函数 ====================
+/**
+ * 判断给定的状态是否为 Active 状态
+ * Active 状态包括: Active, Hospitalized
+ * @param status - Patient 的状态字符串
+ * @returns 是否为 Active 状态
+ */
+function isActiveStatus(status) {
+    return ACTIVE_STATUSES.some((activeStatus) => status.toLowerCase() === activeStatus.toLowerCase());
+}
 /**
  * 格式化电话号码为 HHAeXchange 接受的格式 (e.g., 917-415-2489)
  * @param rawNumber - 从页面提取的原始号码字符串
@@ -2045,13 +2067,36 @@ function formatPhoneNumber(rawNumber) {
     return null;
 }
 /**
- * 以弹窗形式打开一个URL
- * @param url - 要打开的网址
+ * 以弹窗形式打开一个URL或HTML内容
+ * 使用 Blob URL 避免 data URL 的长度限制和编码问题
+ * @param urlOrHtml - 要打开的网址或HTML字符串
  * @param windowName - 弹窗的名称, 相同的名称会覆盖已打开的弹窗
+ * @param isHtml - 是否为HTML内容（默认false，表示是URL）
  */
-function openInPopup(url, windowName = "HHA_Search_Result") {
+function openInPopup(urlOrHtml, windowName = "HHA_Search_Result", isHtml = false) {
     const windowFeatures = "width=1200,height=900,resizable=yes,scrollbars=yes,status=yes";
-    window.open(url, windowName, windowFeatures);
+    if (isHtml) {
+        // 使用 Blob URL 避免 data URL 的编码问题和长度限制
+        const blob = new Blob([urlOrHtml], { type: "text/html;charset=utf-8" });
+        const blobUrl = URL.createObjectURL(blob);
+        const popup = window.open(blobUrl, windowName, windowFeatures);
+        // 在新窗口加载后释放 Blob URL 以避免内存泄漏
+        if (popup) {
+            popup.addEventListener("load", () => {
+                URL.revokeObjectURL(blobUrl);
+            });
+            // 备用清理：如果 load 事件未触发，5秒后自动清理
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+        }
+        else {
+            // 如果弹窗被阻止，立即清理
+            URL.revokeObjectURL(blobUrl);
+            console.warn("弹窗被浏览器阻止，请允许弹窗后重试");
+        }
+    }
+    else {
+        window.open(urlOrHtml, windowName, windowFeatures);
+    }
 }
 /**
  * 解析 Aide (护工) 的搜索结果
@@ -2091,15 +2136,24 @@ function handleAideSearchResult(html) {
     return { count: resultCount, rawHtml: html };
 }
 /**
- * 解析 Patient (病人) 的搜索结果, 包含特殊过滤逻辑
+ * 解析 Patient (病人) 的搜索结果
+ *
+ * 核心逻辑 (基于 ADR-005):
+ * 1. 统计 Active 状态 (Active, Hospitalized) 的结果数量
+ * 2. 如果 activeCount === 1 → 返回该 Active 结果的 profile URL
+ * 3. 如果 activeCount === 0 且 totalCount === 1 → 返回唯一结果的 profile URL
+ * 4. 其他情况 → 返回原始 HTML 让用户判断
+ *
  * @param html - HHAeXchange返回的Patient搜索结果页HTML字符串
  * @returns 一个包含搜索结果信息的对象
  */
 function handlePatientSearchResult(html) {
     const doc = new DOMParser().parseFromString(html, "text/html");
     const resultsTable = doc.querySelector("#tdSearchResults");
-    if (!resultsTable)
-        return { count: 0, rawHtml: html };
+    if (!resultsTable) {
+        return { count: 0, activeCount: 0, rawHtml: html };
+    }
+    // 获取结果总数
     let resultCount = -1;
     const heading = doc.querySelector("h2");
     if (heading) {
@@ -2109,69 +2163,114 @@ function handlePatientSearchResult(html) {
     }
     const resultRows = resultsTable.querySelectorAll("tbody tr");
     if (resultCount === -1) {
-        // Fallback
         resultCount = resultRows.length;
     }
-    if (resultCount === 1 && resultRows.length === 1) {
-        const link = resultRows[0].querySelector('a[onclick*="RedirectToPatientPage"]');
+    // 无结果
+    if (resultCount === 0) {
+        return { count: 0, activeCount: 0, rawHtml: html };
+    }
+    const rowInfos = Array.from(resultRows).map((row) => {
+        // 获取 Status（通常在特定列，通过检查行内容获取）
+        const statusText = row.textContent || "";
+        let status = "Unknown";
+        // 检查所有已知状态
+        for (const s of [...ACTIVE_STATUSES, ...NON_ACTIVE_STATUSES]) {
+            // 使用单词边界匹配，避免部分匹配
+            const regex = new RegExp(`\\b${s}\\b`, "i");
+            if (regex.test(statusText)) {
+                status = s;
+                break;
+            }
+        }
+        // 获取 profile ID
+        const link = row.querySelector('a[onclick*="RedirectToPatientPage"]');
         const match = link
             ?.getAttribute("onclick")
             ?.match(/RedirectToPatientPage\((\d+)/);
-        if (match && match[1]) {
-            return {
-                count: 1,
-                finalUrl: PATIENT_PROFILE_URL_TEMPLATE.replace("{ID}", match[1]),
-                rawHtml: html,
-            };
-        }
+        const profileId = match ? match[1] : null;
+        return { row, status, profileId };
+    });
+    // 筛选 Active 状态的行
+    const activeRows = rowInfos.filter((info) => isActiveStatus(info.status));
+    const activeCount = activeRows.length;
+    console.log(`[Patient Search] Total: ${resultCount}, Active: ${activeCount}`, rowInfos.map((r) => ({ status: r.status, id: r.profileId })));
+    // 核心决策逻辑
+    // Case 1: 恰好 1 个 Active 结果 → 跳转
+    if (activeCount === 1 && activeRows[0].profileId) {
+        return {
+            count: resultCount,
+            activeCount: 1,
+            finalUrl: PATIENT_PROFILE_URL_TEMPLATE.replace("{ID}", activeRows[0].profileId),
+            rawHtml: html,
+        };
     }
-    else if (resultCount === 2 && resultRows.length === 2) {
-        const activeRows = Array.from(resultRows).filter((row) => !row.textContent?.includes("Waiting"));
-        if (activeRows.length === 1) {
-            const link = activeRows[0].querySelector('a[onclick*="RedirectToPatientPage"]');
-            const match = link
-                ?.getAttribute("onclick")
-                ?.match(/RedirectToPatientPage\((\d+)/);
-            if (match && match[1]) {
-                return {
-                    count: 1,
-                    finalUrl: PATIENT_PROFILE_URL_TEMPLATE.replace("{ID}", match[1]),
-                    rawHtml: html,
-                };
-            }
-        }
+    // Case 2: 0 个 Active 结果，但总共只有 1 个结果 → 跳转
+    if (activeCount === 0 && resultCount === 1 && rowInfos[0].profileId) {
+        return {
+            count: 1,
+            activeCount: 0,
+            finalUrl: PATIENT_PROFILE_URL_TEMPLATE.replace("{ID}", rowInfos[0].profileId),
+            rawHtml: html,
+        };
     }
-    return { count: resultCount, rawHtml: html };
+    // Case 3: 其他情况 → 返回原始 HTML 让用户判断
+    return { count: resultCount, activeCount, rawHtml: html };
 }
 /**
  * 创建一个上下分栏的HTML页面来同时显示两个搜索结果
+ * 使用 Blob URL 避免 srcdoc 的编码问题
  * @param aideResult - Aide的搜索结果对象
  * @param patientResult - Patient的搜索结果对象
  */
 function displayCombinedResults(aideResult, patientResult) {
     console.log("两边都有结果，创建合并视图...");
-    const combinedHtml = `
-        <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>HHA Combined Search Results</title>
-            <style>
-                body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
-                .container { display: flex; flex-direction: column; height: 100%; }
-                .panel { flex: 1; border: 1px solid #ccc; overflow: hidden; display: flex; flex-direction: column; }
-                .panel h2 { margin: 0; padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; font-size: 16px; }
-                .panel iframe { flex-grow: 1; border: none; width: 100%; height: 100%; }
-            </style>
-        </head><body>
-            <div class="container">
-                <div class="panel">
-                    <h2>Aide (护工) 搜索结果 (${aideResult.count} a result)</h2>
-                    <iframe srcdoc="${aideResult.rawHtml.replace(/"/g, "&quot;")}"></iframe>
-                </div>
-                <div class="panel">
-                    <h2>Patient (病人) 搜索结果 (${patientResult.count} a result)</h2>
-                    <iframe srcdoc="${patientResult.rawHtml.replace(/"/g, "&quot;")}"></iframe>
-                </div>
-            </div>
-        </body></html>`;
-    openInPopup(`data:text/html;charset=utf-8,${encodeURIComponent(combinedHtml)}`, "HHA_Combined_Result");
+    // 为每个结果创建 Blob URL
+    const aideBlob = new Blob([aideResult.rawHtml], {
+        type: "text/html;charset=utf-8",
+    });
+    const patientBlob = new Blob([patientResult.rawHtml], {
+        type: "text/html;charset=utf-8",
+    });
+    const aideBlobUrl = URL.createObjectURL(aideBlob);
+    const patientBlobUrl = URL.createObjectURL(patientBlob);
+    const combinedHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HHA Combined Search Results</title>
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
+    .container { display: flex; flex-direction: column; height: 100%; }
+    .panel { flex: 1; border: 1px solid #ccc; overflow: hidden; display: flex; flex-direction: column; }
+    .panel h2 { margin: 0; padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; font-size: 16px; }
+    .panel iframe { flex-grow: 1; border: none; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="panel">
+      <h2>Aide (护工) 搜索结果 (${aideResult.count} 条)</h2>
+      <iframe src="${aideBlobUrl}"></iframe>
+    </div>
+    <div class="panel">
+      <h2>Patient (病人) 搜索结果 (${patientResult.count} 条${patientResult.activeCount !== undefined
+        ? `, Active: ${patientResult.activeCount}`
+        : ""})</h2>
+      <iframe src="${patientBlobUrl}"></iframe>
+    </div>
+  </div>
+  <script>
+    // 页面加载完成后清理 Blob URLs
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        URL.revokeObjectURL('${aideBlobUrl}');
+        URL.revokeObjectURL('${patientBlobUrl}');
+      }, 1000);
+    });
+  </script>
+</body>
+</html>`;
+    openInPopup(combinedHtml, "HHA_Combined_Result", true);
 }
 /**
  * 通用的后台搜索函数, 使用 GM_fetch
@@ -2200,7 +2299,9 @@ async function fetchHhaData(type, formattedNumber) {
         const r = (await GM_fetch(searchUrl));
         if (r.status >= 200 && r.status < 400) {
             const html = await r.rawBody.text();
-            return handler(html);
+            const result = handler(html);
+            result.searchUrl = searchUrl; // 保存原始搜索URL
+            return result;
         }
         console.error(`HHA ${type} search failed with status: ${r.status}`);
         return { count: 0, rawHtml: `Request Failed: ${r.status}` };
@@ -2228,14 +2329,25 @@ async function extractAndInitiateSearch(callInfoPanel) {
             const hasAideResult = aideResult.count > 0;
             const hasPatientResult = patientResult.count > 0;
             if (hasAideResult && !hasPatientResult) {
-                aideResult.count === 1 && aideResult.finalUrl
-                    ? openInPopup(aideResult.finalUrl)
-                    : openInPopup(`data:text/html;charset=utf-8,${encodeURIComponent(aideResult.rawHtml)}`);
+                // 只有 Aide 结果
+                if (aideResult.count === 1 && aideResult.finalUrl) {
+                    openInPopup(aideResult.finalUrl);
+                }
+                else {
+                    // 多个结果：直接打开原始搜索URL，保证CSS和链接正常工作
+                    openInPopup(aideResult.searchUrl || aideResult.rawHtml, "HHA_Search_Result", !aideResult.searchUrl);
+                }
             }
             else if (!hasAideResult && hasPatientResult) {
-                patientResult.count === 1 && patientResult.finalUrl
-                    ? openInPopup(patientResult.finalUrl)
-                    : openInPopup(`data:text/html;charset=utf-8,${encodeURIComponent(patientResult.rawHtml)}`);
+                // 只有 Patient 结果
+                if (patientResult.finalUrl) {
+                    // finalUrl 存在说明已定位到唯一结果
+                    openInPopup(patientResult.finalUrl);
+                }
+                else {
+                    // 多个结果：直接打开原始搜索URL，保证CSS和链接正常工作
+                    openInPopup(patientResult.searchUrl || patientResult.rawHtml, "HHA_Search_Result", !patientResult.searchUrl);
+                }
             }
             else if (hasAideResult && hasPatientResult) {
                 displayCombinedResults(aideResult, patientResult);
@@ -2339,7 +2451,7 @@ function waitForElement(selector) {
     });
 }
 const incomingCallHandler = async () => {
-    console.log("HHAeXchange 电话助手 v4.2 (并行搜索/TS/注释版) 已启动。");
+    console.log("HHAeXchange 电话助手 v5.0 (Active状态过滤优化/Blob URL) 已启动。");
     const toastContainer = await waitForElement(TOAST_CONTAINER_SELECTOR);
     const mainContent = await waitForElement(MAIN_CONTENT_SELECTOR);
     console.log("关键元素已找到，正在启动监视器...");
