@@ -672,8 +672,64 @@ function waitForElement<T extends HTMLElement>(selector: string): Promise<T> {
   });
 }
 
+/**
+ * 通过电话号码搜索 HHA (供外部模块调用)
+ * @param phoneNumber - 电话号码字符串 (任意格式，会自动格式化)
+ * @returns 是否成功发起搜索
+ */
+export async function searchHhaByPhone(phoneNumber: string): Promise<boolean> {
+  const formattedNumber = formatPhoneNumber(phoneNumber);
+  if (!formattedNumber) {
+    alert(`无效的电话号码格式: ${phoneNumber}`);
+    return false;
+  }
+
+  // 保存当前搜索号码用于高亮显示
+  currentSearchPhone = formattedNumber;
+  console.log(`[HHA Search] 外部调用: ${formattedNumber}, 开始并行搜索...`);
+
+  const [aideResult, patientResult] = await Promise.all([
+    fetchHhaData("aide", formattedNumber),
+    fetchHhaData("patient", formattedNumber),
+  ]);
+
+  const hasAideResult = aideResult.count > 0;
+  const hasPatientResult = patientResult.count > 0;
+
+  if (hasAideResult && !hasPatientResult) {
+    if (aideResult.count === 1 && aideResult.finalUrl) {
+      openInPopup(aideResult.finalUrl);
+    } else {
+      const processedHtml = processHtmlForDisplay(
+        aideResult.rawHtml,
+        "aide",
+        formattedNumber
+      );
+      openInPopup(processedHtml, "HHA_Search_Result", true);
+    }
+  } else if (!hasAideResult && hasPatientResult) {
+    if (patientResult.finalUrl) {
+      openInPopup(patientResult.finalUrl);
+    } else {
+      const processedHtml = processHtmlForDisplay(
+        patientResult.rawHtml,
+        "patient",
+        formattedNumber
+      );
+      openInPopup(processedHtml, "HHA_Search_Result", true);
+    }
+  } else if (hasAideResult && hasPatientResult) {
+    displayCombinedResults(aideResult, patientResult, formattedNumber);
+  } else {
+    alert(
+      `电话号码 [${formattedNumber}] 在 HHAeXchange 中未找到对应的护工或病人。`
+    );
+  }
+  return true;
+}
+
 export const incomingCallHandler = async (): Promise<void> => {
-  console.log("HHAeXchange 电话助手 v5.1 (高亮电话号码/点击跳转修复) 已启动。");
+  console.log("HHAeXchange 电话助手 v5.2 (支持外部搜索调用) 已启动。");
   const toastContainer = await waitForElement<HTMLDivElement>(
     TOAST_CONTAINER_SELECTOR
   );

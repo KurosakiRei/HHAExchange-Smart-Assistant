@@ -1,3 +1,5 @@
+import { searchHhaByPhone } from "./IncomingCallHandler";
+
 export const highlight2Call = () => {
   // --- 配置区域 ---
   // 用于匹配电话号码的正则表达式
@@ -41,6 +43,9 @@ export const highlight2Call = () => {
                 <a href="tel:${cleanedNumber}" class="hcp-button" target="_top">📞 打电话</a>
                 <a href="sms:${cleanedNumber}" class="hcp-button" target="_top">💬 发短信</a>
             </div>
+            <div class="hcp-actions-full">
+                <button class="hcp-button hcp-search-hha" data-phone="${cleanedNumber}">🔍 在HHA搜索</button>
+            </div>
             <div class="hcp-close-btn" title="关闭">×</div>
         `;
 
@@ -71,11 +76,24 @@ export const highlight2Call = () => {
     }
 
     const actionButtons =
-      popup.querySelectorAll<HTMLAnchorElement>(".hcp-button");
+      popup.querySelectorAll<HTMLAnchorElement>("a.hcp-button");
     actionButtons.forEach((btn) => {
       // 点击后延时关闭弹窗，确保链接跳转可以被触发
       btn.addEventListener("click", () => setTimeout(removePopup, 100));
     });
+
+    // HHA 搜索按钮事件
+    const searchHhaBtn =
+      popup.querySelector<HTMLButtonElement>(".hcp-search-hha");
+    if (searchHhaBtn) {
+      searchHhaBtn.addEventListener("click", async () => {
+        const phone = searchHhaBtn.dataset.phone;
+        if (phone) {
+          removePopup();
+          await searchHhaByPhone(phone);
+        }
+      });
+    }
   }
 
   // 监听全局的 mouseup 事件
