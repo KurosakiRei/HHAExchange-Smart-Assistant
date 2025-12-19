@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.6.0
+// @version             3.6.1
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -2039,6 +2039,8 @@ const PATIENT_SEARCH_PARAMS = "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-
 const PATIENT_PROFILE_URL_TEMPLATE = "https://app.hhaexchange.com/ENT2507010000/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}";
 // ==================== 状态变量 ====================
 let lastCallWasIncoming = false;
+/** 当前搜索的电话号码（用于高亮显示） */
+let currentSearchPhone = "";
 // ==================== 工具函数 ====================
 /**
  * 判断给定的状态是否为 Active 状态
@@ -2048,6 +2050,76 @@ let lastCallWasIncoming = false;
  */
 function isActiveStatus(status) {
     return ACTIVE_STATUSES.some((activeStatus) => status.toLowerCase() === activeStatus.toLowerCase());
+}
+/**
+ * 在 HTML 中高亮指定的电话号码
+ * @param html - 原始 HTML 字符串
+ * @param phoneNumber - 要高亮的电话号码 (格式: xxx-xxx-xxxx)
+ * @returns 处理后的 HTML 字符串
+ */
+function highlightPhoneNumber(html, phoneNumber) {
+    if (!phoneNumber)
+        return html;
+    // 生成多种格式的电话号码进行匹配
+    const digits = phoneNumber.replace(/\D/g, "");
+    const formats = [
+        phoneNumber, // xxx-xxx-xxxx
+        digits, // xxxxxxxxxx
+        `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`, // (xxx) xxx-xxxx
+        `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`, // xxx.xxx.xxxx
+        `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`, // xxx xxx xxxx
+    ];
+    // 转义正则特殊字符并创建匹配模式
+    const escapedFormats = formats.map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const pattern = new RegExp(`(${escapedFormats.join("|")})`, "g");
+    // 替换为高亮版本（避免在标签内替换）
+    return html.replace(pattern, '<span style="background-color: #ffff00; padding: 1px 3px; border-radius: 2px; font-weight: bold;">$1</span>');
+}
+/**
+ * 为 HTML 注入重定向脚本，使点击链接能正常跳转到 profile 页面
+ * @param html - 原始 HTML 字符串
+ * @param type - 搜索类型 'aide' 或 'patient'
+ * @returns 处理后的 HTML 字符串
+ */
+function injectRedirectScript(html, type) {
+    const profileUrlTemplate = type === "aide" ? AIDE_PROFILE_URL_TEMPLATE : PATIENT_PROFILE_URL_TEMPLATE;
+    const functionName = type === "aide" ? "RedirectToAidePage" : "RedirectToPatientPage";
+    const script = `
+<script>
+function ${functionName}(id) {
+  window.open('${profileUrlTemplate}'.replace('{ID}', id), '_blank');
+}
+function RedirectToAidePage(id) {
+  window.open('${AIDE_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
+}
+function RedirectToPatientPage(id) {
+  window.open('${PATIENT_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
+}
+</script>
+`;
+    // 在 </head> 或 </body> 前注入脚本
+    if (html.includes("</head>")) {
+        return html.replace("</head>", script + "</head>");
+    }
+    else if (html.includes("</body>")) {
+        return html.replace("</body>", script + "</body>");
+    }
+    else {
+        return html + script;
+    }
+}
+/**
+ * 处理 HTML: 高亮电话号码 + 注入重定向脚本
+ * @param html - 原始 HTML
+ * @param type - 搜索类型
+ * @param phoneNumber - 要高亮的电话号码
+ * @returns 处理后的 HTML
+ */
+function processHtmlForDisplay(html, type, phoneNumber) {
+    let processed = html;
+    processed = highlightPhoneNumber(processed, phoneNumber);
+    processed = injectRedirectScript(processed, type);
+    return processed;
 }
 /**
  * 格式化电话号码为 HHAeXchange 接受的格式 (e.g., 917-415-2489)
@@ -2222,13 +2294,16 @@ function handlePatientSearchResult(html) {
  * @param aideResult - Aide的搜索结果对象
  * @param patientResult - Patient的搜索结果对象
  */
-function displayCombinedResults(aideResult, patientResult) {
+function displayCombinedResults(aideResult, patientResult, phoneNumber = currentSearchPhone) {
     console.log("两边都有结果，创建合并视图...");
+    // 处理 HTML: 高亮电话号码 + 注入重定向脚本
+    const processedAideHtml = processHtmlForDisplay(aideResult.rawHtml, "aide", phoneNumber);
+    const processedPatientHtml = processHtmlForDisplay(patientResult.rawHtml, "patient", phoneNumber);
     // 为每个结果创建 Blob URL
-    const aideBlob = new Blob([aideResult.rawHtml], {
+    const aideBlob = new Blob([processedAideHtml], {
         type: "text/html;charset=utf-8",
     });
-    const patientBlob = new Blob([patientResult.rawHtml], {
+    const patientBlob = new Blob([processedPatientHtml], {
         type: "text/html;charset=utf-8",
     });
     const aideBlobUrl = URL.createObjectURL(aideBlob);
@@ -2321,6 +2396,8 @@ async function extractAndInitiateSearch(callInfoPanel) {
     if (numElement && !numElement.textContent?.includes("ext:")) {
         const formattedNumber = formatPhoneNumber(numElement.textContent);
         if (formattedNumber) {
+            // 保存当前搜索号码用于高亮显示
+            currentSearchPhone = formattedNumber;
             console.log(`号码 ${formattedNumber}, 开始并行搜索 Aide 和 Patient...`);
             const [aideResult, patientResult] = await Promise.all([
                 fetchHhaData("aide", formattedNumber),
@@ -2334,8 +2411,9 @@ async function extractAndInitiateSearch(callInfoPanel) {
                     openInPopup(aideResult.finalUrl);
                 }
                 else {
-                    // 多个结果：直接打开原始搜索URL，保证CSS和链接正常工作
-                    openInPopup(aideResult.searchUrl || aideResult.rawHtml, "HHA_Search_Result", !aideResult.searchUrl);
+                    // 多个结果：处理 HTML 后显示（高亮 + 点击跳转）
+                    const processedHtml = processHtmlForDisplay(aideResult.rawHtml, "aide", formattedNumber);
+                    openInPopup(processedHtml, "HHA_Search_Result", true);
                 }
             }
             else if (!hasAideResult && hasPatientResult) {
@@ -2345,12 +2423,13 @@ async function extractAndInitiateSearch(callInfoPanel) {
                     openInPopup(patientResult.finalUrl);
                 }
                 else {
-                    // 多个结果：直接打开原始搜索URL，保证CSS和链接正常工作
-                    openInPopup(patientResult.searchUrl || patientResult.rawHtml, "HHA_Search_Result", !patientResult.searchUrl);
+                    // 多个结果：处理 HTML 后显示（高亮 + 点击跳转）
+                    const processedHtml = processHtmlForDisplay(patientResult.rawHtml, "patient", formattedNumber);
+                    openInPopup(processedHtml, "HHA_Search_Result", true);
                 }
             }
             else if (hasAideResult && hasPatientResult) {
-                displayCombinedResults(aideResult, patientResult);
+                displayCombinedResults(aideResult, patientResult, formattedNumber);
             }
             else {
                 alert(`电话号码 [${formattedNumber}] 在 HHAeXchange 中未找到对应的护工或病人。`);
@@ -2451,7 +2530,7 @@ function waitForElement(selector) {
     });
 }
 const incomingCallHandler = async () => {
-    console.log("HHAeXchange 电话助手 v5.0 (Active状态过滤优化/Blob URL) 已启动。");
+    console.log("HHAeXchange 电话助手 v5.1 (高亮电话号码/点击跳转修复) 已启动。");
     const toastContainer = await waitForElement(TOAST_CONTAINER_SELECTOR);
     const mainContent = await waitForElement(MAIN_CONTENT_SELECTOR);
     console.log("关键元素已找到，正在启动监视器...");
