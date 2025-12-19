@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.6.2
+// @version             3.6.3
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -2439,28 +2439,51 @@ async function extractAndInitiateSearch(callInfoPanel) {
     }
     return false;
 }
+// 按钮文本常量
+const SEARCH_BTN_TEXT_DEFAULT = "在HHA中搜索此号码 (Aide & Patient)";
+const SEARCH_BTN_TEXT_SEARCHING = "⏳ 正在HHA中搜索...";
+/**
+ * 设置搜索按钮的状态（搜索中/默认）
+ * @param button - 搜索按钮元素
+ * @param isSearching - 是否正在搜索
+ */
+function setSearchButtonState(button, isSearching) {
+    button.textContent = isSearching
+        ? SEARCH_BTN_TEXT_SEARCHING
+        : SEARCH_BTN_TEXT_DEFAULT;
+    button.disabled = isSearching;
+    button.style.opacity = isSearching ? "0.7" : "1";
+    button.style.cursor = isSearching ? "not-allowed" : "pointer";
+}
 /**
  * 在通话信息面板中注入一个手动搜索按钮
  * @param callInfoPanel - 将要注入按钮的目标DOM元素
+ * @param isSearching - 初始状态是否为"搜索中"
+ * @returns 创建的按钮元素，如果已存在则返回已存在的按钮
  */
-function injectManualSearchButton(callInfoPanel) {
-    if (callInfoPanel.querySelector(".manual-search-btn-hha"))
-        return;
+function injectManualSearchButton(callInfoPanel, isSearching = false) {
+    // 检查是否已存在按钮
+    const existingButton = callInfoPanel.querySelector(".manual-search-btn-hha");
+    if (existingButton)
+        return existingButton;
     const button = document.createElement("button");
-    button.textContent = "在HHA中搜索此号码 (Aide & Patient)";
     button.className = "manual-search-btn-hha";
+    setSearchButtonState(button, isSearching);
     button.addEventListener("click", async (e) => {
         e.stopPropagation();
-        button.textContent = "正在搜索...";
+        if (button.disabled)
+            return; // 如果按钮已禁用，不执行任何操作
+        setSearchButtonState(button, true);
         const success = await extractAndInitiateSearch(callInfoPanel);
         if (!success)
             alert("未能在当前通话信息中找到有效的外部电话号码！");
-        button.textContent = "在HHA中搜索此号码 (Aide & Patient)";
+        setSearchButtonState(button, false);
     });
     const header = callInfoPanel.querySelector(".call-info-header");
     header
         ? header.insertAdjacentElement("afterend", button)
         : callInfoPanel.prepend(button);
+    return button;
 }
 /**
  * 监视主面板的变化, 以触发自动搜索或注入按钮
@@ -2475,10 +2498,18 @@ function observeMainPanel(mainPanel) {
                     !callInfoPanel.hasAttribute("data-hha-processed")) {
                     callInfoPanel.setAttribute("data-hha-processed", "true");
                     if (lastCallWasIncoming) {
+                        // 先注入按钮，显示"搜索中"状态
+                        const button = injectManualSearchButton(callInfoPanel, true);
+                        // 执行自动搜索
                         await extractAndInitiateSearch(callInfoPanel);
-                        lastCallWasIncoming = false; // 在此处消费并重置flag，解决竞态条件
+                        // 搜索完成后，将按钮恢复为默认状态
+                        setSearchButtonState(button, false);
+                        lastCallWasIncoming = false;
                     }
-                    injectManualSearchButton(callInfoPanel);
+                    else {
+                        // 非来电情况，注入默认状态的按钮
+                        injectManualSearchButton(callInfoPanel, false);
+                    }
                 }
             }
         }
@@ -2576,7 +2607,7 @@ async function searchHhaByPhone(phoneNumber) {
     return true;
 }
 const incomingCallHandler = async () => {
-    console.log("HHAeXchange 电话助手 v5.2 (支持外部搜索调用) 已启动。");
+    console.log("HHAeXchange 电话助手 v5.3 (按钮状态管理优化) 已启动。");
     const toastContainer = await waitForElement(TOAST_CONTAINER_SELECTOR);
     const mainContent = await waitForElement(MAIN_CONTENT_SELECTOR);
     console.log("关键元素已找到，正在启动监视器...");
@@ -2589,7 +2620,21 @@ const incomingCallHandler = async () => {
 const highlight2Call = () => {
     // --- 配置区域 ---
     // 用于匹配电话号码的正则表达式
-    const PHONE_REGEX = /(\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}/;
+    // 支持多种格式: 1234567890, 123-456-7890, (123) 456-7890, 123.456.7890, +1 123-456-7890 等
+    const PHONE_REGEX = /(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
+    /**
+     * 标准化电话号码：去除非数字字符，处理 11 位以 1 开头的号码
+     * @param phoneNumber - 匹配到的电话号码字符串
+     * @returns 标准化后的 10 位纯数字号码
+     */
+    function normalizePhoneNumber(phoneNumber) {
+        let digits = phoneNumber.replace(/\D/g, "");
+        // 如果是 11 位且以 1 开头（美国国家代码），去掉开头的 1
+        if (digits.length === 11 && digits.startsWith("1")) {
+            digits = digits.substring(1);
+        }
+        return digits;
+    }
     // --- 脚本核心逻辑 ---
     // 使用类型注解，明确 popup 是一个 DIV 元素或 null
     let popup = null;
@@ -2612,8 +2657,13 @@ const highlight2Call = () => {
         // 创建弹窗容器
         popup = document.createElement("div");
         popup.id = "highlight-caller-popup";
-        // 清理电话号码，只保留数字
-        const cleanedNumber = phoneNumber.replace(/\D/g, "");
+        // 标准化电话号码（去除非数字，处理 11 位 -> 10 位）
+        const cleanedNumber = normalizePhoneNumber(phoneNumber);
+        // 验证号码长度（必须是 10 位）
+        if (cleanedNumber.length !== 10) {
+            console.log("[Highlight2Call] 号码长度不正确，跳过弹窗:", phoneNumber, "->", cleanedNumber);
+            return;
+        }
         // 使用 target="_top" 来避免在 iframe 中导航失败的问题
         popup.innerHTML = `
             <div class="hcp-title">请选择操作</div>
