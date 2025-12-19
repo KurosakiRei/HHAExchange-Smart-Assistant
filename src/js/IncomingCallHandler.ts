@@ -575,26 +575,63 @@ async function extractAndInitiateSearch(
   return false;
 }
 
+// 按钮文本常量
+const SEARCH_BTN_TEXT_DEFAULT = "在HHA中搜索此号码 (Aide & Patient)";
+const SEARCH_BTN_TEXT_SEARCHING = "⏳ 正在HHA中搜索...";
+
+/**
+ * 设置搜索按钮的状态（搜索中/默认）
+ * @param button - 搜索按钮元素
+ * @param isSearching - 是否正在搜索
+ */
+function setSearchButtonState(
+  button: HTMLButtonElement,
+  isSearching: boolean
+): void {
+  button.textContent = isSearching
+    ? SEARCH_BTN_TEXT_SEARCHING
+    : SEARCH_BTN_TEXT_DEFAULT;
+  button.disabled = isSearching;
+  button.style.opacity = isSearching ? "0.7" : "1";
+  button.style.cursor = isSearching ? "not-allowed" : "pointer";
+}
+
 /**
  * 在通话信息面板中注入一个手动搜索按钮
  * @param callInfoPanel - 将要注入按钮的目标DOM元素
+ * @param isSearching - 初始状态是否为"搜索中"
+ * @returns 创建的按钮元素，如果已存在则返回已存在的按钮
  */
-function injectManualSearchButton(callInfoPanel: HTMLElement): void {
-  if (callInfoPanel.querySelector(".manual-search-btn-hha")) return;
+function injectManualSearchButton(
+  callInfoPanel: HTMLElement,
+  isSearching: boolean = false
+): HTMLButtonElement {
+  // 检查是否已存在按钮
+  const existingButton = callInfoPanel.querySelector<HTMLButtonElement>(
+    ".manual-search-btn-hha"
+  );
+  if (existingButton) return existingButton;
+
   const button = document.createElement("button");
-  button.textContent = "在HHA中搜索此号码 (Aide & Patient)";
   button.className = "manual-search-btn-hha";
+  setSearchButtonState(button, isSearching);
+
   button.addEventListener("click", async (e: MouseEvent) => {
     e.stopPropagation();
-    button.textContent = "正在搜索...";
+    if (button.disabled) return; // 如果按钮已禁用，不执行任何操作
+
+    setSearchButtonState(button, true);
     const success = await extractAndInitiateSearch(callInfoPanel);
     if (!success) alert("未能在当前通话信息中找到有效的外部电话号码！");
-    button.textContent = "在HHA中搜索此号码 (Aide & Patient)";
+    setSearchButtonState(button, false);
   });
+
   const header = callInfoPanel.querySelector<HTMLElement>(".call-info-header");
   header
     ? header.insertAdjacentElement("afterend", button)
     : callInfoPanel.prepend(button);
+
+  return button;
 }
 
 /**
@@ -614,11 +651,19 @@ function observeMainPanel(mainPanel: HTMLElement): void {
             !callInfoPanel.hasAttribute("data-hha-processed")
           ) {
             callInfoPanel.setAttribute("data-hha-processed", "true");
+
             if (lastCallWasIncoming) {
+              // 先注入按钮，显示"搜索中"状态
+              const button = injectManualSearchButton(callInfoPanel, true);
+              // 执行自动搜索
               await extractAndInitiateSearch(callInfoPanel);
-              lastCallWasIncoming = false; // 在此处消费并重置flag，解决竞态条件
+              // 搜索完成后，将按钮恢复为默认状态
+              setSearchButtonState(button, false);
+              lastCallWasIncoming = false;
+            } else {
+              // 非来电情况，注入默认状态的按钮
+              injectManualSearchButton(callInfoPanel, false);
             }
-            injectManualSearchButton(callInfoPanel);
           }
         }
       }
@@ -729,7 +774,7 @@ export async function searchHhaByPhone(phoneNumber: string): Promise<boolean> {
 }
 
 export const incomingCallHandler = async (): Promise<void> => {
-  console.log("HHAeXchange 电话助手 v5.2 (支持外部搜索调用) 已启动。");
+  console.log("HHAeXchange 电话助手 v5.3 (按钮状态管理优化) 已启动。");
   const toastContainer = await waitForElement<HTMLDivElement>(
     TOAST_CONTAINER_SELECTOR
   );

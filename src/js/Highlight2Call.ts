@@ -3,7 +3,23 @@ import { searchHhaByPhone } from "./IncomingCallHandler";
 export const highlight2Call = () => {
   // --- 配置区域 ---
   // 用于匹配电话号码的正则表达式
-  const PHONE_REGEX: RegExp = /(\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}/;
+  // 支持多种格式: 1234567890, 123-456-7890, (123) 456-7890, 123.456.7890, +1 123-456-7890 等
+  const PHONE_REGEX: RegExp =
+    /(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
+
+  /**
+   * 标准化电话号码：去除非数字字符，处理 11 位以 1 开头的号码
+   * @param phoneNumber - 匹配到的电话号码字符串
+   * @returns 标准化后的 10 位纯数字号码
+   */
+  function normalizePhoneNumber(phoneNumber: string): string {
+    let digits = phoneNumber.replace(/\D/g, "");
+    // 如果是 11 位且以 1 开头（美国国家代码），去掉开头的 1
+    if (digits.length === 11 && digits.startsWith("1")) {
+      digits = digits.substring(1);
+    }
+    return digits;
+  }
 
   // --- 脚本核心逻辑 ---
 
@@ -32,8 +48,19 @@ export const highlight2Call = () => {
     popup = document.createElement("div");
     popup.id = "highlight-caller-popup";
 
-    // 清理电话号码，只保留数字
-    const cleanedNumber: string = phoneNumber.replace(/\D/g, "");
+    // 标准化电话号码（去除非数字，处理 11 位 -> 10 位）
+    const cleanedNumber: string = normalizePhoneNumber(phoneNumber);
+
+    // 验证号码长度（必须是 10 位）
+    if (cleanedNumber.length !== 10) {
+      console.log(
+        "[Highlight2Call] 号码长度不正确，跳过弹窗:",
+        phoneNumber,
+        "->",
+        cleanedNumber
+      );
+      return;
+    }
 
     // 使用 target="_top" 来避免在 iframe 中导航失败的问题
     popup.innerHTML = `
