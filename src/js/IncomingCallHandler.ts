@@ -108,8 +108,67 @@ const HHA_STYLE_CSS = `
   /* 隐藏不需要的链接和元素 */
   a[href*="uxfrmSearchXSLT"],
   a[id*="uxfrmSearchXSLT"],
-  form[id*="uxfrmSearch"] {
+  a#uxfrmSearchXSLT,
+  form[id*="uxfrmSearch"],
+  [id="uxfrmSearchXSLT"],
+  a[href*="LastName"][href*="FirstName"] {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+  }
+
+  /* 分页列表友好显示 */
+  ul:has(li a[href*="Page"]),
+  ul:has(li:first-child a[href*="First"]),
+  ul:has(li > a) {
+    list-style: none !important;
+    padding: 5px 10px !important;
+    margin: 10px 0 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    align-items: center !important;
+    background-color: #f5f5f5 !important;
+    border-radius: 4px !important;
+  }
+
+  ul:has(li a[href*="Page"]) li,
+  ul:has(li:first-child a[href*="First"]) li,
+  ul:has(li > a) li {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  ul:has(li a[href*="Page"]) li::before,
+  ul:has(li:first-child a[href*="First"]) li::before,
+  ul:has(li > a) li::before {
+    content: none !important;
+  }
+
+  ul:has(li a[href*="Page"]) li a,
+  ul:has(li:first-child a[href*="First"]) li a {
+    color: #0066cc !important;
+    text-decoration: none !important;
+    padding: 4px 8px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 3px !important;
+    background-color: #fff !important;
+    transition: background-color 0.2s !important;
+  }
+
+  ul:has(li a[href*="Page"]) li a:hover,
+  ul:has(li:first-child a[href*="First"]) li a:hover {
+    background-color: #e6f2ff !important;
+  }
+
+  /* 通用分页 UL 样式 - 作为后备 */
+  body ul {
+    list-style-type: none;
   }
 
   /* 表格基础样式 */
@@ -285,6 +344,37 @@ function injectHhaStyles(html: string): string {
 }
 
 /**
+ * 清理 HTML 中的无用元素，移除用户不需要看到的链接和表单
+ * @param html - 原始 HTML 字符串
+ * @returns 清理后的 HTML 字符串
+ */
+function cleanupHtml(html: string): string {
+  // 移除 uxfrmSearchXSLT 相关的链接和表单（包含 URL 参数的那种长链接）
+  // 匹配: <a ...id="uxfrmSearchXSLT"...>...</a>
+  html = html.replace(
+    /<a[^>]*id\s*=\s*["']?uxfrmSearchXSLT["']?[^>]*>[\s\S]*?<\/a>/gi,
+    ""
+  );
+
+  // 移除 href 中包含 uxfrmSearchXSLT 的链接
+  html = html.replace(
+    /<a[^>]*href\s*=\s*["'][^"']*uxfrmSearchXSLT[^"']*["'][^>]*>[\s\S]*?<\/a>/gi,
+    ""
+  );
+
+  // 移除 uxfrmSearch 相关的表单
+  html = html.replace(
+    /<form[^>]*id\s*=\s*["']?uxfrmSearch[^"']*["']?[^>]*>[\s\S]*?<\/form>/gi,
+    ""
+  );
+
+  // 移除那些包含完整 URL 参数的链接文本 (如 "&LastName=...&FirstName=..." 这种)
+  html = html.replace(/<a[^>]*>[^<]*(&amp;|\&)LastName=[^<]*<\/a>/gi, "");
+
+  return html;
+}
+
+/**
  * 在 HTML 中高亮指定的电话号码
  * @param html - 原始 HTML 字符串
  * @param phoneNumber - 要高亮的电话号码 (格式: xxx-xxx-xxxx)
@@ -365,7 +455,8 @@ function processHtmlForDisplay(
   phoneNumber: string
 ): string {
   let processed = html;
-  processed = injectHhaStyles(processed); // 先注入 HHA 风格样式
+  processed = cleanupHtml(processed); // 先清理无用元素
+  processed = injectHhaStyles(processed); // 注入 HHA 风格样式
   processed = highlightPhoneNumber(processed, phoneNumber);
   processed = injectRedirectScript(processed, type);
   return processed;
@@ -971,7 +1062,7 @@ export async function searchHhaByPhone(phoneNumber: string): Promise<boolean> {
 }
 
 export const incomingCallHandler = async (): Promise<void> => {
-  console.log("HHAeXchange 电话助手 v5.4 (Combined View 样式优化) 已启动。");
+  console.log("HHAeXchange 电话助手 v5.5 (HTML清理+分页样式优化) 已启动。");
   const toastContainer = await waitForElement<HTMLDivElement>(
     TOAST_CONTAINER_SELECTOR
   );
