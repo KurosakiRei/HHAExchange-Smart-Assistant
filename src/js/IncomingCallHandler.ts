@@ -89,6 +89,202 @@ function isActiveStatus(status: string): boolean {
 }
 
 /**
+ * HHA 风格的 CSS 样式
+ * 用于在弹窗中复现 HHAeXchange 原版的表格样式
+ */
+const HHA_STYLE_CSS = `
+<style>
+  /* 基础样式重置 */
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    background-color: #fff;
+    margin: 0;
+    padding: 10px;
+  }
+
+  /* 隐藏不需要的链接和元素 */
+  a[href*="uxfrmSearchXSLT"],
+  a[id*="uxfrmSearchXSLT"],
+  form[id*="uxfrmSearch"] {
+    display: none !important;
+  }
+
+  /* 表格基础样式 */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    background-color: #fff;
+  }
+
+  /* 表头样式 - HHA 深蓝色风格 */
+  table thead tr,
+  table tr.header,
+  table tr:first-child:has(th),
+  table tr:has(a[href*="sortable"]) {
+    background-color: #0d3e61 !important;
+    color: #fff !important;
+  }
+
+  table th,
+  table thead td,
+  table tr.header td,
+  table tr:has(a[href*="sortable"]) td {
+    background-color: #0d3e61 !important;
+    color: #fff !important;
+    padding: 10px 8px;
+    text-align: left;
+    font-weight: 600;
+    border: 1px solid #0a2d47;
+    white-space: nowrap;
+  }
+
+  table th a,
+  table thead td a,
+  table tr.header td a,
+  table tr:has(a[href*="sortable"]) td a {
+    color: #fff !important;
+    text-decoration: none;
+  }
+
+  table th a:hover,
+  table thead td a:hover {
+    text-decoration: underline;
+  }
+
+  /* 表格数据行样式 */
+  table tbody tr,
+  table tr:not(:first-child):not(.header):not(:has(a[href*="sortable"])) {
+    background-color: #fff;
+  }
+
+  table tbody tr:nth-child(even),
+  table tr:nth-child(even):not(:first-child):not(.header):not(:has(a[href*="sortable"])) {
+    background-color: #f8f9fa;
+  }
+
+  table tbody tr:hover,
+  table tr:hover:not(:first-child):not(.header):not(:has(a[href*="sortable"])) {
+    background-color: #e9ecef;
+  }
+
+  table td {
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+  }
+
+  /* 链接样式 */
+  a {
+    color: #0d6efd;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+    color: #0a58ca;
+  }
+
+  /* 可点击的名字链接 */
+  a[href*="javascript:"] {
+    color: #0d6efd;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  a[href*="javascript:"]:hover {
+    text-decoration: underline;
+  }
+
+  /* Active 状态标签样式 */
+  td:has(> span:contains("Active")),
+  td:contains("Active") {
+    color: #198754;
+  }
+
+  /* 手动匹配 Active 状态 - 使用边框 */
+  span.status-active,
+  .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* 分页样式 */
+  .pagination,
+  ul:has(li:contains("Page")),
+  div:has(> a:contains("Next")),
+  div:has(> a:contains("Previous")) {
+    margin: 10px 0;
+    padding: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #666;
+  }
+
+  /* 搜索结果标题 */
+  h2, h3 {
+    color: #0d3e61;
+    margin: 15px 0 10px 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* 隐藏空的或不需要的行 */
+  tr:empty,
+  td:empty:only-child {
+    display: none;
+  }
+
+  /* 电话号码高亮保持 */
+  span[style*="background-color: #ffff00"] {
+    background-color: #ffff00 !important;
+    padding: 1px 3px !important;
+    border-radius: 2px !important;
+    font-weight: bold !important;
+  }
+
+  /* 修复表格内的文字换行 */
+  td {
+    word-break: break-word;
+  }
+
+  /* 响应式调整 */
+  @media (max-width: 1200px) {
+    table {
+      font-size: 13px;
+    }
+    table th, table td {
+      padding: 6px;
+    }
+  }
+</style>
+`;
+
+/**
+ * 在 HTML 中注入 HHA 风格的 CSS 样式
+ * @param html - 原始 HTML 字符串
+ * @returns 处理后的 HTML 字符串
+ */
+function injectHhaStyles(html: string): string {
+  // 在 </head> 前注入样式，如果没有 head 标签则在开头添加
+  if (html.includes("</head>")) {
+    return html.replace("</head>", HHA_STYLE_CSS + "</head>");
+  } else if (html.includes("<body")) {
+    return html.replace("<body", HHA_STYLE_CSS + "<body");
+  } else {
+    return HHA_STYLE_CSS + html;
+  }
+}
+
+/**
  * 在 HTML 中高亮指定的电话号码
  * @param html - 原始 HTML 字符串
  * @param phoneNumber - 要高亮的电话号码 (格式: xxx-xxx-xxxx)
@@ -157,7 +353,7 @@ function RedirectToPatientPage(id) {
 }
 
 /**
- * 处理 HTML: 高亮电话号码 + 注入重定向脚本
+ * 处理 HTML: 注入样式 + 高亮电话号码 + 注入重定向脚本
  * @param html - 原始 HTML
  * @param type - 搜索类型
  * @param phoneNumber - 要高亮的电话号码
@@ -169,6 +365,7 @@ function processHtmlForDisplay(
   phoneNumber: string
 ): string {
   let processed = html;
+  processed = injectHhaStyles(processed); // 先注入 HHA 风格样式
   processed = highlightPhoneNumber(processed, phoneNumber);
   processed = injectRedirectScript(processed, type);
   return processed;
@@ -774,7 +971,7 @@ export async function searchHhaByPhone(phoneNumber: string): Promise<boolean> {
 }
 
 export const incomingCallHandler = async (): Promise<void> => {
-  console.log("HHAeXchange 电话助手 v5.3 (按钮状态管理优化) 已启动。");
+  console.log("HHAeXchange 电话助手 v5.4 (Combined View 样式优化) 已启动。");
   const toastContainer = await waitForElement<HTMLDivElement>(
     TOAST_CONTAINER_SELECTOR
   );
