@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.6.5
+// @version             3.6.6
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -2564,59 +2564,278 @@ function handlePatientSearchResult(html) {
 }
 /**
  * 创建一个上下分栏的HTML页面来同时显示两个搜索结果
- * 使用 Blob URL 避免 srcdoc 的编码问题
+ * 不使用 iframe，直接将内容嵌入到可滚动的 div 中
  * @param aideResult - Aide的搜索结果对象
  * @param patientResult - Patient的搜索结果对象
  */
 function displayCombinedResults(aideResult, patientResult, phoneNumber = currentSearchPhone) {
     console.log("两边都有结果，创建合并视图...");
-    // 处理 HTML: 高亮电话号码 + 注入重定向脚本
-    const processedAideHtml = processHtmlForDisplay(aideResult.rawHtml, "aide", phoneNumber);
-    const processedPatientHtml = processHtmlForDisplay(patientResult.rawHtml, "patient", phoneNumber);
-    // 为每个结果创建 Blob URL
-    const aideBlob = new Blob([processedAideHtml], {
-        type: "text/html;charset=utf-8",
-    });
-    const patientBlob = new Blob([processedPatientHtml], {
-        type: "text/html;charset=utf-8",
-    });
-    const aideBlobUrl = URL.createObjectURL(aideBlob);
-    const patientBlobUrl = URL.createObjectURL(patientBlob);
+    /**
+     * 使用 DOMParser 从原始 HTML 提取搜索结果表格及相关内容
+     * 这是最稳定可靠的方法，不依赖字符串正则替换
+     */
+    const extractAndCleanContent = (html, type) => {
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        // 找到搜索结果表格 - 尝试多种选择器
+        let table = doc.querySelector("#tdSearchResults");
+        if (!table) {
+            // 备选：查找包含数据的表格
+            table = doc.querySelector("table[id*='Search']");
+        }
+        if (!table) {
+            // 再备选：查找 tbody 有内容的表格
+            const tables = doc.querySelectorAll("table");
+            for (const t of tables) {
+                if (t.querySelector("tbody tr")) {
+                    table = t;
+                    break;
+                }
+            }
+        }
+        if (!table) {
+            console.warn(`[${type}] 未找到搜索结果表格，HTML 长度: ${html.length}`);
+            console.warn(`[${type}] HTML 前500字符:`, html.substring(0, 500));
+            return `<p style="color: #666; padding: 20px;">未找到搜索结果</p>`;
+        }
+        // 在表格内移除不需要的元素（包括屏幕阅读器专用元素）
+        const unwantedSelectors = [
+            'a[id*="uxfrmSearchXSLT"]',
+            'a[href*="uxfrmSearchXSLT"]',
+            'form[id*="uxfrmSearch"]',
+            'input[type="hidden"]',
+            "script",
+            ".show-for-sr", // 屏幕阅读器专用文字（如 "View Patient Details", "Patient Id"）
+            '[class*="show-for-sr"]', // 匹配任何包含此类的元素
+        ];
+        unwantedSelectors.forEach((sel) => {
+            table.querySelectorAll(sel).forEach((el) => el.remove());
+        });
+        // 移除原始页面的标题行（如 "Caregiver search results (1)"）
+        const captionRow = table.querySelector('caption, tr.title-row, [class*="title"]');
+        if (captionRow)
+            captionRow.remove();
+        // 清理表头：移除 "sortable column head" 等多余文字
+        table.querySelectorAll("th, thead td").forEach((th) => {
+            const link = th.querySelector("a");
+            if (link) {
+                // 只保留链接的文字内容
+                th.textContent = link.textContent?.trim() || "";
+            }
+            else {
+                // 清理多余的空白、换行符和 "sortable column head"
+                let text = th.textContent || "";
+                text = text.replace(/sortable\s*column\s*head/gi, ""); // 移除这段文字
+                text = text.replace(/[\r\n\t]+/g, " "); // 换行变空格
+                text = text.replace(/\s+/g, " ").trim(); // 多空格变单空格
+                th.textContent = text;
+            }
+        });
+        // 清理数据单元格
+        table.querySelectorAll("tbody td, tr td").forEach((td) => {
+            // 已经通过 unwantedSelectors 移除了 .show-for-sr 元素
+            // 现在清理文本节点中的多余空白
+            td.childNodes.forEach((node) => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    let text = node.textContent || "";
+                    text = text
+                        .replace(/[\r\n\t]+/g, " ")
+                        .replace(/\s+/g, " ")
+                        .trim();
+                    node.textContent = text;
+                }
+            });
+            // 移除空的 <br> 和多余换行
+            td.querySelectorAll("br").forEach((br) => {
+                if (!br.nextSibling || !br.nextSibling.textContent?.trim()) {
+                    br.remove();
+                }
+            });
+        });
+        // Aide 表格：移除空的 Action 列（最后一列）
+        if (type === "aide") {
+            const headerCells = table.querySelectorAll("thead tr th, thead tr td");
+            const lastHeaderIndex = headerCells.length - 1;
+            const lastHeader = headerCells[lastHeaderIndex];
+            // 检查最后一列是否是 Action 且内容为空
+            if (lastHeader &&
+                lastHeader.textContent?.trim().toLowerCase() === "action") {
+                // 检查所有数据行的最后一列是否都为空
+                const rows = table.querySelectorAll("tbody tr");
+                let allEmpty = true;
+                rows.forEach((row) => {
+                    const cells = row.querySelectorAll("td");
+                    const lastCell = cells[cells.length - 1];
+                    if (lastCell && lastCell.textContent?.trim()) {
+                        allEmpty = false;
+                    }
+                });
+                if (allEmpty) {
+                    // 移除表头的 Action 列
+                    lastHeader.remove();
+                    // 移除每行的最后一列
+                    rows.forEach((row) => {
+                        const cells = row.querySelectorAll("td");
+                        const lastCell = cells[cells.length - 1];
+                        if (lastCell)
+                            lastCell.remove();
+                    });
+                }
+            }
+        }
+        // 构建输出（不再需要额外标题，因为 panel-header 已经显示了）
+        return table.outerHTML;
+    };
+    // 直接从原始 HTML 提取内容（不做字符串级别的清理，避免破坏 DOM）
+    let aideBody = extractAndCleanContent(aideResult.rawHtml, "aide");
+    let patientBody = extractAndCleanContent(patientResult.rawHtml, "patient");
+    // 高亮电话号码
+    aideBody = highlightPhoneNumber(aideBody, phoneNumber);
+    patientBody = highlightPhoneNumber(patientBody, phoneNumber);
     const combinedHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>HHA Combined Search Results</title>
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
-    .container { display: flex; flex-direction: column; height: 100%; }
-    .panel { flex: 1; border: 1px solid #ccc; overflow: hidden; display: flex; flex-direction: column; }
-    .panel h2 { margin: 0; padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; font-size: 16px; }
-    .panel iframe { flex-grow: 1; border: none; width: 100%; height: 100%; }
+    body, html { 
+      margin: 0; 
+      padding: 0; 
+      height: 100%; 
+      overflow: hidden; 
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; 
+    }
+    .container { 
+      display: flex; 
+      flex-direction: column; 
+      height: 100%; 
+    }
+    .panel { 
+      flex: 1; 
+      border-bottom: 2px solid #0d3e61; 
+      overflow: hidden; 
+      display: flex; 
+      flex-direction: column;
+      min-height: 0;
+    }
+    .panel:last-child {
+      border-bottom: none;
+    }
+    .panel-header { 
+      margin: 0; 
+      padding: 10px 15px; 
+      background-color: #0d3e61; 
+      color: #fff;
+      font-size: 16px; 
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .panel-content { 
+      flex: 1;
+      overflow: auto; 
+      padding: 10px;
+      background-color: #fff;
+    }
+    /* 在 panel-content 内部应用的样式 */
+    .panel-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+    .panel-content table th,
+    .panel-content table td {
+      padding: 8px;
+      border: 1px solid #dee2e6;
+      text-align: left;
+    }
+    .panel-content table thead tr,
+    .panel-content table tr:first-child:has(th) {
+      background-color: #0d3e61 !important;
+      color: #fff !important;
+    }
+    .panel-content table th,
+    .panel-content table thead th,
+    .panel-content table thead td {
+      background-color: #0d3e61 !important;
+      color: #fff !important;
+      font-weight: 600;
+    }
+    /* 确保表头内的链接也是白色 */
+    .panel-content table th a,
+    .panel-content table thead a {
+      color: #fff !important;
+    }
+    .panel-content table tbody tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    .panel-content table tbody tr:hover {
+      background-color: #e9ecef;
+    }
+    .panel-content a {
+      color: #0d6efd;
+      text-decoration: none;
+    }
+    .panel-content a:hover {
+      text-decoration: underline;
+    }
+    /* 隐藏不需要的元素 */
+    .panel-content a[href*="uxfrmSearchXSLT"],
+    .panel-content a[id*="uxfrmSearchXSLT"],
+    .panel-content form[id*="uxfrmSearch"] {
+      display: none !important;
+    }
+    /* 分页样式 */
+    .panel-content ul {
+      list-style: none;
+      padding: 5px 10px;
+      margin: 10px 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+    }
+    .panel-content ul li {
+      display: inline;
+    }
+    .panel-content ul li::before {
+      content: none;
+    }
+    .panel-content ul li a {
+      padding: 4px 8px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      background-color: #fff;
+    }
+    /* 电话高亮 */
+    .panel-content span[style*="background-color: #ffff00"] {
+      background-color: #ffff00 !important;
+      padding: 1px 3px !important;
+      border-radius: 2px !important;
+      font-weight: bold !important;
+    }
   </style>
+  <script>
+    function RedirectToAidePage(id) {
+      window.open('${AIDE_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
+    }
+    function RedirectToPatientPage(id) {
+      window.open('${PATIENT_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
+    }
+  </script>
 </head>
 <body>
   <div class="container">
     <div class="panel">
-      <h2>Aide (护工) 搜索结果 (${aideResult.count} 条)</h2>
-      <iframe src="${aideBlobUrl}"></iframe>
+      <h2 class="panel-header">Caregiver (护工) 搜索结果 (${aideResult.count} 条)</h2>
+      <div class="panel-content">${aideBody}</div>
     </div>
     <div class="panel">
-      <h2>Patient (病人) 搜索结果 (${patientResult.count} 条${patientResult.activeCount !== undefined
+      <h2 class="panel-header">Patient (病人) 搜索结果 (${patientResult.count} 条${patientResult.activeCount !== undefined
         ? `, Active: ${patientResult.activeCount}`
         : ""})</h2>
-      <iframe src="${patientBlobUrl}"></iframe>
+      <div class="panel-content">${patientBody}</div>
     </div>
   </div>
-  <script>
-    // 页面加载完成后清理 Blob URLs
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        URL.revokeObjectURL('${aideBlobUrl}');
-        URL.revokeObjectURL('${patientBlobUrl}');
-      }, 1000);
-    });
-  </script>
 </body>
 </html>`;
     openInPopup(combinedHtml, "HHA_Combined_Result", true);
