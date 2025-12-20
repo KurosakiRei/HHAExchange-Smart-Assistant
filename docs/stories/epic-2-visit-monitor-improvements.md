@@ -5,16 +5,16 @@
 | 属性 | 值 |
 |-----|---|
 | **Epic ID** | EPIC-002 |
-| **标题** | 详情列表 UI/UX 增强 |
+| **标题** | 详情列表 UI/UX 增强 & Combined View |
 | **优先级** | P1 - 重要用户体验改进 |
-| **状态** | ✅ 已完成 (2025-12-14) |
-| **实际工作量** | 3 个修复任务 |
-| **关联 ADR** | [ADR-002](../adr/002-visit-monitor-ui-enhancements.md) |
+| **状态** | ✅ 已完成 (2025-12-20) |
+| **实际工作量** | 4 个功能任务 |
+| **关联 ADR** | [ADR-002](../adr/002-visit-monitor-ui-enhancements.md), [ADR-005](../adr/005-combined-view-implementation.md) |
 
 ## 背景与目标
 
 ### 当前问题
-Visit Monitor 详情列表（Popover）在实际使用中存在以下问题：
+Visit Monitor 功能在实际使用中存在以下问题：
 1. **国际化问题**：列标题全为英文，中文用户使用不便
 2. **Authorization Note 显示问题**：
    - HTML表格直接渲染导致列宽度爆炸
@@ -24,11 +24,15 @@ Visit Monitor 详情列表（Popover）在实际使用中存在以下问题：
    - 拖拽时详情列表不跟随鼠标
    - 存在不合理的高度限制
    - 快速拖动时出现"脱离"现象
+4. **Combined View 需求**：
+   - 当搜索结果同时包含 Aide 和 Patient 时，需要在一个弹窗中同时显示
+   - 需要清晰的视觉分隔和信息呈现
 
 ### 目标
 - 提供中文列标题，改善国际化体验
 - 优化 Authorization Note 的格式化显示，保留完整信息
 - 修复 Resize 功能，提供流畅的拖拽体验
+- 实现 Combined View，提升搜索效率和用户体验
 
 ## Epic 级别验收标准
 
@@ -37,6 +41,9 @@ Visit Monitor 详情列表（Popover）在实际使用中存在以下问题：
 - [x] Note 列内容自动换行，不覆盖相邻列
 - [x] Resize 拖拽时详情列表流畅跟随鼠标
 - [x] 详情列表可拉伸到接近全屏高度
+- [x] Combined View 正常显示 Caregiver 和 Patient 结果
+- [x] Combined View 表格内容清晰准确，无垃圾字符
+- [x] 统一使用 "Caregiver" 术语
 - [x] 所有修复不影响现有功能
 
 ---
@@ -399,10 +406,229 @@ function makeResizable(element: HTMLElement, handleElement: HTMLElement) {
 
 ---
 
+---
+
+## Story 4: Combined View - Aide & Patient 结果合并显示
+
+### Story 描述
+作为 **Coordinator**，当我搜索一个电话号码时，如果同时存在 Aide (Caregiver) 和 Patient 的搜索结果，我希望：
+- 在一个弹窗中同时看到两边的结果
+- 上下分栏显示，清晰区分
+- 保持表格的完整功能和数据准确性
+- 高亮显示搜索的电话号码
+
+### 问题分析
+
+在 v3.6.5 版本中引入的 Combined View 功能遭遇了严重的技术挑战。初始方案使用 iframe 嵌套 blob URL，但被 Chrome 的安全策略阻止。经过 6 次迭代才最终找到可行方案。
+
+**失败的尝试**：
+1. ❌ iframe + nested blob URL → Chrome 安全策略阻止
+2. ❌ iframe + srcdoc (escaped HTML) → HTML 标签被破坏
+3. ❌ iframe + srcdoc (quote-escaped) → 仍然空白
+4. ❌ div + Regex extraction → 内容提取不完整
+5. ❌ div + String cleanup + DOMParser → DOM 结构被破坏
+
+**成功的方案**：
+✅ div + DOMParser + DOM cleanup → 完美工作
+
+### 验收标准
+- [x] 上下分栏显示 Caregiver 和 Patient 结果
+- [x] 面板标题显示结果数量（如 "1 条, Active: 1"）
+- [x] 表格完整显示所有列和数据
+- [x] 表头清晰可读（白色文字在深蓝背景上）
+- [x] 移除无用内容：
+  - [x] 移除 "sortable column head" 文字
+  - [x] 移除屏幕阅读器专用文字（"View Patient Details", "Patient Id"）
+  - [x] 移除 Caregiver 表格的空 Action 列
+  - [x] 移除原始页面标题（如 "Caregiver search results (1)"）
+- [x] 电话号码高亮显示
+- [x] 点击链接可正常跳转到 profile 页面
+- [x] 统一使用 "Caregiver" 而非 "Aide"
+
+### 技术实现
+
+**文件**：
+- `src/js/IncomingCallHandler.ts` - displayCombinedResults(), extractAndCleanContent()
+- 关联 ADR: [ADR-005](../adr/005-combined-view-implementation.md)
+
+**核心架构**：
+
+```typescript
+// 1. HTML 容器结构
+const combinedHtml = `
+<div class="container">
+  <div class="panel">
+    <h2 class="panel-header">Caregiver (护工) 搜索结果 (${count} 条)</h2>
+    <div class="panel-content">${aideTableHtml}</div>
+  </div>
+  <div class="panel">
+    <h2 class="panel-header">Patient (病人) 搜索结果 (${count} 条, Active: ${active})</h2>
+    <div class="panel-content">${patientTableHtml}</div>
+  </div>
+</div>
+`;
+
+// 2. 内容提取和清理函数
+const extractAndCleanContent = (html: string, type: "aide" | "patient"): string => {
+  // 使用 DOMParser 解析原始 HTML（不做字符串预处理）
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  
+  // 定位表格
+  let table = doc.querySelector("#tdSearchResults");
+  
+  // 移除不需要的元素
+  const unwantedSelectors = [
+    'script',
+    '.show-for-sr',           // 屏幕阅读器文字
+    '[class*="show-for-sr"]',
+    'a[id*="uxfrmSearchXSLT"]',
+    'form[id*="uxfrmSearch"]'
+  ];
+  unwantedSelectors.forEach(sel => {
+    table.querySelectorAll(sel).forEach(el => el.remove());
+  });
+  
+  // 清理表头（移除 "sortable column head"）
+  table.querySelectorAll('th, thead td').forEach(th => {
+    let text = th.textContent || '';
+    text = text.replace(/sortable\s*column\s*head/gi, '');
+    text = text.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+    th.textContent = text;
+  });
+  
+  // 清理数据单元格
+  table.querySelectorAll('tbody td, tr td').forEach(td => {
+    td.childNodes.forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        let text = node.textContent || '';
+        text = text.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+        node.textContent = text;
+      }
+    });
+  });
+  
+  // Caregiver 表格：移除空的 Action 列
+  if (type === "aide") {
+    // ... 移除逻辑
+  }
+  
+  return table.outerHTML;
+};
+```
+
+**CSS 关键样式**：
+
+```css
+/* Flexbox 上下分栏布局 */
+.container { 
+  display: flex; 
+  flex-direction: column; 
+  height: 100%; 
+}
+
+.panel { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column;
+  min-height: 0;  /* 关键：允许 flex 子元素收缩 */
+}
+
+/* 固定标题 */
+.panel-header { 
+  flex-shrink: 0;
+  background-color: #0d3e61; 
+  color: #fff;
+}
+
+/* 可滚动内容区 */
+.panel-content { 
+  flex: 1;
+  overflow: auto;
+}
+
+/* 表头样式强化（覆盖原始样式）*/
+.panel-content table th,
+.panel-content table thead th,
+.panel-content table thead td {
+  background-color: #0d3e61 !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* 表头内链接也使用白色 */
+.panel-content table th a,
+.panel-content table thead a {
+  color: #fff !important;
+}
+```
+
+### 关键技术决策
+
+1. **为什么放弃 iframe？**
+   - Chrome 安全策略阻止在 blob URL 页面中嵌套另一个 blob URL 的 iframe
+   - srcdoc 方案无法可靠地传递复杂 HTML
+
+2. **为什么使用 DOMParser 而非 Regex？**
+   - Regex 无法准确匹配复杂的嵌套 HTML 结构
+   - DOMParser 提供真正的 DOM 树，可以精确操作
+
+3. **为什么不预处理字符串？**
+   - 字符串级别的清理（replace、substring）会破坏 HTML 结构
+   - 必须先解析为 DOM，再进行 DOM 级别的操作
+
+4. **为什么使用 Flexbox？**
+   - 提供灵活的上下分栏布局
+   - 自动处理高度分配和滚动
+   - `min-height: 0` 是关键，允许子元素收缩
+
+### 测试步骤
+
+**准备**：搜索一个同时有 Caregiver 和 Patient 结果的电话号码
+
+**验证清单**：
+1. [x] 弹窗正常打开，显示两个面板
+2. [x] Caregiver 面板标题："Caregiver (护工) 搜索结果 (X 条)"
+3. [x] Patient 面板标题："Patient (病人) 搜索结果 (X 条, Active: X)"
+4. [x] Caregiver 表格：
+   - [x] 表头清晰（白色文字）
+   - [x] 无 "sortable column head" 文字
+   - [x] 无空的 Action 列
+   - [x] 数据完整显示
+5. [x] Patient 表格：
+   - [x] 表头清晰（白色文字）
+   - [x] 无 "sortable column head" 文字
+   - [x] 病人名字干净（无 "View Patient Details"）
+   - [x] Patient ID 干净（无重复的 "Patient Id"）
+   - [x] DOB 干净（无 "sortable column head"）
+6. [x] 电话号码高亮显示（黄色背景）
+7. [x] 点击 Caregiver 名字 → 跳转到 Caregiver profile
+8. [x] 点击 Patient 名字 → 跳转到 Patient profile
+9. [x] 两个面板可独立滚动
+10. [x] 无原始页面标题（如 "Caregiver search results"）
+
+### 边界情况测试
+- [x] Caregiver 多条结果，Patient 1 条结果
+- [x] Caregiver 1 条结果，Patient 多条结果
+- [x] 两边都是多条结果
+- [x] 表格内容很长时，滚动条正常工作
+
+### 回归测试
+- [x] 单独 Caregiver 搜索结果正常显示
+- [x] 单独 Patient 搜索结果正常显示
+- [x] 单一结果自动跳转功能不受影响
+- [x] 电话号码高亮功能不受影响
+
+---
+
 ## 里程碑
 
 - **2025-12-14**: Epic 启动
 - **2025-12-14**: Story 1 完成（中文标题）
 - **2025-12-14**: Story 2 完成（Authorization Note 格式化）
 - **2025-12-14**: Story 3 完成（Resize 修复）
-- **2025-12-14**: Epic 完成，通过所有测试
+- **2025-12-20**: Story 4 开发（Combined View）
+  - v3.6.5 初始实现（iframe 方案失败）
+  - 经历 6 次迭代修复
+  - **v3.6.6**: 最终方案成功（div + DOMParser）✅
+- **2025-12-20**: Story 4 完成，所有测试通过
+- **2025-12-20**: Epic 2 完全完成
