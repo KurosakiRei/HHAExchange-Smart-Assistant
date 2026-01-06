@@ -41,7 +41,7 @@
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/* --- General Container --- */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background-color: #007bff;\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: move;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);\n  font-size: 24px;\n  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n}\n/* --- Panel & Views --- */\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  min-height: 500px;\n  background: #f9f9f9;\n  border: 1px solid #ccc;\n  border-radius: 8px;\n  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333;\n  overflow: hidden;\n}\n.tracker-view {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: column;\n  transition: transform 0.3s ease-in-out;\n}\n.tracker-view.hidden {\n  display: none;\n}\n/* View Transition Animations */\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n/* --- Header --- */\n.tracker-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n}\n.tracker-header-btn {\n  background: #e0e0e0;\n  border: 1px solid #ccc;\n  padding: 4px 10px;\n  border-radius: 5px;\n  cursor: pointer;\n}\n.tracker-header-btn:hover {\n  background: #d4d4d4;\n}\n.back-btn {\n  font-size: 20px;\n  padding: 0 10px;\n}\n/* --- 4. 内容与表格 --- */\n.tracker-content {\n  flex-grow: 1;\n  padding: 10px;\n  overflow-y: auto;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n}\n.tracker-table th,\n.tracker-table td {\n  border: 1px solid #ddd;\n  padding: 8px 12px;\n  text-align: center;\n  vertical-align: middle;\n}\n.tracker-table th {\n  background-color: #e9ecef;\n  font-size: 14px;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: bold;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.status-icon:hover {\n  opacity: 0.8;\n  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n  100% {\n    opacity: 1;\n  }\n}\n/* --- Edit View Specifics --- */\n.edit-list-actions button {\n  font-size: 18px;\n  width: 36px;\n  height: 36px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button:disabled {\n  background-color: #ccc;\n  cursor: not-allowed;\n}\n.tracker-footer {\n  padding: 10px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #ddd;\n  background: #f1f1f1;\n  flex-shrink: 0;\n}\n/* --- Loader --- */\n.loader {\n  text-align: center;\n  padding: 40px;\n}\n.spinner {\n  border: 4px solid #f3f3f3;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n/* --- Toast Notification --- */\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 5px;\n  z-index: 10000;\n  opacity: 0;\n  transition: opacity 0.3s, bottom 0.3s;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n/* --- 7. Details Popover (气泡) --- */\n#details-popover {\n  position: fixed;\n  z-index: 10001;\n  /* Must be higher than the panel */\n  /* MODIFIED: 增加宽度以容纳更多列 */\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  /* 提高最大高度限制 */\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  /* Initial state for fade-in animation */\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n  /* FIX: 提高 z-index, 确保它在所有元素之上 */\n  z-index: 100001;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n  /* ADDED: 让用户知道这里可以拖动 */\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* --- Note Cell Styling --- */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  /* 允许换行 */\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* --- Authorization Note Table (格式化后的内容) --- */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* --- Popover Resize Handle --- */\n.popover-resize-handle {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 16px;\n  height: 16px;\n  cursor: nwse-resize;\n  background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n  border-bottom-right-radius: 8px;\n}\n.popover-resize-handle::before {\n  content: '';\n  position: absolute;\n  right: 4px;\n  bottom: 4px;\n  width: 4px;\n  height: 4px;\n  background: #666;\n  border-radius: 1px;\n}\n/* --- 8. Phone Tooltip (新增) --- */\n.phone-icon-wrapper {\n  position: relative;\n  /* 为内部的 tooltip 提供定位上下文 */\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  /* 默认隐藏 */\n  position: absolute;\n  top: 100%;\n  /* 显示在图标正下方 */\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n  /* 确保在气泡本身之上 */\n}\n/* 核心交互：当鼠标悬浮在 wrapper 上时，显示 tooltip */\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, ".hha-smart-panel {\n  position: absolute;\n  top: 0;\n  width: 680px;\n  min-height: 460px;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n  font-size: 14px;\n  color: #333333;\n}\n.hha-smart-panel-header {\n  height: 40px;\n  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);\n  color: white;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 16px;\n  border-bottom: 1px solid #1565c0;\n  cursor: move;\n  user-select: none;\n}\n.hha-smart-panel-title {\n  font-size: 16px;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-panel-controls {\n  display: flex;\n  gap: 8px;\n  position: relative;\n  z-index: 100000;\n}\n.hha-smart-panel-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 2px;\n  background: rgba(255, 255, 255, 0.2);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: background 0.15s ease;\n  font-size: 14px;\n  padding: 0;\n  position: relative;\n  z-index: 100001;\n}\n.hha-smart-panel-btn:hover {\n  background: rgba(255, 255, 255, 0.3);\n}\n.hha-smart-panel-btn:active {\n  background: rgba(255, 255, 255, 0.4);\n}\n.hha-smart-panel-body {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-tab-bar {\n  width: 140px;\n  min-width: 40px;\n  background: #fafafa;\n  border-right: 1px solid #e0e0e0;\n  transition: width 0.2s ease;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  flex-shrink: 0;\n  position: relative;\n  z-index: 5;\n}\n.hha-smart-tab-bar.collapsed {\n  width: 40px;\n}\n.hha-smart-tab-list {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n}\n.hha-smart-tab-list::-webkit-scrollbar {\n  width: 4px;\n}\n.hha-smart-tab-list::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n.hha-smart-tab-item {\n  position: relative;\n  padding: 12px 16px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  white-space: nowrap;\n  border-bottom: 1px solid #f0f0f0;\n}\n.hha-smart-tab-item:hover {\n  background: #f5f5f5;\n}\n.hha-smart-tab-item.active {\n  background: #e3f2fd;\n  color: #1976d2;\n  font-weight: 500;\n}\n.hha-smart-tab-icon {\n  flex-shrink: 0;\n  font-size: 18px;\n  line-height: 1;\n  width: 20px;\n  text-align: center;\n}\n.hha-smart-tab-text {\n  opacity: 1;\n  transition: opacity 0.2s ease;\n  font-size: 13px;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-tab-text {\n  opacity: 0;\n  pointer-events: none;\n}\n.hha-smart-tab-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 4px;\n  height: 100%;\n  background: #1976d2;\n  opacity: 0;\n  transition: opacity 0.2s ease;\n  z-index: 1;\n}\n.hha-smart-tab-item.active .hha-smart-tab-indicator {\n  opacity: 1;\n}\n.hha-smart-tab-collapse-btn {\n  padding: 8px;\n  text-align: center;\n  cursor: pointer;\n  border-top: 1px solid #e0e0e0;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 36px;\n  position: relative;\n  z-index: 10;\n}\n.hha-smart-tab-collapse-btn:hover {\n  background: #f5f5f5;\n}\n.hha-smart-collapse-icon {\n  display: inline-block;\n  transition: transform 0.2s ease;\n  font-size: 14px;\n  color: #666666;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-collapse-icon {\n  transform: rotate(180deg);\n}\n.hha-smart-content-area {\n  flex: 1;\n  overflow: hidden;\n  background: #ffffff;\n  position: relative;\n  min-width: 0;\n}\n.hha-smart-tab-content {\n  display: none;\n  padding: 16px;\n  animation: fadeIn 0.2s ease;\n  height: 100%;\n  overflow-y: auto;\n  overflow-x: hidden;\n  box-sizing: border-box;\n}\n.hha-smart-tab-content.active {\n  display: block;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n.hha-smart-config-card {\n  background: #ffffff;\n  border-radius: 4px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: box-shadow 0.2s ease;\n}\n.hha-smart-config-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.hha-smart-config-card-title {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-config-card-body {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.hha-smart-btn {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.hha-smart-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #1976d2;\n  color: white;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.hha-smart-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary:hover:not(:disabled) {\n  background: #1565c0;\n}\n.hha-smart-btn-primary:active:not(:disabled) {\n  background: #0d47a1;\n}\n.hha-smart-btn-secondary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #fafafa;\n  color: #333333;\n  border: 1px solid #e0e0e0;\n}\n.hha-smart-btn-secondary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-secondary:hover:not(:disabled) {\n  background: #f5f5f5;\n  border-color: #bbdefb;\n}\n.hha-smart-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 32px;\n  text-align: center;\n  color: #666666;\n  min-height: 300px;\n}\n.hha-smart-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.hha-smart-placeholder-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.hha-smart-placeholder-text {\n  font-size: 14px;\n  color: #666666;\n}\n#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/* --- General Container --- */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background-color: #007bff;\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: move;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);\n  font-size: 24px;\n  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n}\n/* --- Panel & Views --- */\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  min-height: 500px;\n  background: #f9f9f9;\n  border: 1px solid #ccc;\n  border-radius: 8px;\n  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333;\n  overflow: hidden;\n}\n.tracker-view {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: column;\n  transition: transform 0.3s ease-in-out;\n}\n.tracker-view.hidden {\n  display: none;\n}\n/* View Transition Animations */\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n/* --- Header --- */\n.tracker-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n}\n.tracker-header-btn {\n  background: #e0e0e0;\n  border: 1px solid #ccc;\n  padding: 4px 10px;\n  border-radius: 5px;\n  cursor: pointer;\n}\n.tracker-header-btn:hover {\n  background: #d4d4d4;\n}\n.back-btn {\n  font-size: 20px;\n  padding: 0 10px;\n}\n/* --- 4. 内容与表格 --- */\n.tracker-content {\n  flex-grow: 1;\n  padding: 10px;\n  overflow-y: auto;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n}\n.tracker-table th,\n.tracker-table td {\n  border: 1px solid #ddd;\n  padding: 8px 12px;\n  text-align: center;\n  vertical-align: middle;\n}\n.tracker-table th {\n  background-color: #e9ecef;\n  font-size: 14px;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: bold;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.status-icon:hover {\n  opacity: 0.8;\n  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n  100% {\n    opacity: 1;\n  }\n}\n/* --- Edit View Specifics --- */\n.edit-list-actions button {\n  font-size: 18px;\n  width: 36px;\n  height: 36px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button:disabled {\n  background-color: #ccc;\n  cursor: not-allowed;\n}\n.tracker-footer {\n  padding: 10px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #ddd;\n  background: #f1f1f1;\n  flex-shrink: 0;\n}\n/* --- Loader --- */\n.loader {\n  text-align: center;\n  padding: 40px;\n}\n.spinner {\n  border: 4px solid #f3f3f3;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n/* --- Toast Notification --- */\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 5px;\n  z-index: 10000;\n  opacity: 0;\n  transition: opacity 0.3s, bottom 0.3s;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n/* --- 7. Details Popover (气泡) --- */\n#details-popover {\n  position: fixed;\n  z-index: 10001;\n  /* Must be higher than the panel */\n  /* MODIFIED: 增加宽度以容纳更多列 */\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  /* 提高最大高度限制 */\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  /* Initial state for fade-in animation */\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n  /* FIX: 提高 z-index, 确保它在所有元素之上 */\n  z-index: 100001;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n  /* ADDED: 让用户知道这里可以拖动 */\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* --- Note Cell Styling --- */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  /* 允许换行 */\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* --- Authorization Note Table (格式化后的内容) --- */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* --- Popover Resize Handle --- */\n.popover-resize-handle {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 16px;\n  height: 16px;\n  cursor: nwse-resize;\n  background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n  border-bottom-right-radius: 8px;\n}\n.popover-resize-handle::before {\n  content: '';\n  position: absolute;\n  right: 4px;\n  bottom: 4px;\n  width: 4px;\n  height: 4px;\n  background: #666;\n  border-radius: 1px;\n}\n/* --- 8. Phone Tooltip (新增) --- */\n.phone-icon-wrapper {\n  position: relative;\n  /* 为内部的 tooltip 提供定位上下文 */\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  /* 默认隐藏 */\n  position: absolute;\n  top: 100%;\n  /* 显示在图标正下方 */\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n  /* 确保在气泡本身之上 */\n}\n/* 核心交互：当鼠标悬浮在 wrapper 上时，显示 tooltip */\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -2032,7 +2032,7 @@ const NON_ACTIVE_STATUSES = [
 ];
 // ==================== 配置区域 ====================
 const AIDE_SEARCH_URL = "https://app.hhaexchange.com/ENT2507010000/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=";
-const AIDE_SEARCH_PARAMS = "&LastName=&Type=-1&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=";
+const AIDE_SEARCH_PARAMS = "&LastName=&Type=-1&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=";
 const AIDE_PROFILE_URL_TEMPLATE = "https://app.hhaexchange.com/ENT2507010000/Aide/Aide_ns.aspx?AideId={ID}";
 const PATIENT_SEARCH_URL = "https://app.hhaexchange.com/ENT2507010000/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=";
 const PATIENT_SEARCH_PARAMS = "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-1&DisciplineID=0&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
@@ -3868,7 +3868,9 @@ const visitMonitor = async () => {
             console.log("[VisitMonitor] getMessageApiParams: page params missing, fetching from app.hhaexchange.com...");
             try {
                 const initialUrl = "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
-                const r = (await GM_fetch(initialUrl, { method: "GET" }));
+                const r = (await GM_fetch(initialUrl, {
+                    method: "GET",
+                }));
                 const textResult = await r.rawBody.text();
                 const getParam = (name) => textResult.match(new RegExp(`var\\s+${name}\\s*=\\s*['"]([^'"]+)['"];`))?.[1];
                 params = {
@@ -5017,10 +5019,17 @@ const visitMonitor = async () => {
                 .join("");
             tableHtml = `
             <thead><tr>
-                <th>Patient Name</th><th>Assignment ID</th><th>Admission ID</th>
-                <th>Caregiver Name</th><th>Visit Date</th><th>Coordinators</th>
-                <th>Schedule</th><th>Contract</th><th>Discipline</th>
-                <th>Service Code</th><th>Caregiver Team</th>
+                <th style="color: #333 !important;">Patient Name</th>
+                <th style="color: #333 !important;">Assignment ID</th>
+                <th style="color: #333 !important;">Admission ID</th>
+                <th style="color: #333 !important;">Caregiver Name</th>
+                <th style="color: #333 !important;">Visit Date</th>
+                <th style="color: #333 !important;">Coordinators</th>
+                <th style="color: #333 !important;">Schedule</th>
+                <th style="color: #333 !important;">Contract</th>
+                <th style="color: #333 !important;">Discipline</th>
+                <th style="color: #333 !important;">Service Code</th>
+                <th style="color: #333 !important;">Caregiver Team</th>
             </tr></thead>
             <tbody>${tableRows}</tbody>
         `;
@@ -6170,7 +6179,602 @@ function initHomePageConfigCardUI() {
     }, 1000);
 }
 
+;// ./src/js/MultiTabPanel.ts
+/**
+ * LocalStorage Keys for Multi-Tab Panel
+ */
+const STORAGE_KEYS = {
+    ACTIVE_TAB: "hha_smart_assistant_active_tab",
+    TAB_BAR_COLLAPSED: "hha_smart_assistant_tab_bar_collapsed",
+};
+/**
+ * Multi-Tab Panel System
+ * Reference: ADR 007 - Multi-tab Panel Architecture
+ *
+ * Features:
+ * - Left sidebar tab navigation
+ * - Collapsible tab bar (80px → 40px)
+ * - LocalStorage state persistence
+ * - Show/Hide DOM switching (state preserved)
+ */
+class MultiTabPanel {
+    constructor(container, config = {}) {
+        this.panelEl = null;
+        this.tabBarEl = null;
+        this.contentAreaEl = null;
+        this.tabs = new Map();
+        this.tabContents = new Map();
+        this.activeTabId = "";
+        this.isCollapsed = false;
+        this.container = container;
+        this.config = {
+            title: config.title ?? "HHAexchange Smart Assistant",
+            defaultTabId: config.defaultTabId ?? "",
+            showHeaderControls: config.showHeaderControls ?? false,
+            initialCollapsed: config.initialCollapsed ?? false,
+        };
+        this.loadState();
+    }
+    /**
+     * Register a tab
+     */
+    registerTab(tab) {
+        this.tabs.set(tab.id, tab);
+        // Set default active tab if not set
+        if (!this.activeTabId) {
+            this.activeTabId = tab.id;
+        }
+    }
+    /**
+     * Initialize and render the panel
+     */
+    async init() {
+        this.render();
+        await this.initializeDefaultTab();
+    }
+    /**
+     * Render the panel structure
+     */
+    render() {
+        // Create panel container
+        this.panelEl = document.createElement("div");
+        this.panelEl.className = "hha-smart-panel";
+        // Render header
+        const header = this.renderHeader();
+        this.panelEl.appendChild(header);
+        // Render body (tab bar + content area)
+        const body = this.renderBody();
+        this.panelEl.appendChild(body);
+        this.container.appendChild(this.panelEl);
+        // Apply collapsed state
+        if (this.isCollapsed) {
+            this.tabBarEl?.classList.add("collapsed");
+        }
+    }
+    /**
+     * Render panel header
+     */
+    renderHeader() {
+        const header = document.createElement("div");
+        header.className = "hha-smart-panel-header";
+        // Title
+        const title = document.createElement("div");
+        title.className = "hha-smart-panel-title";
+        title.textContent = this.config.title;
+        header.appendChild(title);
+        // Controls - only show if showHeaderControls is true
+        if (this.config.showHeaderControls) {
+            const controls = document.createElement("div");
+            controls.className = "hha-smart-panel-controls";
+            // Minimize button
+            const minimizeBtn = document.createElement("button");
+            minimizeBtn.className = "hha-smart-panel-btn";
+            minimizeBtn.innerHTML = "−";
+            minimizeBtn.title = "Minimize";
+            minimizeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.minimize();
+            });
+            // Close button
+            const closeBtn = document.createElement("button");
+            closeBtn.className = "hha-smart-panel-btn";
+            closeBtn.innerHTML = "×";
+            closeBtn.title = "Close";
+            closeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.close();
+            });
+            controls.appendChild(minimizeBtn);
+            controls.appendChild(closeBtn);
+            header.appendChild(controls);
+        }
+        return header;
+    }
+    /**
+     * Render panel body
+     */
+    renderBody() {
+        const body = document.createElement("div");
+        body.className = "hha-smart-panel-body";
+        // Tab bar
+        this.tabBarEl = this.renderTabBar();
+        body.appendChild(this.tabBarEl);
+        // Content area
+        this.contentAreaEl = this.renderContentArea();
+        body.appendChild(this.contentAreaEl);
+        return body;
+    }
+    /**
+     * Render tab bar
+     */
+    renderTabBar() {
+        const tabBar = document.createElement("div");
+        tabBar.className = "hha-smart-tab-bar";
+        // Tab list
+        const tabList = document.createElement("div");
+        tabList.className = "hha-smart-tab-list";
+        this.tabs.forEach((tab) => {
+            const tabItem = this.renderTabItem(tab);
+            tabList.appendChild(tabItem);
+        });
+        tabBar.appendChild(tabList);
+        // Collapse button
+        const collapseBtn = this.renderCollapseButton();
+        tabBar.appendChild(collapseBtn);
+        return tabBar;
+    }
+    /**
+     * Render a single tab item
+     */
+    renderTabItem(tab) {
+        const tabItem = document.createElement("div");
+        tabItem.className = "hha-smart-tab-item";
+        tabItem.dataset.tabId = tab.id;
+        if (tab.id === this.activeTabId) {
+            tabItem.classList.add("active");
+        }
+        // Indicator
+        const indicator = document.createElement("div");
+        indicator.className = "hha-smart-tab-indicator";
+        // Icon
+        const icon = document.createElement("span");
+        icon.className = "hha-smart-tab-icon";
+        icon.textContent = tab.icon;
+        // Text
+        const text = document.createElement("span");
+        text.className = "hha-smart-tab-text";
+        text.textContent = tab.label;
+        tabItem.appendChild(indicator);
+        tabItem.appendChild(icon);
+        tabItem.appendChild(text);
+        // Click event
+        tabItem.addEventListener("click", () => {
+            this.switchTab(tab.id);
+        });
+        return tabItem;
+    }
+    /**
+     * Render collapse button
+     * 参考 VisitMonitor.ts 的按钮实现，确保可点击
+     */
+    renderCollapseButton() {
+        const collapseBtn = document.createElement("div");
+        collapseBtn.className = "hha-smart-tab-collapse-btn";
+        collapseBtn.title = "Collapse/Expand";
+        // 确保按钮在顶层且可点击
+        collapseBtn.style.cssText =
+            "position: relative; z-index: 10; cursor: pointer;";
+        const icon = document.createElement("span");
+        icon.className = "hha-smart-collapse-icon";
+        icon.textContent = "◀";
+        collapseBtn.appendChild(icon);
+        // 使用mousedown+click双重确保事件触发
+        collapseBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            this.toggleCollapse();
+        });
+        return collapseBtn;
+    }
+    /**
+     * Render content area
+     */
+    renderContentArea() {
+        const contentArea = document.createElement("div");
+        contentArea.className = "hha-smart-content-area";
+        // 确保内容区域有overflow控制
+        contentArea.style.cssText = "overflow: hidden; position: relative;";
+        // Create content containers for each tab
+        this.tabs.forEach((tab) => {
+            const contentDiv = document.createElement("div");
+            contentDiv.className = "hha-smart-tab-content";
+            contentDiv.dataset.tabId = tab.id;
+            // 每个tab内容也需要overflow控制
+            contentDiv.style.cssText = "overflow: auto; height: 100%; width: 100%;";
+            if (tab.id === this.activeTabId) {
+                contentDiv.classList.add("active");
+            }
+            this.tabContents.set(tab.id, contentDiv);
+            contentArea.appendChild(contentDiv);
+        });
+        return contentArea;
+    }
+    /**
+     * Initialize the default active tab
+     */
+    async initializeDefaultTab() {
+        const tab = this.tabs.get(this.activeTabId);
+        if (!tab)
+            return;
+        const container = this.tabContents.get(this.activeTabId);
+        if (!container)
+            return;
+        await tab.init();
+        tab.render(container);
+    }
+    /**
+     * Switch to a different tab
+     */
+    async switchTab(tabId) {
+        if (tabId === this.activeTabId)
+            return;
+        const tab = this.tabs.get(tabId);
+        if (!tab)
+            return;
+        // Deactivate current tab
+        const currentTab = this.tabs.get(this.activeTabId);
+        currentTab?.onDeactivate?.();
+        // Update active state
+        this.activeTabId = tabId;
+        this.saveActiveTab();
+        // Update UI
+        this.updateTabBarUI();
+        this.updateContentAreaUI();
+        // Initialize new tab if needed
+        const container = this.tabContents.get(tabId);
+        if (container && container.children.length === 0) {
+            await tab.init();
+            tab.render(container);
+        }
+        // Activate new tab
+        tab.onActivate?.();
+    }
+    /**
+     * Update tab bar UI to reflect active state
+     */
+    updateTabBarUI() {
+        const tabItems = this.tabBarEl?.querySelectorAll(".hha-smart-tab-item");
+        tabItems?.forEach((item) => {
+            const tabId = item.dataset.tabId;
+            if (tabId === this.activeTabId) {
+                item.classList.add("active");
+            }
+            else {
+                item.classList.remove("active");
+            }
+        });
+    }
+    /**
+     * Update content area UI to show active tab
+     */
+    updateContentAreaUI() {
+        this.tabContents.forEach((content, tabId) => {
+            if (tabId === this.activeTabId) {
+                content.classList.add("active");
+            }
+            else {
+                content.classList.remove("active");
+            }
+        });
+    }
+    /**
+     * Toggle tab bar collapse state
+     */
+    toggleCollapse() {
+        this.isCollapsed = !this.isCollapsed;
+        this.saveCollapseState();
+        if (this.isCollapsed) {
+            this.tabBarEl?.classList.add("collapsed");
+        }
+        else {
+            this.tabBarEl?.classList.remove("collapsed");
+        }
+    }
+    /**
+     * Minimize panel (hide)
+     */
+    minimize() {
+        if (this.panelEl) {
+            this.panelEl.style.display = "none";
+        }
+    }
+    /**
+     * Close panel (hide, not destroy)
+     * This allows the panel to be reopened without losing state
+     */
+    close() {
+        // Hide the container (parent of panelEl)
+        if (this.container) {
+            this.container.style.display = "none";
+            console.log("[MultiTabPanel] Panel closed (hidden)");
+        }
+    }
+    /**
+     * Show panel
+     */
+    show() {
+        if (this.panelEl) {
+            this.panelEl.style.display = "flex";
+        }
+    }
+    // ===== LocalStorage State Management =====
+    loadState() {
+        // Load active tab
+        const savedTab = localStorage.getItem(STORAGE_KEYS.ACTIVE_TAB);
+        if (savedTab) {
+            this.activeTabId = savedTab;
+        }
+        else if (this.config.defaultTabId) {
+            this.activeTabId = this.config.defaultTabId;
+        }
+        // Load collapse state
+        const collapsed = localStorage.getItem(STORAGE_KEYS.TAB_BAR_COLLAPSED);
+        this.isCollapsed = collapsed === "true" || this.config.initialCollapsed;
+    }
+    saveActiveTab() {
+        localStorage.setItem(STORAGE_KEYS.ACTIVE_TAB, this.activeTabId);
+    }
+    saveCollapseState() {
+        localStorage.setItem(STORAGE_KEYS.TAB_BAR_COLLAPSED, String(this.isCollapsed));
+    }
+}
+
+;// ./src/js/tabs/BaseTab.ts
+/**
+ * Base Tab Abstract Class
+ * Provides common functionality for all tabs
+ */
+class BaseTab {
+    constructor() {
+        this.container = null;
+        this.initialized = false;
+    }
+    async init() {
+        // Override in subclass if initialization is needed
+    }
+    destroy() {
+        if (this.container) {
+            this.container.innerHTML = "";
+            this.container = null;
+        }
+        this.initialized = false;
+    }
+    onActivate() {
+        // Override in subclass if needed
+    }
+    onDeactivate() {
+        // Override in subclass if needed
+    }
+    /**
+     * Create a config card UI component
+     */
+    createConfigCard(title, content) {
+        const card = document.createElement("div");
+        card.className = "hha-smart-config-card";
+        const titleEl = document.createElement("div");
+        titleEl.className = "hha-smart-config-card-title";
+        titleEl.textContent = title;
+        const bodyEl = document.createElement("div");
+        bodyEl.className = "hha-smart-config-card-body";
+        bodyEl.appendChild(content);
+        card.appendChild(titleEl);
+        card.appendChild(bodyEl);
+        return card;
+    }
+    /**
+     * Create a primary button
+     */
+    createButton(text, onClick, isPrimary = true) {
+        const button = document.createElement("button");
+        button.className = isPrimary
+            ? "hha-smart-btn-primary"
+            : "hha-smart-btn-secondary";
+        button.textContent = text;
+        button.addEventListener("click", onClick);
+        return button;
+    }
+    /**
+     * Create a placeholder UI
+     */
+    createPlaceholder(icon, title, text) {
+        const placeholder = document.createElement("div");
+        placeholder.className = "hha-smart-placeholder";
+        placeholder.innerHTML = `
+      <div class="hha-smart-placeholder-icon">${icon}</div>
+      <div class="hha-smart-placeholder-title">${title}</div>
+      <div class="hha-smart-placeholder-text">${text}</div>
+    `;
+        return placeholder;
+    }
+}
+
+;// ./src/js/tabs/StatusTrackingTab.ts
+
+/**
+ * Status Tracking Tab
+ * Story 7.2: 状态追踪 Tab 集成
+ *
+ * Wraps the existing VisitMonitor functionality
+ */
+class StatusTrackingTab extends BaseTab {
+    constructor() {
+        super(...arguments);
+        this.id = "status-tracking";
+        this.label = "状态追踪";
+        this.icon = "📊";
+        this.visitMonitorInitialized = false;
+    }
+    async init() {
+        // VisitMonitor will be initialized when rendered
+        this.initialized = true;
+    }
+    render(container) {
+        this.container = container;
+        // Create a wrapper for the visit monitor
+        const wrapper = document.createElement("div");
+        wrapper.id = "status-tracking-wrapper";
+        wrapper.style.width = "100%";
+        wrapper.style.height = "100%";
+        container.appendChild(wrapper);
+        // The VisitMonitor has already been initialized by main()
+        // We just need to wait for it and embed it
+        if (!this.visitMonitorInitialized) {
+            this.embedExistingVisitMonitor(wrapper);
+            this.visitMonitorInitialized = true;
+        }
+    }
+    embedExistingVisitMonitor(container) {
+        // Wait for VisitMonitor to create its UI
+        setTimeout(() => {
+            this.embedVisitMonitorPanel(container);
+        }, 200);
+    }
+    /**
+     * Find and embed the VisitMonitor panel into our tab container
+     *
+     * CRITICAL FIX (Epic 7, Story 7.2):
+     * - Move the original tracker-panel (NOT clone) to preserve event listeners
+     * - cloneNode(true) does NOT copy addEventListener bindings
+     * - This fixes "编辑追踪列表" button click handler not working
+     *
+     * ARCHITECTURE:
+     * - tracker-panel is moved from tracker-container into our tab
+     * - The bell button (tracker-drag-handle) stays in tracker-container
+     * - When Multi-Tab Panel is hidden, we move tracker-panel back to tracker-container
+     */
+    embedVisitMonitorPanel(container) {
+        const trackerPanel = document.getElementById("tracker-panel");
+        if (trackerPanel) {
+            // CRITICAL: Move (not clone) the original panel to preserve all event listeners
+            // Remove from tracker-container
+            if (trackerPanel.parentElement) {
+                trackerPanel.parentElement.removeChild(trackerPanel);
+            }
+            // Reset positioning styles to fit in tab container
+            trackerPanel.style.cssText = `
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        transform: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        z-index: 1 !important;
+      `;
+            // Hide close/minimize buttons in embedded version
+            const closeBtn = trackerPanel.querySelector('[title*="关闭"], [title*="Close"]');
+            if (closeBtn) {
+                closeBtn.style.display = "none";
+            }
+            const minimizeBtn = trackerPanel.querySelector('[title*="最小化"], [title*="Minimize"]');
+            if (minimizeBtn) {
+                minimizeBtn.style.display = "none";
+            }
+            // Append to our tab container
+            container.appendChild(trackerPanel);
+            // CRITICAL: Watch for display changes and force it to stay visible
+            // VisitMonitor's bell click handler might try to change display
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === "attributes" &&
+                        mutation.attributeName === "style") {
+                        const panel = mutation.target;
+                        if (panel.style.display !== "block") {
+                            panel.style.display = "block";
+                            console.log("[StatusTrackingTab] Forced tracker-panel to stay visible");
+                        }
+                    }
+                });
+            });
+            observer.observe(trackerPanel, {
+                attributes: true,
+                attributeFilter: ["style"],
+            });
+            console.log("[StatusTrackingTab] VisitMonitor panel moved successfully (preserves event listeners)");
+        }
+        else {
+            console.warn("[StatusTrackingTab] VisitMonitor panel not found, showing placeholder");
+            this.showPlaceholder(container);
+        }
+    }
+    /**
+     * Show placeholder if VisitMonitor panel cannot be found
+     */
+    showPlaceholder(container) {
+        const placeholder = document.createElement("div");
+        placeholder.className = "hha-smart-config-card";
+        placeholder.innerHTML = `
+      <div class="hha-smart-config-card-title">📊 状态追踪</div>
+      <div class="hha-smart-config-card-body">
+        <p style="color: #666; margin-bottom: 12px;">
+          正在加载 Visit Monitor 功能...
+        </p>
+        <p style="color: #999; font-size: 13px;">
+          即将支持：
+        </p>
+        <ul style="color: #999; font-size: 13px; margin-left: 20px;">
+          <li>Coordinator 筛选</li>
+          <li>实时状态追踪</li>
+          <li>异常打钟监控</li>
+          <li>消息通知</li>
+        </ul>
+      </div>
+    `;
+        container.appendChild(placeholder);
+    }
+    onActivate() {
+        console.log("[StatusTrackingTab] Activated");
+    }
+    onDeactivate() {
+        console.log("[StatusTrackingTab] Deactivated");
+    }
+}
+
+;// ./src/js/tabs/QAReportTab.ts
+
+/**
+ * QA Report Tab (Placeholder)
+ * Story 7.3: QA 报告 Tab 占位符
+ */
+class QAReportTab extends BaseTab {
+    constructor() {
+        super(...arguments);
+        this.id = "qa-report";
+        this.label = "QA 报告";
+        this.icon = "📋";
+    }
+    render(container) {
+        this.container = container;
+        const placeholder = this.createPlaceholder("📋", "QA 报告功能", "功能规划中，敬请期待...");
+        container.appendChild(placeholder);
+    }
+}
+
 ;// ./src/index.ts
+
+
+
 
 
 
@@ -6296,8 +6900,157 @@ async function src_main() {
     assignIntervalTimer(saveButtonSelector, $missedOutBtn, "#missedOutBtn", missedCallResolver, ["Attendant failed to call out"]);
     assignIntervalTimer(saveButtonSelector, $missedInBtn, "#missedInBtn", missedCallResolver, ["Attendant failed to call in"]);
     assignIntervalTimer(documentManagementSaveButtonSelector, $copyDescrpBtn, "#uxBtnCopyToDescrp", copyAttachmentToDescrp);
-    visitMonitor();
+    visitMonitor(); // Create floating button and background tracking
     highlight2Call();
+    // Initialize Multi-Tab Panel (Epic 7: Story 7.1, 7.2, 7.3)
+    // This will be shown when clicking the floating button
+    initMultiTabPanel();
+}
+/**
+ * Initialize Multi-Tab Panel System
+ * Epic 7: Multi-Tab Panel System
+ *
+ * 关键架构（参考 VisitMonitor.ts）：
+ * - Multi-Tab Panel 作为 tracker-container 的子元素
+ * - 这样拖动铃铛时，整个container（包括panel）会一起移动
+ * - 铃铛点击控制panel显示/隐藏
+ */
+function initMultiTabPanel() {
+    // IMPORTANT: Only run in top window, not in iframes
+    if (window.self !== window.top) {
+        return;
+    }
+    console.log("[Epic 7] Initializing Multi-Tab Panel System...");
+    // Wait for VisitMonitor to create tracker-container
+    waitForTrackerContainer();
+}
+/**
+ * Wait for tracker-container to exist, then embed our panel inside it
+ */
+function waitForTrackerContainer(retryCount = 0) {
+    const MAX_RETRIES = 40; // 20 seconds max
+    const trackerContainer = document.getElementById("tracker-container");
+    const dragHandle = document.getElementById("tracker-drag-handle");
+    const trackerPanel = document.getElementById("tracker-panel");
+    if (trackerContainer && dragHandle) {
+        // tracker-container exists, now embed our panel
+        embedMultiTabPanel(trackerContainer, dragHandle, trackerPanel);
+    }
+    else if (retryCount < MAX_RETRIES) {
+        setTimeout(() => waitForTrackerContainer(retryCount + 1), 500);
+    }
+    else {
+        console.error("[Epic 7] tracker-container not found after max retries");
+    }
+}
+/**
+ * Embed Multi-Tab Panel inside tracker-container
+ * This way it will move together when dragging the bell button
+ */
+function embedMultiTabPanel(trackerContainer, dragHandle, trackerPanel) {
+    // Create our panel container as a SIBLING to tracker-panel inside tracker-container
+    const container = document.createElement("div");
+    container.id = "hha-smart-multi-tab-container";
+    // 使用和tracker-panel相同的定位方式（相对于container）
+    // CRITICAL: 必须设置 width，否则 container 宽度为 0，getBoundingClientRect 无法正确计算位置
+    container.style.cssText = `
+    position: absolute;
+    top: 0;
+    width: 680px;
+    display: none;
+    z-index: 99998;
+  `;
+    // Append INSIDE tracker-container (not body)
+    trackerContainer.appendChild(container);
+    // Create panel instance
+    const panel = new MultiTabPanel(container, {
+        title: "HHAexchange Smart Assistant",
+        defaultTabId: "status-tracking",
+        initialCollapsed: false,
+        showHeaderControls: false, // 不显示最小化/关闭按钮，用铃铛控制
+    });
+    // Register tabs
+    panel.registerTab(new StatusTrackingTab());
+    panel.registerTab(new QAReportTab());
+    // Initialize panel
+    panel
+        .init()
+        .then(() => {
+        console.log("[Epic 7] Multi-Tab Panel embedded in tracker-container");
+        // Hook bell button click
+        setupBellClickHandler(container, dragHandle, trackerPanel);
+    })
+        .catch((error) => {
+        console.error("[Epic 7] Failed to initialize Multi-Tab Panel:", error);
+    });
+}
+/**
+ * Setup click handler on bell button to toggle Multi-Tab Panel
+ * 参考 VisitMonitor.ts initializeDragAndClick() 的实现
+ */
+function setupBellClickHandler(panelContainer, dragHandle, trackerPanel) {
+    let hasDragged = false;
+    // 监听拖拽状态
+    dragHandle.addEventListener("mousedown", () => {
+        hasDragged = false;
+    }, false);
+    dragHandle.addEventListener("mousemove", () => {
+        hasDragged = true;
+    }, false);
+    // 使用capture阶段拦截click，在VisitMonitor处理之前
+    dragHandle.addEventListener("click", (e) => {
+        if (hasDragged) {
+            console.log("[Epic 7] Drag detected, skipping panel toggle");
+            hasDragged = false;
+            return;
+        }
+        e.stopPropagation();
+        e.preventDefault();
+        const isVisible = panelContainer.style.display !== "none";
+        if (!isVisible) {
+            // 显示我们的面板
+            positionPanelRelativeToHandle(panelContainer, dragHandle);
+            panelContainer.style.display = "block";
+            // 隐藏原来的tracker-panel
+            if (trackerPanel) {
+                trackerPanel.style.display = "none";
+            }
+            console.log("[Epic 7] Multi-Tab Panel opened");
+        }
+        else {
+            // 隐藏面板
+            panelContainer.style.display = "none";
+            console.log("[Epic 7] Multi-Tab Panel closed");
+        }
+    }, true); // capture phase
+    console.log("[Epic 7] Bell click handler setup complete");
+}
+/**
+ * Position panel relative to drag handle (bell button)
+ * 完全参照 VisitMonitor.ts 的鲁棒实现（第 2806-2814 行）
+ */
+function positionPanelRelativeToHandle(panel, handle) {
+    const w = window.innerWidth;
+    const r = handle.getBoundingClientRect();
+    // VisitMonitor 的简单判断：铃铛中心在左半边 → 面板放右边，否则放左边
+    if (r.left + r.width / 2 < w / 2) {
+        panel.style.left = `${handle.offsetWidth + 10}px`;
+        panel.style.right = "auto";
+        console.log("[Epic 7] Panel positioned RIGHT (handle in left half):", {
+            handleCenterX: r.left + r.width / 2,
+            viewportHalf: w / 2,
+            leftValue: `${handle.offsetWidth + 10}px`,
+        });
+    }
+    else {
+        panel.style.right = `${handle.offsetWidth + 10}px`;
+        panel.style.left = "auto";
+        console.log("[Epic 7] Panel positioned LEFT (handle in right half):", {
+            handleCenterX: r.left + r.width / 2,
+            viewportHalf: w / 2,
+            rightValue: `${handle.offsetWidth + 10}px`,
+        });
+    }
 }
 src_main().catch((e) => {
     console.log(e);
