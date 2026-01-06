@@ -927,7 +927,9 @@ export const visitMonitor = async () => {
       try {
         const initialUrl =
           "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
-        const r = (await GM_fetch(initialUrl, { method: "GET" })) as Response & {
+        const r = (await GM_fetch(initialUrl, {
+          method: "GET",
+        })) as Response & {
           rawBody: Blob;
         };
         const textResult = await r.rawBody.text();
@@ -2562,10 +2564,17 @@ export const visitMonitor = async () => {
 
       tableHtml = `
             <thead><tr>
-                <th>Patient Name</th><th>Assignment ID</th><th>Admission ID</th>
-                <th>Caregiver Name</th><th>Visit Date</th><th>Coordinators</th>
-                <th>Schedule</th><th>Contract</th><th>Discipline</th>
-                <th>Service Code</th><th>Caregiver Team</th>
+                <th style="color: #333 !important;">Patient Name</th>
+                <th style="color: #333 !important;">Assignment ID</th>
+                <th style="color: #333 !important;">Admission ID</th>
+                <th style="color: #333 !important;">Caregiver Name</th>
+                <th style="color: #333 !important;">Visit Date</th>
+                <th style="color: #333 !important;">Coordinators</th>
+                <th style="color: #333 !important;">Schedule</th>
+                <th style="color: #333 !important;">Contract</th>
+                <th style="color: #333 !important;">Discipline</th>
+                <th style="color: #333 !important;">Service Code</th>
+                <th style="color: #333 !important;">Caregiver Team</th>
             </tr></thead>
             <tbody>${tableRows}</tbody>
         `;

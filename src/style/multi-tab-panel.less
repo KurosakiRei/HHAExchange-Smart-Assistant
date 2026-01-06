@@ -1,0 +1,346 @@
+@import "./variables.less";
+
+// ===== MULTI-TAB PANEL CONTAINER =====
+.hha-smart-panel {
+  position: absolute;
+  top: 0;
+  width: @panel-width;
+  min-height: @panel-height;
+  background: @background-white;
+  border: 1px solid @border-color;
+  border-radius: @radius-lg;
+  box-shadow: @shadow-panel;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: @font-size-base;
+  color: @text-primary;
+}
+
+// ===== PANEL HEADER =====
+.hha-smart-panel-header {
+  height: @panel-header-height;
+  background: linear-gradient(135deg, @primary-color 0%, @primary-hover 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 @spacing-md;
+  border-bottom: 1px solid @primary-hover;
+  cursor: move;
+  user-select: none;
+}
+
+.hha-smart-panel-title {
+  font-size: @font-size-lg;
+  font-weight: @font-weight-semibold;
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+}
+
+.hha-smart-panel-controls {
+  display: flex;
+  gap: @spacing-sm;
+  position: relative;
+  z-index: 100000; // 确保控制按钮在最顶层
+}
+
+.hha-smart-panel-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: @radius-sm;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background @transition-fast;
+  font-size: @font-size-base;
+  padding: 0;
+  position: relative;
+  z-index: 100001; // 确保按钮本身也在顶层
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.4);
+  }
+}
+
+// ===== PANEL BODY (Tab Layout) =====
+.hha-smart-panel-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative; // 为子元素提供定位上下文
+  z-index: 1; // 确保body在正常层级
+}
+
+// ===== TAB BAR =====
+.hha-smart-tab-bar {
+  width: @tab-bar-width;
+  min-width: @tab-bar-width-collapsed; // 防止被压缩
+  background: @background-alt;
+  border-right: 1px solid @border-color;
+  transition: width @transition-normal;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0; // 防止flex压缩
+  position: relative;
+  z-index: 5; // 确保在内容之上
+
+  &.collapsed {
+    width: @tab-bar-width-collapsed;
+  }
+}
+
+.hha-smart-tab-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  // Hide scrollbar
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: @border-color;
+    border-radius: @radius-sm;
+  }
+}
+
+// ===== TAB ITEM =====
+.hha-smart-tab-item {
+  position: relative;
+  padding: 12px @spacing-md;
+  cursor: pointer;
+  transition: background @transition-fast;
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+  white-space: nowrap;
+  border-bottom: 1px solid @border-color-light;
+
+  &:hover {
+    background: @background-hover;
+  }
+
+  &.active {
+    background: @primary-bg-light;
+    color: @primary-color;
+    font-weight: @font-weight-medium;
+  }
+}
+
+.hha-smart-tab-icon {
+  flex-shrink: 0;
+  font-size: @font-size-xl;
+  line-height: 1;
+  width: 20px;
+  text-align: center;
+}
+
+.hha-smart-tab-text {
+  opacity: 1;
+  transition: opacity @transition-normal;
+  font-size: @font-size-sm;
+
+  .hha-smart-tab-bar.collapsed & {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+// Blue indicator (B-site style)
+.hha-smart-tab-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: @tab-indicator-width;
+  height: 100%;
+  background: @primary-color;
+  opacity: 0;
+  transition: opacity @transition-normal;
+  z-index: @z-index-tab-indicator;
+
+  .hha-smart-tab-item.active & {
+    opacity: 1;
+  }
+}
+
+// ===== COLLAPSE BUTTON =====
+.hha-smart-tab-collapse-btn {
+  padding: @spacing-sm;
+  text-align: center;
+  cursor: pointer;
+  border-top: 1px solid @border-color;
+  transition: background @transition-fast;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  position: relative;
+  z-index: 10; // 确保在内容之上可点击
+
+  &:hover {
+    background: @background-hover;
+  }
+}
+
+.hha-smart-collapse-icon {
+  display: inline-block;
+  transition: transform @transition-normal;
+  font-size: @font-size-base;
+  color: @text-secondary;
+
+  .hha-smart-tab-bar.collapsed & {
+    transform: rotate(180deg);
+  }
+}
+
+// ===== CONTENT AREA =====
+.hha-smart-content-area {
+  flex: 1;
+  overflow: hidden; // 防止子元素溢出
+  background: @background-white;
+  position: relative;
+  min-width: 0; // 防止flex子元素溢出
+}
+
+.hha-smart-tab-content {
+  display: none;
+  padding: @spacing-md;
+  animation: fadeIn @transition-normal;
+  height: 100%;
+  overflow-y: auto; // 内容区滚动
+  overflow-x: hidden;
+  box-sizing: border-box;
+
+  &.active {
+    display: block;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// ===== CONFIG CARD (Shared Component) =====
+.hha-smart-config-card {
+  background: @background-white;
+  border-radius: @radius-md;
+  box-shadow: @shadow-card;
+  padding: @spacing-md;
+  margin-bottom: @spacing-md;
+  transition: box-shadow @transition-normal;
+
+  &:hover {
+    box-shadow: @shadow-card-hover;
+  }
+}
+
+.hha-smart-config-card-title {
+  font-size: @font-size-base;
+  font-weight: @font-weight-semibold;
+  color: @text-primary;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+}
+
+.hha-smart-config-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: @spacing-sm;
+}
+
+// ===== BUTTONS =====
+.hha-smart-btn {
+  border: none;
+  border-radius: @radius-md;
+  padding: @spacing-sm @spacing-md;
+  font-size: @font-size-sm;
+  cursor: pointer;
+  transition: all @transition-fast;
+  font-weight: @font-weight-medium;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: @spacing-sm;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.hha-smart-btn-primary {
+  .hha-smart-btn();
+  background: @primary-color;
+  color: white;
+  box-shadow: @shadow-button;
+
+  &:hover:not(:disabled) {
+    background: @primary-hover;
+  }
+
+  &:active:not(:disabled) {
+    background: @primary-active;
+  }
+}
+
+.hha-smart-btn-secondary {
+  .hha-smart-btn();
+  background: @background-alt;
+  color: @text-primary;
+  border: 1px solid @border-color;
+
+  &:hover:not(:disabled) {
+    background: @background-hover;
+    border-color: @primary-light;
+  }
+}
+
+// ===== PLACEHOLDER =====
+.hha-smart-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: @spacing-xl;
+  text-align: center;
+  color: @text-secondary;
+  min-height: 300px;
+}
+
+.hha-smart-placeholder-icon {
+  font-size: 48px;
+  margin-bottom: @spacing-md;
+  opacity: 0.5;
+}
+
+.hha-smart-placeholder-title {
+  font-size: @font-size-lg;
+  font-weight: @font-weight-semibold;
+  color: @text-primary;
+  margin-bottom: @spacing-sm;
+}
+
+.hha-smart-placeholder-text {
+  font-size: @font-size-base;
+  color: @text-secondary;
+}

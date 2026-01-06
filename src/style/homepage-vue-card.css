@@ -1,0 +1,166 @@
+/**
+ * HomePage Config Card - Vue Component Styles
+ * Epic 7, Story 1: Naive-UI 样式适配
+ * 
+ * 注意：
+ * 1. 复用原有动画和色彩方案
+ * 2. 最小化自定义样式（优先使用 Naive-UI 主题）
+ * 3. 保持与原生 UI 的视觉一致性
+ */
+/* Vue 卡片容器 */
+.vue-card-wrapper {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 10000;
+  min-width: 400px;
+  max-width: 500px;
+  /* 动画（复用原有方案）*/
+  transition: all 0.3s ease-out;
+  /* 初始隐藏 */
+  display: none;
+  opacity: 0;
+  transform: translateY(-10px);
+  /* 阴影（与原生保持一致）*/
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.2));
+}
+.vue-card-wrapper.show {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Naive-UI 组件自定义 */
+.homepage-config-vue-card {
+  /* 卡片背景与边框 - 改为蓝色主题 */
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  border: none !important;
+  /* 标题样式 */
+  /* 内容区 */
+  /* 底部按钮区 */
+}
+.homepage-config-vue-card .n-card-header {
+  color: white !important;
+  font-weight: 600;
+  padding: 16px 20px;
+}
+.homepage-config-vue-card .n-card__content {
+  background: white;
+  padding: 20px;
+}
+.homepage-config-vue-card .n-card__footer {
+  background: #f7f8fa;
+  padding: 12px 20px;
+}
+/* 配置标签 */
+.config-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  display: block;
+  margin-bottom: 8px;
+}
+/* 选中信息提示 - 蓝色主题 */
+.selected-info {
+  background: #eff6ff;
+  border-left: 3px solid #3b82f6;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #1e40af;
+  border-radius: 4px;
+}
+.selected-info strong {
+  color: #1e3a8a;
+}
+/* Naive-UI Select 组件自定义 */
+.homepage-config-vue-card {
+  /* 按钮样式调整 */
+}
+.homepage-config-vue-card .n-select {
+  /* 增加高度使其更易点击 */
+  /* Placeholder 颜色 */
+}
+.homepage-config-vue-card .n-select .n-base-selection {
+  min-height: 40px !important;
+}
+.homepage-config-vue-card .n-select .n-base-selection-placeholder {
+  color: #999;
+}
+.homepage-config-vue-card .n-button {
+  font-weight: 500;
+  min-height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+  /* 主按钮蓝色主题 */
+  /* 次要按钮样式 */
+  /* 禁用状态 */
+}
+.homepage-config-vue-card .n-button--primary-type {
+  background: #3b82f6;
+  border: none;
+}
+.homepage-config-vue-card .n-button--primary-type:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+.homepage-config-vue-card .n-button--primary-type:active {
+  transform: translateY(0);
+  background: #1d4ed8;
+}
+.homepage-config-vue-card .n-button--default-type {
+  border-color: #d1d5db;
+}
+.homepage-config-vue-card .n-button--default-type:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+.homepage-config-vue-card .n-button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* 响应式调整 */
+@media (max-width: 480px) {
+  .vue-card-wrapper {
+    min-width: 320px;
+    max-width: calc(100vw - 32px);
+    left: 16px;
+    right: 16px;
+  }
+}
+/* Dark Mode 支持（预留）*/
+@media (prefers-color-scheme: dark) {
+  .homepage-config-vue-card .n-card__content {
+    background: #1a1a1a;
+  }
+  .homepage-config-vue-card .config-label {
+    color: #e5e5e5;
+  }
+  .homepage-config-vue-card .selected-info {
+    background: #1e3a8a;
+    color: #93c5fd;
+  }
+  .homepage-config-vue-card .selected-info strong {
+    color: #bfdbfe;
+  }
+}
+/* 动画关键帧（复用原有）*/
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
