@@ -12,6 +12,8 @@ export class StatusTrackingTab extends BaseTab {
   icon = "📊";
 
   private visitMonitorInitialized = false;
+  private retryCount = 0;
+  private maxRetries = 20; // 最多重试 20 次 (20 * 300ms = 6秒)
 
   async init(): Promise<void> {
     // VisitMonitor will be initialized when rendered
@@ -20,6 +22,8 @@ export class StatusTrackingTab extends BaseTab {
 
   render(container: HTMLElement): void {
     this.container = container;
+    // 只添加 status-tracking-tab class，不要覆盖原有的 class
+    container.classList.add("status-tracking-tab");
 
     // Create a wrapper for the visit monitor
     const wrapper = document.createElement("div");
@@ -32,16 +36,42 @@ export class StatusTrackingTab extends BaseTab {
     // The VisitMonitor has already been initialized by main()
     // We just need to wait for it and embed it
     if (!this.visitMonitorInitialized) {
+      this.retryCount = 0;
       this.embedExistingVisitMonitor(wrapper);
-      this.visitMonitorInitialized = true;
     }
   }
 
   private embedExistingVisitMonitor(container: HTMLElement): void {
-    // Wait for VisitMonitor to create its UI
-    setTimeout(() => {
+    // Check if tracker-panel exists, retry if not
+    const trackerPanel = document.getElementById("tracker-panel");
+
+    if (trackerPanel) {
       this.embedVisitMonitorPanel(container);
-    }, 200);
+      this.visitMonitorInitialized = true;
+      console.log(
+        "[StatusTrackingTab] VisitMonitor panel embedded successfully"
+      );
+    } else if (this.retryCount < this.maxRetries) {
+      // Retry after delay
+      this.retryCount++;
+      console.log(
+        `[StatusTrackingTab] Waiting for tracker-panel... (attempt ${this.retryCount}/${this.maxRetries})`
+      );
+      setTimeout(() => {
+        this.embedExistingVisitMonitor(container);
+      }, 300);
+    } else {
+      console.error(
+        "[StatusTrackingTab] Failed to find tracker-panel after max retries"
+      );
+      // Show error message in container
+      container.innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #666;">
+          <p>⚠️ 无法加载状态追踪面板</p>
+          <p style="font-size: 12px;">请刷新页面重试</p>
+        </div>
+      `;
+    }
   }
 
   /**
@@ -70,6 +100,7 @@ export class StatusTrackingTab extends BaseTab {
       }
 
       // Reset positioning styles to fit in tab container
+      // CRITICAL: 必须设置 display: block 因为 VisitMonitor 可能设置了 display: none
       trackerPanel.style.cssText = `
         display: block !important;
         position: static !important;

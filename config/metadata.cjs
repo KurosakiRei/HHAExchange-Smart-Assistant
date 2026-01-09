@@ -23,6 +23,6 @@ module.exports = {
     `https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js`,
   ],
   grant: ["GM.xmlHttpRequest","GM_openInTab", "GM_addStyle", "GM_setValue", "GM_getValue"],
-  connect: ["app.hhaexchange.com"],
+  connect: ["app.hhaexchange.com","reports.hhaexchange.com"],
   "run-at": "document-idle",
 };

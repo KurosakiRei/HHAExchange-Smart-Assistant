@@ -1,3 +1,5 @@
+    @import "./variables.less";
+
     #tracker-container {
         position: fixed;
         top: 20px;
@@ -85,10 +87,12 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 15px;
-        background: #f1f1f1;
-        border-bottom: 1px solid #ddd;
+        padding: 8px 15px;
+        background: @background-white; // 统一使用QA报告的工具栏背景色
+        border-bottom: 1px solid @border-color;
         flex-shrink: 0;
+        height: 44px; // 统一高度与QA报告工具栏一致
+        box-sizing: border-box;
     }
 
     .tracker-header h3 {

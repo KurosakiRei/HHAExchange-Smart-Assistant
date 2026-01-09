@@ -1,0 +1,636 @@
+/**
+ * QA Report Tab Styles
+ * Epic 8: QA 报告功能
+ *
+ * 依赖: variables.less, multi-tab-panel.less
+ * @author HHA Smart Assistant
+ * @date 2026-01-08
+ */
+
+@import "./variables.less";
+
+// ===== Local Variables (complements variables.less) =====
+@text-color: @text-primary;
+@text-color-secondary: @text-secondary;
+@hover-bg: @background-hover;
+@surface-bg: @background-alt;
+@shadow-sm: @shadow-card;
+@shadow-md: @shadow-card-hover;
+@shadow-lg: @shadow-panel;
+@danger-color: #dc3545;
+@success-color: #28a745;
+@font-mono: "Monaco", "Menlo", "Consolas", monospace;
+
+// ============================================================================
+// Tab Container & Wrapper
+// ============================================================================
+
+.qa-report-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.qa-report-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 0; // 移除间隙，由各自的 border/padding 控制
+}
+
+// ============================================================================
+// Header Styles
+// ============================================================================
+
+.qa-report-header {
+  display: none; // 隐藏header，与状态追踪tab保持一致（无header）
+}
+
+.qa-report-title {
+  margin: 0;
+  font-size: @font-size-base;
+  font-weight: @font-weight-semibold;
+  color: @text-primary;
+  display: flex;
+  align-items: center;
+  gap: @spacing-xs;
+}
+
+// ============================================================================
+// Toolbar Styles
+// ============================================================================
+
+.qa-report-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; // 左中右三段式布局
+  padding: @spacing-xs @spacing-md;
+  background: @background-white;
+  border-bottom: 1px solid @border-color;
+  flex-shrink: 0;
+  height: 44px; // 固定高度
+  box-sizing: border-box;
+  gap: @spacing-sm; // 添加间隙
+}
+
+.qa-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+  flex: 0 0 auto;
+  height: 28px; // 统一高度
+  
+  // 确保所有子元素垂直居中
+  > * {
+    margin: 0;
+    vertical-align: middle;
+  }
+}
+
+// 按钮组：加载 + 导出
+.qa-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0; // 按钮组无间隙
+  flex: 0 0 auto;
+  height: 28px; // 统一高度
+  
+  .qa-load-btn {
+    border-radius: @radius-sm 0 0 @radius-sm;
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+    height: 28px !important; // 强制高度
+    line-height: 26px;
+    padding: 0 14px;
+  }
+  
+  .qa-export-btn {
+    border-radius: 0 @radius-sm @radius-sm 0;
+    height: 28px !important; // 强制高度
+    line-height: 26px;
+    padding: 0 14px;
+  }
+}
+
+.qa-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: @spacing-xs;
+  height: 28px; // 统一高度
+}
+
+.qa-select-label {
+  font-size: @font-size-sm;
+  color: @text-color-secondary;
+  font-weight: 500;
+  line-height: 28px; // 和按钮高度一致
+  white-space: nowrap;
+}
+
+.qa-coordinator-select {
+  padding: 0 28px 0 10px; // 右侧留出空间给下拉箭头
+  border: 1px solid @border-color;
+  border-radius: @radius-sm;
+  background: white;
+  background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"%3E%3Cpath fill="%23666" d="M6 9L1 4h10z"/%3E%3C/svg%3E'); // 下拉箭头SVG
+  background-repeat: no-repeat;
+  background-position: right 8px center; // 箭头位置
+  background-size: 12px 12px;
+  font-size: @font-size-sm;
+  min-width: 180px;
+  max-width: 300px; // 限制最大宽度防止过长
+  height: 28px !important; // 强制高度和按钮一致
+  line-height: 26px;
+  vertical-align: middle; // 确保垂直居中对齐
+  cursor: pointer;
+  box-sizing: border-box;
+  appearance: none; // 移除浏览器默认箭头
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  &:focus {
+    outline: none;
+    border-color: @primary-color;
+    box-shadow: 0 0 0 2px @primary-light;
+  }
+
+  &:disabled {
+    background: @background-alt;
+    cursor: not-allowed;
+  }
+}
+
+.qa-load-btn {
+  padding: 0 14px;
+  font-size: @font-size-sm;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: @spacing-xs;
+  height: 28px;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.qa-export-btn {
+  padding: 0 12px;
+  font-size: @font-size-sm;
+  background: @surface-bg;
+  border: 1px solid @border-color;
+  border-radius: @radius-sm;
+  color: @text-color;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    background: @hover-bg;
+    border-color: @primary-color;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.qa-status-text {
+  font-size: @font-size-xs;
+  color: @text-color-secondary;
+  white-space: nowrap;
+}
+
+// ============================================================================
+// View Toggle
+// ============================================================================
+
+.qa-view-toggle {
+  display: flex;
+  border: 1px solid @border-color;
+  border-radius: @radius-sm;
+  overflow: hidden;
+  height: 28px; // 固定高度
+}
+
+.qa-view-btn {
+  padding: 0 10px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  color: @text-color-secondary;
+  transition: all 0.2s;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:first-child {
+    border-right: 1px solid @border-color;
+  }
+
+  &:hover {
+    background: @hover-bg;
+    color: @primary-color;
+  }
+
+  &.active {
+    background: @primary-color;
+    color: white;
+  }
+}
+
+// ============================================================================
+// Content Body
+// ============================================================================
+
+.qa-report-content-body {
+  flex: 1;
+  overflow: auto;
+  padding: @spacing-sm;
+  background: @surface-bg;
+}
+
+// ============================================================================
+// Empty State
+// ============================================================================
+
+.qa-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: @text-color-secondary;
+}
+
+.qa-empty-icon {
+  font-size: 48px;
+  margin-bottom: @spacing-md;
+  opacity: 0.5;
+}
+
+.qa-empty-title {
+  font-size: @font-size-lg;
+  font-weight: 600;
+  color: @text-color;
+  margin-bottom: @spacing-sm;
+}
+
+.qa-empty-text {
+  font-size: @font-size-sm;
+}
+
+// ============================================================================
+// Table/List View
+// ============================================================================
+
+.qa-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: @font-size-sm;
+  background: white;
+  border-radius: @radius-sm;
+  overflow: hidden;
+  box-shadow: @shadow-sm;
+
+  thead {
+    background: @surface-bg;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    th {
+      padding: @spacing-sm @spacing-md;
+      text-align: left;
+      font-weight: 600;
+      color: @text-color-secondary;
+      border-bottom: 2px solid @border-color;
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid @border-color-light;
+      transition: background 0.15s;
+
+      &:hover {
+        background: @hover-bg;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: @spacing-sm @spacing-md;
+      vertical-align: middle;
+    }
+  }
+
+  // Column widths
+  .col-id {
+    width: 110px;
+    font-family: @font-mono;
+    color: @primary-color;
+    font-weight: 500;
+  }
+
+  .col-name {
+    width: auto;
+    min-width: 150px;
+    font-weight: 500;
+  }
+
+  .col-phone {
+    width: 120px;
+  }
+
+  .col-qa {
+    width: 100px;
+    font-weight: 500;
+  }
+
+  .col-action {
+    width: 50px;
+    text-align: center;
+  }
+}
+
+.phone-item {
+  font-family: @font-mono;
+  font-size: @font-size-xs;
+  color: @text-color-secondary;
+
+  & + .phone-item {
+    margin-top: 2px;
+  }
+}
+
+.qa-never {
+  color: @danger-color !important;
+  font-weight: 600;
+}
+
+.qa-action-btn {
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  color: @text-color-secondary;
+  border-radius: @radius-sm;
+  transition: all 0.2s;
+
+  &:hover {
+    background: @hover-bg;
+    color: @primary-color;
+  }
+}
+
+// ============================================================================
+// Grid View
+// ============================================================================
+
+.qa-report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: @spacing-sm;
+  padding: @spacing-sm;
+}
+
+.qa-card {
+  background: white;
+  border-radius: @radius-sm;
+  padding: @spacing-md;
+  border-left: 4px solid @border-color;
+  box-shadow: @shadow-sm;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    box-shadow: @shadow-md;
+    transform: translateY(-2px);
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: @spacing-sm;
+}
+
+.card-name {
+  font-weight: 600;
+  font-size: @font-size-sm;
+  color: @text-color;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: @spacing-sm;
+}
+
+.card-action-btn {
+  padding: 2px 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: @text-color-secondary;
+  border-radius: @radius-sm;
+  flex-shrink: 0;
+
+  &:hover {
+    background: @hover-bg;
+    color: @primary-color;
+  }
+}
+
+.card-id {
+  font-family: @font-mono;
+  font-size: @font-size-xs;
+  color: @primary-color;
+  margin-bottom: @spacing-sm;
+}
+
+.card-phones {
+  margin-bottom: @spacing-sm;
+}
+
+.card-phone {
+  font-family: @font-mono;
+  font-size: @font-size-xs;
+  color: @text-color-secondary;
+
+  & + .card-phone {
+    margin-top: 2px;
+  }
+}
+
+.card-qa {
+  font-weight: 600;
+  font-size: @font-size-sm;
+  margin-bottom: @spacing-sm;
+}
+
+.card-priority-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 2px 8px;
+  font-size: @font-size-xs;
+  color: white;
+  border-radius: @radius-sm 0 0 0;
+  font-weight: 500;
+}
+
+// ============================================================================
+// Priority Row Highlights (List View)
+// ============================================================================
+
+.priority-critical {
+  .col-qa {
+    color: #dc3545;
+  }
+}
+
+.priority-high {
+  .col-qa {
+    color: #e74c3c;
+  }
+}
+
+.priority-medium-high {
+  .col-qa {
+    color: #fd7e14;
+  }
+}
+
+.priority-medium {
+  .col-qa {
+    color: #ffc107;
+  }
+}
+
+.priority-low-medium {
+  .col-qa {
+    color: #a8d08d;
+  }
+}
+
+.priority-low {
+  .col-qa {
+    color: #28a745;
+  }
+}
+
+// ============================================================================
+// Export Menu
+// ============================================================================
+
+.qa-export-menu {
+  background: white;
+  border: 1px solid @border-color;
+  border-radius: @radius-sm;
+  box-shadow: @shadow-lg;
+  overflow: hidden;
+  z-index: 1000;
+  min-width: 140px;
+}
+
+.export-menu-item {
+  padding: @spacing-sm @spacing-md;
+  cursor: pointer;
+  font-size: @font-size-sm;
+  transition: background 0.15s;
+
+  &:hover {
+    background: @hover-bg;
+    color: @primary-color;
+  }
+
+  & + .export-menu-item {
+    border-top: 1px solid @border-color-light;
+  }
+}
+
+// ============================================================================
+// Action Menu
+// ============================================================================
+
+.qa-action-menu {
+  background: white;
+  border: 1px solid @border-color;
+  border-radius: @radius-sm;
+  box-shadow: @shadow-lg;
+  overflow: hidden;
+  z-index: 1000;
+  min-width: 180px;
+}
+
+.action-menu-item {
+  padding: @spacing-sm @spacing-md;
+  cursor: pointer;
+  font-size: @font-size-sm;
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+  transition: background 0.15s;
+
+  &:hover {
+    background: @hover-bg;
+    color: @primary-color;
+  }
+
+  & + .action-menu-item {
+    border-top: 1px solid @border-color-light;
+  }
+}
+
+// ============================================================================
+// Toast Notifications
+// ============================================================================
+
+.qa-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100%);
+  padding: @spacing-sm @spacing-lg;
+  border-radius: @radius-sm;
+  font-size: @font-size-sm;
+  color: white;
+  z-index: 100001;
+  opacity: 0;
+  transition: all 0.3s ease;
+  box-shadow: @shadow-lg;
+
+  &.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  &.qa-toast-success {
+    background: @success-color;
+  }
+
+  &.qa-toast-error {
+    background: @danger-color;
+  }
+
+  &.qa-toast-info {
+    background: @primary-color;
+  }
+}

@@ -155,13 +155,23 @@ export class MultiTabPanel {
     const body = document.createElement("div");
     body.className = "hha-smart-panel-body";
 
+    // Content wrapper (tab bar + content area in a row)
+    const contentWrapper = document.createElement("div");
+    contentWrapper.className = "hha-smart-content-wrapper";
+
     // Tab bar
     this.tabBarEl = this.renderTabBar();
-    body.appendChild(this.tabBarEl);
+    contentWrapper.appendChild(this.tabBarEl);
 
     // Content area
     this.contentAreaEl = this.renderContentArea();
-    body.appendChild(this.contentAreaEl);
+    contentWrapper.appendChild(this.contentAreaEl);
+
+    body.appendChild(contentWrapper);
+
+    // Footer
+    const footer = this.renderFooter();
+    body.appendChild(footer);
 
     return body;
   }
@@ -263,16 +273,12 @@ export class MultiTabPanel {
   private renderContentArea(): HTMLElement {
     const contentArea = document.createElement("div");
     contentArea.className = "hha-smart-content-area";
-    // 确保内容区域有overflow控制
-    contentArea.style.cssText = "overflow: hidden; position: relative;";
 
     // Create content containers for each tab
     this.tabs.forEach((tab) => {
       const contentDiv = document.createElement("div");
       contentDiv.className = "hha-smart-tab-content";
       contentDiv.dataset.tabId = tab.id;
-      // 每个tab内容也需要overflow控制
-      contentDiv.style.cssText = "overflow: auto; height: 100%; width: 100%;";
 
       if (tab.id === this.activeTabId) {
         contentDiv.classList.add("active");
@@ -286,6 +292,21 @@ export class MultiTabPanel {
   }
 
   /**
+   * Render footer with branding
+   */
+  private renderFooter(): HTMLElement {
+    const footer = document.createElement("div");
+    footer.className = "hha-smart-panel-footer";
+
+    const branding = document.createElement("div");
+    branding.className = "footer-branding";
+    branding.textContent = "Powered by KurosakiRei";
+
+    footer.appendChild(branding);
+    return footer;
+  }
+
+  /**
    * Initialize the default active tab
    */
   private async initializeDefaultTab(): Promise<void> {
@@ -295,8 +316,9 @@ export class MultiTabPanel {
     const container = this.tabContents.get(this.activeTabId);
     if (!container) return;
 
-    await tab.init();
+    // CRITICAL: Render first to create DOM elements, then init to load data
     tab.render(container);
+    await tab.init();
   }
 
   /**
@@ -316,15 +338,18 @@ export class MultiTabPanel {
     this.activeTabId = tabId;
     this.saveActiveTab();
 
-    // Update UI
+    // Update UI - this controls which tab content is visible via CSS
     this.updateTabBarUI();
     this.updateContentAreaUI();
 
-    // Initialize new tab if needed
+    // Initialize and render new tab if not yet done
     const container = this.tabContents.get(tabId);
     if (container && container.children.length === 0) {
-      await tab.init();
+      // CRITICAL: Render first to create DOM elements, then init to load data
       tab.render(container);
+      if (!tab.initialized) {
+        await tab.init();
+      }
     }
 
     // Activate new tab

@@ -1,0 +1,36 @@
+/**
+ * Status Tracking Tab Styles
+ * Epic 7: Multi-Tab Panel - 状态追踪 Tab
+ *
+ * 依赖: variables.less, multi-tab-panel.less
+ * @author HHA Smart Assistant
+ * @date 2026-01-08
+ */
+.status-tracking-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+}
+#status-tracking-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+#status-tracking-wrapper #tracker-panel {
+  background: #ffffff;
+}
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar {
+  width: 6px;
+}
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 2px;
+}
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover {
+  background: #666666;
+}
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track {
+  background: #fafafa;
+}

@@ -1,0 +1,56 @@
+/**
+ * Status Tracking Tab Styles
+ * Epic 7: Multi-Tab Panel - 状态追踪 Tab
+ *
+ * 依赖: variables.less, multi-tab-panel.less
+ * @author HHA Smart Assistant
+ * @date 2026-01-08
+ */
+
+@import "./variables.less";
+
+// ============================================================================
+// Tab Container & Wrapper
+// ============================================================================
+
+.status-tracking-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 0; // 无内边距，让 VisitMonitor 面板填满整个区域
+}
+
+#status-tracking-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+// ============================================================================
+// Tracker Panel Integration
+// ============================================================================
+
+// 当 tracker-panel 被嵌入到 tab 中时的样式调整
+#status-tracking-wrapper #tracker-panel {
+  // 继承自内联样式，这里只做补充
+  background: @background-white;
+  
+  // 确保面板内的滚动条样式一致
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: @border-color;
+    border-radius: @radius-sm;
+    
+    &:hover {
+      background: @text-secondary;
+    }
+  }
+
+  &::-webkit-scrollbar-track {
+    background: @background-alt;
+  }
+}

@@ -5,7 +5,8 @@
   position: absolute;
   top: 0;
   width: @panel-width;
-  min-height: @panel-height;
+  height: @panel-height; // 固定高度，防止面板拉伸过长
+  max-height: 80vh; // 最大高度限制
   background: @background-white;
   border: 1px solid @border-color;
   border-radius: @radius-lg;
@@ -21,19 +22,19 @@
 // ===== PANEL HEADER =====
 .hha-smart-panel-header {
   height: @panel-header-height;
-  background: linear-gradient(135deg, @primary-color 0%, @primary-hover 100%);
+  background: @primary-gradient; // 渐变背景，与 Prebilling Selector 一致
   color: white;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 @spacing-md;
-  border-bottom: 1px solid @primary-hover;
+  border-bottom: none;
   cursor: move;
   user-select: none;
 }
 
 .hha-smart-panel-title {
-  font-size: @font-size-lg;
+  font-size: @font-size-base;
   font-weight: @font-weight-semibold;
   display: flex;
   align-items: center;
@@ -77,9 +78,20 @@
 .hha-smart-panel-body {
   flex: 1;
   display: flex;
+  flex-direction: column; // 改为column以支持footer
   overflow: hidden;
   position: relative; // 为子元素提供定位上下文
   z-index: 1; // 确保body在正常层级
+}
+
+// Main content wrapper (tab bar + content area in a row)
+.hha-smart-content-wrapper {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0; // 关键：确保 flex 子元素可以正确收缩
+  position: relative; // 为子元素提供定位上下文
+  isolation: isolate; // 创建新的层叠上下文，防止子元素层级冲突
 }
 
 // ===== TAB BAR =====
@@ -94,7 +106,7 @@
   flex-direction: column;
   flex-shrink: 0; // 防止flex压缩
   position: relative;
-  z-index: 5; // 确保在内容之上
+  z-index: 2; // 略高于 content-area，但不会太高导致遮挡问题
 
   &.collapsed {
     width: @tab-bar-width-collapsed;
@@ -120,12 +132,12 @@
 // ===== TAB ITEM =====
 .hha-smart-tab-item {
   position: relative;
-  padding: 12px @spacing-md;
+  padding: 12px 8px;
   cursor: pointer;
   transition: background @transition-fast;
   display: flex;
   align-items: center;
-  gap: @spacing-sm;
+  gap: @spacing-xs;
   white-space: nowrap;
   border-bottom: 1px solid @border-color-light;
 
@@ -152,11 +164,27 @@
   opacity: 1;
   transition: opacity @transition-normal;
   font-size: @font-size-sm;
-
-  .hha-smart-tab-bar.collapsed & {
-    opacity: 0;
-    pointer-events: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  flex: 1;
+  
+  // Hide scrollbar but keep functionality
+  &::-webkit-scrollbar {
+    height: 0;
+    display: none;
   }
+  
+  // Enable smooth scrolling
+  scroll-behavior: smooth;
+}
+
+// 当 tab bar 收缩时隐藏文字
+.hha-smart-tab-bar.collapsed .hha-smart-tab-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 // Blue indicator (B-site style)
@@ -209,23 +237,50 @@
 // ===== CONTENT AREA =====
 .hha-smart-content-area {
   flex: 1;
-  overflow: hidden; // 防止子元素溢出
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: @background-white;
+  min-height: 0; // 确保 flex 子元素可以正确收缩
   position: relative;
-  min-width: 0; // 防止flex子元素溢出
+  z-index: 1; // 确保在正常层级，低于 tab-bar
+}
+
+// ===== FOOTER =====
+.hha-smart-panel-footer {
+  height: 28px;
+  background: @background-alt;
+  border-top: 1px solid @border-color;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 @spacing-md;
+  font-size: @font-size-xs;
+  color: @text-secondary;
+  flex-shrink: 0;
+}
+
+.footer-branding {
+  font-style: italic;
+  opacity: 0.6;
+  user-select: none;
 }
 
 .hha-smart-tab-content {
-  display: none;
-  padding: @spacing-md;
+  display: none !important; // 默认隐藏，使用 !important 确保不被覆盖
+  padding: 0; // 移除默认 padding，让各 tab 自己控制间距
   animation: fadeIn @transition-normal;
-  height: 100%;
-  overflow-y: auto; // 内容区滚动
+  flex: 1;
+  overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
+  min-height: 0; // 确保 flex 子元素可以正确收缩
+  position: relative;
+  z-index: 0; // 基础层级
 
   &.active {
-    display: block;
+    display: flex !important; // 激活时显示，使用 !important
+    flex-direction: column;
   }
 }
 

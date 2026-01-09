@@ -73,10 +73,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
-  background: #f1f1f1;
-  border-bottom: 1px solid #ddd;
+  padding: 8px 15px;
+  background: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
   flex-shrink: 0;
+  height: 44px;
+  box-sizing: border-box;
 }
 .tracker-header h3 {
   margin: 0;

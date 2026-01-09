@@ -651,7 +651,9 @@ export const visitMonitor = async () => {
   panel.innerHTML = `
          <div id="tracking-view" class="tracker-view">
             <div class="tracker-header">
-              <h3 style="color: #333 !important;">各类状态追踪<span id="last-refresh-time" style="font-size: 11px; color: #666; margin-left: 8px;"></span></h3>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span id="last-refresh-time" style="font-size: 12px; color: #666;">上次更新：--:--:--</span>
+              </div>
               <button id="edit-list-btn" class="tracker-header-btn">编辑追踪列表</button>
             </div>
             <div class="tracker-content"><table class="tracker-table"><thead><tr>
