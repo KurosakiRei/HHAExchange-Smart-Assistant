@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.6.6
+// @version             3.7.0
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -19,6 +19,7 @@
 // @grant               GM_setValue
 // @grant               GM_getValue
 // @connect             app.hhaexchange.com
+// @connect             reports.hhaexchange.com
 // @run-at              document-idle
 // ==/UserScript==
 
@@ -36,12 +37,17 @@
 /* harmony import */ var _node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./node_modules/css-loader/dist/runtime/api.js");
 /* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./node_modules/css-loader/dist/runtime/getUrl.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2__);
 // Imports
 
 
+
+var ___CSS_LOADER_URL_IMPORT_0___ = new URL(/* asset import */ __webpack_require__("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 12 12\"%3E%3Cpath fill=\"%23666\" d=\"M6 9L1 4h10z\"/%3E%3C/svg%3E"), __webpack_require__.b);
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
+var ___CSS_LOADER_URL_REPLACEMENT_0___ = _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default()(___CSS_LOADER_URL_IMPORT_0___);
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, ".hha-smart-panel {\n  position: absolute;\n  top: 0;\n  width: 680px;\n  min-height: 460px;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n  font-size: 14px;\n  color: #333333;\n}\n.hha-smart-panel-header {\n  height: 40px;\n  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);\n  color: white;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 16px;\n  border-bottom: 1px solid #1565c0;\n  cursor: move;\n  user-select: none;\n}\n.hha-smart-panel-title {\n  font-size: 16px;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-panel-controls {\n  display: flex;\n  gap: 8px;\n  position: relative;\n  z-index: 100000;\n}\n.hha-smart-panel-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 2px;\n  background: rgba(255, 255, 255, 0.2);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: background 0.15s ease;\n  font-size: 14px;\n  padding: 0;\n  position: relative;\n  z-index: 100001;\n}\n.hha-smart-panel-btn:hover {\n  background: rgba(255, 255, 255, 0.3);\n}\n.hha-smart-panel-btn:active {\n  background: rgba(255, 255, 255, 0.4);\n}\n.hha-smart-panel-body {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-tab-bar {\n  width: 140px;\n  min-width: 40px;\n  background: #fafafa;\n  border-right: 1px solid #e0e0e0;\n  transition: width 0.2s ease;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  flex-shrink: 0;\n  position: relative;\n  z-index: 5;\n}\n.hha-smart-tab-bar.collapsed {\n  width: 40px;\n}\n.hha-smart-tab-list {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n}\n.hha-smart-tab-list::-webkit-scrollbar {\n  width: 4px;\n}\n.hha-smart-tab-list::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n.hha-smart-tab-item {\n  position: relative;\n  padding: 12px 16px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  white-space: nowrap;\n  border-bottom: 1px solid #f0f0f0;\n}\n.hha-smart-tab-item:hover {\n  background: #f5f5f5;\n}\n.hha-smart-tab-item.active {\n  background: #e3f2fd;\n  color: #1976d2;\n  font-weight: 500;\n}\n.hha-smart-tab-icon {\n  flex-shrink: 0;\n  font-size: 18px;\n  line-height: 1;\n  width: 20px;\n  text-align: center;\n}\n.hha-smart-tab-text {\n  opacity: 1;\n  transition: opacity 0.2s ease;\n  font-size: 13px;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-tab-text {\n  opacity: 0;\n  pointer-events: none;\n}\n.hha-smart-tab-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 4px;\n  height: 100%;\n  background: #1976d2;\n  opacity: 0;\n  transition: opacity 0.2s ease;\n  z-index: 1;\n}\n.hha-smart-tab-item.active .hha-smart-tab-indicator {\n  opacity: 1;\n}\n.hha-smart-tab-collapse-btn {\n  padding: 8px;\n  text-align: center;\n  cursor: pointer;\n  border-top: 1px solid #e0e0e0;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 36px;\n  position: relative;\n  z-index: 10;\n}\n.hha-smart-tab-collapse-btn:hover {\n  background: #f5f5f5;\n}\n.hha-smart-collapse-icon {\n  display: inline-block;\n  transition: transform 0.2s ease;\n  font-size: 14px;\n  color: #666666;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-collapse-icon {\n  transform: rotate(180deg);\n}\n.hha-smart-content-area {\n  flex: 1;\n  overflow: hidden;\n  background: #ffffff;\n  position: relative;\n  min-width: 0;\n}\n.hha-smart-tab-content {\n  display: none;\n  padding: 16px;\n  animation: fadeIn 0.2s ease;\n  height: 100%;\n  overflow-y: auto;\n  overflow-x: hidden;\n  box-sizing: border-box;\n}\n.hha-smart-tab-content.active {\n  display: block;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n.hha-smart-config-card {\n  background: #ffffff;\n  border-radius: 4px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: box-shadow 0.2s ease;\n}\n.hha-smart-config-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.hha-smart-config-card-title {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-config-card-body {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.hha-smart-btn {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.hha-smart-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #1976d2;\n  color: white;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.hha-smart-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary:hover:not(:disabled) {\n  background: #1565c0;\n}\n.hha-smart-btn-primary:active:not(:disabled) {\n  background: #0d47a1;\n}\n.hha-smart-btn-secondary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #fafafa;\n  color: #333333;\n  border: 1px solid #e0e0e0;\n}\n.hha-smart-btn-secondary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-secondary:hover:not(:disabled) {\n  background: #f5f5f5;\n  border-color: #bbdefb;\n}\n.hha-smart-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 32px;\n  text-align: center;\n  color: #666666;\n  min-height: 300px;\n}\n.hha-smart-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.hha-smart-placeholder-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.hha-smart-placeholder-text {\n  font-size: 14px;\n  color: #666666;\n}\n#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/* --- General Container --- */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background-color: #007bff;\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: move;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);\n  font-size: 24px;\n  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n}\n/* --- Panel & Views --- */\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  min-height: 500px;\n  background: #f9f9f9;\n  border: 1px solid #ccc;\n  border-radius: 8px;\n  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333;\n  overflow: hidden;\n}\n.tracker-view {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: column;\n  transition: transform 0.3s ease-in-out;\n}\n.tracker-view.hidden {\n  display: none;\n}\n/* View Transition Animations */\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n/* --- Header --- */\n.tracker-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n}\n.tracker-header-btn {\n  background: #e0e0e0;\n  border: 1px solid #ccc;\n  padding: 4px 10px;\n  border-radius: 5px;\n  cursor: pointer;\n}\n.tracker-header-btn:hover {\n  background: #d4d4d4;\n}\n.back-btn {\n  font-size: 20px;\n  padding: 0 10px;\n}\n/* --- 4. 内容与表格 --- */\n.tracker-content {\n  flex-grow: 1;\n  padding: 10px;\n  overflow-y: auto;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n}\n.tracker-table th,\n.tracker-table td {\n  border: 1px solid #ddd;\n  padding: 8px 12px;\n  text-align: center;\n  vertical-align: middle;\n}\n.tracker-table th {\n  background-color: #e9ecef;\n  font-size: 14px;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: bold;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.status-icon:hover {\n  opacity: 0.8;\n  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n  100% {\n    opacity: 1;\n  }\n}\n/* --- Edit View Specifics --- */\n.edit-list-actions button {\n  font-size: 18px;\n  width: 36px;\n  height: 36px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button:disabled {\n  background-color: #ccc;\n  cursor: not-allowed;\n}\n.tracker-footer {\n  padding: 10px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #ddd;\n  background: #f1f1f1;\n  flex-shrink: 0;\n}\n/* --- Loader --- */\n.loader {\n  text-align: center;\n  padding: 40px;\n}\n.spinner {\n  border: 4px solid #f3f3f3;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n/* --- Toast Notification --- */\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 5px;\n  z-index: 10000;\n  opacity: 0;\n  transition: opacity 0.3s, bottom 0.3s;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n/* --- 7. Details Popover (气泡) --- */\n#details-popover {\n  position: fixed;\n  z-index: 10001;\n  /* Must be higher than the panel */\n  /* MODIFIED: 增加宽度以容纳更多列 */\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  /* 提高最大高度限制 */\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  /* Initial state for fade-in animation */\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n  /* FIX: 提高 z-index, 确保它在所有元素之上 */\n  z-index: 100001;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n  /* ADDED: 让用户知道这里可以拖动 */\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* --- Note Cell Styling --- */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  /* 允许换行 */\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* --- Authorization Note Table (格式化后的内容) --- */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* --- Popover Resize Handle --- */\n.popover-resize-handle {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 16px;\n  height: 16px;\n  cursor: nwse-resize;\n  background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n  border-bottom-right-radius: 8px;\n}\n.popover-resize-handle::before {\n  content: '';\n  position: absolute;\n  right: 4px;\n  bottom: 4px;\n  width: 4px;\n  height: 4px;\n  background: #666;\n  border-radius: 1px;\n}\n/* --- 8. Phone Tooltip (新增) --- */\n.phone-icon-wrapper {\n  position: relative;\n  /* 为内部的 tooltip 提供定位上下文 */\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  /* 默认隐藏 */\n  position: absolute;\n  top: 100%;\n  /* 显示在图标正下方 */\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n  /* 确保在气泡本身之上 */\n}\n/* 核心交互：当鼠标悬浮在 wrapper 上时，显示 tooltip */\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, ".hha-smart-panel {\n  position: absolute;\n  top: 0;\n  width: 680px;\n  height: 460px;\n  max-height: 80vh;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n  font-size: 14px;\n  color: #333333;\n}\n.hha-smart-panel-header {\n  height: 40px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 16px;\n  border-bottom: none;\n  cursor: move;\n  user-select: none;\n}\n.hha-smart-panel-title {\n  font-size: 14px;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-panel-controls {\n  display: flex;\n  gap: 8px;\n  position: relative;\n  z-index: 100000;\n}\n.hha-smart-panel-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 2px;\n  background: rgba(255, 255, 255, 0.2);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: background 0.15s ease;\n  font-size: 14px;\n  padding: 0;\n  position: relative;\n  z-index: 100001;\n}\n.hha-smart-panel-btn:hover {\n  background: rgba(255, 255, 255, 0.3);\n}\n.hha-smart-panel-btn:active {\n  background: rgba(255, 255, 255, 0.4);\n}\n.hha-smart-panel-body {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-content-wrapper {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n  position: relative;\n  isolation: isolate;\n}\n.hha-smart-tab-bar {\n  width: 100px;\n  min-width: 40px;\n  background: #fafafa;\n  border-right: 1px solid #e0e0e0;\n  transition: width 0.2s ease;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  flex-shrink: 0;\n  position: relative;\n  z-index: 2;\n}\n.hha-smart-tab-bar.collapsed {\n  width: 40px;\n}\n.hha-smart-tab-list {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n}\n.hha-smart-tab-list::-webkit-scrollbar {\n  width: 4px;\n}\n.hha-smart-tab-list::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n.hha-smart-tab-item {\n  position: relative;\n  padding: 12px 8px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  white-space: nowrap;\n  border-bottom: 1px solid #f0f0f0;\n}\n.hha-smart-tab-item:hover {\n  background: #f5f5f5;\n}\n.hha-smart-tab-item.active {\n  background: #f0efff;\n  color: #667eea;\n  font-weight: 500;\n}\n.hha-smart-tab-icon {\n  flex-shrink: 0;\n  font-size: 18px;\n  line-height: 1;\n  width: 20px;\n  text-align: center;\n}\n.hha-smart-tab-text {\n  opacity: 1;\n  transition: opacity 0.2s ease;\n  font-size: 13px;\n  overflow-x: auto;\n  overflow-y: hidden;\n  white-space: nowrap;\n  flex: 1;\n  scroll-behavior: smooth;\n}\n.hha-smart-tab-text::-webkit-scrollbar {\n  height: 0;\n  display: none;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-tab-text {\n  opacity: 0;\n  width: 0;\n  overflow: hidden;\n  pointer-events: none;\n}\n.hha-smart-tab-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 4px;\n  height: 100%;\n  background: #667eea;\n  opacity: 0;\n  transition: opacity 0.2s ease;\n  z-index: 1;\n}\n.hha-smart-tab-item.active .hha-smart-tab-indicator {\n  opacity: 1;\n}\n.hha-smart-tab-collapse-btn {\n  padding: 8px;\n  text-align: center;\n  cursor: pointer;\n  border-top: 1px solid #e0e0e0;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 36px;\n  position: relative;\n  z-index: 10;\n}\n.hha-smart-tab-collapse-btn:hover {\n  background: #f5f5f5;\n}\n.hha-smart-collapse-icon {\n  display: inline-block;\n  transition: transform 0.2s ease;\n  font-size: 14px;\n  color: #666666;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-collapse-icon {\n  transform: rotate(180deg);\n}\n.hha-smart-content-area {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: #ffffff;\n  min-height: 0;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-panel-footer {\n  height: 28px;\n  background: #fafafa;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  padding: 0 16px;\n  font-size: 12px;\n  color: #666666;\n  flex-shrink: 0;\n}\n.footer-branding {\n  font-style: italic;\n  opacity: 0.6;\n  user-select: none;\n}\n.hha-smart-tab-content {\n  display: none !important;\n  padding: 0;\n  animation: fadeIn 0.2s ease;\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  box-sizing: border-box;\n  min-height: 0;\n  position: relative;\n  z-index: 0;\n}\n.hha-smart-tab-content.active {\n  display: flex !important;\n  flex-direction: column;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n.hha-smart-config-card {\n  background: #ffffff;\n  border-radius: 4px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: box-shadow 0.2s ease;\n}\n.hha-smart-config-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.hha-smart-config-card-title {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-config-card-body {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.hha-smart-btn {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.hha-smart-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #667eea;\n  color: white;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.hha-smart-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary:hover:not(:disabled) {\n  background: #5a6fd6;\n}\n.hha-smart-btn-primary:active:not(:disabled) {\n  background: #4c5ec2;\n}\n.hha-smart-btn-secondary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #fafafa;\n  color: #333333;\n  border: 1px solid #e0e0e0;\n}\n.hha-smart-btn-secondary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-secondary:hover:not(:disabled) {\n  background: #f5f5f5;\n  border-color: #a29bfe;\n}\n.hha-smart-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 32px;\n  text-align: center;\n  color: #666666;\n  min-height: 300px;\n}\n.hha-smart-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.hha-smart-placeholder-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.hha-smart-placeholder-text {\n  font-size: 14px;\n  color: #666666;\n}\n#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/**\n * QA Report Tab Styles\n * Epic 8: QA 报告功能\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.qa-report-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n}\n.qa-report-wrapper {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  gap: 0;\n}\n.qa-report-header {\n  display: none;\n}\n.qa-report-title {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.qa-report-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.qa-toolbar-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-left > * {\n  margin: 0;\n  vertical-align: middle;\n}\n.qa-toolbar-actions {\n  display: flex;\n  align-items: center;\n  gap: 0;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-actions .qa-load-btn {\n  border-radius: 2px 0 0 2px;\n  border-right: 1px solid rgba(255, 255, 255, 0.3);\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-actions .qa-export-btn {\n  border-radius: 0 2px 2px 0;\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-select-label {\n  font-size: 13px;\n  color: #666666;\n  font-weight: 500;\n  line-height: 28px;\n  white-space: nowrap;\n}\n.qa-coordinator-select {\n  padding: 0 28px 0 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: white;\n  background-image: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n  background-repeat: no-repeat;\n  background-position: right 8px center;\n  background-size: 12px 12px;\n  font-size: 13px;\n  min-width: 180px;\n  max-width: 300px;\n  height: 28px !important;\n  line-height: 26px;\n  vertical-align: middle;\n  cursor: pointer;\n  box-sizing: border-box;\n  appearance: none;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.qa-coordinator-select:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px #a29bfe;\n}\n.qa-coordinator-select:disabled {\n  background: #fafafa;\n  cursor: not-allowed;\n}\n.qa-load-btn {\n  padding: 0 14px;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-load-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.qa-export-btn {\n  padding: 0 12px;\n  font-size: 13px;\n  background: #fafafa;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  color: #333333;\n  cursor: pointer;\n  transition: all 0.2s;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-export-btn:hover:not(:disabled) {\n  background: #f5f5f5;\n  border-color: #667eea;\n}\n.qa-export-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.qa-status-text {\n  font-size: 12px;\n  color: #666666;\n  white-space: nowrap;\n}\n.qa-view-toggle {\n  display: flex;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  overflow: hidden;\n  height: 28px;\n}\n.qa-view-btn {\n  padding: 0 10px;\n  border: none;\n  background: white;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  transition: all 0.2s;\n  height: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-view-btn:first-child {\n  border-right: 1px solid #e0e0e0;\n}\n.qa-view-btn:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.qa-view-btn.active {\n  background: #667eea;\n  color: white;\n}\n.qa-report-content-body {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n  background: #fafafa;\n}\n.qa-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  text-align: center;\n  color: #666666;\n}\n.qa-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.qa-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.qa-empty-text {\n  font-size: 13px;\n}\n.qa-report-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n  background: white;\n  border-radius: 2px;\n  overflow: hidden;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.qa-report-table thead {\n  background: #fafafa;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n}\n.qa-report-table thead th {\n  padding: 8px 16px;\n  text-align: left;\n  font-weight: 600;\n  color: #666666;\n  border-bottom: 2px solid #e0e0e0;\n  white-space: nowrap;\n}\n.qa-report-table tbody tr {\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s;\n}\n.qa-report-table tbody tr:hover {\n  background: #f5f5f5;\n}\n.qa-report-table tbody tr:last-child {\n  border-bottom: none;\n}\n.qa-report-table tbody td {\n  padding: 8px 16px;\n  vertical-align: middle;\n}\n.qa-report-table .col-id {\n  width: 110px;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  color: #667eea;\n  font-weight: 500;\n}\n.qa-report-table .col-name {\n  width: auto;\n  min-width: 150px;\n  font-weight: 500;\n}\n.qa-report-table .col-phone {\n  width: 120px;\n}\n.qa-report-table .col-qa {\n  width: 100px;\n  font-weight: 500;\n}\n.qa-report-table .col-action {\n  width: 50px;\n  text-align: center;\n}\n.phone-item {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.phone-item + .phone-item {\n  margin-top: 2px;\n}\n.qa-never {\n  color: #dc3545 !important;\n  font-weight: 600;\n}\n.qa-action-btn {\n  padding: 4px 8px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 16px;\n  color: #666666;\n  border-radius: 2px;\n  transition: all 0.2s;\n}\n.qa-action-btn:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.qa-report-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 8px;\n  padding: 8px;\n}\n.qa-card {\n  background: white;\n  border-radius: 2px;\n  padding: 16px;\n  border-left: 4px solid #e0e0e0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  transition: all 0.2s;\n  position: relative;\n  overflow: hidden;\n}\n.qa-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  transform: translateY(-2px);\n}\n.card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  margin-bottom: 8px;\n}\n.card-name {\n  font-weight: 600;\n  font-size: 13px;\n  color: #333333;\n  flex: 1;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  padding-right: 8px;\n}\n.card-action-btn {\n  padding: 2px 6px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  border-radius: 2px;\n  flex-shrink: 0;\n}\n.card-action-btn:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.card-id {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #667eea;\n  margin-bottom: 8px;\n}\n.card-phones {\n  margin-bottom: 8px;\n}\n.card-phone {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.card-phone + .card-phone {\n  margin-top: 2px;\n}\n.card-qa {\n  font-weight: 600;\n  font-size: 13px;\n  margin-bottom: 8px;\n}\n.card-priority-badge {\n  position: absolute;\n  bottom: 0;\n  right: 0;\n  padding: 2px 8px;\n  font-size: 12px;\n  color: white;\n  border-radius: 2px 0 0 0;\n  font-weight: 500;\n}\n.priority-critical .col-qa {\n  color: #dc3545;\n}\n.priority-high .col-qa {\n  color: #e74c3c;\n}\n.priority-medium-high .col-qa {\n  color: #fd7e14;\n}\n.priority-medium .col-qa {\n  color: #ffc107;\n}\n.priority-low-medium .col-qa {\n  color: #a8d08d;\n}\n.priority-low .col-qa {\n  color: #28a745;\n}\n.qa-export-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 1000;\n  min-width: 140px;\n}\n.export-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  transition: background 0.15s;\n}\n.export-menu-item:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.export-menu-item + .export-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-action-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 1000;\n  min-width: 180px;\n}\n.action-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: background 0.15s;\n}\n.action-menu-item:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.action-menu-item + .action-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-toast {\n  position: fixed;\n  top: 24px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100%);\n  padding: 8px 24px;\n  border-radius: 2px;\n  font-size: 13px;\n  color: white;\n  z-index: 100001;\n  opacity: 0;\n  transition: all 0.3s ease;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n}\n.qa-toast.show {\n  transform: translateX(-50%) translateY(0);\n  opacity: 1;\n}\n.qa-toast.qa-toast-success {\n  background: #28a745;\n}\n.qa-toast.qa-toast-error {\n  background: #dc3545;\n}\n.qa-toast.qa-toast-info {\n  background: #667eea;\n}\n/**\n * Status Tracking Tab Styles\n * Epic 7: Multi-Tab Panel - 状态追踪 Tab\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.status-tracking-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n  padding: 0;\n}\n#status-tracking-wrapper {\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n#status-tracking-wrapper #tracker-panel {\n  background: #ffffff;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar {\n  width: 6px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover {\n  background: #666666;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track {\n  background: #fafafa;\n}\n/* --- General Container --- */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background-color: #007bff;\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: move;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);\n  font-size: 24px;\n  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n}\n/* --- Panel & Views --- */\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  min-height: 500px;\n  background: #f9f9f9;\n  border: 1px solid #ccc;\n  border-radius: 8px;\n  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333;\n  overflow: hidden;\n}\n.tracker-view {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: column;\n  transition: transform 0.3s ease-in-out;\n}\n.tracker-view.hidden {\n  display: none;\n}\n/* View Transition Animations */\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n/* --- Header --- */\n.tracker-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 8px 15px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n}\n.tracker-header-btn {\n  background: #e0e0e0;\n  border: 1px solid #ccc;\n  padding: 4px 10px;\n  border-radius: 5px;\n  cursor: pointer;\n}\n.tracker-header-btn:hover {\n  background: #d4d4d4;\n}\n.back-btn {\n  font-size: 20px;\n  padding: 0 10px;\n}\n/* --- 4. 内容与表格 --- */\n.tracker-content {\n  flex-grow: 1;\n  padding: 10px;\n  overflow-y: auto;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n}\n.tracker-table th,\n.tracker-table td {\n  border: 1px solid #ddd;\n  padding: 8px 12px;\n  text-align: center;\n  vertical-align: middle;\n}\n.tracker-table th {\n  background-color: #e9ecef;\n  font-size: 14px;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: bold;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.status-icon:hover {\n  opacity: 0.8;\n  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n  100% {\n    opacity: 1;\n  }\n}\n/* --- Edit View Specifics --- */\n.edit-list-actions button {\n  font-size: 18px;\n  width: 36px;\n  height: 36px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button:disabled {\n  background-color: #ccc;\n  cursor: not-allowed;\n}\n.tracker-footer {\n  padding: 10px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #ddd;\n  background: #f1f1f1;\n  flex-shrink: 0;\n}\n/* --- Loader --- */\n.loader {\n  text-align: center;\n  padding: 40px;\n}\n.spinner {\n  border: 4px solid #f3f3f3;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n/* --- Toast Notification --- */\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 5px;\n  z-index: 10000;\n  opacity: 0;\n  transition: opacity 0.3s, bottom 0.3s;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n/* --- 7. Details Popover (气泡) --- */\n#details-popover {\n  position: fixed;\n  z-index: 10001;\n  /* Must be higher than the panel */\n  /* MODIFIED: 增加宽度以容纳更多列 */\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  /* 提高最大高度限制 */\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  /* Initial state for fade-in animation */\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n  /* FIX: 提高 z-index, 确保它在所有元素之上 */\n  z-index: 100001;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n  /* ADDED: 让用户知道这里可以拖动 */\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* --- Note Cell Styling --- */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  /* 允许换行 */\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* --- Authorization Note Table (格式化后的内容) --- */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* --- Popover Resize Handle --- */\n.popover-resize-handle {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 16px;\n  height: 16px;\n  cursor: nwse-resize;\n  background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n  border-bottom-right-radius: 8px;\n}\n.popover-resize-handle::before {\n  content: '';\n  position: absolute;\n  right: 4px;\n  bottom: 4px;\n  width: 4px;\n  height: 4px;\n  background: #666;\n  border-radius: 1px;\n}\n/* --- 8. Phone Tooltip (新增) --- */\n.phone-icon-wrapper {\n  position: relative;\n  /* 为内部的 tooltip 提供定位上下文 */\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  /* 默认隐藏 */\n  position: absolute;\n  top: 100%;\n  /* 显示在图标正下方 */\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n  /* 确保在气泡本身之上 */\n}\n/* 核心交互：当鼠标悬浮在 wrapper 上时，显示 tooltip */\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -157,6 +163,38 @@ module.exports = function (cssWithMappingToString) {
     }
   };
   return list;
+};
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/dist/runtime/getUrl.js":
+/***/ ((module) => {
+
+
+
+module.exports = function (url, options) {
+  if (!options) {
+    options = {};
+  }
+  if (!url) {
+    return url;
+  }
+  url = String(url.__esModule ? url.default : url);
+
+  // If url is already wrapped in quotes, remove them
+  if (/^['"].*['"]$/.test(url)) {
+    url = url.slice(1, -1);
+  }
+  if (options.hash) {
+    url += options.hash;
+  }
+
+  // Should url be wrapped?
+  // See https://drafts.csswg.org/css-values-3/#urls
+  if (/["'() \t\n]|(%20)/.test(url) || options.needQuotes) {
+    return "\"".concat(url.replace(/"/g, '\\"').replace(/\n/g, "\\n"), "\"");
+  }
+  return url;
 };
 
 /***/ }),
@@ -458,6 +496,13 @@ function styleTagTransform(css, styleElement) {
 
 module.exports = styleTagTransform;
 
+/***/ }),
+
+/***/ "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 12 12\"%3E%3Cpath fill=\"%23666\" d=\"M6 9L1 4h10z\"/%3E%3C/svg%3E":
+/***/ ((module) => {
+
+module.exports = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 12 12\"%3E%3Cpath fill=\"%23666\" d=\"M6 9L1 4h10z\"/%3E%3C/svg%3E";
+
 /***/ })
 
 /******/ 	});
@@ -485,6 +530,9 @@ module.exports = styleTagTransform;
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
+/******/ 	
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = __webpack_modules__;
 /******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat get default export */
@@ -514,6 +562,32 @@ module.exports = styleTagTransform;
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/jsonp chunk loading */
+/******/ 	(() => {
+/******/ 		__webpack_require__.b = document.baseURI || self.location.href;
+/******/ 		
+/******/ 		// object to store loaded and loading chunks
+/******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
+/******/ 		var installedChunks = {
+/******/ 			792: 0
+/******/ 		};
+/******/ 		
+/******/ 		// no chunk on demand loading
+/******/ 		
+/******/ 		// no prefetching
+/******/ 		
+/******/ 		// no preloaded
+/******/ 		
+/******/ 		// no HMR
+/******/ 		
+/******/ 		// no HMR manifest
+/******/ 		
+/******/ 		// no on chunks loaded
+/******/ 		
+/******/ 		// no jsonp function
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/nonce */
@@ -3667,7 +3741,9 @@ const visitMonitor = async () => {
     panel.innerHTML = `
          <div id="tracking-view" class="tracker-view">
             <div class="tracker-header">
-              <h3 style="color: #333 !important;">各类状态追踪<span id="last-refresh-time" style="font-size: 11px; color: #666; margin-left: 8px;"></span></h3>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span id="last-refresh-time" style="font-size: 12px; color: #666;">上次更新：--:--:--</span>
+              </div>
               <button id="edit-list-btn" class="tracker-header-btn">编辑追踪列表</button>
             </div>
             <div class="tracker-content"><table class="tracker-table"><thead><tr>
@@ -6296,12 +6372,19 @@ class MultiTabPanel {
     renderBody() {
         const body = document.createElement("div");
         body.className = "hha-smart-panel-body";
+        // Content wrapper (tab bar + content area in a row)
+        const contentWrapper = document.createElement("div");
+        contentWrapper.className = "hha-smart-content-wrapper";
         // Tab bar
         this.tabBarEl = this.renderTabBar();
-        body.appendChild(this.tabBarEl);
+        contentWrapper.appendChild(this.tabBarEl);
         // Content area
         this.contentAreaEl = this.renderContentArea();
-        body.appendChild(this.contentAreaEl);
+        contentWrapper.appendChild(this.contentAreaEl);
+        body.appendChild(contentWrapper);
+        // Footer
+        const footer = this.renderFooter();
+        body.appendChild(footer);
         return body;
     }
     /**
@@ -6382,15 +6465,11 @@ class MultiTabPanel {
     renderContentArea() {
         const contentArea = document.createElement("div");
         contentArea.className = "hha-smart-content-area";
-        // 确保内容区域有overflow控制
-        contentArea.style.cssText = "overflow: hidden; position: relative;";
         // Create content containers for each tab
         this.tabs.forEach((tab) => {
             const contentDiv = document.createElement("div");
             contentDiv.className = "hha-smart-tab-content";
             contentDiv.dataset.tabId = tab.id;
-            // 每个tab内容也需要overflow控制
-            contentDiv.style.cssText = "overflow: auto; height: 100%; width: 100%;";
             if (tab.id === this.activeTabId) {
                 contentDiv.classList.add("active");
             }
@@ -6398,6 +6477,18 @@ class MultiTabPanel {
             contentArea.appendChild(contentDiv);
         });
         return contentArea;
+    }
+    /**
+     * Render footer with branding
+     */
+    renderFooter() {
+        const footer = document.createElement("div");
+        footer.className = "hha-smart-panel-footer";
+        const branding = document.createElement("div");
+        branding.className = "footer-branding";
+        branding.textContent = "Powered by KurosakiRei";
+        footer.appendChild(branding);
+        return footer;
     }
     /**
      * Initialize the default active tab
@@ -6409,8 +6500,9 @@ class MultiTabPanel {
         const container = this.tabContents.get(this.activeTabId);
         if (!container)
             return;
-        await tab.init();
+        // CRITICAL: Render first to create DOM elements, then init to load data
         tab.render(container);
+        await tab.init();
     }
     /**
      * Switch to a different tab
@@ -6427,14 +6519,17 @@ class MultiTabPanel {
         // Update active state
         this.activeTabId = tabId;
         this.saveActiveTab();
-        // Update UI
+        // Update UI - this controls which tab content is visible via CSS
         this.updateTabBarUI();
         this.updateContentAreaUI();
-        // Initialize new tab if needed
+        // Initialize and render new tab if not yet done
         const container = this.tabContents.get(tabId);
         if (container && container.children.length === 0) {
-            await tab.init();
+            // CRITICAL: Render first to create DOM elements, then init to load data
             tab.render(container);
+            if (!tab.initialized) {
+                await tab.init();
+            }
         }
         // Activate new tab
         tab.onActivate?.();
@@ -6613,6 +6708,8 @@ class StatusTrackingTab extends BaseTab {
         this.label = "状态追踪";
         this.icon = "📊";
         this.visitMonitorInitialized = false;
+        this.retryCount = 0;
+        this.maxRetries = 20; // 最多重试 20 次 (20 * 300ms = 6秒)
     }
     async init() {
         // VisitMonitor will be initialized when rendered
@@ -6620,6 +6717,8 @@ class StatusTrackingTab extends BaseTab {
     }
     render(container) {
         this.container = container;
+        // 只添加 status-tracking-tab class，不要覆盖原有的 class
+        container.classList.add("status-tracking-tab");
         // Create a wrapper for the visit monitor
         const wrapper = document.createElement("div");
         wrapper.id = "status-tracking-wrapper";
@@ -6629,15 +6728,36 @@ class StatusTrackingTab extends BaseTab {
         // The VisitMonitor has already been initialized by main()
         // We just need to wait for it and embed it
         if (!this.visitMonitorInitialized) {
+            this.retryCount = 0;
             this.embedExistingVisitMonitor(wrapper);
-            this.visitMonitorInitialized = true;
         }
     }
     embedExistingVisitMonitor(container) {
-        // Wait for VisitMonitor to create its UI
-        setTimeout(() => {
+        // Check if tracker-panel exists, retry if not
+        const trackerPanel = document.getElementById("tracker-panel");
+        if (trackerPanel) {
             this.embedVisitMonitorPanel(container);
-        }, 200);
+            this.visitMonitorInitialized = true;
+            console.log("[StatusTrackingTab] VisitMonitor panel embedded successfully");
+        }
+        else if (this.retryCount < this.maxRetries) {
+            // Retry after delay
+            this.retryCount++;
+            console.log(`[StatusTrackingTab] Waiting for tracker-panel... (attempt ${this.retryCount}/${this.maxRetries})`);
+            setTimeout(() => {
+                this.embedExistingVisitMonitor(container);
+            }, 300);
+        }
+        else {
+            console.error("[StatusTrackingTab] Failed to find tracker-panel after max retries");
+            // Show error message in container
+            container.innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #666;">
+          <p>⚠️ 无法加载状态追踪面板</p>
+          <p style="font-size: 12px;">请刷新页面重试</p>
+        </div>
+      `;
+        }
     }
     /**
      * Find and embed the VisitMonitor panel into our tab container
@@ -6661,6 +6781,7 @@ class StatusTrackingTab extends BaseTab {
                 trackerPanel.parentElement.removeChild(trackerPanel);
             }
             // Reset positioning styles to fit in tab container
+            // CRITICAL: 必须设置 display: block 因为 VisitMonitor 可能设置了 display: none
             trackerPanel.style.cssText = `
         display: block !important;
         position: static !important;
@@ -6751,23 +6872,1737 @@ class StatusTrackingTab extends BaseTab {
     }
 }
 
+;// ./src/js/services/ApiParamProvider.ts
+/**
+ * ApiParamProvider - Shared API Parameter Provider (Singleton)
+ *
+ * This module provides a centralized way to obtain API parameters needed for
+ * HHAexchange API calls. It supports fetching parameters from both:
+ * - app.hhaexchange.com (main application)
+ * - reports.hhaexchange.com (reports domain)
+ *
+ * @author HHA Smart Assistant
+ * @date 2026-01-08
+ * @see docs/stories/epic-8-qa-report-feature.md - Story 8.1
+ * @see docs/adr/008-qa-report-tab-implementation.md
+ */
+
+// ============================================================================
+// Constants
+// ============================================================================
+const CALL_MAINTENANCE_URL = "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+const CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes cache
+// ============================================================================
+// ApiParamProvider Class (Singleton)
+// ============================================================================
+/**
+ * ApiParamProvider - Singleton class for managing API parameters
+ *
+ * Features:
+ * - Single instance across all modules (singleton pattern)
+ * - Supports both app and reports domains
+ * - Automatic caching with configurable expiry
+ * - ViewState parsing and updating
+ *
+ * Usage:
+ * ```typescript
+ * const provider = ApiParamProvider.getInstance();
+ * const params = await provider.getParams();
+ * ```
+ */
+class ApiParamProvider {
+    /**
+     * Private constructor to enforce singleton pattern
+     */
+    constructor() {
+        // Cached parameters
+        this.appParams = null;
+        this.reportsParams = null;
+        this.cacheTimestamp = 0;
+        console.log("[ApiParamProvider] Singleton instance created");
+    }
+    /**
+     * Get the singleton instance of ApiParamProvider
+     */
+    static getInstance() {
+        if (!ApiParamProvider.instance) {
+            ApiParamProvider.instance = new ApiParamProvider();
+        }
+        return ApiParamProvider.instance;
+    }
+    /**
+     * Reset the singleton instance (for testing purposes)
+     */
+    static resetInstance() {
+        ApiParamProvider.instance = null;
+    }
+    // ==========================================================================
+    // Public Methods
+    // ==========================================================================
+    /**
+     * Get API parameters for app.hhaexchange.com
+     * @returns Full API parameters including ViewState
+     */
+    async getParams() {
+        // Return cached params if still valid
+        if (this.appParams && !this.isCacheExpired()) {
+            console.log("[ApiParamProvider] Returning cached app params");
+            return this.appParams;
+        }
+        console.log("[ApiParamProvider] Fetching app params from CallMaintenance...");
+        this.appParams = await this.fetchFromAppPage();
+        this.cacheTimestamp = Date.now();
+        return this.appParams;
+    }
+    /**
+     * Get session info for reports.hhaexchange.com
+     * @returns Session info for reports API calls
+     */
+    getReportsSessionInfo() {
+        // Return cached params if available
+        if (this.reportsParams) {
+            return this.reportsParams;
+        }
+        // Try to extract from current page
+        this.reportsParams = this.extractFromReportsPage();
+        return this.reportsParams;
+    }
+    /**
+     * Get session info, automatically detecting source
+     * @returns Session info for API calls
+     */
+    async getSessionInfo() {
+        // Try reports page first if we're on reports domain
+        if (this.isReportsPage()) {
+            const reportsInfo = this.getReportsSessionInfo();
+            if (reportsInfo) {
+                return reportsInfo;
+            }
+        }
+        // Fall back to app params
+        const appParams = await this.getParams();
+        return {
+            sessionId: appParams.sessionID,
+            userId: appParams.userID,
+            officeIds: "", // Need to get from JWT token
+            version: appParams.version,
+            minorVersion: appParams.minorVersion,
+            appVersion: appParams.appVersion,
+        };
+    }
+    /**
+     * Parse ViewState from HTML and update cached params
+     * @param htmlText - HTML content containing ViewState
+     * @returns Extracted ViewState values
+     */
+    parseViewState(htmlText) {
+        const viewState = this.getInputValue("__VIEWSTATE", htmlText);
+        const viewStateGenerator = this.getInputValue("__VIEWSTATEGENERATOR", htmlText);
+        // Update cached params if available
+        if (this.appParams) {
+            if (viewState) {
+                this.appParams.viewState = viewState;
+            }
+            if (viewStateGenerator) {
+                this.appParams.viewStateGenerator = viewStateGenerator;
+            }
+        }
+        return {
+            viewState: viewState || "",
+            viewStateGenerator: viewStateGenerator || "",
+        };
+    }
+    /**
+     * Check if we're on the reports.hhaexchange.com domain
+     */
+    isReportsPage() {
+        return window.location.hostname.includes("reports.hhaexchange.com");
+    }
+    /**
+     * Check if we're on the app.hhaexchange.com domain
+     */
+    isAppPage() {
+        return window.location.hostname.includes("app.hhaexchange.com");
+    }
+    /**
+     * Clear all cached parameters
+     */
+    clearCache() {
+        this.appParams = null;
+        this.reportsParams = null;
+        this.cacheTimestamp = 0;
+        console.log("[ApiParamProvider] Cache cleared");
+    }
+    /**
+     * Get office IDs from JWT token
+     */
+    getOfficeIdsFromToken() {
+        try {
+            const tokenMatch = document.cookie.match(/HHAX_ENT_AccessToken=([^;]+)/);
+            if (tokenMatch) {
+                const payload = JSON.parse(atob(tokenMatch[1].split(".")[1]));
+                return payload.pid || "";
+            }
+        }
+        catch (e) {
+            console.warn("[ApiParamProvider] Failed to parse JWT token:", e);
+        }
+        return "";
+    }
+    // ==========================================================================
+    // Private Methods
+    // ==========================================================================
+    /**
+     * Check if cache has expired
+     */
+    isCacheExpired() {
+        return Date.now() - this.cacheTimestamp > CACHE_EXPIRY_MS;
+    }
+    /**
+     * Fetch API parameters from app.hhaexchange.com CallMaintenance page
+     */
+    async fetchFromAppPage() {
+        const r = (await GM_fetch(CALL_MAINTENANCE_URL, {
+            method: "GET",
+        }));
+        const text = await r.rawBody.text();
+        const params = {
+            userID: this.getParamFromText("userID", text),
+            appSecret: this.getParamFromText("appSecret", text),
+            appVersion: this.getParamFromText("appVersion", text),
+            version: this.getParamFromText("version", text),
+            minorVersion: this.getParamFromText("minorVersion", text),
+            appName: this.getParamFromText("appName", text),
+            sessionID: this.getParamFromText("sessionID", text),
+            vendorID: this.getParamFromText("vendorID", text),
+            viewState: this.getInputValue("__VIEWSTATE", text),
+            viewStateGenerator: this.getInputValue("__VIEWSTATEGENERATOR", text),
+        };
+        // Validate all required parameters
+        for (const [key, value] of Object.entries(params)) {
+            if (!value) {
+                throw new Error(`[ApiParamProvider] Failed to extract critical API parameter: ${key}`);
+            }
+        }
+        console.log("[ApiParamProvider] App params cached successfully");
+        return params;
+    }
+    /**
+     * Extract session info from reports.hhaexchange.com page
+     */
+    extractFromReportsPage() {
+        try {
+            // From cookie
+            const sessionMatch = document.cookie.match(/HHAX_Session=([^;]+)/);
+            if (!sessionMatch) {
+                console.warn("[ApiParamProvider] HHAX_Session cookie not found");
+                return null;
+            }
+            // From JWT token
+            const tokenMatch = document.cookie.match(/HHAX_ENT_AccessToken=([^;]+)/);
+            let userId = "";
+            let officeIds = "";
+            if (tokenMatch) {
+                try {
+                    const payload = JSON.parse(atob(tokenMatch[1].split(".")[1]));
+                    userId = payload.uid || "";
+                    officeIds = payload.pid || "";
+                }
+                catch (e) {
+                    console.warn("[ApiParamProvider] JWT parse error:", e);
+                }
+            }
+            // From hidden fields or URL
+            const hdnUserID = document.getElementById("ctl00_ContentPlaceHolder1_hdnUserID")?.value;
+            const hdnOfficeID = document.getElementById("ctl00_ContentPlaceHolder1_hdnOfficeID")?.value;
+            const hdnVersion = document.getElementById("ctl00_ContentPlaceHolder1_hdnVersion")?.value;
+            const hdnMinorVersion = document.getElementById("ctl00_ContentPlaceHolder1_hdnMinorVersion")?.value;
+            const hdnAppVersion = document.getElementById("ctl00_ContentPlaceHolder1_hdnAppVersion")?.value;
+            const urlParams = new URLSearchParams(window.location.search);
+            return {
+                sessionId: sessionMatch[1],
+                userId: hdnUserID || userId,
+                officeIds: hdnOfficeID || officeIds,
+                version: hdnVersion || urlParams.get("Version") || "25.07",
+                minorVersion: hdnMinorVersion || urlParams.get("MinorVersion") || "1.00",
+                appVersion: hdnAppVersion || urlParams.get("AppVersion") || "ENT",
+            };
+        }
+        catch (e) {
+            console.error("[ApiParamProvider] Failed to extract reports session info:", e);
+            return null;
+        }
+    }
+    /**
+     * Extract parameter value from text using regex
+     * Pattern: key: 'value'
+     */
+    getParamFromText(key, sourceText) {
+        const regex = new RegExp(`${key}\\s*:\\s*'([^']+)'`);
+        const match = sourceText.match(regex);
+        return match ? match[1] : null;
+    }
+    /**
+     * Extract hidden input value from HTML
+     */
+    getInputValue(id, sourceText) {
+        const match = sourceText.match(new RegExp(`id="${id}"[\\s\\S]*?value="([^"]*)"`));
+        return match ? match[1] : null;
+    }
+}
+// ============================================================================
+// Export default instance for convenience
+// ============================================================================
+const apiParamProvider = ApiParamProvider.getInstance();
+/* harmony default export */ const services_ApiParamProvider = ((/* unused pure expression or super */ null && (ApiParamProvider)));
+
 ;// ./src/js/tabs/QAReportTab.ts
 
-/**
- * QA Report Tab (Placeholder)
- * Story 7.3: QA 报告 Tab 占位符
- */
+
+
+// ============================================================================
+// Constants
+// ============================================================================
+const QAReportTab_STORAGE_KEYS = {
+    VIEW_MODE: "hha_qa_report_view_mode",
+    LAST_COORDINATOR: "hha_qa_report_last_coordinator",
+};
+const PRIORITY_COLORS = {
+    critical: "#dc3545", // 从未联系 - 深红
+    high: "#e74c3c", // >120天 - 红
+    "medium-high": "#fd7e14", // 90-120天 - 橙
+    medium: "#ffc107", // 30-90天 - 黄
+    "low-medium": "#a8d08d", // 15-30天 - 浅绿
+    low: "#28a745", // <15天 - 绿
+};
+const PRIORITY_LABELS = {
+    critical: "从未联系",
+    high: ">120天",
+    "medium-high": "90-120天",
+    medium: "30-90天",
+    "low-medium": "15-30天",
+    low: "<15天",
+};
+// ============================================================================
+// QAReportTab Class
+// ============================================================================
 class QAReportTab extends BaseTab {
     constructor() {
-        super(...arguments);
+        super();
         this.id = "qa-report";
         this.label = "QA 报告";
         this.icon = "📋";
+        this.coordinators = [];
+        this.selectedCoordinatorId = "";
+        this.qaReportData = [];
+        this.viewMode = "list";
+        this.isLoading = false;
+        this.cachedOfficeIds = null; // Cache complete OfficeIDs from API
+        this.officeIdsCacheTimestamp = 0; // Cache timestamp for OfficeIDs
+        // DOM Elements
+        this.toolbarEl = null;
+        this.contentBodyEl = null;
+        this.coordinatorSelectEl = null;
+        this.loadBtnEl = null;
+        this.exportBtnEl = null;
+        this.viewToggleEl = null;
+        /**
+         * Initialize reports.hhaexchange.com session by accessing a report page
+         * This establishes the necessary cookies for AjaxPro API calls
+         *
+         * @see Similar to VisitMonitor's apiParamProvider.get() which fetches CallMaintenance page
+         */
+        this.reportsSessionInitialized = false;
+        this.apiProvider = ApiParamProvider.getInstance();
+        this.loadState();
+    }
+    async init() {
+        // 避免重复初始化 - 使用单独的标志
+        if (this.initialized) {
+            return;
+        }
+        try {
+            await this.fetchCoordinators();
+            this.initialized = true;
+        }
+        catch (e) {
+            console.error("[QAReportTab] Init failed:", e);
+        }
     }
     render(container) {
         this.container = container;
-        const placeholder = this.createPlaceholder("📋", "QA 报告功能", "功能规划中，敬请期待...");
-        container.appendChild(placeholder);
+        // 只添加 qa-report-tab class，不要覆盖原有的 class
+        container.classList.add("qa-report-tab");
+        // Create main structure
+        const wrapper = document.createElement("div");
+        wrapper.className = "qa-report-wrapper";
+        // Header with title
+        const header = document.createElement("div");
+        header.className = "qa-report-header";
+        header.innerHTML = `<h3 class="qa-report-title">📋 QA 报告</h3>`;
+        wrapper.appendChild(header);
+        // Toolbar
+        this.toolbarEl = this.createToolbar();
+        wrapper.appendChild(this.toolbarEl);
+        // Content body
+        this.contentBodyEl = document.createElement("div");
+        this.contentBodyEl.className = "qa-report-content-body";
+        wrapper.appendChild(this.contentBodyEl);
+        // Initial empty state
+        this.renderEmptyState();
+        container.appendChild(wrapper);
+        // 注意：不要在这里设置 this.initialized = true
+        // initialized 标志只在 init() 成功完成后设置
+    }
+    // ==========================================================================
+    // Toolbar Creation
+    // ==========================================================================
+    createToolbar() {
+        const toolbar = document.createElement("div");
+        toolbar.className = "qa-report-toolbar";
+        // Left section: Coordinator select
+        const leftSection = document.createElement("div");
+        leftSection.className = "qa-toolbar-left";
+        const selectLabel = document.createElement("label");
+        selectLabel.className = "qa-select-label";
+        selectLabel.textContent = "辅导员:";
+        this.coordinatorSelectEl = document.createElement("select");
+        this.coordinatorSelectEl.className = "qa-coordinator-select";
+        this.coordinatorSelectEl.innerHTML = '<option value="">加载中...</option>';
+        leftSection.appendChild(selectLabel);
+        leftSection.appendChild(this.coordinatorSelectEl);
+        // Actions section: Button group (Load + Export)
+        const actionsSection = document.createElement("div");
+        actionsSection.className = "qa-toolbar-actions";
+        this.loadBtnEl = document.createElement("button");
+        this.loadBtnEl.className = "hha-smart-btn-primary qa-load-btn";
+        this.loadBtnEl.innerHTML = "🔄 加载";
+        this.loadBtnEl.addEventListener("click", () => this.handleLoad());
+        this.exportBtnEl = document.createElement("button");
+        this.exportBtnEl.className = "hha-smart-btn-secondary qa-export-btn";
+        this.exportBtnEl.innerHTML = "📥 导出";
+        this.exportBtnEl.disabled = true;
+        this.exportBtnEl.addEventListener("click", () => this.showExportMenu());
+        actionsSection.appendChild(this.loadBtnEl);
+        actionsSection.appendChild(this.exportBtnEl);
+        // Right section: View toggle
+        const rightSection = document.createElement("div");
+        rightSection.className = "qa-toolbar-right";
+        this.viewToggleEl = this.createViewToggle();
+        rightSection.appendChild(this.viewToggleEl);
+        toolbar.appendChild(leftSection);
+        toolbar.appendChild(actionsSection);
+        toolbar.appendChild(rightSection);
+        return toolbar;
+    }
+    createViewToggle() {
+        const toggle = document.createElement("div");
+        toggle.className = "qa-view-toggle";
+        const listBtn = document.createElement("button");
+        listBtn.className = `qa-view-btn ${this.viewMode === "list" ? "active" : ""}`;
+        listBtn.innerHTML = "≡";
+        listBtn.title = "列表视图";
+        listBtn.addEventListener("click", () => this.setViewMode("list"));
+        const gridBtn = document.createElement("button");
+        gridBtn.className = `qa-view-btn ${this.viewMode === "grid" ? "active" : ""}`;
+        gridBtn.innerHTML = "⊞";
+        gridBtn.title = "九宫格视图";
+        gridBtn.addEventListener("click", () => this.setViewMode("grid"));
+        toggle.appendChild(listBtn);
+        toggle.appendChild(gridBtn);
+        return toggle;
+    }
+    // ==========================================================================
+    // Data Fetching
+    // ==========================================================================
+    async fetchCoordinators() {
+        try {
+            const sessionInfo = await this.getSessionInfo();
+            const url = this.buildCoordinatorApiUrl(sessionInfo);
+            const response = await this.gmGet(url);
+            this.coordinators = response || [];
+            this.populateCoordinatorSelect();
+        }
+        catch (e) {
+            console.error("[QAReportTab] Failed to fetch coordinators:", e);
+            this.showError("获取 Coordinator 列表失败");
+        }
+    }
+    buildCoordinatorApiUrl(sessionInfo) {
+        const params = new URLSearchParams({
+            MethodName: "GetCoordinatorforOffice_WithNoCoordinator",
+            UserID: sessionInfo.userId,
+            OfficeIDs: sessionInfo.officeIds,
+            Version: sessionInfo.version,
+            MinorVersion: sessionInfo.minorVersion,
+            AppVersion: sessionInfo.appVersion,
+        });
+        return `https://reports.hhaexchange.com/HHAReportsML/Handler/Contracts.ashx/BindContract?${params}`;
+    }
+    populateCoordinatorSelect() {
+        if (!this.coordinatorSelectEl) {
+            console.error("[QAReportTab] coordinatorSelectEl is null!");
+            return;
+        }
+        this.coordinatorSelectEl.innerHTML =
+            '<option value="">-- 选择辅导员 --</option>';
+        // Filter out "No Coordinator" option
+        const validCoordinators = this.coordinators.filter((c) => c.ID !== "-3");
+        validCoordinators.forEach((coordinator) => {
+            const option = document.createElement("option");
+            option.value = coordinator.ID;
+            // 去除邮箱地址，只保留名字和分机号（例如："Anna O. Russian Sup ext.141" 而不是 "Anna O. Russian Sup ext.141 AOzhigova@alwaysny.net"）
+            const displayText = coordinator.Text.replace(/\s+[\w.-]+@[\w.-]+$/i, "").trim();
+            option.textContent = displayText;
+            this.coordinatorSelectEl.appendChild(option);
+        });
+        // Restore last selected
+        const lastSelected = localStorage.getItem(QAReportTab_STORAGE_KEYS.LAST_COORDINATOR);
+        if (lastSelected && validCoordinators.some((c) => c.ID === lastSelected)) {
+            this.coordinatorSelectEl.value = lastSelected;
+            this.selectedCoordinatorId = lastSelected;
+        }
+        this.coordinatorSelectEl.addEventListener("change", (e) => {
+            this.selectedCoordinatorId = e.target.value;
+            localStorage.setItem(QAReportTab_STORAGE_KEYS.LAST_COORDINATOR, this.selectedCoordinatorId);
+        });
+    }
+    async handleLoad() {
+        if (!this.selectedCoordinatorId) {
+            this.showError("请先选择一个 Coordinator");
+            return;
+        }
+        if (this.isLoading)
+            return;
+        this.setLoading(true);
+        try {
+            // Step 1: Fetch Census data
+            const censusPatients = await this.fetchCensusData();
+            // Step 2: Fetch Patient General Notes
+            const qaNotes = await this.fetchQANotes();
+            // Step 3: Merge and sort data
+            this.qaReportData = this.mergeAndSortData(censusPatients, qaNotes);
+            console.log(`[QAReportTab] Loaded: ${censusPatients.length} patients, ${qaNotes.length} notes → ${this.qaReportData.length} items`);
+            // Step 4: Render
+            this.renderData();
+            this.exportBtnEl.disabled = false;
+            this.showSuccess(`已加载 ${this.qaReportData.length} 个病人数据`);
+        }
+        catch (e) {
+            console.error("[QAReportTab] Load error:", e);
+            this.showError("加载失败: " + e.message);
+        }
+        finally {
+            this.setLoading(false);
+        }
+    }
+    async fetchCensusData() {
+        // CRITICAL: Initialize reports session first to establish cookies
+        await this.initializeReportsSession();
+        const sessionInfo = await this.getSessionInfo();
+        // Build UserDataXML for Census API
+        const userDataXML = `<Params>
+      <Param StatusIDs="3,4,8"/>
+      <Param OfficeIDs="${sessionInfo.officeIds}"/>
+      <Param CoordinatorIDs="${this.selectedCoordinatorId}"/>
+      <Param PatientLocationIDs="-1"/>
+      <Param PatientBranchIDs="-1"/>
+      <Param PatientTeamIDs="-1"/>
+      <Param ContractIDs="-1"/>
+      <Param IsDefaultPatient="0"/>
+      <Param Version="${sessionInfo.version}"/>
+      <Param MinorVersion="${sessionInfo.minorVersion}"/>
+      <Param AppVersion="${sessionInfo.appVersion}"/>
+    </Params>`.replace(/\s+/g, " ");
+        console.log(`[QAReportTab] Census API params: StatusIDs=3,4,8, CoordinatorID=${this.selectedCoordinatorId}, OfficeIDs=${sessionInfo.officeIds}`);
+        // Call Census API to get report GUID
+        const bindDataUrl = "https://reports.hhaexchange.com/HHAReportsML/ajaxpro/Reports_CensusbyCoordinator,HHAExchangeUI.ashx";
+        const response = await this.gmPostAjaxPro(bindDataUrl, "BindData", {
+            UserDataXML: userDataXML,
+        });
+        // Response format: "GUID";/*
+        const guid = response.replace(/[";/*]/g, "").trim();
+        if (!guid) {
+            throw new Error("Census API 返回空 GUID");
+        }
+        // Fetch and parse ALL pages of report HTML
+        const reportUrl = `https://reports.hhaexchange.com/HHAReportsML/Reports/Reports.aspx?UserDataXML=${guid}&ReportName=Census%20by%20Coordinator&ReportTitle=Census%20by%20Coordinator`;
+        const allPatients = [];
+        // Fetch first page and get total pages
+        const { html: firstPageHtml, totalPages, formFields, } = await this.fetchReportFirstPage(reportUrl);
+        const firstPagePatients = this.parseCensusReport(firstPageHtml);
+        allPatients.push(...firstPagePatients);
+        console.log(`[QAReportTab] Census page 1/${totalPages}: ${firstPagePatients.length} patients`);
+        // Fetch remaining pages if more than one page
+        if (totalPages > 1) {
+            for (let page = 2; page <= totalPages; page++) {
+                try {
+                    const pageHtml = await this.fetchReportPage(reportUrl, page, formFields);
+                    const pagePatients = this.parseCensusReport(pageHtml);
+                    allPatients.push(...pagePatients);
+                    console.log(`[QAReportTab] Census page ${page}/${totalPages}: ${pagePatients.length} patients`);
+                }
+                catch (e) {
+                    console.error(`[QAReportTab] Failed to fetch Census page ${page}:`, e);
+                }
+            }
+        }
+        // Deduplicate by admissionId (in case of page overlaps)
+        const uniquePatients = Array.from(new Map(allPatients.map((p) => [p.admissionId, p])).values());
+        console.log(`[QAReportTab] Census total: ${uniquePatients.length} patients from ${totalPages} pages (before dedup: ${allPatients.length})`);
+        return uniquePatients;
+    }
+    /**
+     * Parse Census by Coordinator report HTML to extract patient data.
+     * ASP.NET ReportViewer uses uppercase HTML tags (TR, TD, DIV).
+     */
+    parseCensusReport(html) {
+        const patients = [];
+        try {
+            // DEBUG: Log HTML length and first 1000 chars
+            console.log(`[QAReportTab] Census HTML length: ${html.length} chars`);
+            console.log(`[QAReportTab] Census HTML preview:`, html.substring(0, 1000));
+            // Find all AHC-XXXXXX or AMD-XXXXXX Admission IDs (6 OR 7 digits)
+            const admissionIdRegex = /(AHC|AMD)-\d{6,7}/g;
+            const allIds = html.match(admissionIdRegex) || [];
+            // Log IDs found for debugging
+            console.log(`[QAReportTab] Census IDs found in page: ${allIds.length}`, allIds.slice(0, 5).join(", ") + "...");
+            // Process each unique ID
+            const processedIds = new Set();
+            allIds.forEach((admissionId) => {
+                if (processedIds.has(admissionId))
+                    return;
+                processedIds.add(admissionId);
+                // Find ID position in HTML (format: >AHC-XXXXXX<)
+                let idPos = html.indexOf(`>${admissionId}<`);
+                if (idPos === -1) {
+                    idPos = html.indexOf(admissionId);
+                }
+                if (idPos === -1)
+                    return;
+                // Find containing <TR> (ASP.NET uses uppercase)
+                let trStart = html.lastIndexOf("<TR", idPos);
+                if (trStart === -1)
+                    trStart = html.lastIndexOf("<tr", idPos);
+                if (trStart === -1)
+                    return;
+                // Find closing </TR>
+                let trEnd = html.indexOf("</TR>", idPos);
+                if (trEnd === -1)
+                    trEnd = html.indexOf("</tr>", idPos);
+                if (trEnd === -1)
+                    return;
+                trEnd += 5; // Include </TR>
+                const rowHtml = html.substring(trStart, trEnd);
+                // Verify it's a data row (has VALIGN="top")
+                if (!rowHtml.includes('VALIGN="top"') &&
+                    !rowHtml.includes('valign="top"')) {
+                    return;
+                }
+                // Extract cell values from <TD><DIV>VALUE</DIV></TD> structure
+                const tdDivRegex = /<TD[^>]*>(?:<DIV[^>]*>)?([^<]*)(?:<\/DIV>)?<\/TD>/gi;
+                const cellValues = [];
+                let cellMatch;
+                while ((cellMatch = tdDivRegex.exec(rowHtml)) !== null) {
+                    const value = cellMatch[1].trim();
+                    if (value)
+                        cellValues.push(value);
+                }
+                // Fallback: extract <DIV> contents directly
+                if (cellValues.length < 3) {
+                    const divRegex = /<DIV[^>]*>([^<]+)<\/DIV>/gi;
+                    let divMatch;
+                    while ((divMatch = divRegex.exec(rowHtml)) !== null) {
+                        const value = divMatch[1].trim();
+                        if (value)
+                            cellValues.push(value);
+                    }
+                }
+                // Need at least 3 cells (row#, ID, name)
+                if (cellValues.length < 3)
+                    return;
+                // Find admissionId position in cell values
+                const idIndex = cellValues.findIndex((v) => v === admissionId);
+                if (idIndex === -1)
+                    return;
+                // Extract fields relative to ID position
+                // Expected: [rowNum, admissionId, patientName, address, coordinator, contract, status, startDate]
+                const patientName = cellValues[idIndex + 1] || "";
+                const address = cellValues[idIndex + 2] || "";
+                const coordinator = cellValues[idIndex + 3] || "";
+                const primaryContract = cellValues[idIndex + 4] || "";
+                const status = cellValues[idIndex + 5] || "Active";
+                const startDate = cellValues[idIndex + 6] || "";
+                // Extract phone numbers from all fields
+                const phones = [];
+                const allText = cellValues.join(" ");
+                const phoneMatches = allText.match(/\d{3}[-.]?\d{3}[-.]?\d{4}/g) || [];
+                phoneMatches.forEach((phone, idx) => {
+                    phones.push({
+                        label: idx === 0 ? "Primary" : `Phone ${idx + 1}`,
+                        phone: this.formatPhone(phone),
+                    });
+                });
+                patients.push({
+                    admissionId,
+                    patientName,
+                    address,
+                    phones,
+                    coordinator,
+                    primaryContract,
+                    status,
+                    startDate,
+                });
+            });
+            console.log(`[QAReportTab] Census parsed: ${patients.length} patients`);
+        }
+        catch (e) {
+            console.error("[QAReportTab] Census parse error:", e);
+        }
+        return patients;
+    }
+    async fetchQANotes() {
+        // CRITICAL: Initialize reports session first to establish cookies
+        await this.initializeReportsSession();
+        const sessionInfo = await this.getSessionInfo();
+        // Calculate date range (1 year ago to today)
+        const today = new Date();
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(today.getFullYear() - 1);
+        // Format date as MM/DD/YYYY with leading zeros (matches HHA report format)
+        const formatDate = (d) => {
+            const month = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${month}/${day}/${d.getFullYear()}`;
+        };
+        const fromDateStr = formatDate(oneYearAgo);
+        const toDateStr = formatDate(today);
+        console.log(`[QAReportTab] QA Notes date range: ${fromDateStr} to ${toDateStr}`);
+        console.log(`[QAReportTab] QA Notes API params: OfficeIDs=${sessionInfo.officeIds}, CoordinatorID=${this.selectedCoordinatorId}`);
+        // Build UserDataXML for Patient General Notes API (与 PatientGeneralNotesReport.ts 格式一致)
+        const userDataXML = `<Params>` +
+            `<Param OfficeIDs="${sessionInfo.officeIds}"/>` +
+            `<Param FromDate="${formatDate(oneYearAgo)}"/>` +
+            `<Param ToDate="${formatDate(today)}"/>` +
+            `<Param StatusID="-1"/>` +
+            `<Param ReasonID="2289535"/>` + // Quality Assurance
+            `<Param ChhaID="-1"/>` +
+            `<Param PatientID="-1"/>` +
+            `<Param CoordinatorID="${this.selectedCoordinatorId}"/>` +
+            `<Param Priority="-1"/>` +
+            `<Param IsCallFromPatientProfile="0"/>` +
+            `<Param CallerInfo="SSRS"/>` +
+            `<Param AppVersion="${sessionInfo.appVersion}"/>` +
+            `<Param Version="${sessionInfo.version}"/>` +
+            `<Param MinorVersion="${sessionInfo.minorVersion}"/>` +
+            `</Params>`;
+        // Call Patient General Notes API (正确的URL)
+        const apiUrl = "https://reports.hhaexchange.com/HHAReportsML/Reports/PatientGeneralNotesRpt.aspx/BindData";
+        const response = await this.gmPost(apiUrl, { UserDataXML: userDataXML });
+        // Response format: { d: "GUID" }
+        const guid = response?.d;
+        if (!guid) {
+            console.warn("[QAReportTab] No QA notes found");
+            return [];
+        }
+        // Fetch and parse ALL pages of report HTML
+        const reportUrl = `https://reports.hhaexchange.com/HHAReportsML/Reports/Reports.aspx?UserDataXML=${guid}&ReportName=Patient%20General%20Notes&ReportTitle=Patient%20General%20Notes`;
+        const allNotes = [];
+        // Fetch first page and get total pages
+        const { html: firstPageHtml, totalPages, formFields, } = await this.fetchReportFirstPage(reportUrl);
+        const firstPageNotes = this.parseQANotesReport(firstPageHtml);
+        allNotes.push(...firstPageNotes);
+        console.log(`[QAReportTab] QA Notes page 1/${totalPages}: ${firstPageNotes.length} notes`);
+        // Fetch remaining pages if more than one page
+        if (totalPages > 1) {
+            for (let page = 2; page <= totalPages; page++) {
+                try {
+                    const pageHtml = await this.fetchReportPage(reportUrl, page, formFields);
+                    const pageNotes = this.parseQANotesReport(pageHtml);
+                    allNotes.push(...pageNotes);
+                    console.log(`[QAReportTab] QA Notes page ${page}/${totalPages}: ${pageNotes.length} notes`);
+                }
+                catch (e) {
+                    console.error(`[QAReportTab] Failed to fetch QA Notes page ${page}:`, e);
+                }
+            }
+        }
+        console.log(`[QAReportTab] QA Notes total: ${allNotes.length} notes from ${totalPages} pages`);
+        return allNotes;
+    }
+    parseQANotesReport(html) {
+        const notes = [];
+        try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+            // Extract all text content from the report
+            const fullText = doc.body.textContent || "";
+            // Split by "Quality Assurance" followed by contract/note info
+            // Pattern: ...Quality Assurance[Contract][Note Text]Closed by...
+            // We need to split on the pattern where "Closed" appears before date
+            // Find all patterns of: Closed[Date][Time][User][AHC-XXXXXX or AMD-XXXXXX]
+            const recordPattern = /Closed(\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2})([^\s]+)((?:AHC|AMD)-\d{6,7})/g;
+            const matches = [...fullText.matchAll(recordPattern)];
+            console.log(`[QAReportTab] Found ${matches.length} QA Note records`);
+            matches.forEach((match, index) => {
+                const createdDate = match[1]; // e.g., "05/02/2025 14:13"
+                const admissionId = match[3]; // e.g., "AHC-908035"
+                // Extract just the date part (MM/DD/YYYY)
+                const dateOnly = createdDate.split(" ")[0];
+                // Debug first 5 matches
+                if (index < 5) {
+                    console.log(`[QAReportTab] Match ${index}: AdmID=${admissionId}, Date=${dateOnly}`);
+                }
+                notes.push({
+                    admissionId: admissionId,
+                    patientName: "",
+                    createdDate: dateOnly,
+                    note: "",
+                    coordinator: "",
+                });
+            });
+            console.log(`[QAReportTab] QA Notes parsed: ${notes.length} notes`);
+        }
+        catch (e) {
+            console.error("[QAReportTab] QA Notes parse error:", e);
+        }
+        return notes;
+    }
+    // ==========================================================================
+    // Data Processing (Story 8.5)
+    // ==========================================================================
+    mergeAndSortData(censusPatients, qaNotes) {
+        // Build a map of latest QA note by admission ID
+        const qaMap = new Map();
+        qaNotes.forEach((note) => {
+            const existing = qaMap.get(note.admissionId);
+            if (!existing ||
+                this.compareDates(note.createdDate, existing.createdDate) > 0) {
+                qaMap.set(note.admissionId, note);
+            }
+        });
+        // Debug: Log specific patients for investigation
+        const debugPatients = ["AHC-902770", "AHC-907981"]; // ZHENG LIYING, ZHU HEPING
+        debugPatients.forEach((id) => {
+            const note = qaMap.get(id);
+            if (note) {
+                console.log(`[QAReportTab] DEBUG ${id}: Latest QA Note = ${note.createdDate}, parsed = ${new Date(note.createdDate).toISOString()}`);
+            }
+            else {
+                console.log(`[QAReportTab] DEBUG ${id}: No QA Notes found in map`);
+            }
+        });
+        // Merge with census patients
+        const reportItems = censusPatients.map((patient) => {
+            const qaNote = qaMap.get(patient.admissionId);
+            const daysAgo = qaNote ? this.calculateDaysAgo(qaNote.createdDate) : null;
+            // Debug specific patients
+            if (debugPatients.includes(patient.admissionId)) {
+                console.log(`[QAReportTab] DEBUG ${patient.admissionId} (${patient.patientName}): daysAgo=${daysAgo}, createdDate=${qaNote?.createdDate || "N/A"}`);
+            }
+            return {
+                admissionId: patient.admissionId,
+                patientName: patient.patientName,
+                phones: patient.phones,
+                address: patient.address,
+                lastQADaysAgo: daysAgo,
+                lastQADate: qaNote?.createdDate || null,
+                lastQANote: qaNote?.note || null,
+                priority: this.calculatePriority(daysAgo),
+                coordinator: patient.coordinator,
+                primaryContract: patient.primaryContract,
+            };
+        });
+        // Sort: 从未联系优先，然后按天数降序
+        reportItems.sort((a, b) => {
+            // 从未联系的排最前
+            if (a.lastQADaysAgo === null && b.lastQADaysAgo !== null)
+                return -1;
+            if (a.lastQADaysAgo !== null && b.lastQADaysAgo === null)
+                return 1;
+            if (a.lastQADaysAgo === null && b.lastQADaysAgo === null)
+                return 0;
+            // 天数多的排前面
+            return b.lastQADaysAgo - a.lastQADaysAgo;
+        });
+        return reportItems;
+    }
+    calculateDaysAgo(dateStr) {
+        try {
+            const date = new Date(dateStr);
+            const today = new Date();
+            const diffTime = today.getTime() - date.getTime();
+            return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        }
+        catch {
+            return 0;
+        }
+    }
+    calculatePriority(daysAgo) {
+        if (daysAgo === null)
+            return "critical";
+        if (daysAgo > 120)
+            return "high";
+        if (daysAgo > 90)
+            return "medium-high";
+        if (daysAgo > 30)
+            return "medium";
+        if (daysAgo > 15)
+            return "low-medium";
+        return "low";
+    }
+    compareDates(date1, date2) {
+        return new Date(date1).getTime() - new Date(date2).getTime();
+    }
+    // ==========================================================================
+    // Rendering (Story 8.6, 8.7, 8.8)
+    // ==========================================================================
+    renderData() {
+        if (!this.contentBodyEl)
+            return;
+        // 如果没有数据，显示空状态
+        if (this.qaReportData.length === 0) {
+            this.renderEmptyState("无数据", "当前 Coordinator 没有找到病人数据");
+            return;
+        }
+        if (this.viewMode === "list") {
+            this.renderListView();
+        }
+        else {
+            this.renderGridView();
+        }
+    }
+    renderEmptyState(title = "QA 报告", message = "选择辅导员并点击'加载'开始") {
+        if (!this.contentBodyEl)
+            return;
+        this.contentBodyEl.innerHTML = `
+      <div class="qa-empty-state">
+        <div class="qa-empty-icon">📋</div>
+        <div class="qa-empty-title">${title}</div>
+        <div class="qa-empty-text">${message}</div>
+      </div>
+    `;
+    }
+    renderListView() {
+        if (!this.contentBodyEl)
+            return;
+        const table = document.createElement("table");
+        table.className = "qa-report-table";
+        // Header
+        const thead = document.createElement("thead");
+        thead.innerHTML = `
+      <tr>
+        <th class="col-id">Admission ID</th>
+        <th class="col-name">病人姓名</th>
+        <th class="col-phone">解析到的QA日期</th>
+        <th class="col-qa">上次 QA</th>
+        <th class="col-action">操作</th>
+      </tr>
+    `;
+        table.appendChild(thead);
+        // Body
+        const tbody = document.createElement("tbody");
+        this.qaReportData.forEach((item) => {
+            const tr = document.createElement("tr");
+            tr.className = `priority-${item.priority}`;
+            // DEBUG: Show parsed QA date instead of phones
+            const qaDateDebug = item.lastQADate || "N/A";
+            const qaDisplay = this.formatQADisplay(item.lastQADaysAgo);
+            const qaClass = item.lastQADaysAgo === null ? "qa-never" : "";
+            tr.innerHTML = `
+        <td class="col-id">${item.admissionId}</td>
+        <td class="col-name">${item.patientName}</td>
+        <td class="col-phone">${qaDateDebug}</td>
+        <td class="col-qa ${qaClass}" style="border-left: 4px solid ${PRIORITY_COLORS[item.priority]}">${qaDisplay}</td>
+        <td class="col-action">
+          <button class="qa-action-btn" data-id="${item.admissionId}">⋮</button>
+        </td>
+      `;
+            // Action button click handler
+            const actionBtn = tr.querySelector(".qa-action-btn");
+            actionBtn?.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.showActionMenu(item, actionBtn);
+            });
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        this.contentBodyEl.innerHTML = "";
+        this.contentBodyEl.appendChild(table);
+    }
+    renderGridView() {
+        if (!this.contentBodyEl)
+            return;
+        const grid = document.createElement("div");
+        grid.className = "qa-report-grid";
+        this.qaReportData.forEach((item) => {
+            const card = document.createElement("div");
+            card.className = `qa-card priority-${item.priority}`;
+            card.style.borderLeftColor = PRIORITY_COLORS[item.priority];
+            card.style.backgroundColor = this.hexToRgba(PRIORITY_COLORS[item.priority], 0.08);
+            // DEBUG: Show parsed QA date instead of phones
+            const qaDateDebug = item.lastQADate || "N/A";
+            card.innerHTML = `
+        <div class="card-header">
+          <span class="card-name">${item.patientName}</span>
+          <button class="card-action-btn" data-id="${item.admissionId}">⋮</button>
+        </div>
+        <div class="card-id">${item.admissionId}</div>
+        <div class="card-phones">QA日期: ${qaDateDebug}</div>
+        <div class="card-qa" style="color: ${PRIORITY_COLORS[item.priority]}">
+          ${this.formatQADisplay(item.lastQADaysAgo)}
+        </div>
+        <div class="card-priority-badge" style="background: ${PRIORITY_COLORS[item.priority]}">
+          ${PRIORITY_LABELS[item.priority]}
+        </div>
+      `;
+            // Action button click handler
+            const actionBtn = card.querySelector(".card-action-btn");
+            actionBtn?.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.showActionMenu(item, actionBtn);
+            });
+            grid.appendChild(card);
+        });
+        this.contentBodyEl.innerHTML = "";
+        this.contentBodyEl.appendChild(grid);
+    }
+    formatQADisplay(daysAgo) {
+        if (daysAgo === null)
+            return "从未联系";
+        if (daysAgo === 0)
+            return "今天";
+        if (daysAgo === 1)
+            return "昨天";
+        return `${daysAgo} 天前`;
+    }
+    formatPhone(phone) {
+        const cleaned = phone.replace(/\D/g, "");
+        if (cleaned.length === 10) {
+            return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+        }
+        return phone;
+    }
+    hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    // ==========================================================================
+    // View Toggle (Story 8.8)
+    // ==========================================================================
+    setViewMode(mode) {
+        if (this.viewMode === mode)
+            return;
+        this.viewMode = mode;
+        localStorage.setItem(QAReportTab_STORAGE_KEYS.VIEW_MODE, mode);
+        // Update toggle buttons
+        const buttons = this.viewToggleEl?.querySelectorAll(".qa-view-btn");
+        buttons?.forEach((btn, index) => {
+            btn.classList.toggle("active", (index === 0 && mode === "list") || (index === 1 && mode === "grid"));
+        });
+        // Re-render if data exists
+        if (this.qaReportData.length > 0) {
+            this.renderData();
+        }
+    }
+    // ==========================================================================
+    // Export (Story 8.9)
+    // ==========================================================================
+    showExportMenu() {
+        // Remove existing menu
+        document.querySelector(".qa-export-menu")?.remove();
+        const menu = document.createElement("div");
+        menu.className = "qa-export-menu";
+        menu.innerHTML = `
+      <div class="export-menu-item" data-format="csv">📄 导出 CSV</div>
+      <div class="export-menu-item" data-format="json">📋 导出 JSON</div>
+    `;
+        // Position menu near export button
+        const btnRect = this.exportBtnEl.getBoundingClientRect();
+        menu.style.position = "fixed";
+        menu.style.top = `${btnRect.bottom + 4}px`;
+        menu.style.left = `${btnRect.left}px`;
+        // Click handlers
+        menu.querySelectorAll(".export-menu-item").forEach((item) => {
+            item.addEventListener("click", () => {
+                const format = item.dataset.format;
+                if (format === "csv")
+                    this.exportToCSV();
+                else if (format === "json")
+                    this.exportToJSON();
+                menu.remove();
+            });
+        });
+        // Close on outside click
+        const closeHandler = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener("click", closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener("click", closeHandler), 0);
+        document.body.appendChild(menu);
+    }
+    exportToCSV() {
+        const BOM = "\uFEFF";
+        const headers = [
+            "Admission ID",
+            "Patient Name",
+            "Phone",
+            "Last QA",
+            "Priority",
+        ];
+        const rows = this.qaReportData.map((item) => [
+            item.admissionId,
+            item.patientName,
+            item.phones.map((p) => p.phone).join("; "),
+            item.lastQADaysAgo === null ? "Never" : `${item.lastQADaysAgo} days ago`,
+            PRIORITY_LABELS[item.priority],
+        ]);
+        const csv = BOM +
+            [headers, ...rows]
+                .map((row) => row.map((cell) => `"${cell}"`).join(","))
+                .join("\n");
+        const coordinatorName = this.getSelectedCoordinatorName();
+        const date = new Date().toISOString().split("T")[0];
+        this.downloadFile(csv, `QA_Report_${coordinatorName}_${date}.csv`, "text/csv");
+    }
+    exportToJSON() {
+        const json = JSON.stringify(this.qaReportData, null, 2);
+        const coordinatorName = this.getSelectedCoordinatorName();
+        const date = new Date().toISOString().split("T")[0];
+        this.downloadFile(json, `QA_Report_${coordinatorName}_${date}.json`, "application/json");
+    }
+    downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    getSelectedCoordinatorName() {
+        const coordinator = this.coordinators.find((c) => c.ID === this.selectedCoordinatorId);
+        return coordinator?.Text?.split(" ")[0] || "Unknown";
+    }
+    // ==========================================================================
+    // Action Menu (Story 8.10)
+    // ==========================================================================
+    showActionMenu(item, anchorEl) {
+        // Remove existing menu
+        document.querySelector(".qa-action-menu")?.remove();
+        const menu = document.createElement("div");
+        menu.className = "qa-action-menu";
+        menu.innerHTML = `
+      <div class="action-menu-item" data-action="create-note">📝 快速创建 QA Note</div>
+      <div class="action-menu-item" data-action="view-patient">📋 查看病人详情</div>
+      <div class="action-menu-item" data-action="call">📞 拨打电话</div>
+      <div class="action-menu-item" data-action="history">📄 查看历史 QA 记录</div>
+      <div class="action-menu-item" data-action="copy-id">🔗 复制 Admission ID</div>
+    `;
+        // Position menu near anchor
+        const rect = anchorEl.getBoundingClientRect();
+        menu.style.position = "fixed";
+        menu.style.top = `${rect.bottom + 4}px`;
+        menu.style.left = `${rect.left - 150}px`;
+        // Click handlers
+        menu.querySelectorAll(".action-menu-item").forEach((menuItem) => {
+            menuItem.addEventListener("click", () => {
+                const action = menuItem.dataset.action;
+                this.handleAction(action, item);
+                menu.remove();
+            });
+        });
+        // Close on outside click
+        const closeHandler = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener("click", closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener("click", closeHandler), 0);
+        document.body.appendChild(menu);
+    }
+    handleAction(action, item) {
+        switch (action) {
+            case "create-note":
+                this.showQuickNoteModal(item);
+                break;
+            case "view-patient":
+                // Open patient profile in new tab
+                window.open(`https://app.hhaexchange.com/ENT2507010000/Patient/PatientMaintenance.aspx?AdmissionID=${item.admissionId}`, "_blank");
+                break;
+            case "call":
+                if (item.phones.length > 0) {
+                    window.open(`tel:${item.phones[0].phone}`, "_self");
+                }
+                else {
+                    this.showError("没有可用的电话号码");
+                }
+                break;
+            case "history":
+                // TODO: Show QA history modal
+                this.showInfo("功能开发中...");
+                break;
+            case "copy-id":
+                navigator.clipboard.writeText(item.admissionId);
+                this.showSuccess(`已复制: ${item.admissionId}`);
+                break;
+        }
+    }
+    showQuickNoteModal(item) {
+        // TODO: Implement quick note creation modal
+        this.showInfo("快速创建 QA Note 功能开发中...");
+    }
+    // ==========================================================================
+    // Utilities
+    // ==========================================================================
+    /**
+     * Get complete OfficeIDs dynamically from API
+     * The JWT token only contains a single office (469), but we need all offices for complete data.
+     * This implementation is ported from VisitMonitor.ts getMessageOfficeIds()
+     */
+    async getCompleteOfficeIds() {
+        // Use cached value if available (5 minute cache)
+        const CACHE_EXPIRY_MS = 5 * 60 * 1000;
+        const now = Date.now();
+        if (this.cachedOfficeIds &&
+            this.officeIdsCacheTimestamp &&
+            now - this.officeIdsCacheTimestamp < CACHE_EXPIRY_MS) {
+            console.log(`[QAReportTab] Using cached OfficeIDs: ${this.cachedOfficeIds}`);
+            return this.cachedOfficeIds;
+        }
+        try {
+            // Get API params from session
+            const session = await this.apiProvider.getSessionInfo();
+            // Get appSecret from ApiParamProvider
+            const fullParams = await this.apiProvider.getParams();
+            // Build base URL dynamically
+            const baseUrl = `https://app.hhaexchange.com/ENTP${session.version.replace(".", "")}010000`;
+            console.log(`[QAReportTab] Fetching OfficeIDs from: ${baseUrl}/api/Common/GetAllOffices`);
+            const response = await this.gmPostWithHeaders(`${baseUrl}/api/Common/GetAllOffices`, {
+                appVersion: session.appVersion,
+                version: session.version,
+                minorVersion: session.minorVersion,
+                userID: session.userId,
+                SelectionType: "filter",
+                PermissionName: "Smart Map Beta",
+            }, {
+                appsecret: fullParams.appSecret,
+                appname: session.appVersion,
+            });
+            // Check if response is valid array
+            if (!Array.isArray(response)) {
+                console.warn(`[QAReportTab] GetAllOffices returned non-array, falling back to JWT token`);
+                return this.apiProvider.getOfficeIdsFromToken();
+            }
+            // Only include Type: "1" offices (actual offices, not groups/parents)
+            const officeIds = response
+                .filter((o) => o.OfficeID > 0 && o.Type === "1")
+                .map((o) => o.OfficeID)
+                .join(",");
+            if (!officeIds) {
+                console.warn(`[QAReportTab] No valid offices found, falling back to JWT token`);
+                return this.apiProvider.getOfficeIdsFromToken();
+            }
+            // Cache the result
+            this.cachedOfficeIds = officeIds;
+            this.officeIdsCacheTimestamp = now;
+            console.log(`[QAReportTab] Fetched complete OfficeIDs: ${this.cachedOfficeIds}`);
+            return this.cachedOfficeIds;
+        }
+        catch (e) {
+            console.error("[QAReportTab] Failed to fetch complete OfficeIDs:", e);
+            // Fall back to JWT token on error
+            return this.apiProvider.getOfficeIdsFromToken();
+        }
+    }
+    async getSessionInfo() {
+        const session = await this.apiProvider.getSessionInfo();
+        // Get complete OfficeIDs dynamically from API
+        // JWT token only has single office (469), but we need all offices for complete data
+        const completeOfficeIds = await this.getCompleteOfficeIds();
+        session.officeIds = completeOfficeIds;
+        return session;
+    }
+    async initializeReportsSession() {
+        // Only initialize once per page load
+        if (this.reportsSessionInitialized) {
+            return;
+        }
+        try {
+            const sessionInfo = await this.getSessionInfo();
+            // Access Census by Coordinator report page to establish session
+            const reportUrl = `https://reports.hhaexchange.com/HHAReportsML/Reports/CensusbyCoordinator.aspx?s=${sessionInfo.sessionId}&Version=${sessionInfo.version}&MinorVersion=${sessionInfo.minorVersion}&AppVersion=${sessionInfo.appVersion}`;
+            console.log("[QAReportTab] Initializing reports session...");
+            const response = await GM_fetch(reportUrl, {
+                method: "GET",
+                credentials: "include", // Include cookies
+            });
+            if (!response.ok) {
+                console.warn(`[QAReportTab] Session init returned HTTP ${response.status}`);
+            }
+            // Mark as initialized
+            this.reportsSessionInitialized = true;
+            console.log("[QAReportTab] Reports session initialized successfully");
+        }
+        catch (e) {
+            console.error("[QAReportTab] Failed to initialize reports session:", e);
+            // Don't throw - allow API calls to proceed and fail with better error messages
+        }
+    }
+    setLoading(loading) {
+        this.isLoading = loading;
+        if (this.loadBtnEl) {
+            this.loadBtnEl.disabled = loading;
+            this.loadBtnEl.innerHTML = loading ? "⏳ 加载中..." : "🔄 加载";
+        }
+    }
+    showError(message) {
+        this.showToast(message, "error");
+    }
+    showSuccess(message) {
+        this.showToast(message, "success");
+    }
+    showInfo(message) {
+        this.showToast(message, "info");
+    }
+    showToast(message, type) {
+        const toast = document.createElement("div");
+        toast.className = `qa-toast qa-toast-${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.classList.add("show"), 10);
+        setTimeout(() => {
+            toast.classList.remove("show");
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+    loadState() {
+        const savedView = localStorage.getItem(QAReportTab_STORAGE_KEYS.VIEW_MODE);
+        if (savedView) {
+            this.viewMode = savedView;
+        }
+    }
+    // ==========================================================================
+    // GM API Wrappers (使用 GM_fetch 而非 GM_xmlhttpRequest)
+    // ==========================================================================
+    async gmGet(url) {
+        const response = await GM_fetch(url, {
+            method: "GET",
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const text = await response.rawBody.text();
+        try {
+            return JSON.parse(text);
+        }
+        catch {
+            return text;
+        }
+    }
+    async gmGetText(url) {
+        const response = await GM_fetch(url, {
+            method: "GET",
+            credentials: "include", // 包含cookies用于身份验证
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return await response.rawBody.text();
+    }
+    /**
+     * Fetch the first page of ASP.NET ReportViewer report and extract pagination info
+     * Returns HTML content, total pages, and form fields for subsequent page requests
+     */
+    async fetchReportFirstPage(url) {
+        // Step 1: Initial GET request to get __VIEWSTATE and all form fields
+        const initialResponse = await GM_fetch(url, {
+            method: "GET",
+            credentials: "include",
+        });
+        if (!initialResponse.ok) {
+            throw new Error(`Initial GET failed: HTTP ${initialResponse.status}`);
+        }
+        const initialHtml = await initialResponse.rawBody.text();
+        // Extract ALL hidden form fields from initial response
+        const formFields = this.extractAllFormFields(initialHtml);
+        if (!formFields["__VIEWSTATE"]) {
+            console.warn("[QAReportTab] __VIEWSTATE not found, using initial HTML");
+            return { html: initialHtml, totalPages: 1, formFields };
+        }
+        // Step 2: Build async POST request for first page
+        const asyncText = await this.postReportPage(url, formFields);
+        // Step 3: Parse response and extract total pages
+        const html = this.parseUpdatePanelResponse(asyncText);
+        const totalPages = this.extractTotalPages(html);
+        // Update formFields with new __VIEWSTATE from response
+        const newViewState = this.extractViewStateFromResponse(asyncText);
+        if (newViewState) {
+            formFields["__VIEWSTATE"] = newViewState;
+        }
+        return { html, totalPages, formFields };
+    }
+    /**
+     * Fetch a specific page of ASP.NET ReportViewer report
+     */
+    async fetchReportPage(url, pageNumber, formFields) {
+        // Build form data for page navigation
+        const formData = new URLSearchParams();
+        // For page navigation, use the CurrentPage control as EVENTTARGET
+        formData.append("ScriptManager1", "ScriptManager1|ReportViewer$ctl05$ctl00$CurrentPage");
+        formData.append("__EVENTTARGET", "ReportViewer$ctl05$ctl00$CurrentPage");
+        formData.append("__EVENTARGUMENT", "");
+        // Add __VIEWSTATE and __VIEWSTATEGENERATOR
+        formData.append("__VIEWSTATE", formFields["__VIEWSTATE"]);
+        if (formFields["__VIEWSTATEGENERATOR"]) {
+            formData.append("__VIEWSTATEGENERATOR", formFields["__VIEWSTATEGENERATOR"]);
+        }
+        // Add all ReportViewer control fields with the new page number
+        formData.append("ReportViewer$ctl03$ctl00", formFields["ReportViewer$ctl03$ctl00"] || "");
+        formData.append("ReportViewer$ctl03$ctl01", formFields["ReportViewer$ctl03$ctl01"] || "");
+        formData.append("ReportViewer$ctl10", formFields["ReportViewer$ctl10"] || "ltr");
+        formData.append("ReportViewer$ctl11", formFields["ReportViewer$ctl11"] || "standards");
+        formData.append("ReportViewer$AsyncWait$HiddenCancelField", "False");
+        formData.append("ReportViewer$ToggleParam$store", "");
+        formData.append("ReportViewer$ToggleParam$collapse", "false");
+        // CRITICAL: Set the page number here
+        formData.append("ReportViewer$ctl05$ctl00$CurrentPage", String(pageNumber));
+        formData.append("ReportViewer$ctl05$ctl03$ctl00", formFields["ReportViewer$ctl05$ctl03$ctl00"] || "");
+        formData.append("ReportViewer$ctl08$ClientClickedId", "");
+        formData.append("ReportViewer$ctl07$store", "");
+        formData.append("ReportViewer$ctl07$collapse", "false");
+        formData.append("ReportViewer$ctl09$VisibilityState$ctl00", "ReportPage");
+        formData.append("ReportViewer$ctl09$ScrollPosition", "");
+        formData.append("ReportViewer$ctl09$ReportControl$ctl02", "");
+        formData.append("ReportViewer$ctl09$ReportControl$ctl03", "");
+        formData.append("ReportViewer$ctl09$ReportControl$ctl04", "100");
+        formData.append("__ASYNCPOST", "true");
+        const asyncResponse = await GM_fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "X-MicrosoftAjax": "Delta=true",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            credentials: "include",
+            body: formData.toString(),
+        });
+        if (!asyncResponse.ok) {
+            throw new Error(`Page ${pageNumber} POST failed: HTTP ${asyncResponse.status}`);
+        }
+        const asyncText = await asyncResponse.rawBody.text();
+        const html = this.parseUpdatePanelResponse(asyncText);
+        // Update formFields with new __VIEWSTATE for next page
+        const newViewState = this.extractViewStateFromResponse(asyncText);
+        if (newViewState) {
+            formFields["__VIEWSTATE"] = newViewState;
+        }
+        return html;
+    }
+    /**
+     * Post request to get report page content
+     */
+    async postReportPage(url, formFields) {
+        const formData = new URLSearchParams();
+        // Add special async postback fields FIRST (order matters for ASP.NET)
+        formData.append("ScriptManager1", "ScriptManager1|ReportViewer$ctl09$Reserved_AsyncLoadTarget");
+        formData.append("__EVENTTARGET", "ReportViewer$ctl09$Reserved_AsyncLoadTarget");
+        formData.append("__EVENTARGUMENT", "");
+        // Add __VIEWSTATE and __VIEWSTATEGENERATOR
+        formData.append("__VIEWSTATE", formFields["__VIEWSTATE"]);
+        if (formFields["__VIEWSTATEGENERATOR"]) {
+            formData.append("__VIEWSTATEGENERATOR", formFields["__VIEWSTATEGENERATOR"]);
+        }
+        // Add all ReportViewer control fields
+        formData.append("ReportViewer$ctl03$ctl00", formFields["ReportViewer$ctl03$ctl00"] || "");
+        formData.append("ReportViewer$ctl03$ctl01", formFields["ReportViewer$ctl03$ctl01"] || "");
+        formData.append("ReportViewer$ctl10", formFields["ReportViewer$ctl10"] || "ltr");
+        formData.append("ReportViewer$ctl11", formFields["ReportViewer$ctl11"] || "standards");
+        formData.append("ReportViewer$AsyncWait$HiddenCancelField", formFields["ReportViewer$AsyncWait$HiddenCancelField"] || "False");
+        formData.append("ReportViewer$ToggleParam$store", formFields["ReportViewer$ToggleParam$store"] || "");
+        formData.append("ReportViewer$ToggleParam$collapse", formFields["ReportViewer$ToggleParam$collapse"] || "false");
+        formData.append("ReportViewer$ctl05$ctl00$CurrentPage", formFields["ReportViewer$ctl05$ctl00$CurrentPage"] || "");
+        formData.append("ReportViewer$ctl05$ctl03$ctl00", formFields["ReportViewer$ctl05$ctl03$ctl00"] || "");
+        formData.append("ReportViewer$ctl08$ClientClickedId", formFields["ReportViewer$ctl08$ClientClickedId"] || "");
+        formData.append("ReportViewer$ctl07$store", formFields["ReportViewer$ctl07$store"] || "");
+        formData.append("ReportViewer$ctl07$collapse", formFields["ReportViewer$ctl07$collapse"] || "false");
+        formData.append("ReportViewer$ctl09$VisibilityState$ctl00", formFields["ReportViewer$ctl09$VisibilityState$ctl00"] || "None");
+        formData.append("ReportViewer$ctl09$ScrollPosition", formFields["ReportViewer$ctl09$ScrollPosition"] || "");
+        formData.append("ReportViewer$ctl09$ReportControl$ctl02", formFields["ReportViewer$ctl09$ReportControl$ctl02"] || "");
+        formData.append("ReportViewer$ctl09$ReportControl$ctl03", formFields["ReportViewer$ctl09$ReportControl$ctl03"] || "");
+        formData.append("ReportViewer$ctl09$ReportControl$ctl04", formFields["ReportViewer$ctl09$ReportControl$ctl04"] || "100");
+        formData.append("__ASYNCPOST", "true");
+        const asyncResponse = await GM_fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "X-MicrosoftAjax": "Delta=true",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            credentials: "include",
+            body: formData.toString(),
+        });
+        if (!asyncResponse.ok) {
+            throw new Error(`Async POST failed: HTTP ${asyncResponse.status}`);
+        }
+        return await asyncResponse.rawBody.text();
+    }
+    /**
+     * Extract total page count from report HTML
+     * Looks for pattern like "Page 1 of 3" or "Page  1 of 3"
+     */
+    extractTotalPages(html) {
+        // Pattern: "Page  X of Y" (ASP.NET ReportViewer format)
+        const pageMatch = html.match(/Page\s+\d+\s+of\s+(\d+)/i);
+        if (pageMatch) {
+            return parseInt(pageMatch[1], 10);
+        }
+        return 1; // Default to 1 page if pattern not found
+    }
+    /**
+     * Extract new __VIEWSTATE from async postback response
+     */
+    extractViewStateFromResponse(response) {
+        // Format: |length|hiddenField|__VIEWSTATE|value|
+        const viewStateMatch = response.match(/\|(\d+)\|hiddenField\|__VIEWSTATE\|([^|]+)\|/);
+        if (viewStateMatch) {
+            return viewStateMatch[2];
+        }
+        return null;
+    }
+    /**
+     * Fetch ASP.NET ReportViewer report using async postback
+     * The ReportViewer uses UpdatePanel which requires a two-step process:
+     * 1. Initial GET to get __VIEWSTATE and ALL form fields
+     * 2. Async POST to trigger report rendering (AsyncLoadTarget) with ALL fields
+     *
+     * CRITICAL: The server returns different content based on which form fields are sent.
+     * We must send ALL hidden form fields to get the full report with ReportArea panel.
+     */
+    async fetchReportWithAsyncPostback(url) {
+        // Step 1: Initial GET request to get __VIEWSTATE and all form fields
+        const initialResponse = await GM_fetch(url, {
+            method: "GET",
+            credentials: "include",
+        });
+        if (!initialResponse.ok) {
+            throw new Error(`Initial GET failed: HTTP ${initialResponse.status}`);
+        }
+        const initialHtml = await initialResponse.rawBody.text();
+        // Extract ALL hidden form fields from initial response
+        const formFields = this.extractAllFormFields(initialHtml);
+        if (!formFields["__VIEWSTATE"]) {
+            console.warn("[QAReportTab] __VIEWSTATE not found, using initial HTML");
+            return initialHtml;
+        }
+        // Step 2: Build async POST request with ALL form fields
+        // This mimics exactly what the browser does for UpdatePanel async postback
+        const formData = new URLSearchParams();
+        // Add special async postback fields FIRST (order matters for ASP.NET)
+        formData.append("ScriptManager1", "ScriptManager1|ReportViewer$ctl09$Reserved_AsyncLoadTarget");
+        formData.append("__EVENTTARGET", "ReportViewer$ctl09$Reserved_AsyncLoadTarget");
+        formData.append("__EVENTARGUMENT", "");
+        // Add __VIEWSTATE and __VIEWSTATEGENERATOR
+        formData.append("__VIEWSTATE", formFields["__VIEWSTATE"]);
+        if (formFields["__VIEWSTATEGENERATOR"]) {
+            formData.append("__VIEWSTATEGENERATOR", formFields["__VIEWSTATEGENERATOR"]);
+        }
+        // Add all ReportViewer control fields (these are CRITICAL for getting full report)
+        formData.append("ReportViewer$ctl03$ctl00", formFields["ReportViewer$ctl03$ctl00"] || "");
+        formData.append("ReportViewer$ctl03$ctl01", formFields["ReportViewer$ctl03$ctl01"] || "");
+        formData.append("ReportViewer$ctl10", formFields["ReportViewer$ctl10"] || "ltr");
+        formData.append("ReportViewer$ctl11", formFields["ReportViewer$ctl11"] || "standards");
+        formData.append("ReportViewer$AsyncWait$HiddenCancelField", formFields["ReportViewer$AsyncWait$HiddenCancelField"] || "False");
+        formData.append("ReportViewer$ToggleParam$store", formFields["ReportViewer$ToggleParam$store"] || "");
+        formData.append("ReportViewer$ToggleParam$collapse", formFields["ReportViewer$ToggleParam$collapse"] || "false");
+        formData.append("ReportViewer$ctl05$ctl00$CurrentPage", formFields["ReportViewer$ctl05$ctl00$CurrentPage"] || "");
+        formData.append("ReportViewer$ctl05$ctl03$ctl00", formFields["ReportViewer$ctl05$ctl03$ctl00"] || "");
+        formData.append("ReportViewer$ctl08$ClientClickedId", formFields["ReportViewer$ctl08$ClientClickedId"] || "");
+        formData.append("ReportViewer$ctl07$store", formFields["ReportViewer$ctl07$store"] || "");
+        formData.append("ReportViewer$ctl07$collapse", formFields["ReportViewer$ctl07$collapse"] || "false");
+        formData.append("ReportViewer$ctl09$VisibilityState$ctl00", formFields["ReportViewer$ctl09$VisibilityState$ctl00"] || "None");
+        formData.append("ReportViewer$ctl09$ScrollPosition", formFields["ReportViewer$ctl09$ScrollPosition"] || "");
+        formData.append("ReportViewer$ctl09$ReportControl$ctl02", formFields["ReportViewer$ctl09$ReportControl$ctl02"] || "");
+        formData.append("ReportViewer$ctl09$ReportControl$ctl03", formFields["ReportViewer$ctl09$ReportControl$ctl03"] || "");
+        formData.append("ReportViewer$ctl09$ReportControl$ctl04", formFields["ReportViewer$ctl09$ReportControl$ctl04"] || "100");
+        // Add async post flag LAST
+        formData.append("__ASYNCPOST", "true");
+        const asyncResponse = await GM_fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "X-MicrosoftAjax": "Delta=true",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            credentials: "include",
+            body: formData.toString(),
+        });
+        if (!asyncResponse.ok) {
+            throw new Error(`Async POST failed: HTTP ${asyncResponse.status}`);
+        }
+        const asyncText = await asyncResponse.rawBody.text();
+        // Step 3: Parse UpdatePanel response to extract HTML
+        // Response format: 1|#||4|length|updatePanel|panelId|<html content>|...
+        const reportHtml = this.parseUpdatePanelResponse(asyncText);
+        return reportHtml;
+    }
+    /**
+     * Extract all form fields (hidden inputs) from HTML
+     * This is critical for ASP.NET UpdatePanel to return the correct content
+     */
+    extractAllFormFields(html) {
+        const fields = {};
+        // Match all hidden input fields and text inputs
+        const inputRegex = /<input[^>]*type=["']?(?:hidden|text)["']?[^>]*>/gi;
+        const matches = html.match(inputRegex) || [];
+        for (const input of matches) {
+            // Extract name and value attributes
+            const nameMatch = input.match(/name=["']([^"']+)["']/i);
+            const valueMatch = input.match(/value=["']([^"']*)["']/i);
+            if (nameMatch) {
+                const name = nameMatch[1];
+                const value = valueMatch ? valueMatch[1] : "";
+                // Decode HTML entities in the value
+                fields[name] = this.decodeHtmlEntities(value);
+            }
+        }
+        return fields;
+    }
+    /**
+     * Decode HTML entities in a string
+     */
+    decodeHtmlEntities(str) {
+        return str
+            .replace(/&amp;/g, "&")
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&#x27;/g, "'")
+            .replace(/&#x2F;/g, "/");
+    }
+    /**
+     * Parse ASP.NET UpdatePanel response format to extract HTML content
+     * Format: 1|#||4|length|updatePanel|panelId|content|length|updatePanel|panelId|content|...
+     *
+     * The key insight is that we need to use the LENGTH prefix to properly extract content,
+     * because the content itself may contain pipe characters.
+     */
+    parseUpdatePanelResponse(response) {
+        // Strategy: Look for ReportArea panel using regex with length-based extraction
+        // The actual format from browser is: |62065|updatePanel|ReportViewer_ctl09_ReportArea|<content>
+        // Try multiple regex patterns to find ReportArea
+        const patterns = [
+            /\|(\d+)\|updatePanel\|ReportViewer_ctl09_ReportArea\|/, // Exact match
+            /\|(\d+)\|updatePanel\|([^|]*ReportArea[^|]*)\|/, // Contains ReportArea
+            /\|(\d+)\|updatePanel\|(ReportViewer_ctl09[^|]*)\|/, // Any ctl09 panel
+        ];
+        for (const pattern of patterns) {
+            const match = response.match(pattern);
+            if (match) {
+                const contentLength = parseInt(match[1], 10);
+                const matchEnd = match.index + match[0].length;
+                // Extract content starting from matchEnd with the specified length
+                const content = response.substring(matchEnd, matchEnd + contentLength);
+                // Verify content has patient data patterns
+                if (content.includes("AHC-") ||
+                    content.includes("AMD-") ||
+                    content.includes('VALIGN="top"')) {
+                    return content;
+                }
+            }
+        }
+        // Fallback: Try to find any large HTML content with patient data patterns
+        // Look for DIV with report content that contains patient data
+        const divMatch = response.match(/<DIV[^>]*dir="LTR"[^>]*>[\s\S]*?(?=<\/DIV>)/gi);
+        if (divMatch) {
+            // Find the largest DIV that contains patient ID patterns
+            const patientDivs = divMatch.filter((d) => d.includes("AHC-") || d.includes("AMD-"));
+            if (patientDivs.length > 0) {
+                const largestPatientDiv = patientDivs.reduce((a, b) => a.length > b.length ? a : b);
+                return largestPatientDiv;
+            }
+        }
+        // Look for table content that might contain patient rows
+        const tableMatch = response.match(/<TABLE[^>]*CELLSPACING[^>]*>[\s\S]*?<\/TABLE>/gi);
+        if (tableMatch) {
+            // Find tables that contain patient data
+            const patientTables = tableMatch.filter((t) => t.includes("AHC-") || t.includes("AMD-"));
+            if (patientTables.length > 0) {
+                return patientTables.reduce((a, b) => (a.length > b.length ? a : b));
+            }
+            // If no patient tables, still return the largest table
+            return tableMatch.reduce((a, b) => (a.length > b.length ? a : b));
+        }
+        // Last resort: return the whole response
+        return response;
+    }
+    async gmPost(url, data) {
+        const response = await GM_fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            credentials: "include", // 包含cookies用于身份验证
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const text = await response.rawBody.text();
+        try {
+            return JSON.parse(text);
+        }
+        catch {
+            return text;
+        }
+    }
+    /**
+     * POST request with custom headers (for app.hhaexchange.com APIs)
+     */
+    async gmPostWithHeaders(url, data, customHeaders) {
+        const response = await GM_fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8",
+                ...customHeaders,
+            },
+            credentials: "include",
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const text = await response.rawBody.text();
+        try {
+            return JSON.parse(text);
+        }
+        catch {
+            return text;
+        }
+    }
+    async gmPostAjaxPro(url, method, data) {
+        const response = await GM_fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain; charset=UTF-8",
+                "X-AjaxPro-Method": method,
+            },
+            credentials: "include", // 包含cookies用于身份验证
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return await response.rawBody.text();
     }
 }
 
@@ -6796,7 +8631,7 @@ async function src_main() {
             // 构造目标网站的搜索URL
             // const searchUrl = `https://your-search-site.com/search?q=${number}`; // <--- [!] 修改为实际的搜索URL格式
             // console.log('正在搜索:', searchUrl);
-            let SearchCGphone = "https://app.hhaexchange.com/ENT2507010000/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=347-265-3886&LastName=&Type=2&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=&_=1755108928644";
+            let SearchCGphone = "https://app.hhaexchange.com/ENT2507010000/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=347-265-3886&LastName=&Type=2&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=&_=1755108928644";
             let missIn = "https://app.hhaexchange.com/ENT2507010000/Call/CallReportsXSLT_ns.aspx?CallType=2&VendorID=469&CoordinatorID=69419&PatientNumber=&PatientName=&AideName=&AssignmentID=&sort=VisitDate&ord=DESC&Source=-1&CaregiverTeamID=-1&SkillType=-1&HideVisitWithTimeSheetRequired=false&FromDate=2025-08-13%2000:00:00&ToDate=2025-08-13%2023:59:00&TimesheetRequired=-1&PatientTeamID=-1&PatientLocationID=-1&PatientBranchID=-1&CaregiverLocationID=-1&CaregiverBranchID=-1&time=1755113664818&OfficeId=469,5137,5139,6475,14849&DisciplineIDs=0";
             let CallMaintenance_ns = "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
             const r = (await GM_fetch(CallMaintenance_ns, {
