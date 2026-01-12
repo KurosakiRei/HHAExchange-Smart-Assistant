@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.7.0
+// @version             3.8.0
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -47,7 +47,7 @@ var ___CSS_LOADER_URL_IMPORT_0___ = new URL(/* asset import */ __webpack_require
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 var ___CSS_LOADER_URL_REPLACEMENT_0___ = _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default()(___CSS_LOADER_URL_IMPORT_0___);
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, ".hha-smart-panel {\n  position: absolute;\n  top: 0;\n  width: 680px;\n  height: 460px;\n  max-height: 80vh;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n  font-size: 14px;\n  color: #333333;\n}\n.hha-smart-panel-header {\n  height: 40px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 16px;\n  border-bottom: none;\n  cursor: move;\n  user-select: none;\n}\n.hha-smart-panel-title {\n  font-size: 14px;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-panel-controls {\n  display: flex;\n  gap: 8px;\n  position: relative;\n  z-index: 100000;\n}\n.hha-smart-panel-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 2px;\n  background: rgba(255, 255, 255, 0.2);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: background 0.15s ease;\n  font-size: 14px;\n  padding: 0;\n  position: relative;\n  z-index: 100001;\n}\n.hha-smart-panel-btn:hover {\n  background: rgba(255, 255, 255, 0.3);\n}\n.hha-smart-panel-btn:active {\n  background: rgba(255, 255, 255, 0.4);\n}\n.hha-smart-panel-body {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-content-wrapper {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n  position: relative;\n  isolation: isolate;\n}\n.hha-smart-tab-bar {\n  width: 100px;\n  min-width: 40px;\n  background: #fafafa;\n  border-right: 1px solid #e0e0e0;\n  transition: width 0.2s ease;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  flex-shrink: 0;\n  position: relative;\n  z-index: 2;\n}\n.hha-smart-tab-bar.collapsed {\n  width: 40px;\n}\n.hha-smart-tab-list {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n}\n.hha-smart-tab-list::-webkit-scrollbar {\n  width: 4px;\n}\n.hha-smart-tab-list::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n.hha-smart-tab-item {\n  position: relative;\n  padding: 12px 8px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  white-space: nowrap;\n  border-bottom: 1px solid #f0f0f0;\n}\n.hha-smart-tab-item:hover {\n  background: #f5f5f5;\n}\n.hha-smart-tab-item.active {\n  background: #f0efff;\n  color: #667eea;\n  font-weight: 500;\n}\n.hha-smart-tab-icon {\n  flex-shrink: 0;\n  font-size: 18px;\n  line-height: 1;\n  width: 20px;\n  text-align: center;\n}\n.hha-smart-tab-text {\n  opacity: 1;\n  transition: opacity 0.2s ease;\n  font-size: 13px;\n  overflow-x: auto;\n  overflow-y: hidden;\n  white-space: nowrap;\n  flex: 1;\n  scroll-behavior: smooth;\n}\n.hha-smart-tab-text::-webkit-scrollbar {\n  height: 0;\n  display: none;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-tab-text {\n  opacity: 0;\n  width: 0;\n  overflow: hidden;\n  pointer-events: none;\n}\n.hha-smart-tab-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 4px;\n  height: 100%;\n  background: #667eea;\n  opacity: 0;\n  transition: opacity 0.2s ease;\n  z-index: 1;\n}\n.hha-smart-tab-item.active .hha-smart-tab-indicator {\n  opacity: 1;\n}\n.hha-smart-tab-collapse-btn {\n  padding: 8px;\n  text-align: center;\n  cursor: pointer;\n  border-top: 1px solid #e0e0e0;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 36px;\n  position: relative;\n  z-index: 10;\n}\n.hha-smart-tab-collapse-btn:hover {\n  background: #f5f5f5;\n}\n.hha-smart-collapse-icon {\n  display: inline-block;\n  transition: transform 0.2s ease;\n  font-size: 14px;\n  color: #666666;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-collapse-icon {\n  transform: rotate(180deg);\n}\n.hha-smart-content-area {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: #ffffff;\n  min-height: 0;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-panel-footer {\n  height: 28px;\n  background: #fafafa;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  padding: 0 16px;\n  font-size: 12px;\n  color: #666666;\n  flex-shrink: 0;\n}\n.footer-branding {\n  font-style: italic;\n  opacity: 0.6;\n  user-select: none;\n}\n.hha-smart-tab-content {\n  display: none !important;\n  padding: 0;\n  animation: fadeIn 0.2s ease;\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  box-sizing: border-box;\n  min-height: 0;\n  position: relative;\n  z-index: 0;\n}\n.hha-smart-tab-content.active {\n  display: flex !important;\n  flex-direction: column;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n.hha-smart-config-card {\n  background: #ffffff;\n  border-radius: 4px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: box-shadow 0.2s ease;\n}\n.hha-smart-config-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.hha-smart-config-card-title {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-config-card-body {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.hha-smart-btn {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.hha-smart-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #667eea;\n  color: white;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.hha-smart-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary:hover:not(:disabled) {\n  background: #5a6fd6;\n}\n.hha-smart-btn-primary:active:not(:disabled) {\n  background: #4c5ec2;\n}\n.hha-smart-btn-secondary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #fafafa;\n  color: #333333;\n  border: 1px solid #e0e0e0;\n}\n.hha-smart-btn-secondary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-secondary:hover:not(:disabled) {\n  background: #f5f5f5;\n  border-color: #a29bfe;\n}\n.hha-smart-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 32px;\n  text-align: center;\n  color: #666666;\n  min-height: 300px;\n}\n.hha-smart-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.hha-smart-placeholder-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.hha-smart-placeholder-text {\n  font-size: 14px;\n  color: #666666;\n}\n#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/**\n * QA Report Tab Styles\n * Epic 8: QA 报告功能\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.qa-report-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n}\n.qa-report-wrapper {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  gap: 0;\n}\n.qa-report-header {\n  display: none;\n}\n.qa-report-title {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.qa-report-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.qa-toolbar-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-left > * {\n  margin: 0;\n  vertical-align: middle;\n}\n.qa-toolbar-actions {\n  display: flex;\n  align-items: center;\n  gap: 0;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-actions .qa-load-btn {\n  border-radius: 2px 0 0 2px;\n  border-right: 1px solid rgba(255, 255, 255, 0.3);\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-actions .qa-export-btn {\n  border-radius: 0 2px 2px 0;\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-select-label {\n  font-size: 13px;\n  color: #666666;\n  font-weight: 500;\n  line-height: 28px;\n  white-space: nowrap;\n}\n.qa-coordinator-select {\n  padding: 0 28px 0 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: white;\n  background-image: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n  background-repeat: no-repeat;\n  background-position: right 8px center;\n  background-size: 12px 12px;\n  font-size: 13px;\n  min-width: 180px;\n  max-width: 300px;\n  height: 28px !important;\n  line-height: 26px;\n  vertical-align: middle;\n  cursor: pointer;\n  box-sizing: border-box;\n  appearance: none;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.qa-coordinator-select:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px #a29bfe;\n}\n.qa-coordinator-select:disabled {\n  background: #fafafa;\n  cursor: not-allowed;\n}\n.qa-load-btn {\n  padding: 0 14px;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-load-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.qa-export-btn {\n  padding: 0 12px;\n  font-size: 13px;\n  background: #fafafa;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  color: #333333;\n  cursor: pointer;\n  transition: all 0.2s;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-export-btn:hover:not(:disabled) {\n  background: #f5f5f5;\n  border-color: #667eea;\n}\n.qa-export-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.qa-status-text {\n  font-size: 12px;\n  color: #666666;\n  white-space: nowrap;\n}\n.qa-view-toggle {\n  display: flex;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  overflow: hidden;\n  height: 28px;\n}\n.qa-view-btn {\n  padding: 0 10px;\n  border: none;\n  background: white;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  transition: all 0.2s;\n  height: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-view-btn:first-child {\n  border-right: 1px solid #e0e0e0;\n}\n.qa-view-btn:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.qa-view-btn.active {\n  background: #667eea;\n  color: white;\n}\n.qa-report-content-body {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n  background: #fafafa;\n}\n.qa-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  text-align: center;\n  color: #666666;\n}\n.qa-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.qa-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.qa-empty-text {\n  font-size: 13px;\n}\n.qa-report-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n  background: white;\n  border-radius: 2px;\n  overflow: hidden;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.qa-report-table thead {\n  background: #fafafa;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n}\n.qa-report-table thead th {\n  padding: 8px 16px;\n  text-align: left;\n  font-weight: 600;\n  color: #666666;\n  border-bottom: 2px solid #e0e0e0;\n  white-space: nowrap;\n}\n.qa-report-table tbody tr {\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s;\n}\n.qa-report-table tbody tr:hover {\n  background: #f5f5f5;\n}\n.qa-report-table tbody tr:last-child {\n  border-bottom: none;\n}\n.qa-report-table tbody td {\n  padding: 8px 16px;\n  vertical-align: middle;\n}\n.qa-report-table .col-id {\n  width: 110px;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  color: #667eea;\n  font-weight: 500;\n}\n.qa-report-table .col-name {\n  width: auto;\n  min-width: 150px;\n  font-weight: 500;\n}\n.qa-report-table .col-phone {\n  width: 120px;\n}\n.qa-report-table .col-qa {\n  width: 100px;\n  font-weight: 500;\n}\n.qa-report-table .col-action {\n  width: 50px;\n  text-align: center;\n}\n.phone-item {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.phone-item + .phone-item {\n  margin-top: 2px;\n}\n.qa-never {\n  color: #dc3545 !important;\n  font-weight: 600;\n}\n.qa-action-btn {\n  padding: 4px 8px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 16px;\n  color: #666666;\n  border-radius: 2px;\n  transition: all 0.2s;\n}\n.qa-action-btn:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.qa-report-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 8px;\n  padding: 8px;\n}\n.qa-card {\n  background: white;\n  border-radius: 2px;\n  padding: 16px;\n  border-left: 4px solid #e0e0e0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  transition: all 0.2s;\n  position: relative;\n  overflow: hidden;\n}\n.qa-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  transform: translateY(-2px);\n}\n.card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  margin-bottom: 8px;\n}\n.card-name {\n  font-weight: 600;\n  font-size: 13px;\n  color: #333333;\n  flex: 1;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  padding-right: 8px;\n}\n.card-action-btn {\n  padding: 2px 6px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  border-radius: 2px;\n  flex-shrink: 0;\n}\n.card-action-btn:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.card-id {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #667eea;\n  margin-bottom: 8px;\n}\n.card-phones {\n  margin-bottom: 8px;\n}\n.card-phone {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.card-phone + .card-phone {\n  margin-top: 2px;\n}\n.card-qa {\n  font-weight: 600;\n  font-size: 13px;\n  margin-bottom: 8px;\n}\n.card-priority-badge {\n  position: absolute;\n  bottom: 0;\n  right: 0;\n  padding: 2px 8px;\n  font-size: 12px;\n  color: white;\n  border-radius: 2px 0 0 0;\n  font-weight: 500;\n}\n.priority-critical .col-qa {\n  color: #dc3545;\n}\n.priority-high .col-qa {\n  color: #e74c3c;\n}\n.priority-medium-high .col-qa {\n  color: #fd7e14;\n}\n.priority-medium .col-qa {\n  color: #ffc107;\n}\n.priority-low-medium .col-qa {\n  color: #a8d08d;\n}\n.priority-low .col-qa {\n  color: #28a745;\n}\n.qa-export-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 1000;\n  min-width: 140px;\n}\n.export-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  transition: background 0.15s;\n}\n.export-menu-item:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.export-menu-item + .export-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-action-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 1000;\n  min-width: 180px;\n}\n.action-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: background 0.15s;\n}\n.action-menu-item:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.action-menu-item + .action-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-toast {\n  position: fixed;\n  top: 24px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100%);\n  padding: 8px 24px;\n  border-radius: 2px;\n  font-size: 13px;\n  color: white;\n  z-index: 100001;\n  opacity: 0;\n  transition: all 0.3s ease;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n}\n.qa-toast.show {\n  transform: translateX(-50%) translateY(0);\n  opacity: 1;\n}\n.qa-toast.qa-toast-success {\n  background: #28a745;\n}\n.qa-toast.qa-toast-error {\n  background: #dc3545;\n}\n.qa-toast.qa-toast-info {\n  background: #667eea;\n}\n/**\n * Status Tracking Tab Styles\n * Epic 7: Multi-Tab Panel - 状态追踪 Tab\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.status-tracking-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n  padding: 0;\n}\n#status-tracking-wrapper {\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n#status-tracking-wrapper #tracker-panel {\n  background: #ffffff;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar {\n  width: 6px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover {\n  background: #666666;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track {\n  background: #fafafa;\n}\n/* --- General Container --- */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background-color: #007bff;\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: move;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);\n  font-size: 24px;\n  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n}\n/* --- Panel & Views --- */\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  min-height: 500px;\n  background: #f9f9f9;\n  border: 1px solid #ccc;\n  border-radius: 8px;\n  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333;\n  overflow: hidden;\n}\n.tracker-view {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: column;\n  transition: transform 0.3s ease-in-out;\n}\n.tracker-view.hidden {\n  display: none;\n}\n/* View Transition Animations */\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n/* --- Header --- */\n.tracker-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 8px 15px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n}\n.tracker-header-btn {\n  background: #e0e0e0;\n  border: 1px solid #ccc;\n  padding: 4px 10px;\n  border-radius: 5px;\n  cursor: pointer;\n}\n.tracker-header-btn:hover {\n  background: #d4d4d4;\n}\n.back-btn {\n  font-size: 20px;\n  padding: 0 10px;\n}\n/* --- 4. 内容与表格 --- */\n.tracker-content {\n  flex-grow: 1;\n  padding: 10px;\n  overflow-y: auto;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n}\n.tracker-table th,\n.tracker-table td {\n  border: 1px solid #ddd;\n  padding: 8px 12px;\n  text-align: center;\n  vertical-align: middle;\n}\n.tracker-table th {\n  background-color: #e9ecef;\n  font-size: 14px;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: bold;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.status-icon:hover {\n  opacity: 0.8;\n  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n  100% {\n    opacity: 1;\n  }\n}\n/* --- Edit View Specifics --- */\n.edit-list-actions button {\n  font-size: 18px;\n  width: 36px;\n  height: 36px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button:disabled {\n  background-color: #ccc;\n  cursor: not-allowed;\n}\n.tracker-footer {\n  padding: 10px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #ddd;\n  background: #f1f1f1;\n  flex-shrink: 0;\n}\n/* --- Loader --- */\n.loader {\n  text-align: center;\n  padding: 40px;\n}\n.spinner {\n  border: 4px solid #f3f3f3;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n/* --- Toast Notification --- */\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 5px;\n  z-index: 10000;\n  opacity: 0;\n  transition: opacity 0.3s, bottom 0.3s;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n/* --- 7. Details Popover (气泡) --- */\n#details-popover {\n  position: fixed;\n  z-index: 10001;\n  /* Must be higher than the panel */\n  /* MODIFIED: 增加宽度以容纳更多列 */\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  /* 提高最大高度限制 */\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  /* Initial state for fade-in animation */\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n  /* FIX: 提高 z-index, 确保它在所有元素之上 */\n  z-index: 100001;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n  /* ADDED: 让用户知道这里可以拖动 */\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* --- Note Cell Styling --- */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  /* 允许换行 */\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* --- Authorization Note Table (格式化后的内容) --- */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* --- Popover Resize Handle --- */\n.popover-resize-handle {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 16px;\n  height: 16px;\n  cursor: nwse-resize;\n  background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n  border-bottom-right-radius: 8px;\n}\n.popover-resize-handle::before {\n  content: '';\n  position: absolute;\n  right: 4px;\n  bottom: 4px;\n  width: 4px;\n  height: 4px;\n  background: #666;\n  border-radius: 1px;\n}\n/* --- 8. Phone Tooltip (新增) --- */\n.phone-icon-wrapper {\n  position: relative;\n  /* 为内部的 tooltip 提供定位上下文 */\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  /* 默认隐藏 */\n  position: absolute;\n  top: 100%;\n  /* 显示在图标正下方 */\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n  /* 确保在气泡本身之上 */\n}\n/* 核心交互：当鼠标悬浮在 wrapper 上时，显示 tooltip */\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, ".hha-smart-panel {\n  position: absolute;\n  top: 0;\n  width: 680px;\n  height: 460px;\n  max-height: 80vh;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n  font-size: 14px;\n  color: #333333;\n}\n.hha-smart-panel-header {\n  height: 40px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 16px;\n  border-bottom: none;\n  cursor: move;\n  user-select: none;\n}\n.hha-smart-panel-title {\n  font-size: 14px;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-panel-controls {\n  display: flex;\n  gap: 8px;\n  position: relative;\n  z-index: 100000;\n}\n.hha-smart-panel-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 2px;\n  background: rgba(255, 255, 255, 0.2);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: background 0.15s ease;\n  font-size: 14px;\n  padding: 0;\n  position: relative;\n  z-index: 100001;\n}\n.hha-smart-panel-btn:hover {\n  background: rgba(255, 255, 255, 0.3);\n}\n.hha-smart-panel-btn:active {\n  background: rgba(255, 255, 255, 0.4);\n}\n.hha-smart-panel-body {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-content-wrapper {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n  position: relative;\n  isolation: isolate;\n}\n.hha-smart-tab-bar {\n  width: 100px;\n  min-width: 40px;\n  background: #fafafa;\n  border-right: 1px solid #e0e0e0;\n  transition: width 0.2s ease;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  flex-shrink: 0;\n  position: relative;\n  z-index: 2;\n}\n.hha-smart-tab-bar.collapsed {\n  width: 40px;\n}\n.hha-smart-tab-list {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n}\n.hha-smart-tab-list::-webkit-scrollbar {\n  width: 4px;\n}\n.hha-smart-tab-list::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n.hha-smart-tab-item {\n  position: relative;\n  padding: 12px 8px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  white-space: nowrap;\n  border-bottom: 1px solid #f0f0f0;\n}\n.hha-smart-tab-item:hover {\n  background: #f5f5f5;\n}\n.hha-smart-tab-item.active {\n  background: #f0efff;\n  color: #667eea;\n  font-weight: 500;\n}\n.hha-smart-tab-icon {\n  flex-shrink: 0;\n  font-size: 18px;\n  line-height: 1;\n  width: 20px;\n  text-align: center;\n}\n.hha-smart-tab-text {\n  opacity: 1;\n  transition: opacity 0.2s ease;\n  font-size: 13px;\n  overflow-x: auto;\n  overflow-y: hidden;\n  white-space: nowrap;\n  flex: 1;\n  scroll-behavior: smooth;\n}\n.hha-smart-tab-text::-webkit-scrollbar {\n  height: 0;\n  display: none;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-tab-text {\n  opacity: 0;\n  width: 0;\n  overflow: hidden;\n  pointer-events: none;\n}\n.hha-smart-tab-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 4px;\n  height: 100%;\n  background: #667eea;\n  opacity: 0;\n  transition: opacity 0.2s ease;\n  z-index: 1;\n}\n.hha-smart-tab-item.active .hha-smart-tab-indicator {\n  opacity: 1;\n}\n.hha-smart-tab-collapse-btn {\n  padding: 8px;\n  text-align: center;\n  cursor: pointer;\n  border-top: 1px solid #e0e0e0;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 36px;\n  position: relative;\n  z-index: 10;\n}\n.hha-smart-tab-collapse-btn:hover {\n  background: #f5f5f5;\n}\n.hha-smart-collapse-icon {\n  display: inline-block;\n  transition: transform 0.2s ease;\n  font-size: 14px;\n  color: #666666;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-collapse-icon {\n  transform: rotate(180deg);\n}\n.hha-smart-content-area {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: #ffffff;\n  min-height: 0;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-panel-footer {\n  height: 28px;\n  background: #fafafa;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  padding: 0 16px;\n  font-size: 12px;\n  color: #666666;\n  flex-shrink: 0;\n}\n.footer-branding {\n  font-style: italic;\n  opacity: 0.6;\n  user-select: none;\n}\n.hha-smart-tab-content {\n  display: none !important;\n  padding: 0;\n  animation: fadeIn 0.2s ease;\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  box-sizing: border-box;\n  min-height: 0;\n  position: relative;\n  z-index: 0;\n}\n.hha-smart-tab-content.active {\n  display: flex !important;\n  flex-direction: column;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n.hha-smart-config-card {\n  background: #ffffff;\n  border-radius: 4px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: box-shadow 0.2s ease;\n}\n.hha-smart-config-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.hha-smart-config-card-title {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-config-card-body {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.hha-smart-btn {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.hha-smart-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #667eea;\n  color: white;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.hha-smart-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary:hover:not(:disabled) {\n  background: #5a6fd6;\n}\n.hha-smart-btn-primary:active:not(:disabled) {\n  background: #4c5ec2;\n}\n.hha-smart-btn-secondary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #fafafa;\n  color: #333333;\n  border: 1px solid #e0e0e0;\n}\n.hha-smart-btn-secondary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-secondary:hover:not(:disabled) {\n  background: #f5f5f5;\n  border-color: #a29bfe;\n}\n.hha-smart-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 32px;\n  text-align: center;\n  color: #666666;\n  min-height: 300px;\n}\n.hha-smart-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.hha-smart-placeholder-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.hha-smart-placeholder-text {\n  font-size: 14px;\n  color: #666666;\n}\n#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/**\n * QA Report Tab Styles\n * Epic 8: QA 报告功能\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.qa-report-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n}\n.qa-report-wrapper {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  gap: 0;\n}\n.qa-report-header {\n  display: none;\n}\n.qa-report-title {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.qa-report-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.qa-toolbar-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-left > * {\n  margin: 0;\n  vertical-align: middle;\n}\n.qa-toolbar-actions {\n  display: flex;\n  align-items: center;\n  gap: 0;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-actions .qa-load-btn {\n  border-radius: 2px 0 0 2px;\n  border-right: 1px solid rgba(255, 255, 255, 0.3);\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-actions .qa-export-btn {\n  border-radius: 0 2px 2px 0;\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-select-label {\n  font-size: 13px;\n  color: #666666;\n  font-weight: 500;\n  line-height: 28px;\n  white-space: nowrap;\n}\n.qa-coordinator-select {\n  padding: 0 28px 0 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: white;\n  background-image: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n  background-repeat: no-repeat;\n  background-position: right 8px center;\n  background-size: 12px 12px;\n  font-size: 13px;\n  min-width: 180px;\n  max-width: 300px;\n  height: 28px !important;\n  line-height: 26px;\n  vertical-align: middle;\n  cursor: pointer;\n  box-sizing: border-box;\n  appearance: none;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.qa-coordinator-select:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px #a29bfe;\n}\n.qa-coordinator-select:disabled {\n  background: #fafafa;\n  cursor: not-allowed;\n}\n.qa-load-btn {\n  padding: 0 14px;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-load-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.qa-export-btn {\n  padding: 0 12px;\n  font-size: 13px;\n  background: #fafafa;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  color: #333333;\n  cursor: pointer;\n  transition: all 0.2s;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-export-btn:hover:not(:disabled) {\n  background: #f5f5f5;\n  border-color: #667eea;\n}\n.qa-export-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.qa-status-text {\n  font-size: 12px;\n  color: #666666;\n  white-space: nowrap;\n}\n.qa-view-toggle {\n  display: flex;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  overflow: hidden;\n  height: 28px;\n}\n.qa-view-btn {\n  padding: 0 10px;\n  border: none;\n  background: white;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  transition: all 0.2s;\n  height: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-view-btn:first-child {\n  border-right: 1px solid #e0e0e0;\n}\n.qa-view-btn:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.qa-view-btn.active {\n  background: #667eea;\n  color: white;\n}\n.qa-report-content-body {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n  background: #fafafa;\n}\n.qa-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  text-align: center;\n  color: #666666;\n}\n.qa-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.qa-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.qa-empty-text {\n  font-size: 13px;\n}\n.qa-report-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n  background: white;\n  border-radius: 2px;\n  overflow: hidden;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.qa-report-table thead {\n  background: #fafafa;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n}\n.qa-report-table thead th {\n  padding: 8px 16px;\n  text-align: left;\n  font-weight: 600;\n  color: #666666;\n  border-bottom: 2px solid #e0e0e0;\n  white-space: nowrap;\n}\n.qa-report-table thead th.sortable {\n  cursor: pointer;\n  user-select: none;\n  transition: background 0.15s;\n}\n.qa-report-table thead th.sortable:hover {\n  background: #ededed;\n}\n.qa-report-table thead th.sortable .sort-icon {\n  margin-left: 4px;\n  font-size: 10px;\n  opacity: 0.5;\n  display: inline-block;\n  vertical-align: middle;\n}\n.qa-report-table thead th.sortable .sort-icon.sort-asc,\n.qa-report-table thead th.sortable .sort-icon.sort-desc {\n  opacity: 1;\n  color: #667eea;\n}\n.qa-report-table tbody tr {\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s;\n}\n.qa-report-table tbody tr:hover {\n  background: #f5f5f5;\n}\n.qa-report-table tbody tr:last-child {\n  border-bottom: none;\n}\n.qa-report-table tbody td {\n  padding: 8px 16px;\n  vertical-align: middle;\n  user-select: text;\n  cursor: text;\n}\n.qa-report-table tbody td.col-action {\n  user-select: none;\n  cursor: default;\n}\n.qa-report-table .col-id {\n  width: 110px;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  color: #667eea;\n  font-weight: 500;\n}\n.qa-report-table .col-name {\n  width: auto;\n  min-width: 150px;\n  font-weight: 500;\n}\n.qa-report-table .col-phone {\n  width: 140px;\n}\n.qa-report-table .phone-loading {\n  color: #666666;\n  font-style: italic;\n  font-size: 13px;\n}\n.qa-report-table .phone-error {\n  color: #dc3545;\n  font-size: 13px;\n}\n.qa-report-table .phone-single {\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n}\n.qa-report-table .phone-single a {\n  color: #667eea;\n  text-decoration: none;\n}\n.qa-report-table .phone-single a:hover {\n  text-decoration: underline;\n}\n.qa-report-table .phone-multiple {\n  position: relative;\n  display: inline-block;\n  cursor: pointer;\n}\n.qa-report-table .phone-multiple .phone-trigger {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  padding: 2px 6px;\n  background: rgba(102, 126, 234, 0.1);\n  border: 1px solid #667eea;\n  border-radius: 2px;\n  color: #667eea;\n  cursor: pointer;\n  font-size: 13px;\n  transition: all 0.2s;\n}\n.qa-report-table .phone-multiple .phone-trigger:hover {\n  background: #667eea;\n  color: white;\n}\n.qa-report-table .phone-multiple .phone-trigger .phone-count {\n  font-weight: 600;\n}\n.qa-report-table .phone-dropdown {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  z-index: 1000;\n  min-width: 160px;\n  padding: 4px 0;\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  margin-top: 4px;\n}\n.qa-report-table .phone-dropdown .phone-item {\n  display: block;\n  padding: 4px 8px;\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n  text-decoration: none;\n  transition: background 0.15s;\n}\n.qa-report-table .phone-dropdown .phone-item:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.qa-report-table .col-qa {\n  width: 100px;\n  font-weight: 500;\n}\n.qa-report-table .col-action {\n  width: 50px;\n  text-align: center;\n}\n.phone-item {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.phone-item + .phone-item {\n  margin-top: 2px;\n}\n.qa-never {\n  color: #dc3545 !important;\n  font-weight: 600;\n}\n.qa-action-btn {\n  padding: 4px 8px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 16px;\n  color: #666666;\n  border-radius: 2px;\n  transition: all 0.2s;\n}\n.qa-action-btn:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.qa-report-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 8px;\n  padding: 8px;\n}\n.qa-card {\n  background: white;\n  border-radius: 2px;\n  padding: 16px;\n  border-left: 4px solid #e0e0e0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  transition: all 0.2s;\n  position: relative;\n  overflow: hidden;\n  user-select: text;\n}\n.qa-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  transform: translateY(-2px);\n}\n.card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  margin-bottom: 8px;\n}\n.card-name {\n  font-weight: 600;\n  font-size: 13px;\n  color: #333333;\n  flex: 1;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  padding-right: 8px;\n}\n.card-action-btn {\n  padding: 2px 6px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  border-radius: 2px;\n  flex-shrink: 0;\n  user-select: none;\n}\n.card-action-btn:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.card-id {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #667eea;\n  margin-bottom: 8px;\n}\n.card-phones {\n  margin-bottom: 8px;\n}\n.card-phone {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.card-phone + .card-phone {\n  margin-top: 2px;\n}\n.card-qa {\n  font-weight: 600;\n  font-size: 13px;\n  margin-bottom: 8px;\n}\n.card-priority-badge {\n  position: absolute;\n  bottom: 0;\n  right: 0;\n  padding: 2px 8px;\n  font-size: 12px;\n  color: white;\n  border-radius: 2px 0 0 0;\n  font-weight: 500;\n}\n.priority-critical .col-qa {\n  color: #dc3545;\n}\n.priority-high .col-qa {\n  color: #e74c3c;\n}\n.priority-medium-high .col-qa {\n  color: #fd7e14;\n}\n.priority-medium .col-qa {\n  color: #ffc107;\n}\n.priority-low-medium .col-qa {\n  color: #a8d08d;\n}\n.priority-low .col-qa {\n  color: #28a745;\n}\n.qa-export-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 140px;\n}\n.export-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  transition: background 0.15s;\n}\n.export-menu-item:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.export-menu-item + .export-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-action-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 180px;\n}\n.action-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: background 0.15s;\n}\n.action-menu-item:hover {\n  background: #f5f5f5;\n  color: #667eea;\n}\n.action-menu-item + .action-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-toast {\n  position: fixed;\n  top: 24px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100%);\n  padding: 8px 24px;\n  border-radius: 2px;\n  font-size: 13px;\n  color: white;\n  z-index: 100001;\n  opacity: 0;\n  transition: all 0.3s ease;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n}\n.qa-toast.show {\n  transform: translateX(-50%) translateY(0);\n  opacity: 1;\n}\n.qa-toast.qa-toast-success {\n  background: #28a745;\n}\n.qa-toast.qa-toast-error {\n  background: #dc3545;\n}\n.qa-toast.qa-toast-info {\n  background: #667eea;\n}\n.qa-note-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n}\n.qa-note-modal {\n  background: white;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  width: 90%;\n  max-width: 520px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.qa-note-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.qa-note-modal-title {\n  font-size: 14px;\n  font-weight: 600;\n}\n.qa-note-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 28px;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  transition: background 0.15s;\n}\n.qa-note-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.qa-note-modal-body {\n  padding: 16px;\n  overflow-y: auto;\n  flex: 1;\n}\n.qa-note-section {\n  margin-bottom: 16px;\n}\n.qa-note-section:last-child {\n  margin-bottom: 0;\n}\n.qa-note-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #666666;\n  margin-bottom: 4px;\n}\n.qa-note-template {\n  padding: 8px 16px;\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  line-height: 1.5;\n  color: #333333;\n}\n.qa-note-textarea {\n  width: 100%;\n  padding: 8px 16px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  font-family: inherit;\n  resize: vertical;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.qa-note-textarea:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);\n}\n.qa-note-textarea::placeholder {\n  color: #666666;\n}\n.qa-note-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  padding: 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #f5f5f5;\n}\n.qa-note-btn {\n  padding: 4px 16px;\n  font-size: 13px;\n  border-radius: 2px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.qa-note-btn.qa-note-btn-cancel {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #666666;\n}\n.qa-note-btn.qa-note-btn-cancel:hover {\n  background: #f5f5f5;\n  border-color: #666666;\n}\n.qa-note-btn.qa-note-btn-submit {\n  background: #667eea;\n  border: 1px solid #667eea;\n  color: white;\n}\n.qa-note-btn.qa-note-btn-submit:hover {\n  background: #5a6fd6;\n  border-color: #5a6fd6;\n}\n/**\n * Status Tracking Tab Styles\n * Epic 7: Multi-Tab Panel - 状态追踪 Tab\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.status-tracking-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n  padding: 0;\n}\n#status-tracking-wrapper {\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n#status-tracking-wrapper #tracker-panel {\n  background: #ffffff;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar {\n  width: 6px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover {\n  background: #666666;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track {\n  background: #fafafa;\n}\n/* --- General Container --- */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background-color: #007bff;\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: move;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);\n  font-size: 24px;\n  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n}\n/* --- Panel & Views --- */\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  min-height: 500px;\n  background: #f9f9f9;\n  border: 1px solid #ccc;\n  border-radius: 8px;\n  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333;\n  overflow: hidden;\n}\n.tracker-view {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  top: 0;\n  left: 0;\n  display: flex;\n  flex-direction: column;\n  transition: transform 0.3s ease-in-out;\n}\n.tracker-view.hidden {\n  display: none;\n}\n/* View Transition Animations */\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n/* --- Header --- */\n.tracker-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 8px 15px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n}\n.tracker-header-btn {\n  background: #e0e0e0;\n  border: 1px solid #ccc;\n  padding: 4px 10px;\n  border-radius: 5px;\n  cursor: pointer;\n}\n.tracker-header-btn:hover {\n  background: #d4d4d4;\n}\n.back-btn {\n  font-size: 20px;\n  padding: 0 10px;\n}\n/* --- 4. 内容与表格 --- */\n.tracker-content {\n  flex-grow: 1;\n  padding: 10px;\n  overflow-y: auto;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n}\n.tracker-table th,\n.tracker-table td {\n  border: 1px solid #ddd;\n  padding: 8px 12px;\n  text-align: center;\n  vertical-align: middle;\n}\n.tracker-table th {\n  background-color: #e9ecef;\n  font-size: 14px;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: bold;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.status-icon:hover {\n  opacity: 0.8;\n  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n  100% {\n    opacity: 1;\n  }\n}\n/* --- Edit View Specifics --- */\n.edit-list-actions button {\n  font-size: 18px;\n  width: 36px;\n  height: 36px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button:disabled {\n  background-color: #ccc;\n  cursor: not-allowed;\n}\n.tracker-footer {\n  padding: 10px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #ddd;\n  background: #f1f1f1;\n  flex-shrink: 0;\n}\n/* --- Loader --- */\n.loader {\n  text-align: center;\n  padding: 40px;\n}\n.spinner {\n  border: 4px solid #f3f3f3;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n/* --- Toast Notification --- */\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 5px;\n  z-index: 10000;\n  opacity: 0;\n  transition: opacity 0.3s, bottom 0.3s;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n/* --- 7. Details Popover (气泡) --- */\n#details-popover {\n  position: fixed;\n  z-index: 10001;\n  /* Must be higher than the panel */\n  /* MODIFIED: 增加宽度以容纳更多列 */\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  /* 提高最大高度限制 */\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  /* Initial state for fade-in animation */\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n  /* FIX: 提高 z-index, 确保它在所有元素之上 */\n  z-index: 100001;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n  /* ADDED: 让用户知道这里可以拖动 */\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* --- Note Cell Styling --- */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  /* 允许换行 */\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* --- Authorization Note Table (格式化后的内容) --- */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* --- Popover Resize Handle --- */\n.popover-resize-handle {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 16px;\n  height: 16px;\n  cursor: nwse-resize;\n  background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n  border-bottom-right-radius: 8px;\n}\n.popover-resize-handle::before {\n  content: '';\n  position: absolute;\n  right: 4px;\n  bottom: 4px;\n  width: 4px;\n  height: 4px;\n  background: #666;\n  border-radius: 1px;\n}\n/* --- 8. Phone Tooltip (新增) --- */\n.phone-icon-wrapper {\n  position: relative;\n  /* 为内部的 tooltip 提供定位上下文 */\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  /* 默认隐藏 */\n  position: absolute;\n  top: 100%;\n  /* 显示在图标正下方 */\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n  /* 确保在气泡本身之上 */\n}\n/* 核心交互：当鼠标悬浮在 wrapper 上时，显示 tooltip */\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -3742,7 +3742,7 @@ const visitMonitor = async () => {
          <div id="tracking-view" class="tracker-view">
             <div class="tracker-header">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span id="last-refresh-time" style="font-size: 12px; color: #666;">上次更新：--:--:--</span>
+                <span id="last-refresh-time" style="font-size: 13px; color: #666;">上次更新: --:--:--</span>
               </div>
               <button id="edit-list-btn" class="tracker-header-btn">编辑追踪列表</button>
             </div>
@@ -3790,7 +3790,7 @@ const visitMonitor = async () => {
         const timeEl = document.getElementById("last-refresh-time");
         if (timeEl) {
             const date = new Date(timestamp);
-            timeEl.textContent = `（上次更新: ${date.toLocaleTimeString()}）`;
+            timeEl.textContent = `上次更新: ${date.toLocaleTimeString()}`;
         }
     }
     function showToast(message, type) {
@@ -4223,8 +4223,6 @@ const visitMonitor = async () => {
                 OfficeIDs: officeIds,
                 ReasonIDs: reasonIds,
             };
-            console.log("[VisitMonitor] fetchMessageReport - Request URL:", `${baseUrl}/api/PayerNotification/PayerNotificationSearch`);
-            console.log("[VisitMonitor] fetchMessageReport - Request Body:", JSON.stringify(requestBody, null, 2));
             const res = (await GM_fetch(`${baseUrl}/api/PayerNotification/PayerNotificationSearch`, {
                 method: "POST",
                 headers: {
@@ -4235,10 +4233,7 @@ const visitMonitor = async () => {
                 body: JSON.stringify(requestBody),
             }));
             const rawText = await res.rawBody.text();
-            console.log("[VisitMonitor] fetchMessageReport - Response status:", res.status);
-            console.log("[VisitMonitor] fetchMessageReport - Response raw:", rawText.substring(0, 500));
             const data = JSON.parse(rawText);
-            console.log("[VisitMonitor] fetchMessageReport - Parsed data length:", data?.length);
             // 解析消息数据
             const details = data.map((item) => {
                 const createdDate = item.CreatedDate || "";
@@ -7167,6 +7162,14 @@ const QAReportTab_STORAGE_KEYS = {
     VIEW_MODE: "hha_qa_report_view_mode",
     LAST_COORDINATOR: "hha_qa_report_last_coordinator",
 };
+// Story 9.3 & 9.5: 病人搜索 API URL
+const PATIENT_SEARCH_BY_NUMBER_URL = "https://app.hhaexchange.com/ENT2507010000/Patient/PatientSearchXSLT_ns.aspx" +
+    "?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1" +
+    "&Source=-1&PatientNumber={ADMISSION_ID}&HomePhone=";
+const QAReportTab_PATIENT_SEARCH_PARAMS = "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-1&DisciplineID=0" +
+    "&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
+// Story 9.5: 病人详情页 URL
+const QAReportTab_PATIENT_PROFILE_URL_TEMPLATE = "https://app.hhaexchange.com/ENT2507010000/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}";
 const PRIORITY_COLORS = {
     critical: "#dc3545", // 从未联系 - 深红
     high: "#e74c3c", // >120天 - 红
@@ -7199,6 +7202,11 @@ class QAReportTab extends BaseTab {
         this.isLoading = false;
         this.cachedOfficeIds = null; // Cache complete OfficeIDs from API
         this.officeIdsCacheTimestamp = 0; // Cache timestamp for OfficeIDs
+        // Story 9.1: 排序状态
+        this.sortState = { column: null, direction: "none" };
+        this.originalData = []; // 保存原始顺序用于重置
+        // Story 9.3 & 9.5: 病人详情缓存 (电话号码和 Profile ID)
+        this.patientDetailsCache = new Map();
         // DOM Elements
         this.toolbarEl = null;
         this.contentBodyEl = null;
@@ -7206,6 +7214,25 @@ class QAReportTab extends BaseTab {
         this.loadBtnEl = null;
         this.exportBtnEl = null;
         this.viewToggleEl = null;
+        /**
+         * Delegated click handler for phone buttons
+         */
+        this.handlePhoneButtonClick = (e) => {
+            const target = e.target;
+            if (target.classList.contains("phone-multiple")) {
+                e.stopPropagation();
+                const phonesData = target.getAttribute("data-phones");
+                if (phonesData) {
+                    try {
+                        const phones = JSON.parse(decodeURIComponent(phonesData));
+                        this.showPhoneDropdown(phones, target);
+                    }
+                    catch (err) {
+                        console.error("[QAReportTab] Failed to parse phone data:", err);
+                    }
+                }
+            }
+        };
         /**
          * Initialize reports.hhaexchange.com session by accessing a report page
          * This establishes the necessary cookies for AjaxPro API calls
@@ -7459,9 +7486,6 @@ class QAReportTab extends BaseTab {
     parseCensusReport(html) {
         const patients = [];
         try {
-            // DEBUG: Log HTML length and first 1000 chars
-            console.log(`[QAReportTab] Census HTML length: ${html.length} chars`);
-            console.log(`[QAReportTab] Census HTML preview:`, html.substring(0, 1000));
             // Find all AHC-XXXXXX or AMD-XXXXXX Admission IDs (6 OR 7 digits)
             const admissionIdRegex = /(AHC|AMD)-\d{6,7}/g;
             const allIds = html.match(admissionIdRegex) || [];
@@ -7566,9 +7590,10 @@ class QAReportTab extends BaseTab {
         await this.initializeReportsSession();
         const sessionInfo = await this.getSessionInfo();
         // Calculate date range (1 year ago to today)
+        // NOTE: Use millisecond calculation because Date.setFullYear() is broken in HHA page environment
         const today = new Date();
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(today.getFullYear() - 1);
+        const oneYearMs = 365 * 24 * 60 * 60 * 1000;
+        const oneYearAgo = new Date(today.getTime() - oneYearMs);
         // Format date as MM/DD/YYYY with leading zeros (matches HHA report format)
         const formatDate = (d) => {
             const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -7649,10 +7674,6 @@ class QAReportTab extends BaseTab {
                 const admissionId = match[3]; // e.g., "AHC-908035"
                 // Extract just the date part (MM/DD/YYYY)
                 const dateOnly = createdDate.split(" ")[0];
-                // Debug first 5 matches
-                if (index < 5) {
-                    console.log(`[QAReportTab] Match ${index}: AdmID=${admissionId}, Date=${dateOnly}`);
-                }
                 notes.push({
                     admissionId: admissionId,
                     patientName: "",
@@ -7681,25 +7702,10 @@ class QAReportTab extends BaseTab {
                 qaMap.set(note.admissionId, note);
             }
         });
-        // Debug: Log specific patients for investigation
-        const debugPatients = ["AHC-902770", "AHC-907981"]; // ZHENG LIYING, ZHU HEPING
-        debugPatients.forEach((id) => {
-            const note = qaMap.get(id);
-            if (note) {
-                console.log(`[QAReportTab] DEBUG ${id}: Latest QA Note = ${note.createdDate}, parsed = ${new Date(note.createdDate).toISOString()}`);
-            }
-            else {
-                console.log(`[QAReportTab] DEBUG ${id}: No QA Notes found in map`);
-            }
-        });
         // Merge with census patients
         const reportItems = censusPatients.map((patient) => {
             const qaNote = qaMap.get(patient.admissionId);
             const daysAgo = qaNote ? this.calculateDaysAgo(qaNote.createdDate) : null;
-            // Debug specific patients
-            if (debugPatients.includes(patient.admissionId)) {
-                console.log(`[QAReportTab] DEBUG ${patient.admissionId} (${patient.patientName}): daysAgo=${daysAgo}, createdDate=${qaNote?.createdDate || "N/A"}`);
-            }
             return {
                 admissionId: patient.admissionId,
                 patientName: patient.patientName,
@@ -7725,6 +7731,10 @@ class QAReportTab extends BaseTab {
             // 天数多的排前面
             return b.lastQADaysAgo - a.lastQADaysAgo;
         });
+        // Story 9.1: 保存原始顺序用于重置
+        this.originalData = [...reportItems];
+        // 重置排序状态
+        this.sortState = { column: null, direction: "none" };
         return reportItems;
     }
     calculateDaysAgo(dateStr) {
@@ -7755,8 +7765,267 @@ class QAReportTab extends BaseTab {
         return new Date(date1).getTime() - new Date(date2).getTime();
     }
     // ==========================================================================
+    // Sorting (Story 9.1)
+    // ==========================================================================
+    /**
+     * 处理表头排序点击
+     * 三态循环: none → asc → desc → none
+     */
+    handleSort(column) {
+        if (this.sortState.column === column) {
+            // 同一列：切换状态 none → asc → desc → none
+            const nextDirection = {
+                none: "asc",
+                asc: "desc",
+                desc: "none",
+            };
+            this.sortState.direction = nextDirection[this.sortState.direction];
+            if (this.sortState.direction === "none") {
+                this.sortState.column = null;
+            }
+        }
+        else {
+            // 新列：从 asc 开始
+            this.sortState.column = column;
+            this.sortState.direction = "asc";
+        }
+        this.applySorting();
+        this.renderData();
+    }
+    /**
+     * 应用当前排序状态到数据
+     */
+    applySorting() {
+        if (this.sortState.direction === "none" || !this.sortState.column) {
+            // 恢复原始顺序
+            this.qaReportData = [...this.originalData];
+            return;
+        }
+        const multiplier = this.sortState.direction === "asc" ? 1 : -1;
+        this.qaReportData = [...this.originalData].sort((a, b) => {
+            switch (this.sortState.column) {
+                case "id":
+                    return multiplier * a.admissionId.localeCompare(b.admissionId);
+                case "name":
+                    return multiplier * a.patientName.localeCompare(b.patientName);
+                case "lastQA":
+                    // null (从未联系) 视为最大值，在升序时排最后，降序时排最前
+                    const aVal = a.lastQADaysAgo ?? Infinity;
+                    const bVal = b.lastQADaysAgo ?? Infinity;
+                    return multiplier * (aVal - bVal);
+                default:
+                    return 0;
+            }
+        });
+    }
+    /**
+     * 获取排序图标
+     */
+    getSortIcon(column) {
+        if (this.sortState.column !== column ||
+            this.sortState.direction === "none") {
+            return '<span class="sort-icon sort-none">⇅</span>';
+        }
+        return this.sortState.direction === "asc"
+            ? '<span class="sort-icon sort-asc">▲</span>'
+            : '<span class="sort-icon sort-desc">▼</span>';
+    }
+    // ==========================================================================
     // Rendering (Story 8.6, 8.7, 8.8)
     // ==========================================================================
+    // ==========================================================================
+    // Patient Details (Story 9.3 & 9.5)
+    // ==========================================================================
+    /**
+     * 获取病人详情（电话号码和 Profile ID）
+     * 使用缓存避免重复请求
+     */
+    async getPatientDetails(admissionId) {
+        // 检查缓存
+        if (this.patientDetailsCache.has(admissionId)) {
+            return this.patientDetailsCache.get(admissionId);
+        }
+        try {
+            const result = await this.fetchPatientDetails(admissionId);
+            this.patientDetailsCache.set(admissionId, result);
+            return result;
+        }
+        catch (e) {
+            console.error(`[QAReportTab] Failed to fetch patient details for ${admissionId}:`, e);
+            return { phones: [], profileId: null };
+        }
+    }
+    /**
+     * 通过 Admission ID 获取病人电话号码和 Profile ID
+     */
+    async fetchPatientDetails(admissionId) {
+        try {
+            const url = PATIENT_SEARCH_BY_NUMBER_URL.replace("{ADMISSION_ID}", admissionId) +
+                QAReportTab_PATIENT_SEARCH_PARAMS +
+                `&_=${Date.now()}`;
+            const response = await GM_fetch(url, {
+                method: "GET",
+                credentials: "include",
+            });
+            if (!response.ok) {
+                console.error(`[QAReportTab] Failed to fetch patient details for ${admissionId}: HTTP ${response.status}`);
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const html = await response.text();
+            return this.parsePatientSearchResult(html);
+        }
+        catch (error) {
+            console.error(`[QAReportTab] Error fetching patient details for ${admissionId}:`, error);
+            throw error;
+        }
+    }
+    /**
+     * 解析搜索结果 HTML，提取电话号码和 Profile ID
+     */
+    parsePatientSearchResult(html) {
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const rows = doc.querySelectorAll("#tdSearchResults tbody tr");
+        if (rows.length === 0) {
+            return { phones: [], profileId: null };
+        }
+        // 取第一行结果
+        const row = rows[0];
+        const cells = row.querySelectorAll("td");
+        // 更健壮的电话号码查找：遍历所有单元格，找到包含电话号码格式的单元格
+        // 电话号码格式: "332-265-6219, 929-685-6363, 347-323-3536" 或单个号码
+        // 严格匹配：必须是 xxx-xxx-xxxx 或 xxx.xxx.xxxx 或 xxxxxxxxxx 格式，且只包含数字和分隔符
+        let phones = [];
+        // 匹配整个字符串为电话号码格式（3位-3位-4位，分隔符可选）
+        const strictPhonePattern = /^\d{3}[-.]?\d{3}[-.]?\d{4}$/;
+        for (let i = 0; i < cells.length; i++) {
+            const cellText = cells[i]?.textContent?.trim() || "";
+            // 先检查单元格是否包含电话号码特征（去掉非数字字符后至少10位）
+            const digitsOnly = cellText.replace(/\D/g, "");
+            if (digitsOnly.length >= 10) {
+                // 按逗号分割，每个部分独立验证
+                const parts = cellText.split(",").map((p) => p.trim());
+                const validPhones = parts.filter((p) => strictPhonePattern.test(p));
+                if (validPhones.length > 0) {
+                    phones = validPhones;
+                    break; // 找到第一个有效的电话单元格就停止
+                }
+            }
+        }
+        // Profile ID 从 onclick 属性提取
+        const link = row.querySelector('a[onclick*="RedirectToPatientPage"]');
+        const onclickAttr = link?.getAttribute("onclick") || "";
+        const match = onclickAttr.match(/RedirectToPatientPage\((\d+)/);
+        const profileId = match ? match[1] : null;
+        return { phones, profileId };
+    }
+    /**
+     * 显示电话号码下拉框
+     */
+    showPhoneDropdown(phones, anchorEl) {
+        // 移除已有下拉框
+        document.querySelector(".phone-dropdown")?.remove();
+        const dropdown = document.createElement("div");
+        dropdown.className = "phone-dropdown";
+        phones.forEach((phone) => {
+            const item = document.createElement("a");
+            item.className = "phone-dropdown-item";
+            item.href = `tel:${phone.replace(/\D/g, "")}`;
+            item.innerHTML = `📞 ${phone}`;
+            item.addEventListener("click", (e) => {
+                e.stopPropagation();
+                // tel: 协议会自动处理
+            });
+            dropdown.appendChild(item);
+        });
+        // 定位到锚点元素下方
+        const rect = anchorEl.getBoundingClientRect();
+        const dropdownWidth = 160; // minWidth
+        // 计算 left 位置，确保不超出屏幕右边缘
+        let leftPos = rect.left;
+        const viewportWidth = window.innerWidth;
+        if (leftPos + dropdownWidth > viewportWidth - 10) {
+            // 如果会超出右边缘，则向左调整
+            leftPos = viewportWidth - dropdownWidth - 10;
+        }
+        // 确保不会超出左边缘
+        if (leftPos < 10) {
+            leftPos = 10;
+        }
+        // 设置完整的内联样式（因为 dropdown 添加到 body，CSS 选择器无法匹配）
+        // z-index 必须高于面板容器的 99999
+        Object.assign(dropdown.style, {
+            position: "fixed",
+            top: `${rect.bottom + 4}px`,
+            left: `${leftPos}px`,
+            zIndex: "100001",
+            minWidth: `${dropdownWidth}px`,
+            padding: "4px 0",
+            background: "white",
+            border: "1px solid #e0e0e0",
+            borderRadius: "4px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+        });
+        // 设置下拉项样式并添加 hover 效果
+        dropdown.querySelectorAll(".phone-dropdown-item").forEach((item) => {
+            const el = item;
+            // 设置基础样式
+            Object.assign(el.style, {
+                display: "block",
+                padding: "8px 12px",
+                color: "#333",
+                fontFamily: "Monaco, Menlo, Consolas, monospace",
+                fontSize: "13px",
+                textDecoration: "none",
+                cursor: "pointer",
+                transition: "background 0.15s, color 0.15s",
+            });
+            // 添加 hover 效果
+            el.addEventListener("mouseenter", () => {
+                el.style.background = "#f5f5f5";
+                el.style.color = "#1890ff";
+            });
+            el.addEventListener("mouseleave", () => {
+                el.style.background = "";
+                el.style.color = "#333";
+            });
+        });
+        // 点击外部关闭
+        const closeHandler = (e) => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.remove();
+                document.removeEventListener("click", closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener("click", closeHandler), 0);
+        document.body.appendChild(dropdown);
+    }
+    /**
+     * 渲染电话号码单元格
+     */
+    renderPhoneCell(item, td) {
+        td.className = "col-phone phone-cell";
+        td.innerHTML = '<span class="phone-loading">加载中...</span>';
+        // 异步获取电话号码
+        this.getPatientDetails(item.admissionId)
+            .then((details) => {
+            if (details.phones.length === 0) {
+                td.innerHTML = '<span class="phone-none">-</span>';
+            }
+            else if (details.phones.length === 1) {
+                // 单个电话号码：直接显示，可点击拨打
+                const phone = details.phones[0];
+                td.innerHTML = `<a class="phone-single" href="tel:${phone.replace(/\D/g, "")}">${phone}</a>`;
+            }
+            else {
+                // 多个电话号码：显示 ⋯，点击展开下拉框
+                // Store phones data on the element for event delegation
+                td.innerHTML = `<button class="phone-multiple" data-phones="${encodeURIComponent(JSON.stringify(details.phones))}" title="点击查看 ${details.phones.length} 个电话">⋯</button>`;
+            }
+        })
+            .catch(() => {
+            td.innerHTML = '<span class="phone-error">获取失败</span>';
+        });
+    }
     renderData() {
         if (!this.contentBodyEl)
             return;
@@ -7788,36 +8057,62 @@ class QAReportTab extends BaseTab {
             return;
         const table = document.createElement("table");
         table.className = "qa-report-table";
-        // Header
+        // Header with sortable columns (Story 9.1)
         const thead = document.createElement("thead");
-        thead.innerHTML = `
-      <tr>
-        <th class="col-id">Admission ID</th>
-        <th class="col-name">病人姓名</th>
-        <th class="col-phone">解析到的QA日期</th>
-        <th class="col-qa">上次 QA</th>
-        <th class="col-action">操作</th>
-      </tr>
-    `;
+        const headerRow = document.createElement("tr");
+        // ID 列 - 可排序
+        const thId = document.createElement("th");
+        thId.className = "col-id sortable";
+        thId.innerHTML = `ID ${this.getSortIcon("id")}`;
+        thId.addEventListener("click", () => this.handleSort("id"));
+        headerRow.appendChild(thId);
+        // 病人姓名列 - 可排序
+        const thName = document.createElement("th");
+        thName.className = "col-name sortable";
+        thName.innerHTML = `病人姓名 ${this.getSortIcon("name")}`;
+        thName.addEventListener("click", () => this.handleSort("name"));
+        headerRow.appendChild(thName);
+        // 电话号码列 - 不可排序 (Story 9.3)
+        const thPhone = document.createElement("th");
+        thPhone.className = "col-phone";
+        thPhone.textContent = "电话号码";
+        headerRow.appendChild(thPhone);
+        // 上次 QA 列 - 可排序
+        const thLastQA = document.createElement("th");
+        thLastQA.className = "col-qa sortable";
+        thLastQA.innerHTML = `上次 QA ${this.getSortIcon("lastQA")}`;
+        thLastQA.addEventListener("click", () => this.handleSort("lastQA"));
+        headerRow.appendChild(thLastQA);
+        // 操作列 - 不可排序
+        const thAction = document.createElement("th");
+        thAction.className = "col-action";
+        thAction.textContent = "操作";
+        headerRow.appendChild(thAction);
+        thead.appendChild(headerRow);
         table.appendChild(thead);
         // Body
         const tbody = document.createElement("tbody");
         this.qaReportData.forEach((item) => {
             const tr = document.createElement("tr");
             tr.className = `priority-${item.priority}`;
-            // DEBUG: Show parsed QA date instead of phones
-            const qaDateDebug = item.lastQADate || "N/A";
             const qaDisplay = this.formatQADisplay(item.lastQADaysAgo);
             const qaClass = item.lastQADaysAgo === null ? "qa-never" : "";
+            // Create row with static cells
+            const qaTooltip = item.lastQADate || "从未联系";
             tr.innerHTML = `
         <td class="col-id">${item.admissionId}</td>
         <td class="col-name">${item.patientName}</td>
-        <td class="col-phone">${qaDateDebug}</td>
-        <td class="col-qa ${qaClass}" style="border-left: 4px solid ${PRIORITY_COLORS[item.priority]}">${qaDisplay}</td>
+        <td class="col-phone"></td>
+        <td class="col-qa ${qaClass}" style="border-left: 4px solid ${PRIORITY_COLORS[item.priority]}" title="${qaTooltip}">${qaDisplay}</td>
         <td class="col-action">
           <button class="qa-action-btn" data-id="${item.admissionId}">⋮</button>
         </td>
       `;
+            // Async render phone cell (Story 9.3)
+            const phoneCell = tr.querySelector(".col-phone");
+            if (phoneCell) {
+                this.renderPhoneCell(item, phoneCell);
+            }
             // Action button click handler
             const actionBtn = tr.querySelector(".qa-action-btn");
             actionBtn?.addEventListener("click", (e) => {
@@ -7829,6 +8124,20 @@ class QAReportTab extends BaseTab {
         table.appendChild(tbody);
         this.contentBodyEl.innerHTML = "";
         this.contentBodyEl.appendChild(table);
+        // Event delegation for phone-multiple buttons (fix: inline addEventListener doesn't work in async context)
+        this.setupPhoneButtonDelegation();
+    }
+    /**
+     * Setup event delegation for phone-multiple buttons
+     * This is needed because buttons created in async Promise callbacks don't retain event handlers
+     */
+    setupPhoneButtonDelegation() {
+        if (!this.contentBodyEl)
+            return;
+        // Remove existing handler if any
+        this.contentBodyEl.removeEventListener("click", this.handlePhoneButtonClick);
+        // Add delegated click handler
+        this.contentBodyEl.addEventListener("click", this.handlePhoneButtonClick);
     }
     renderGridView() {
         if (!this.contentBodyEl)
@@ -7840,22 +8149,26 @@ class QAReportTab extends BaseTab {
             card.className = `qa-card priority-${item.priority}`;
             card.style.borderLeftColor = PRIORITY_COLORS[item.priority];
             card.style.backgroundColor = this.hexToRgba(PRIORITY_COLORS[item.priority], 0.08);
-            // DEBUG: Show parsed QA date instead of phones
-            const qaDateDebug = item.lastQADate || "N/A";
+            const qaTooltip = item.lastQADate || "从未联系";
             card.innerHTML = `
         <div class="card-header">
           <span class="card-name">${item.patientName}</span>
           <button class="card-action-btn" data-id="${item.admissionId}">⋮</button>
         </div>
         <div class="card-id">${item.admissionId}</div>
-        <div class="card-phones">QA日期: ${qaDateDebug}</div>
-        <div class="card-qa" style="color: ${PRIORITY_COLORS[item.priority]}">
+        <div class="card-phones"></div>
+        <div class="card-qa" style="color: ${PRIORITY_COLORS[item.priority]}" title="${qaTooltip}">
           ${this.formatQADisplay(item.lastQADaysAgo)}
         </div>
         <div class="card-priority-badge" style="background: ${PRIORITY_COLORS[item.priority]}">
           ${PRIORITY_LABELS[item.priority]}
         </div>
       `;
+            // Async render phone cell (Story 9.3)
+            const phoneContainer = card.querySelector(".card-phones");
+            if (phoneContainer) {
+                this.renderPhoneCell(item, phoneContainer);
+            }
             // Action button click handler
             const actionBtn = card.querySelector(".card-action-btn");
             actionBtn?.addEventListener("click", (e) => {
@@ -7866,6 +8179,8 @@ class QAReportTab extends BaseTab {
         });
         this.contentBodyEl.innerHTML = "";
         this.contentBodyEl.appendChild(grid);
+        // Event delegation for phone-multiple buttons
+        this.setupPhoneButtonDelegation();
     }
     formatQADisplay(daysAgo) {
         if (daysAgo === null)
@@ -8001,9 +8316,6 @@ class QAReportTab extends BaseTab {
         menu.innerHTML = `
       <div class="action-menu-item" data-action="create-note">📝 快速创建 QA Note</div>
       <div class="action-menu-item" data-action="view-patient">📋 查看病人详情</div>
-      <div class="action-menu-item" data-action="call">📞 拨打电话</div>
-      <div class="action-menu-item" data-action="history">📄 查看历史 QA 记录</div>
-      <div class="action-menu-item" data-action="copy-id">🔗 复制 Admission ID</div>
     `;
         // Position menu near anchor
         const rect = anchorEl.getBoundingClientRect();
@@ -8034,30 +8346,130 @@ class QAReportTab extends BaseTab {
                 this.showQuickNoteModal(item);
                 break;
             case "view-patient":
-                // Open patient profile in new tab
-                window.open(`https://app.hhaexchange.com/ENT2507010000/Patient/PatientMaintenance.aspx?AdmissionID=${item.admissionId}`, "_blank");
-                break;
-            case "call":
-                if (item.phones.length > 0) {
-                    window.open(`tel:${item.phones[0].phone}`, "_self");
-                }
-                else {
-                    this.showError("没有可用的电话号码");
-                }
-                break;
-            case "history":
-                // TODO: Show QA history modal
-                this.showInfo("功能开发中...");
-                break;
-            case "copy-id":
-                navigator.clipboard.writeText(item.admissionId);
-                this.showSuccess(`已复制: ${item.admissionId}`);
+                // Story 9.5: Open patient profile using cached Profile ID
+                this.openPatientProfile(item);
                 break;
         }
     }
+    /**
+     * Story 9.5: Open patient profile in new tab using Profile ID
+     */
+    async openPatientProfile(item) {
+        try {
+            const details = await this.getPatientDetails(item.admissionId);
+            if (details.profileId) {
+                const url = QAReportTab_PATIENT_PROFILE_URL_TEMPLATE.replace("{ID}", details.profileId);
+                window.open(url, "_blank");
+            }
+            else {
+                this.showError("无法获取病人资料链接");
+            }
+        }
+        catch (error) {
+            console.error("[QAReportTab] Failed to get patient profile:", error);
+            this.showError("获取病人信息失败");
+        }
+    }
+    /**
+     * Story 9.3: Handle call action using cached phone numbers
+     */
+    async handleCallAction(item) {
+        try {
+            const details = await this.getPatientDetails(item.admissionId);
+            if (details.phones.length === 0) {
+                this.showError("没有可用的电话号码");
+            }
+            else if (details.phones.length === 1) {
+                window.open(`tel:${details.phones[0]}`, "_self");
+            }
+            else {
+                // Multiple phones - let user choose
+                this.showInfo(`该病人有 ${details.phones.length} 个电话号码，请从表格中选择拨打`);
+            }
+        }
+        catch (error) {
+            console.error("[QAReportTab] Failed to get phone numbers:", error);
+            this.showError("获取电话号码失败");
+        }
+    }
+    /**
+     * Story 9.6: Show quick note creation modal
+     */
     showQuickNoteModal(item) {
-        // TODO: Implement quick note creation modal
-        this.showInfo("快速创建 QA Note 功能开发中...");
+        // Remove existing modal if any
+        document.querySelector(".qa-note-modal-overlay")?.remove();
+        // Default QA note template
+        const defaultNote = `Quality call made to pt, confirmed pt has not been admitted to hospital or rehab within the last 30 days. Pt is satisfied with current aide and or hours OR pt is interested in increase`;
+        // Create modal overlay
+        const overlay = document.createElement("div");
+        overlay.className = "qa-note-modal-overlay";
+        overlay.innerHTML = `
+      <div class="qa-note-modal">
+        <div class="qa-note-modal-header">
+          <div class="qa-note-modal-title">
+            📝 快速创建 QA Note - ${item.patientName} (${item.admissionId})
+          </div>
+          <button class="qa-note-modal-close" type="button">×</button>
+        </div>
+        <div class="qa-note-modal-body">
+          <div class="qa-note-section">
+            <label class="qa-note-label">将提交以下 QA 记录:</label>
+            <div class="qa-note-template">${defaultNote}</div>
+          </div>
+          <div class="qa-note-section">
+            <label class="qa-note-label" for="qa-additional-note">附加备注 (可选):</label>
+            <textarea 
+              id="qa-additional-note" 
+              class="qa-note-textarea" 
+              placeholder="在此输入任何附加信息..."
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+        <div class="qa-note-modal-footer">
+          <button class="qa-note-btn qa-note-btn-cancel" type="button">取消</button>
+          <button class="qa-note-btn qa-note-btn-submit" type="button">提交并关闭</button>
+        </div>
+      </div>
+    `;
+        // Event handlers
+        const closeModal = () => overlay.remove();
+        // Close button
+        overlay
+            .querySelector(".qa-note-modal-close")
+            ?.addEventListener("click", closeModal);
+        // Cancel button
+        overlay
+            .querySelector(".qa-note-btn-cancel")
+            ?.addEventListener("click", closeModal);
+        // Submit button
+        overlay
+            .querySelector(".qa-note-btn-submit")
+            ?.addEventListener("click", () => {
+            const additionalNote = overlay.querySelector("#qa-additional-note")?.value?.trim();
+            console.log("[QAReportTab] Submit QA Note:", {
+                admissionId: item.admissionId,
+                patientName: item.patientName,
+                defaultNote,
+                additionalNote,
+            });
+            closeModal();
+            this.showInfo("功能开发中 - QA Note 创建将在后续版本实现");
+        });
+        // ESC key to close
+        const escHandler = (e) => {
+            if (e.key === "Escape") {
+                closeModal();
+                document.removeEventListener("keydown", escHandler);
+            }
+        };
+        document.addEventListener("keydown", escHandler);
+        // Append to body
+        document.body.appendChild(overlay);
+        // Focus on textarea
+        setTimeout(() => {
+            overlay.querySelector("#qa-additional-note")?.focus();
+        }, 100);
     }
     // ==========================================================================
     // Utilities
@@ -8783,6 +9195,11 @@ function waitForTrackerContainer(retryCount = 0) {
  * This way it will move together when dragging the bell button
  */
 function embedMultiTabPanel(trackerContainer, dragHandle, trackerPanel) {
+    // CRITICAL FIX: 立即克隆铃铛移除 VisitMonitor 的所有事件监听器
+    // 必须在异步操作之前完成，防止用户在初始化期间点击铃铛触发旧的 handler
+    const newDragHandle = dragHandle.cloneNode(true);
+    dragHandle.parentNode?.replaceChild(newDragHandle, dragHandle);
+    console.log("[Epic 7] Bell button cloned to remove VisitMonitor handlers");
     // Create our panel container as a SIBLING to tracker-panel inside tracker-container
     const container = document.createElement("div");
     container.id = "hha-smart-multi-tab-container";
@@ -8812,8 +9229,8 @@ function embedMultiTabPanel(trackerContainer, dragHandle, trackerPanel) {
         .init()
         .then(() => {
         console.log("[Epic 7] Multi-Tab Panel embedded in tracker-container");
-        // Hook bell button click
-        setupBellClickHandler(container, dragHandle, trackerPanel);
+        // Hook bell button click - 使用已克隆的新铃铛
+        setupBellClickHandler(container, newDragHandle, trackerPanel);
     })
         .catch((error) => {
         console.error("[Epic 7] Failed to initialize Multi-Tab Panel:", error);
@@ -8822,17 +9239,57 @@ function embedMultiTabPanel(trackerContainer, dragHandle, trackerPanel) {
 /**
  * Setup click handler on bell button to toggle Multi-Tab Panel
  * 参考 VisitMonitor.ts initializeDragAndClick() 的实现
+ *
+ * 注意：传入的 dragHandle 已经是在 embedMultiTabPanel 中克隆过的新节点
  */
 function setupBellClickHandler(panelContainer, dragHandle, trackerPanel) {
     let hasDragged = false;
-    // 监听拖拽状态
-    dragHandle.addEventListener("mousedown", () => {
-        hasDragged = false;
-    }, false);
-    dragHandle.addEventListener("mousemove", () => {
-        hasDragged = true;
-    }, false);
-    // 使用capture阶段拦截click，在VisitMonitor处理之前
+    // dragHandle 已经是克隆过的节点，不需要再克隆
+    // 重新实现拖动功能（参考 VisitMonitor makeDraggable）
+    const trackerContainer = dragHandle.parentElement;
+    let isDragging = false;
+    let offsetX = 0, offsetY = 0;
+    dragHandle.style.cursor = "move";
+    const onMouseDown = (e) => {
+        isDragging = true;
+        hasDragged = false; // 重置拖动标志
+        const rect = trackerContainer.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+    };
+    const onMouseMove = (e) => {
+        if (!isDragging)
+            return;
+        hasDragged = true; // 标记为已拖动
+        let newX = e.clientX - offsetX;
+        let newY = e.clientY - offsetY;
+        // 边界检测
+        const margin = 5;
+        if (newX < margin)
+            newX = margin;
+        if (newY < margin)
+            newY = margin;
+        if (newX + trackerContainer.offsetWidth > window.innerWidth - margin) {
+            newX = window.innerWidth - trackerContainer.offsetWidth - margin;
+        }
+        if (newY + trackerContainer.offsetHeight > window.innerHeight - margin) {
+            newY = window.innerHeight - trackerContainer.offsetHeight - margin;
+        }
+        // 设置位置
+        trackerContainer.style.right = "auto";
+        trackerContainer.style.bottom = "auto";
+        trackerContainer.style.left = `${newX}px`;
+        trackerContainer.style.top = `${newY}px`;
+    };
+    const onMouseUp = () => {
+        isDragging = false;
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+    };
+    dragHandle.addEventListener("mousedown", onMouseDown);
+    // 使用capture阶段拦截click，完全控制点击行为
     dragHandle.addEventListener("click", (e) => {
         if (hasDragged) {
             console.log("[Epic 7] Drag detected, skipping panel toggle");
@@ -8843,13 +9300,13 @@ function setupBellClickHandler(panelContainer, dragHandle, trackerPanel) {
         e.preventDefault();
         const isVisible = panelContainer.style.display !== "none";
         if (!isVisible) {
-            // 显示我们的面板
-            positionPanelRelativeToHandle(panelContainer, dragHandle);
-            panelContainer.style.display = "block";
-            // 隐藏原来的tracker-panel
+            // CRITICAL: 立即隐藏原来的tracker-panel，防止在页面刚加载时点击铃铛显示旧面板
             if (trackerPanel) {
                 trackerPanel.style.display = "none";
             }
+            // 显示我们的面板
+            positionPanelRelativeToHandle(panelContainer, dragHandle);
+            panelContainer.style.display = "block";
             console.log("[Epic 7] Multi-Tab Panel opened");
         }
         else {
@@ -8858,7 +9315,7 @@ function setupBellClickHandler(panelContainer, dragHandle, trackerPanel) {
             console.log("[Epic 7] Multi-Tab Panel closed");
         }
     }, true); // capture phase
-    console.log("[Epic 7] Bell click handler setup complete");
+    console.log("[Epic 7] Bell click handler setup complete (drag functionality restored)");
 }
 /**
  * Position panel relative to drag handle (bell button)
