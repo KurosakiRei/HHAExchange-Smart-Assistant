@@ -239,6 +239,26 @@
   border-bottom: 2px solid #e0e0e0;
   white-space: nowrap;
 }
+.qa-report-table thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.qa-report-table thead th.sortable:hover {
+  background: #ededed;
+}
+.qa-report-table thead th.sortable .sort-icon {
+  margin-left: 4px;
+  font-size: 10px;
+  opacity: 0.5;
+  display: inline-block;
+  vertical-align: middle;
+}
+.qa-report-table thead th.sortable .sort-icon.sort-asc,
+.qa-report-table thead th.sortable .sort-icon.sort-desc {
+  opacity: 1;
+  color: #667eea;
+}
 .qa-report-table tbody tr {
   border-bottom: 1px solid #f0f0f0;
   transition: background 0.15s;
@@ -252,6 +272,12 @@
 .qa-report-table tbody td {
   padding: 8px 16px;
   vertical-align: middle;
+  user-select: text;
+  cursor: text;
+}
+.qa-report-table tbody td.col-action {
+  user-select: none;
+  cursor: default;
 }
 .qa-report-table .col-id {
   width: 110px;
@@ -265,7 +291,79 @@
   font-weight: 500;
 }
 .qa-report-table .col-phone {
-  width: 120px;
+  width: 140px;
+}
+.qa-report-table .phone-loading {
+  color: #666666;
+  font-style: italic;
+  font-size: 13px;
+}
+.qa-report-table .phone-error {
+  color: #dc3545;
+  font-size: 13px;
+}
+.qa-report-table .phone-single {
+  color: #333333;
+  font-family: "Monaco", "Menlo", "Consolas", monospace;
+  font-size: 13px;
+}
+.qa-report-table .phone-single a {
+  color: #667eea;
+  text-decoration: none;
+}
+.qa-report-table .phone-single a:hover {
+  text-decoration: underline;
+}
+.qa-report-table .phone-multiple {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+.qa-report-table .phone-multiple .phone-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid #667eea;
+  border-radius: 2px;
+  color: #667eea;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.qa-report-table .phone-multiple .phone-trigger:hover {
+  background: #667eea;
+  color: white;
+}
+.qa-report-table .phone-multiple .phone-trigger .phone-count {
+  font-weight: 600;
+}
+.qa-report-table .phone-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  min-width: 160px;
+  padding: 4px 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 4px;
+}
+.qa-report-table .phone-dropdown .phone-item {
+  display: block;
+  padding: 4px 8px;
+  color: #333333;
+  font-family: "Monaco", "Menlo", "Consolas", monospace;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.qa-report-table .phone-dropdown .phone-item:hover {
+  background: #f5f5f5;
+  color: #667eea;
 }
 .qa-report-table .col-qa {
   width: 100px;
@@ -316,6 +414,7 @@
   transition: all 0.2s;
   position: relative;
   overflow: hidden;
+  user-select: text;
 }
 .qa-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -346,6 +445,7 @@
   color: #666666;
   border-radius: 2px;
   flex-shrink: 0;
+  user-select: none;
 }
 .card-action-btn:hover {
   background: #f5f5f5;
@@ -407,7 +507,7 @@
   border-radius: 2px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   overflow: hidden;
-  z-index: 1000;
+  z-index: 100000;
   min-width: 140px;
 }
 .export-menu-item {
@@ -429,7 +529,7 @@
   border-radius: 2px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   overflow: hidden;
-  z-index: 1000;
+  z-index: 100000;
   min-width: 180px;
 }
 .action-menu-item {
@@ -474,4 +574,136 @@
 }
 .qa-toast.qa-toast-info {
   background: #667eea;
+}
+.qa-note-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100002;
+}
+.qa-note-modal {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  width: 90%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.qa-note-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+.qa-note-modal-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+.qa-note-modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+.qa-note-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.qa-note-modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+.qa-note-section {
+  margin-bottom: 16px;
+}
+.qa-note-section:last-child {
+  margin-bottom: 0;
+}
+.qa-note-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666666;
+  margin-bottom: 4px;
+}
+.qa-note-template {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 2px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #333333;
+}
+.qa-note-textarea {
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 2px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.qa-note-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+.qa-note-textarea::placeholder {
+  color: #666666;
+}
+.qa-note-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+  background: #f5f5f5;
+}
+.qa-note-btn {
+  padding: 4px 16px;
+  font-size: 13px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.qa-note-btn.qa-note-btn-cancel {
+  background: white;
+  border: 1px solid #e0e0e0;
+  color: #666666;
+}
+.qa-note-btn.qa-note-btn-cancel:hover {
+  background: #f5f5f5;
+  border-color: #666666;
+}
+.qa-note-btn.qa-note-btn-submit {
+  background: #667eea;
+  border: 1px solid #667eea;
+  color: white;
+}
+.qa-note-btn.qa-note-btn-submit:hover {
+  background: #5a6fd6;
+  border-color: #5a6fd6;
 }

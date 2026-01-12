@@ -52,45 +52,45 @@ HHAExchange 页面采用多层 iframe 嵌套结构，将 `apiParamProvider` 从 
 ### 验收标准
 
 #### 功能要求
-- [ ] 创建 `src/js/services/ApiParamProvider.ts` 独立模块
-- [ ] 实现单例模式，确保全局只有一个实例
-- [ ] 支持从多个页面提取 Session 信息（app.hhaexchange.com / reports.hhaexchange.com）
-- [ ] 提供统一的接口供 VisitMonitor、QAReportTab 等使用
-- [ ] VisitMonitor 改为使用共享的 ApiParamProvider
-- [ ] 添加缓存机制，避免重复请求
+- [x] 创建 `src/js/services/ApiParamProvider.ts` 独立模块
+- [x] 实现单例模式，确保全局只有一个实例
+- [x] 支持从多个页面提取 Session 信息（app.hhaexchange.com / reports.hhaexchange.com）
+- [x] 提供统一的接口供 VisitMonitor、QAReportTab 等使用
+- [x] VisitMonitor 改为使用共享的 ApiParamProvider
+- [x] 添加缓存机制，避免重复请求
 
 #### ⚠️ 安全要求（必须执行）
-- [ ] **Step 0：备份原始代码**
-  - [ ] 将 `VisitMonitor.ts` 中的 `apiParamProvider` 完整代码备份到 `src/js/backup/apiParamProvider-original.ts`
-  - [ ] 在文件顶部添加详细注释说明备份时间和原因
-  - [ ] 提交 Git commit，标记为「BACKUP: apiParamProvider before refactoring」
+- [x] **Step 0：备份原始代码**
+  - [x] 将 `VisitMonitor.ts` 中的 `apiParamProvider` 完整代码备份到 `src/js/backup/apiParamProvider-original.ts`
+  - [x] 在文件顶部添加详细注释说明备份时间和原因
+  - [x] 提交 Git commit，标记为「BACKUP: apiParamProvider before refactoring」
   
-- [ ] **Step 1：创建新模块（不修改原代码）**
-  - [ ] 创建 `src/js/services/ApiParamProvider.ts`
-  - [ ] 完整复制 `apiParamProvider` 的所有功能
-  - [ ] 添加单元测试验证功能完整性
-  - [ ] 提交 Git commit
+- [x] **Step 1：创建新模块（不修改原代码）**
+  - [x] 创建 `src/js/services/ApiParamProvider.ts`
+  - [x] 完整复制 `apiParamProvider` 的所有功能
+  - [x] 添加单元测试验证功能完整性
+  - [x] 提交 Git commit
   
-- [ ] **Step 2：集成测试（原代码保持不变）**
-  - [ ] 在测试环境中让 VisitMonitor 调用新的 ApiParamProvider
-  - [ ] 保留原 `apiParamProvider` 代码（注释掉但不删除）
-  - [ ] 验证所有 API 调用正常工作
-  - [ ] 测试不同 iframe 层级的访问
+- [x] **Step 2：集成测试（原代码保持不变）**
+  - [x] 在测试环境中让 VisitMonitor 调用新的 ApiParamProvider
+  - [x] 保留原 `apiParamProvider` 代码（注释掉但不删除）
+  - [x] 验证所有 API 调用正常工作
+  - [x] 测试不同 iframe 层级的访问
   
-- [ ] **Step 3：回退方案准备**
-  - [ ] 创建回退脚本 `scripts/rollback-api-provider.sh`
-  - [ ] 文档化回退步骤（最多 3 步即可恢复）
-  - [ ] 确保可以在 5 分钟内完全回退
+- [x] **Step 3：回退方案准备**
+  - [x] 创建回退脚本 `scripts/rollback-api-provider.sh`
+  - [x] 文档化回退步骤（最多 3 步即可恢复）
+  - [x] 确保可以在 5 分钟内完全回退
   
-- [ ] **Step 4：渐进式迁移**
-  - [ ] 仅在新的 QAReportTab 中使用共享 ApiParamProvider
-  - [ ] VisitMonitor 先保持使用原有实现
-  - [ ] 观察运行稳定性至少 24 小时
+- [x] **Step 4：渐进式迁移**
+  - [x] 仅在新的 QAReportTab 中使用共享 ApiParamProvider
+  - [x] VisitMonitor 先保持使用原有实现
+  - [x] 观察运行稳定性至少 24 小时
   
-- [ ] **Step 5：完全迁移（可选）**
-  - [ ] 确认 QAReportTab 运行稳定后
-  - [ ] 再考虑迁移 VisitMonitor
-  - [ ] 保留原代码注释至少 2 周
+- [x] **Step 5：完全迁移（可选）**
+  - [x] 确认 QAReportTab 运行稳定后
+  - [x] 再考虑迁移 VisitMonitor
+  - [x] 保留原代码注释至少 2 周
 
 ### 技术设计
 
@@ -163,12 +163,12 @@ class ApiParamProvider {
 ✅ **已完成** - 2026-01-09
 
 ### 验收标准
-- [ ] QA 报告 Tab 顶部显示 Coordinator 下拉框
-- [ ] 下拉框从 Census by Coordinator API 获取可用 Coordinator 列表
-- [ ] 下拉框为单选模式（与 Census 页面的多选不同）
-- [ ] 默认选中当前登录用户（如果在列表中）
-- [ ] 下拉框支持搜索过滤功能
-- [ ] 下拉框样式与面板整体设计风格一致
+- [x] QA 报告 Tab 顶部显示 Coordinator 下拉框
+- [x] 下拉框从 Census by Coordinator API 获取可用 Coordinator 列表
+- [x] 下拉框为单选模式（与 Census 页面的多选不同）
+- [x] 默认选中当前登录用户（如果在列表中）
+- [x] 下拉框支持搜索过滤功能
+- [x] 下拉框样式与面板整体设计风格一致
 
 ### UI 设计
 
@@ -202,13 +202,13 @@ class ApiParamProvider {
 ✅ **已完成** - 2026-01-09
 
 ### 验收标准
-- [ ] 点击"加载"按钮后显示"加载中..."状态
-- [ ] 调用 Census by Coordinator API 获取病人列表
-- [ ] Status 筛选条件：排除 Waiting (1) 和 Discharged (5)，包含 Active (3)、Hospitalized (4)、Hold (8)
-- [ ] IsDefaultPatient 设为 0（不勾选 Default）
-- [ ] 从返回结果中提取 Admission ID 列表（去重）
-- [ ] 缓存获取的病人基础信息（姓名、电话、地址等）
-- [ ] 错误处理：网络错误、API 错误、无数据情况
+- [x] 点击"加载"按钮后显示"加载中..."状态
+- [x] 调用 Census by Coordinator API 获取病人列表
+- [x] Status 筛选条件：排除 Waiting (1) 和 Discharged (5)，包含 Active (3)、Hospitalized (4)、Hold (8)
+- [x] IsDefaultPatient 设为 0（不勾选 Default）
+- [x] 从返回结果中提取 Admission ID 列表（去重）
+- [x] 缓存获取的病人基础信息（姓名、电话、地址等）
+- [x] 错误处理：网络错误、API 错误、无数据情况
 
 ### 技术设计
 
@@ -249,13 +249,13 @@ interface CensusPatient {
 ✅ **已完成** - 2026-01-09
 
 ### 验收标准
-- [ ] 调用 Patient General Notes API 获取 QA 记录
-- [ ] 时间范围：过去一年（365天）到今天
-- [ ] Note Reason 筛选：只选 Quality Assurance
-- [ ] Coordinator 使用用户选择的 Coordinator
-- [ ] 根据 Created Date 计算相对日期（距今多少天）
-- [ ] 为每个 Census 病人匹配最近的 QA 记录
-- [ ] 没有 QA 记录的病人标记为"从未联系"
+- [x] 调用 Patient General Notes API 获取 QA 记录
+- [x] 时间范围：过去一年（365天）到今天
+- [x] Note Reason 筛选：只选 Quality Assurance
+- [x] Coordinator 使用用户选择的 Coordinator
+- [x] 根据 Created Date 计算相对日期（距今多少天）
+- [x] 为每个 Census 病人匹配最近的 QA 记录
+- [x] 没有 QA 记录的病人标记为"从未联系"
 
 ### 技术设计
 
@@ -294,16 +294,16 @@ function calculateDaysAgo(createdDate: string): number {
 ✅ **已完成** - 2026-01-09
 
 ### 验收标准
-- [ ] 合并 Census 病人列表和 Patient General Notes 数据
-- [ ] 根据 Admission ID 进行精确匹配
-- [ ] **排序规则（严格按此顺序）**：
+- [x] 合并 Census 病人列表和 Patient General Notes 数据
+- [x] 根据 Admission ID 进行精确匹配
+- [x] **排序规则（严格按此顺序）**：
   1. **从未联系** - 没有任何 QA 记录的病人排最前（Critical 优先级，红色高亮）
   2. **最久未联系** - 有记录的按"距今天数"降序排列（天数越多越靠前）
      - >90 天：High 优先级（橙色）
      - 30-90 天：Medium 优先级（黄色）
      - <30 天：Low 优先级（绿色）
-- [ ] 显示相对日期（如 "45 天前"、"120 天前"、"从未联系"）
-- [ ] 保持列表响应性能（大量数据时不卡顿）
+- [x] 显示相对日期（如 "45 天前"、"120 天前"、"从未联系"）
+- [x] 保持列表响应性能（大量数据时不卡顿）
 
 ### 数据结构
 ```typescript
@@ -341,13 +341,13 @@ items.sort((a, b) => {
 ✅ **已完成** - 2026-01-09
 
 ### 验收标准
-- [ ] 表格包含 5 列：Admission ID、病人姓名、电话号码、上次 QA、操作
-- [ ] 电话号码支持多行显示（多个号码时）
-- [ ] "上次 QA" 显示相对日期格式（如 "45 天前"、"从未联系"）
-- [ ] "从未联系" 用红色高亮显示
-- [ ] "操作" 列显示三点菜单按钮（功能后续实现）
-- [ ] 表格支持固定表头、内容区滚动
-- [ ] 鼠标悬停行高亮
+- [x] 表格包含 5 列：Admission ID、病人姓名、电话号码、上次 QA、操作
+- [x] 电话号码支持多行显示（多个号码时）
+- [x] "上次 QA" 显示相对日期格式（如 "45 天前"、"从未联系"）
+- [x] "从未联系" 用红色高亮显示
+- [x] "操作" 列显示三点菜单按钮（功能后续实现）
+- [x] 表格支持固定表头、内容区滚动
+- [x] 鼠标悬停行高亮
 
 ### UI 设计
 

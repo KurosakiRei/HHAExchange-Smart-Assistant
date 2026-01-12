@@ -652,7 +652,7 @@ export const visitMonitor = async () => {
          <div id="tracking-view" class="tracker-view">
             <div class="tracker-header">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span id="last-refresh-time" style="font-size: 12px; color: #666;">上次更新：--:--:--</span>
+                <span id="last-refresh-time" style="font-size: 13px; color: #666;">上次更新: --:--:--</span>
               </div>
               <button id="edit-list-btn" class="tracker-header-btn">编辑追踪列表</button>
             </div>
@@ -712,7 +712,7 @@ export const visitMonitor = async () => {
     const timeEl = document.getElementById("last-refresh-time");
     if (timeEl) {
       const date = new Date(timestamp);
-      timeEl.textContent = `（上次更新: ${date.toLocaleTimeString()}）`;
+      timeEl.textContent = `上次更新: ${date.toLocaleTimeString()}`;
     }
   }
 
@@ -1337,15 +1337,6 @@ export const visitMonitor = async () => {
         ReasonIDs: reasonIds,
       };
 
-      console.log(
-        "[VisitMonitor] fetchMessageReport - Request URL:",
-        `${baseUrl}/api/PayerNotification/PayerNotificationSearch`
-      );
-      console.log(
-        "[VisitMonitor] fetchMessageReport - Request Body:",
-        JSON.stringify(requestBody, null, 2)
-      );
-
       const res = (await GM_fetch(
         `${baseUrl}/api/PayerNotification/PayerNotificationSearch`,
         {
@@ -1360,20 +1351,7 @@ export const visitMonitor = async () => {
       )) as Response & { rawBody: Blob };
 
       const rawText = await res.rawBody.text();
-      console.log(
-        "[VisitMonitor] fetchMessageReport - Response status:",
-        res.status
-      );
-      console.log(
-        "[VisitMonitor] fetchMessageReport - Response raw:",
-        rawText.substring(0, 500)
-      );
-
       const data = JSON.parse(rawText);
-      console.log(
-        "[VisitMonitor] fetchMessageReport - Parsed data length:",
-        data?.length
-      );
 
       // 解析消息数据
       const details: MessageDetail[] = data.map((item: any) => {

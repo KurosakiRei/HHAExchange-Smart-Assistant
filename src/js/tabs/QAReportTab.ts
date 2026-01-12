@@ -77,6 +77,21 @@ interface QAReportItem {
 
 type ViewMode = "list" | "grid";
 
+// Story 9.1: 排序类型
+type SortDirection = "none" | "asc" | "desc";
+type SortableColumn = "id" | "name" | "lastQA";
+
+interface SortState {
+  column: SortableColumn | null;
+  direction: SortDirection;
+}
+
+// Story 9.3: 病人详情搜索结果（电话号码和 Profile ID）
+interface PatientSearchResult {
+  phones: string[];
+  profileId: string | null;
+}
+
 // ============================================================================
 // Constants
 // ============================================================================
@@ -85,6 +100,20 @@ const STORAGE_KEYS = {
   VIEW_MODE: "hha_qa_report_view_mode",
   LAST_COORDINATOR: "hha_qa_report_last_coordinator",
 };
+
+// Story 9.3 & 9.5: 病人搜索 API URL
+const PATIENT_SEARCH_BY_NUMBER_URL =
+  "https://app.hhaexchange.com/ENT2507010000/Patient/PatientSearchXSLT_ns.aspx" +
+  "?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1" +
+  "&Source=-1&PatientNumber={ADMISSION_ID}&HomePhone=";
+
+const PATIENT_SEARCH_PARAMS =
+  "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-1&DisciplineID=0" +
+  "&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
+
+// Story 9.5: 病人详情页 URL
+const PATIENT_PROFILE_URL_TEMPLATE =
+  "https://app.hhaexchange.com/ENT2507010000/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}";
 
 const PRIORITY_COLORS: Record<QAReportItem["priority"], string> = {
   critical: "#dc3545", // 从未联系 - 深红
@@ -121,6 +150,13 @@ export class QAReportTab extends BaseTab {
   private isLoading: boolean = false;
   private cachedOfficeIds: string | null = null; // Cache complete OfficeIDs from API
   private officeIdsCacheTimestamp: number = 0; // Cache timestamp for OfficeIDs
+
+  // Story 9.1: 排序状态
+  private sortState: SortState = { column: null, direction: "none" };
+  private originalData: QAReportItem[] = []; // 保存原始顺序用于重置
+
+  // Story 9.3 & 9.5: 病人详情缓存 (电话号码和 Profile ID)
+  private patientDetailsCache: Map<string, PatientSearchResult> = new Map();
 
   // DOM Elements
   private toolbarEl: HTMLElement | null = null;
@@ -472,13 +508,6 @@ export class QAReportTab extends BaseTab {
     const patients: CensusPatient[] = [];
 
     try {
-      // DEBUG: Log HTML length and first 1000 chars
-      console.log(`[QAReportTab] Census HTML length: ${html.length} chars`);
-      console.log(
-        `[QAReportTab] Census HTML preview:`,
-        html.substring(0, 1000)
-      );
-
       // Find all AHC-XXXXXX or AMD-XXXXXX Admission IDs (6 OR 7 digits)
       const admissionIdRegex = /(AHC|AMD)-\d{6,7}/g;
       const allIds = html.match(admissionIdRegex) || [];
@@ -598,9 +627,10 @@ export class QAReportTab extends BaseTab {
     const sessionInfo = await this.getSessionInfo();
 
     // Calculate date range (1 year ago to today)
+    // NOTE: Use millisecond calculation because Date.setFullYear() is broken in HHA page environment
     const today = new Date();
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(today.getFullYear() - 1);
+    const oneYearMs = 365 * 24 * 60 * 60 * 1000;
+    const oneYearAgo = new Date(today.getTime() - oneYearMs);
 
     // Format date as MM/DD/YYYY with leading zeros (matches HHA report format)
     const formatDate = (d: Date) => {
@@ -726,13 +756,6 @@ export class QAReportTab extends BaseTab {
         // Extract just the date part (MM/DD/YYYY)
         const dateOnly = createdDate.split(" ")[0];
 
-        // Debug first 5 matches
-        if (index < 5) {
-          console.log(
-            `[QAReportTab] Match ${index}: AdmID=${admissionId}, Date=${dateOnly}`
-          );
-        }
-
         notes.push({
           admissionId: admissionId,
           patientName: "",
@@ -771,34 +794,10 @@ export class QAReportTab extends BaseTab {
       }
     });
 
-    // Debug: Log specific patients for investigation
-    const debugPatients = ["AHC-902770", "AHC-907981"]; // ZHENG LIYING, ZHU HEPING
-    debugPatients.forEach((id) => {
-      const note = qaMap.get(id);
-      if (note) {
-        console.log(
-          `[QAReportTab] DEBUG ${id}: Latest QA Note = ${
-            note.createdDate
-          }, parsed = ${new Date(note.createdDate).toISOString()}`
-        );
-      } else {
-        console.log(`[QAReportTab] DEBUG ${id}: No QA Notes found in map`);
-      }
-    });
-
     // Merge with census patients
     const reportItems: QAReportItem[] = censusPatients.map((patient) => {
       const qaNote = qaMap.get(patient.admissionId);
       const daysAgo = qaNote ? this.calculateDaysAgo(qaNote.createdDate) : null;
-
-      // Debug specific patients
-      if (debugPatients.includes(patient.admissionId)) {
-        console.log(
-          `[QAReportTab] DEBUG ${patient.admissionId} (${
-            patient.patientName
-          }): daysAgo=${daysAgo}, createdDate=${qaNote?.createdDate || "N/A"}`
-        );
-      }
 
       return {
         admissionId: patient.admissionId,
@@ -823,6 +822,11 @@ export class QAReportTab extends BaseTab {
       // 天数多的排前面
       return b.lastQADaysAgo! - a.lastQADaysAgo!;
     });
+
+    // Story 9.1: 保存原始顺序用于重置
+    this.originalData = [...reportItems];
+    // 重置排序状态
+    this.sortState = { column: null, direction: "none" };
 
     return reportItems;
   }
@@ -852,8 +856,318 @@ export class QAReportTab extends BaseTab {
   }
 
   // ==========================================================================
+  // Sorting (Story 9.1)
+  // ==========================================================================
+
+  /**
+   * 处理表头排序点击
+   * 三态循环: none → asc → desc → none
+   */
+  private handleSort(column: SortableColumn): void {
+    if (this.sortState.column === column) {
+      // 同一列：切换状态 none → asc → desc → none
+      const nextDirection: Record<SortDirection, SortDirection> = {
+        none: "asc",
+        asc: "desc",
+        desc: "none",
+      };
+      this.sortState.direction = nextDirection[this.sortState.direction];
+      if (this.sortState.direction === "none") {
+        this.sortState.column = null;
+      }
+    } else {
+      // 新列：从 asc 开始
+      this.sortState.column = column;
+      this.sortState.direction = "asc";
+    }
+
+    this.applySorting();
+    this.renderData();
+  }
+
+  /**
+   * 应用当前排序状态到数据
+   */
+  private applySorting(): void {
+    if (this.sortState.direction === "none" || !this.sortState.column) {
+      // 恢复原始顺序
+      this.qaReportData = [...this.originalData];
+      return;
+    }
+
+    const multiplier = this.sortState.direction === "asc" ? 1 : -1;
+
+    this.qaReportData = [...this.originalData].sort((a, b) => {
+      switch (this.sortState.column) {
+        case "id":
+          return multiplier * a.admissionId.localeCompare(b.admissionId);
+        case "name":
+          return multiplier * a.patientName.localeCompare(b.patientName);
+        case "lastQA":
+          // null (从未联系) 视为最大值，在升序时排最后，降序时排最前
+          const aVal = a.lastQADaysAgo ?? Infinity;
+          const bVal = b.lastQADaysAgo ?? Infinity;
+          return multiplier * (aVal - bVal);
+        default:
+          return 0;
+      }
+    });
+  }
+
+  /**
+   * 获取排序图标
+   */
+  private getSortIcon(column: SortableColumn): string {
+    if (
+      this.sortState.column !== column ||
+      this.sortState.direction === "none"
+    ) {
+      return '<span class="sort-icon sort-none">⇅</span>';
+    }
+    return this.sortState.direction === "asc"
+      ? '<span class="sort-icon sort-asc">▲</span>'
+      : '<span class="sort-icon sort-desc">▼</span>';
+  }
+
+  // ==========================================================================
   // Rendering (Story 8.6, 8.7, 8.8)
   // ==========================================================================
+
+  // ==========================================================================
+  // Patient Details (Story 9.3 & 9.5)
+  // ==========================================================================
+
+  /**
+   * 获取病人详情（电话号码和 Profile ID）
+   * 使用缓存避免重复请求
+   */
+  private async getPatientDetails(
+    admissionId: string
+  ): Promise<PatientSearchResult> {
+    // 检查缓存
+    if (this.patientDetailsCache.has(admissionId)) {
+      return this.patientDetailsCache.get(admissionId)!;
+    }
+
+    try {
+      const result = await this.fetchPatientDetails(admissionId);
+      this.patientDetailsCache.set(admissionId, result);
+      return result;
+    } catch (e) {
+      console.error(
+        `[QAReportTab] Failed to fetch patient details for ${admissionId}:`,
+        e
+      );
+      return { phones: [], profileId: null };
+    }
+  }
+
+  /**
+   * 通过 Admission ID 获取病人电话号码和 Profile ID
+   */
+  private async fetchPatientDetails(
+    admissionId: string
+  ): Promise<PatientSearchResult> {
+    try {
+      const url =
+        PATIENT_SEARCH_BY_NUMBER_URL.replace("{ADMISSION_ID}", admissionId) +
+        PATIENT_SEARCH_PARAMS +
+        `&_=${Date.now()}`;
+
+      const response = await GM_fetch(url, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        console.error(
+          `[QAReportTab] Failed to fetch patient details for ${admissionId}: HTTP ${response.status}`
+        );
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const html = await response.text();
+      return this.parsePatientSearchResult(html);
+    } catch (error) {
+      console.error(
+        `[QAReportTab] Error fetching patient details for ${admissionId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 解析搜索结果 HTML，提取电话号码和 Profile ID
+   */
+  private parsePatientSearchResult(html: string): PatientSearchResult {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const rows = doc.querySelectorAll("#tdSearchResults tbody tr");
+
+    if (rows.length === 0) {
+      return { phones: [], profileId: null };
+    }
+
+    // 取第一行结果
+    const row = rows[0];
+    const cells = row.querySelectorAll("td");
+
+    // 更健壮的电话号码查找：遍历所有单元格，找到包含电话号码格式的单元格
+    // 电话号码格式: "332-265-6219, 929-685-6363, 347-323-3536" 或单个号码
+    // 严格匹配：必须是 xxx-xxx-xxxx 或 xxx.xxx.xxxx 或 xxxxxxxxxx 格式，且只包含数字和分隔符
+    let phones: string[] = [];
+    // 匹配整个字符串为电话号码格式（3位-3位-4位，分隔符可选）
+    const strictPhonePattern = /^\d{3}[-.]?\d{3}[-.]?\d{4}$/;
+
+    for (let i = 0; i < cells.length; i++) {
+      const cellText = cells[i]?.textContent?.trim() || "";
+      // 先检查单元格是否包含电话号码特征（去掉非数字字符后至少10位）
+      const digitsOnly = cellText.replace(/\D/g, "");
+      if (digitsOnly.length >= 10) {
+        // 按逗号分割，每个部分独立验证
+        const parts = cellText.split(",").map((p) => p.trim());
+        const validPhones = parts.filter((p) => strictPhonePattern.test(p));
+
+        if (validPhones.length > 0) {
+          phones = validPhones;
+          break; // 找到第一个有效的电话单元格就停止
+        }
+      }
+    }
+
+    // Profile ID 从 onclick 属性提取
+    const link = row.querySelector('a[onclick*="RedirectToPatientPage"]');
+    const onclickAttr = link?.getAttribute("onclick") || "";
+    const match = onclickAttr.match(/RedirectToPatientPage\((\d+)/);
+    const profileId = match ? match[1] : null;
+
+    return { phones, profileId };
+  }
+
+  /**
+   * 显示电话号码下拉框
+   */
+  private showPhoneDropdown(phones: string[], anchorEl: HTMLElement): void {
+    // 移除已有下拉框
+    document.querySelector(".phone-dropdown")?.remove();
+
+    const dropdown = document.createElement("div");
+    dropdown.className = "phone-dropdown";
+
+    phones.forEach((phone) => {
+      const item = document.createElement("a");
+      item.className = "phone-dropdown-item";
+      item.href = `tel:${phone.replace(/\D/g, "")}`;
+      item.innerHTML = `📞 ${phone}`;
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // tel: 协议会自动处理
+      });
+      dropdown.appendChild(item);
+    });
+
+    // 定位到锚点元素下方
+    const rect = anchorEl.getBoundingClientRect();
+    const dropdownWidth = 160; // minWidth
+
+    // 计算 left 位置，确保不超出屏幕右边缘
+    let leftPos = rect.left;
+    const viewportWidth = window.innerWidth;
+    if (leftPos + dropdownWidth > viewportWidth - 10) {
+      // 如果会超出右边缘，则向左调整
+      leftPos = viewportWidth - dropdownWidth - 10;
+    }
+    // 确保不会超出左边缘
+    if (leftPos < 10) {
+      leftPos = 10;
+    }
+
+    // 设置完整的内联样式（因为 dropdown 添加到 body，CSS 选择器无法匹配）
+    // z-index 必须高于面板容器的 99999
+    Object.assign(dropdown.style, {
+      position: "fixed",
+      top: `${rect.bottom + 4}px`,
+      left: `${leftPos}px`,
+      zIndex: "100001",
+      minWidth: `${dropdownWidth}px`,
+      padding: "4px 0",
+      background: "white",
+      border: "1px solid #e0e0e0",
+      borderRadius: "4px",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+    });
+
+    // 设置下拉项样式并添加 hover 效果
+    dropdown.querySelectorAll(".phone-dropdown-item").forEach((item) => {
+      const el = item as HTMLElement;
+
+      // 设置基础样式
+      Object.assign(el.style, {
+        display: "block",
+        padding: "8px 12px",
+        color: "#333",
+        fontFamily: "Monaco, Menlo, Consolas, monospace",
+        fontSize: "13px",
+        textDecoration: "none",
+        cursor: "pointer",
+        transition: "background 0.15s, color 0.15s",
+      });
+
+      // 添加 hover 效果
+      el.addEventListener("mouseenter", () => {
+        el.style.background = "#f5f5f5";
+        el.style.color = "#1890ff";
+      });
+
+      el.addEventListener("mouseleave", () => {
+        el.style.background = "";
+        el.style.color = "#333";
+      });
+    });
+
+    // 点击外部关闭
+    const closeHandler = (e: MouseEvent) => {
+      if (!dropdown.contains(e.target as Node)) {
+        dropdown.remove();
+        document.removeEventListener("click", closeHandler);
+      }
+    };
+    setTimeout(() => document.addEventListener("click", closeHandler), 0);
+
+    document.body.appendChild(dropdown);
+  }
+
+  /**
+   * 渲染电话号码单元格
+   */
+  private renderPhoneCell(item: QAReportItem, td: HTMLElement): void {
+    td.className = "col-phone phone-cell";
+    td.innerHTML = '<span class="phone-loading">加载中...</span>';
+
+    // 异步获取电话号码
+    this.getPatientDetails(item.admissionId)
+      .then((details) => {
+        if (details.phones.length === 0) {
+          td.innerHTML = '<span class="phone-none">-</span>';
+        } else if (details.phones.length === 1) {
+          // 单个电话号码：直接显示，可点击拨打
+          const phone = details.phones[0];
+          td.innerHTML = `<a class="phone-single" href="tel:${phone.replace(
+            /\D/g,
+            ""
+          )}">${phone}</a>`;
+        } else {
+          // 多个电话号码：显示 ⋯，点击展开下拉框
+          // Store phones data on the element for event delegation
+          td.innerHTML = `<button class="phone-multiple" data-phones="${encodeURIComponent(
+            JSON.stringify(details.phones)
+          )}" title="点击查看 ${details.phones.length} 个电话">⋯</button>`;
+        }
+      })
+      .catch(() => {
+        td.innerHTML = '<span class="phone-error">获取失败</span>';
+      });
+  }
 
   private renderData(): void {
     if (!this.contentBodyEl) return;
@@ -892,17 +1206,44 @@ export class QAReportTab extends BaseTab {
     const table = document.createElement("table");
     table.className = "qa-report-table";
 
-    // Header
+    // Header with sortable columns (Story 9.1)
     const thead = document.createElement("thead");
-    thead.innerHTML = `
-      <tr>
-        <th class="col-id">Admission ID</th>
-        <th class="col-name">病人姓名</th>
-        <th class="col-phone">解析到的QA日期</th>
-        <th class="col-qa">上次 QA</th>
-        <th class="col-action">操作</th>
-      </tr>
-    `;
+    const headerRow = document.createElement("tr");
+
+    // ID 列 - 可排序
+    const thId = document.createElement("th");
+    thId.className = "col-id sortable";
+    thId.innerHTML = `ID ${this.getSortIcon("id")}`;
+    thId.addEventListener("click", () => this.handleSort("id"));
+    headerRow.appendChild(thId);
+
+    // 病人姓名列 - 可排序
+    const thName = document.createElement("th");
+    thName.className = "col-name sortable";
+    thName.innerHTML = `病人姓名 ${this.getSortIcon("name")}`;
+    thName.addEventListener("click", () => this.handleSort("name"));
+    headerRow.appendChild(thName);
+
+    // 电话号码列 - 不可排序 (Story 9.3)
+    const thPhone = document.createElement("th");
+    thPhone.className = "col-phone";
+    thPhone.textContent = "电话号码";
+    headerRow.appendChild(thPhone);
+
+    // 上次 QA 列 - 可排序
+    const thLastQA = document.createElement("th");
+    thLastQA.className = "col-qa sortable";
+    thLastQA.innerHTML = `上次 QA ${this.getSortIcon("lastQA")}`;
+    thLastQA.addEventListener("click", () => this.handleSort("lastQA"));
+    headerRow.appendChild(thLastQA);
+
+    // 操作列 - 不可排序
+    const thAction = document.createElement("th");
+    thAction.className = "col-action";
+    thAction.textContent = "操作";
+    headerRow.appendChild(thAction);
+
+    thead.appendChild(headerRow);
     table.appendChild(thead);
 
     // Body
@@ -912,23 +1253,28 @@ export class QAReportTab extends BaseTab {
       const tr = document.createElement("tr");
       tr.className = `priority-${item.priority}`;
 
-      // DEBUG: Show parsed QA date instead of phones
-      const qaDateDebug = item.lastQADate || "N/A";
-
       const qaDisplay = this.formatQADisplay(item.lastQADaysAgo);
       const qaClass = item.lastQADaysAgo === null ? "qa-never" : "";
 
+      // Create row with static cells
+      const qaTooltip = item.lastQADate || "从未联系";
       tr.innerHTML = `
         <td class="col-id">${item.admissionId}</td>
         <td class="col-name">${item.patientName}</td>
-        <td class="col-phone">${qaDateDebug}</td>
+        <td class="col-phone"></td>
         <td class="col-qa ${qaClass}" style="border-left: 4px solid ${
         PRIORITY_COLORS[item.priority]
-      }">${qaDisplay}</td>
+      }" title="${qaTooltip}">${qaDisplay}</td>
         <td class="col-action">
           <button class="qa-action-btn" data-id="${item.admissionId}">⋮</button>
         </td>
       `;
+
+      // Async render phone cell (Story 9.3)
+      const phoneCell = tr.querySelector(".col-phone") as HTMLElement;
+      if (phoneCell) {
+        this.renderPhoneCell(item, phoneCell);
+      }
 
       // Action button click handler
       const actionBtn = tr.querySelector(".qa-action-btn");
@@ -944,7 +1290,46 @@ export class QAReportTab extends BaseTab {
 
     this.contentBodyEl.innerHTML = "";
     this.contentBodyEl.appendChild(table);
+
+    // Event delegation for phone-multiple buttons (fix: inline addEventListener doesn't work in async context)
+    this.setupPhoneButtonDelegation();
   }
+
+  /**
+   * Setup event delegation for phone-multiple buttons
+   * This is needed because buttons created in async Promise callbacks don't retain event handlers
+   */
+  private setupPhoneButtonDelegation(): void {
+    if (!this.contentBodyEl) return;
+
+    // Remove existing handler if any
+    this.contentBodyEl.removeEventListener(
+      "click",
+      this.handlePhoneButtonClick
+    );
+
+    // Add delegated click handler
+    this.contentBodyEl.addEventListener("click", this.handlePhoneButtonClick);
+  }
+
+  /**
+   * Delegated click handler for phone buttons
+   */
+  private handlePhoneButtonClick = (e: MouseEvent): void => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains("phone-multiple")) {
+      e.stopPropagation();
+      const phonesData = target.getAttribute("data-phones");
+      if (phonesData) {
+        try {
+          const phones = JSON.parse(decodeURIComponent(phonesData));
+          this.showPhoneDropdown(phones, target);
+        } catch (err) {
+          console.error("[QAReportTab] Failed to parse phone data:", err);
+        }
+      }
+    }
+  };
 
   private renderGridView(): void {
     if (!this.contentBodyEl) return;
@@ -961,9 +1346,7 @@ export class QAReportTab extends BaseTab {
         0.08
       );
 
-      // DEBUG: Show parsed QA date instead of phones
-      const qaDateDebug = item.lastQADate || "N/A";
-
+      const qaTooltip = item.lastQADate || "从未联系";
       card.innerHTML = `
         <div class="card-header">
           <span class="card-name">${item.patientName}</span>
@@ -972,8 +1355,10 @@ export class QAReportTab extends BaseTab {
           }">⋮</button>
         </div>
         <div class="card-id">${item.admissionId}</div>
-        <div class="card-phones">QA日期: ${qaDateDebug}</div>
-        <div class="card-qa" style="color: ${PRIORITY_COLORS[item.priority]}">
+        <div class="card-phones"></div>
+        <div class="card-qa" style="color: ${
+          PRIORITY_COLORS[item.priority]
+        }" title="${qaTooltip}">
           ${this.formatQADisplay(item.lastQADaysAgo)}
         </div>
         <div class="card-priority-badge" style="background: ${
@@ -982,6 +1367,12 @@ export class QAReportTab extends BaseTab {
           ${PRIORITY_LABELS[item.priority]}
         </div>
       `;
+
+      // Async render phone cell (Story 9.3)
+      const phoneContainer = card.querySelector(".card-phones") as HTMLElement;
+      if (phoneContainer) {
+        this.renderPhoneCell(item, phoneContainer);
+      }
 
       // Action button click handler
       const actionBtn = card.querySelector(".card-action-btn");
@@ -995,6 +1386,9 @@ export class QAReportTab extends BaseTab {
 
     this.contentBodyEl.innerHTML = "";
     this.contentBodyEl.appendChild(grid);
+
+    // Event delegation for phone-multiple buttons
+    this.setupPhoneButtonDelegation();
   }
 
   private formatQADisplay(daysAgo: number | null): string {
@@ -1171,9 +1565,6 @@ export class QAReportTab extends BaseTab {
     menu.innerHTML = `
       <div class="action-menu-item" data-action="create-note">📝 快速创建 QA Note</div>
       <div class="action-menu-item" data-action="view-patient">📋 查看病人详情</div>
-      <div class="action-menu-item" data-action="call">📞 拨打电话</div>
-      <div class="action-menu-item" data-action="history">📄 查看历史 QA 记录</div>
-      <div class="action-menu-item" data-action="copy-id">🔗 复制 Admission ID</div>
     `;
 
     // Position menu near anchor
@@ -1209,33 +1600,149 @@ export class QAReportTab extends BaseTab {
         this.showQuickNoteModal(item);
         break;
       case "view-patient":
-        // Open patient profile in new tab
-        window.open(
-          `https://app.hhaexchange.com/ENT2507010000/Patient/PatientMaintenance.aspx?AdmissionID=${item.admissionId}`,
-          "_blank"
-        );
-        break;
-      case "call":
-        if (item.phones.length > 0) {
-          window.open(`tel:${item.phones[0].phone}`, "_self");
-        } else {
-          this.showError("没有可用的电话号码");
-        }
-        break;
-      case "history":
-        // TODO: Show QA history modal
-        this.showInfo("功能开发中...");
-        break;
-      case "copy-id":
-        navigator.clipboard.writeText(item.admissionId);
-        this.showSuccess(`已复制: ${item.admissionId}`);
+        // Story 9.5: Open patient profile using cached Profile ID
+        this.openPatientProfile(item);
         break;
     }
   }
 
+  /**
+   * Story 9.5: Open patient profile in new tab using Profile ID
+   */
+  private async openPatientProfile(item: QAReportItem): Promise<void> {
+    try {
+      const details = await this.getPatientDetails(item.admissionId);
+
+      if (details.profileId) {
+        const url = PATIENT_PROFILE_URL_TEMPLATE.replace(
+          "{ID}",
+          details.profileId
+        );
+        window.open(url, "_blank");
+      } else {
+        this.showError("无法获取病人资料链接");
+      }
+    } catch (error) {
+      console.error("[QAReportTab] Failed to get patient profile:", error);
+      this.showError("获取病人信息失败");
+    }
+  }
+
+  /**
+   * Story 9.3: Handle call action using cached phone numbers
+   */
+  private async handleCallAction(item: QAReportItem): Promise<void> {
+    try {
+      const details = await this.getPatientDetails(item.admissionId);
+
+      if (details.phones.length === 0) {
+        this.showError("没有可用的电话号码");
+      } else if (details.phones.length === 1) {
+        window.open(`tel:${details.phones[0]}`, "_self");
+      } else {
+        // Multiple phones - let user choose
+        this.showInfo(
+          `该病人有 ${details.phones.length} 个电话号码，请从表格中选择拨打`
+        );
+      }
+    } catch (error) {
+      console.error("[QAReportTab] Failed to get phone numbers:", error);
+      this.showError("获取电话号码失败");
+    }
+  }
+
+  /**
+   * Story 9.6: Show quick note creation modal
+   */
   private showQuickNoteModal(item: QAReportItem): void {
-    // TODO: Implement quick note creation modal
-    this.showInfo("快速创建 QA Note 功能开发中...");
+    // Remove existing modal if any
+    document.querySelector(".qa-note-modal-overlay")?.remove();
+
+    // Default QA note template
+    const defaultNote = `Quality call made to pt, confirmed pt has not been admitted to hospital or rehab within the last 30 days. Pt is satisfied with current aide and or hours OR pt is interested in increase`;
+
+    // Create modal overlay
+    const overlay = document.createElement("div");
+    overlay.className = "qa-note-modal-overlay";
+
+    overlay.innerHTML = `
+      <div class="qa-note-modal">
+        <div class="qa-note-modal-header">
+          <div class="qa-note-modal-title">
+            📝 快速创建 QA Note - ${item.patientName} (${item.admissionId})
+          </div>
+          <button class="qa-note-modal-close" type="button">×</button>
+        </div>
+        <div class="qa-note-modal-body">
+          <div class="qa-note-section">
+            <label class="qa-note-label">将提交以下 QA 记录:</label>
+            <div class="qa-note-template">${defaultNote}</div>
+          </div>
+          <div class="qa-note-section">
+            <label class="qa-note-label" for="qa-additional-note">附加备注 (可选):</label>
+            <textarea 
+              id="qa-additional-note" 
+              class="qa-note-textarea" 
+              placeholder="在此输入任何附加信息..."
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+        <div class="qa-note-modal-footer">
+          <button class="qa-note-btn qa-note-btn-cancel" type="button">取消</button>
+          <button class="qa-note-btn qa-note-btn-submit" type="button">提交并关闭</button>
+        </div>
+      </div>
+    `;
+
+    // Event handlers
+    const closeModal = () => overlay.remove();
+
+    // Close button
+    overlay
+      .querySelector(".qa-note-modal-close")
+      ?.addEventListener("click", closeModal);
+
+    // Cancel button
+    overlay
+      .querySelector(".qa-note-btn-cancel")
+      ?.addEventListener("click", closeModal);
+
+    // Submit button
+    overlay
+      .querySelector(".qa-note-btn-submit")
+      ?.addEventListener("click", () => {
+        const additionalNote = (
+          overlay.querySelector("#qa-additional-note") as HTMLTextAreaElement
+        )?.value?.trim();
+        console.log("[QAReportTab] Submit QA Note:", {
+          admissionId: item.admissionId,
+          patientName: item.patientName,
+          defaultNote,
+          additionalNote,
+        });
+        closeModal();
+        this.showInfo("功能开发中 - QA Note 创建将在后续版本实现");
+      });
+
+    // ESC key to close
+    const escHandler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeModal();
+        document.removeEventListener("keydown", escHandler);
+      }
+    };
+    document.addEventListener("keydown", escHandler);
+
+    // Append to body
+    document.body.appendChild(overlay);
+
+    // Focus on textarea
+    setTimeout(() => {
+      (
+        overlay.querySelector("#qa-additional-note") as HTMLTextAreaElement
+      )?.focus();
+    }, 100);
   }
 
   // ==========================================================================

@@ -314,6 +314,30 @@
       color: @text-color-secondary;
       border-bottom: 2px solid @border-color;
       white-space: nowrap;
+      
+      // Story 9.1: 可排序列样式
+      &.sortable {
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.15s;
+        
+        &:hover {
+          background: darken(@surface-bg, 5%);
+        }
+        
+        .sort-icon {
+          margin-left: 4px;
+          font-size: 10px;
+          opacity: 0.5;
+          display: inline-block;
+          vertical-align: middle;
+          
+          &.sort-asc, &.sort-desc {
+            opacity: 1;
+            color: @primary-color;
+          }
+        }
+      }
     }
   }
 
@@ -334,6 +358,16 @@
     td {
       padding: @spacing-sm @spacing-md;
       vertical-align: middle;
+      
+      // Story 9.2: 支持文本选中复制
+      user-select: text;
+      cursor: text;
+      
+      // 操作列除外
+      &.col-action {
+        user-select: none;
+        cursor: default;
+      }
     }
   }
 
@@ -352,7 +386,92 @@
   }
 
   .col-phone {
-    width: 120px;
+    width: 140px;
+  }
+
+  // Story 9.3: Phone number cell styles
+  .phone-loading {
+    color: @text-color-secondary;
+    font-style: italic;
+    font-size: @font-size-sm;
+  }
+
+  .phone-error {
+    color: @danger-color;
+    font-size: @font-size-sm;
+  }
+
+  .phone-single {
+    color: @text-color;
+    font-family: @font-mono;
+    font-size: @font-size-sm;
+    
+    a {
+      color: @primary-color;
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .phone-multiple {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    
+    .phone-trigger {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      background: fade(@primary-color, 10%);
+      border: 1px solid @primary-color;
+      border-radius: @radius-sm;
+      color: @primary-color;
+      cursor: pointer;
+      font-size: @font-size-sm;
+      transition: all 0.2s;
+      
+      &:hover {
+        background: @primary-color;
+        color: white;
+      }
+      
+      .phone-count {
+        font-weight: 600;
+      }
+    }
+  }
+
+  .phone-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    min-width: 160px;
+    padding: @spacing-xs 0;
+    background: white;
+    border: 1px solid @border-color;
+    border-radius: @radius-sm;
+    box-shadow: @shadow-md;
+    margin-top: 4px;
+    
+    .phone-item {
+      display: block;
+      padding: @spacing-xs @spacing-sm;
+      color: @text-color;
+      font-family: @font-mono;
+      font-size: @font-size-sm;
+      text-decoration: none;
+      transition: background 0.15s;
+      
+      &:hover {
+        background: @hover-bg;
+        color: @primary-color;
+      }
+    }
   }
 
   .col-qa {
@@ -417,6 +536,9 @@
   transition: all 0.2s;
   position: relative;
   overflow: hidden;
+  
+  // Story 9.2: 支持文本选中复制
+  user-select: text;
 
   &:hover {
     box-shadow: @shadow-md;
@@ -451,6 +573,9 @@
   color: @text-color-secondary;
   border-radius: @radius-sm;
   flex-shrink: 0;
+  
+  // Story 9.2: 按钮不可选中
+  user-select: none;
 
   &:hover {
     background: @hover-bg;
@@ -546,7 +671,7 @@
   border-radius: @radius-sm;
   box-shadow: @shadow-lg;
   overflow: hidden;
-  z-index: 1000;
+  z-index: 100000; // Story 9.4: 确保菜单显示在面板之上
   min-width: 140px;
 }
 
@@ -576,7 +701,7 @@
   border-radius: @radius-sm;
   box-shadow: @shadow-lg;
   overflow: hidden;
-  z-index: 1000;
+  z-index: 100000; // Story 9.4: 确保菜单显示在面板之上
   min-width: 180px;
 }
 
@@ -632,5 +757,161 @@
 
   &.qa-toast-info {
     background: @primary-color;
+  }
+}
+
+// ============================================================================
+// Story 9.6: Quick Note Modal
+// ============================================================================
+
+.qa-note-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100002;
+}
+
+.qa-note-modal {
+  background: white;
+  border-radius: @radius-lg;
+  box-shadow: @shadow-lg;
+  width: 90%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.qa-note-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: @spacing-md;
+  border-bottom: 1px solid @border-color;
+  background: @primary-gradient;
+  color: white;
+}
+
+.qa-note-modal-title {
+  font-size: @font-size-base;
+  font-weight: 600;
+}
+
+.qa-note-modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: @radius-sm;
+  transition: background 0.15s;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.qa-note-modal-body {
+  padding: @spacing-md;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.qa-note-section {
+  margin-bottom: @spacing-md;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.qa-note-label {
+  display: block;
+  font-size: @font-size-sm;
+  font-weight: 500;
+  color: @text-color-secondary;
+  margin-bottom: @spacing-xs;
+}
+
+.qa-note-template {
+  padding: @spacing-sm @spacing-md;
+  background: @hover-bg;
+  border: 1px solid @border-color;
+  border-radius: @radius-sm;
+  font-size: @font-size-sm;
+  line-height: 1.5;
+  color: @text-color;
+}
+
+.qa-note-textarea {
+  width: 100%;
+  padding: @spacing-sm @spacing-md;
+  border: 1px solid @border-color;
+  border-radius: @radius-sm;
+  font-size: @font-size-sm;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  
+  &:focus {
+    outline: none;
+    border-color: @primary-color;
+    box-shadow: 0 0 0 2px fade(@primary-color, 20%);
+  }
+  
+  &::placeholder {
+    color: @text-color-secondary;
+  }
+}
+
+.qa-note-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: @spacing-sm;
+  padding: @spacing-md;
+  border-top: 1px solid @border-color;
+  background: @hover-bg;
+}
+
+.qa-note-btn {
+  padding: @spacing-xs @spacing-md;
+  font-size: @font-size-sm;
+  border-radius: @radius-sm;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &.qa-note-btn-cancel {
+    background: white;
+    border: 1px solid @border-color;
+    color: @text-color-secondary;
+    
+    &:hover {
+      background: @hover-bg;
+      border-color: @text-color-secondary;
+    }
+  }
+  
+  &.qa-note-btn-submit {
+    background: @primary-color;
+    border: 1px solid @primary-color;
+    color: white;
+    
+    &:hover {
+      background: @primary-hover;
+      border-color: @primary-hover;
+    }
   }
 }

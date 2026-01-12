@@ -270,6 +270,12 @@ function embedMultiTabPanel(
   dragHandle: HTMLElement,
   trackerPanel: HTMLElement | null
 ): void {
+  // CRITICAL FIX: 立即克隆铃铛移除 VisitMonitor 的所有事件监听器
+  // 必须在异步操作之前完成，防止用户在初始化期间点击铃铛触发旧的 handler
+  const newDragHandle = dragHandle.cloneNode(true) as HTMLElement;
+  dragHandle.parentNode?.replaceChild(newDragHandle, dragHandle);
+  console.log("[Epic 7] Bell button cloned to remove VisitMonitor handlers");
+
   // Create our panel container as a SIBLING to tracker-panel inside tracker-container
   const container = document.createElement("div");
   container.id = "hha-smart-multi-tab-container";
@@ -304,8 +310,8 @@ function embedMultiTabPanel(
     .then(() => {
       console.log("[Epic 7] Multi-Tab Panel embedded in tracker-container");
 
-      // Hook bell button click
-      setupBellClickHandler(container, dragHandle, trackerPanel);
+      // Hook bell button click - 使用已克隆的新铃铛
+      setupBellClickHandler(container, newDragHandle, trackerPanel);
     })
     .catch((error) => {
       console.error("[Epic 7] Failed to initialize Multi-Tab Panel:", error);
@@ -315,6 +321,8 @@ function embedMultiTabPanel(
 /**
  * Setup click handler on bell button to toggle Multi-Tab Panel
  * 参考 VisitMonitor.ts initializeDragAndClick() 的实现
+ *
+ * 注意：传入的 dragHandle 已经是在 embedMultiTabPanel 中克隆过的新节点
  */
 function setupBellClickHandler(
   panelContainer: HTMLElement,
@@ -323,24 +331,59 @@ function setupBellClickHandler(
 ): void {
   let hasDragged = false;
 
-  // 监听拖拽状态
-  dragHandle.addEventListener(
-    "mousedown",
-    () => {
-      hasDragged = false;
-    },
-    false
-  );
+  // dragHandle 已经是克隆过的节点，不需要再克隆
+  // 重新实现拖动功能（参考 VisitMonitor makeDraggable）
+  const trackerContainer = dragHandle.parentElement!;
+  let isDragging = false;
+  let offsetX = 0,
+    offsetY = 0;
 
-  dragHandle.addEventListener(
-    "mousemove",
-    () => {
-      hasDragged = true;
-    },
-    false
-  );
+  dragHandle.style.cursor = "move";
 
-  // 使用capture阶段拦截click，在VisitMonitor处理之前
+  const onMouseDown = (e: MouseEvent) => {
+    isDragging = true;
+    hasDragged = false; // 重置拖动标志
+    const rect = trackerContainer.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+
+  const onMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    hasDragged = true; // 标记为已拖动
+
+    let newX = e.clientX - offsetX;
+    let newY = e.clientY - offsetY;
+
+    // 边界检测
+    const margin = 5;
+    if (newX < margin) newX = margin;
+    if (newY < margin) newY = margin;
+    if (newX + trackerContainer.offsetWidth > window.innerWidth - margin) {
+      newX = window.innerWidth - trackerContainer.offsetWidth - margin;
+    }
+    if (newY + trackerContainer.offsetHeight > window.innerHeight - margin) {
+      newY = window.innerHeight - trackerContainer.offsetHeight - margin;
+    }
+
+    // 设置位置
+    trackerContainer.style.right = "auto";
+    trackerContainer.style.bottom = "auto";
+    trackerContainer.style.left = `${newX}px`;
+    trackerContainer.style.top = `${newY}px`;
+  };
+
+  const onMouseUp = () => {
+    isDragging = false;
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+  };
+
+  dragHandle.addEventListener("mousedown", onMouseDown);
+
+  // 使用capture阶段拦截click，完全控制点击行为
   dragHandle.addEventListener(
     "click",
     (e) => {
@@ -356,14 +399,14 @@ function setupBellClickHandler(
       const isVisible = panelContainer.style.display !== "none";
 
       if (!isVisible) {
-        // 显示我们的面板
-        positionPanelRelativeToHandle(panelContainer, dragHandle);
-        panelContainer.style.display = "block";
-
-        // 隐藏原来的tracker-panel
+        // CRITICAL: 立即隐藏原来的tracker-panel，防止在页面刚加载时点击铃铛显示旧面板
         if (trackerPanel) {
           trackerPanel.style.display = "none";
         }
+
+        // 显示我们的面板
+        positionPanelRelativeToHandle(panelContainer, dragHandle);
+        panelContainer.style.display = "block";
         console.log("[Epic 7] Multi-Tab Panel opened");
       } else {
         // 隐藏面板
@@ -374,7 +417,9 @@ function setupBellClickHandler(
     true
   ); // capture phase
 
-  console.log("[Epic 7] Bell click handler setup complete");
+  console.log(
+    "[Epic 7] Bell click handler setup complete (drag functionality restored)"
+  );
 }
 
 /**
