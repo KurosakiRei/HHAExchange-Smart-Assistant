@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.8.0
+// @version             3.8.1
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -5289,6 +5289,24 @@ const visitMonitor = async () => {
         }
         // 激活多方向调整大小功能 (8个方向)
         makeMultiDirectionResizable(popover);
+        // 防止滚动穿透：为 popover-content 添加滚动穿透防止
+        const popoverContent = popover.querySelector(".popover-content");
+        if (popoverContent) {
+            popoverContent.addEventListener("wheel", (e) => {
+                const target = e.currentTarget;
+                const scrollTop = target.scrollTop;
+                const scrollHeight = target.scrollHeight;
+                const clientHeight = target.clientHeight;
+                const deltaY = e.deltaY;
+                // 如果滚动到顶部且继续向上滚动，或滚动到底部且继续向下滚动，则阻止默认行为
+                if ((scrollTop === 0 && deltaY < 0) ||
+                    (scrollTop + clientHeight >= scrollHeight && deltaY > 0)) {
+                    e.preventDefault();
+                }
+                // 阻止事件冒泡到页面
+                e.stopPropagation();
+            });
+        }
         // 智能定位
         const targetRect = targetElement.getBoundingClientRect();
         const popoverHeight = popover.offsetHeight;
