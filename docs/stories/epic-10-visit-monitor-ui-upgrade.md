@@ -1844,5 +1844,6 @@ webpack 5.96.1 compiled with 3 warnings (size warnings only) in 1075 ms
 | 2026-01-13 | 10.9 | 修复 Toast 通知位置：从底部改为顶部显示 |
 | 2026-01-13 | 10.10 | 简化 resize 功能：改为 4 方向设计（移除顶部拉伸）；移除可见 resize 图标，仅保留 cursor 变化 |
 | 2026-01-13 | 10.3 | 修复表头文字换行问题：为表头添加 `white-space: nowrap` |
+| 2026-01-13 | 10.9 | 修复详情列表弹窗滚动穿透问题：为 `.popover-content` 添加边界滚动防穿透逻辑 |
 | 2026-01-13 | 文档 | QA 完成：更新所有验收标准 checkbox 为已完成状态 |
 | 2026-01-12 | Epic 10 | Epic 状态更新为已完成 ✅ |
