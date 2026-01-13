@@ -1,284 +1,717 @@
-    @import "./variables.less";
+/**
+ * Visit Monitor (Coordinator Tracker) Styles
+ * Epic 10: UI 现代化升级
+ *
+ * 依赖: variables.less
+ * @author HHA Smart Assistant
+ * @date 2026-01-12
+ */
 
-    #tracker-container {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 99999;
-        user-select: none;
-        -webkit-user-select: none;
-    }
+@import "./variables.less";
 
-    #tracker-drag-handle {
-        width: 48px;
-        height: 48px;
-        background-color: #007bff;
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        font-size: 24px;
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
+// ===== Local Variables (complements variables.less) =====
+@success-color: #28a745;
+@success-hover: #218838;
+@danger-color: #dc3545;
+@danger-hover: #c82333;
+@spinner-color: #3498db;
 
-    #tracker-drag-handle:hover {
+// ============================================================================
+// Container & Drag Handle
+// ============================================================================
+
+#tracker-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: @z-index-panel;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+// Story 10.6: 拖拽句柄视觉升级
+#tracker-drag-handle {
+    width: 48px;
+    height: 48px;
+    background: @primary-gradient;
+    color: white;
+    border-radius: @radius-round;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: move;
+    box-shadow: @shadow-card;
+    font-size: 24px;
+    transition: all @transition-fast;
+
+    &:hover {
         transform: scale(1.1);
+        box-shadow: @shadow-card-hover;
     }
 
-    #tracker-drag-handle:active {
+    &:active {
         transform: scale(0.95);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        box-shadow: @shadow-button;
+    }
+}
+
+// ============================================================================
+// Panel Container
+// ============================================================================
+
+#tracker-panel {
+    position: absolute;
+    top: 0;
+    width: 550px;
+    height: 480px;  // 固定高度，避免内容变化导致布局问题
+    background: @background-white;
+    border: 1px solid @border-color;
+    border-radius: @radius-lg;
+    box-shadow: @shadow-panel;
+    display: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: @text-primary;
+    overflow: hidden;
+    transition: height @transition-slow;
+}
+
+// ============================================================================
+// View Transitions
+// ============================================================================
+
+.tracker-view {
+    // 使用 flex 布局填满整个面板
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;  // 填满父容器
+    overflow: hidden;  // 阻止滚动穿透
+    transition: transform @transition-slow;
+}
+
+.tracker-view.hidden {
+    display: none;
+}
+
+.slide-in {
+    transform: translateX(0);
+}
+
+.slide-out {
+    transform: translateX(-100%);
+}
+
+.slide-in-from-right {
+    transform: translateX(100%);
+}
+
+.slide-out-to-right {
+    transform: translateX(100%);
+}
+
+.slide-in-from-left {
+    transform: translateX(-100%);
+}
+
+// ============================================================================
+// Header / Toolbar - Story 10.4
+// ============================================================================
+
+.tracker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: @spacing-xs @spacing-md;
+    background: @background-white;
+    border-bottom: 1px solid @border-color;
+    flex-shrink: 0;
+    height: 44px;
+    box-sizing: border-box;
+    gap: @spacing-sm;
+}
+
+.tracker-header-left {
+    display: flex;
+    align-items: center;
+    gap: @spacing-sm;
+    flex: 0 0 auto;
+}
+
+.tracker-header-right {
+    display: flex;
+    align-items: center;
+    gap: @spacing-xs;
+}
+
+.tracker-header h3 {
+    margin: 0;
+    font-size: @font-size-lg;
+    font-weight: @font-weight-semibold;
+    color: @text-primary;
+}
+
+#last-refresh-time {
+    font-size: @font-size-sm;
+    color: @text-secondary;
+    line-height: 28px;
+}
+
+// ============================================================================
+// Button Styles - Story 10.2
+// ============================================================================
+
+// 主操作按钮（保存、确认等）
+.tracker-btn-primary {
+    background: @primary-gradient;
+    border: none;
+    color: white;
+    border-radius: @radius-sm;
+    height: 28px;
+    padding: 0 14px;
+    font-size: @font-size-sm;
+    font-weight: @font-weight-medium;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: @spacing-xs;
+    transition: all @transition-fast;
+
+    &:hover:not(:disabled) {
+        filter: brightness(1.1);
+        box-shadow: @shadow-button;
     }
 
-    #tracker-panel {
-        position: absolute;
-        top: 0;
-        width: 550px;
-        background: #f9f9f9;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        display: none;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        color: #333;
-        overflow: hidden;
-        transition: height 0.3s ease-in-out;
+    &:active:not(:disabled) {
+        transform: translateY(1px);
     }
 
-    .tracker-view {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        transition: transform 0.3s ease-in-out;
-    }
-
-    .tracker-view.hidden {
-        display: none;
-    }
-
-    .slide-in {
-        transform: translateX(0);
-    }
-
-    .slide-out {
-        transform: translateX(-100%);
-    }
-
-    .slide-in-from-right {
-        transform: translateX(100%);
-    }
-
-    .slide-out-to-right {
-        transform: translateX(100%);
-    }
-
-    .slide-in-from-left {
-        transform: translateX(-100%);
-    }
-
-    .tracker-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 15px;
-        background: @background-white; // 统一使用QA报告的工具栏背景色
-        border-bottom: 1px solid @border-color;
-        flex-shrink: 0;
-        height: 44px; // 统一高度与QA报告工具栏一致
-        box-sizing: border-box;
-    }
-
-    .tracker-header h3 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-    }
-
-    .tracker-header-btn {
-        background: #e0e0e0;
-        border: 1px solid #ccc;
-        padding: 4px 10px;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    .tracker-header-btn:hover {
-        background: #d4d4d4;
-    }
-
-    .back-btn {
-        font-size: 20px;
-        padding: 0 10px;
-    }
-
-    .tracker-footer {
-        padding: 10px;
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        border-top: 1px solid #ddd;
-        background: #f1f1f1;
-        flex-shrink: 0;
-    }
-
-    .tracker-content {
-        flex-grow: 1;
-        padding: 10px;
-        max-height: 60vh;
-        overflow-y: auto;
-        min-height: 360px;
-    }
-
-    .tracker-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .tracker-table th,
-    .tracker-table td {
-        border: 1px solid #ddd;
-        padding: 8px 12px;
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    .tracker-table th {
-        background-color: #e9ecef;
-        font-size: 14px;
-    }
-
-    .tracker-table td {
-        font-size: 13px;
-    }
-
-    .tracker-table .col-coordinator {
-        text-align: left;
-        width: auto;
-        min-width: 150px;
-    }
-
-    .status-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        color: white;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 14px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .status-icon:hover {
-        opacity: 0.8;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-    }
-
-    .status-ok {
-        background-color: #28a745;
-    }
-
-    .status-error {
-        background-color: #dc3545;
-        animation: blink-animation 1.5s infinite;
-    }
-
-    @keyframes blink-animation {
-        0% {
-            opacity: 1;
-        }
-
-        50% {
-            opacity: 0.4;
-        }
-
-        100% {
-            opacity: 1;
-        }
-    }
-
-    .edit-list-actions button {
-        font-size: 18px;
-        width: 36px;
-        height: 36px;
-        border: none;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-    .edit-list-actions button.add-btn {
-        background-color: #28a745;
-        color: white;
-    }
-
-    .edit-list-actions button.remove-btn {
-        background-color: #dc3545;
-        color: white;
-    }
-
-    .edit-list-actions button:disabled {
-        background-color: #ccc;
+    &:disabled {
+        opacity: 0.6;
         cursor: not-allowed;
     }
+}
 
-    .loader {
-        text-align: center;
-        padding: 40px;
+// 次级按钮（取消、返回、编辑等）
+.tracker-btn-secondary {
+    background: white;
+    border: 1px solid @border-color;
+    color: @text-primary;
+    border-radius: @radius-sm;
+    height: 28px;
+    padding: 0 14px;
+    font-size: @font-size-sm;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: @spacing-xs;
+    transition: all @transition-fast;
+
+    &:hover:not(:disabled) {
+        border-color: @primary-color;
+        color: @primary-color;
+        background: @primary-bg-light;
     }
 
-    .spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #3498db;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto;
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+// 图标按钮（返回箭头等）
+.tracker-btn-icon {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: @radius-sm;
+    font-size: @font-size-lg;
+}
+
+// 旧样式兼容（逐步弃用）
+.tracker-header-btn {
+    background: @background-alt;
+    border: 1px solid @border-color;
+    padding: 0 14px;
+    height: 28px;
+    border-radius: @radius-sm;
+    cursor: pointer;
+    font-size: @font-size-sm;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: @spacing-xs;
+    transition: all @transition-fast;
+
+    &:hover:not(:disabled) {
+        border-color: @primary-color;
+        color: @primary-color;
+        background: @primary-bg-light;
     }
 
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.back-btn {
+    font-size: @font-size-xl;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+}
+
+// ============================================================================
+// Footer
+// ============================================================================
+
+.tracker-footer {
+    padding: @spacing-sm @spacing-md;
+    display: flex;
+    justify-content: flex-end;
+    gap: @spacing-sm;
+    border-top: 1px solid @border-color;
+    background: @background-alt;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// Content Area
+// ============================================================================
+
+.tracker-content {
+    flex: 1 1 auto;  // 占用剩余空间
+    padding: @spacing-sm @spacing-md;
+    overflow-y: auto;  // 只有 content 区域滚动
+    overflow-x: hidden;
+    overscroll-behavior: contain;  // 阻止滚动穿透到父页面
+    min-height: 0;  // 允许 flex 子元素收缩
+}
+
+// ============================================================================
+// Table Styles - Story 10.3
+// ============================================================================
+
+.tracker-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: @font-size-sm;
+}
+
+// 表头样式
+.tracker-table thead th {
+    background: @background-alt;
+    color: @text-primary;
+    font-weight: @font-weight-semibold;
+    font-size: @font-size-sm;
+    text-align: center;
+    padding: @spacing-sm @spacing-md;
+    border: none;
+    border-bottom: 2px solid @border-color;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+}
+
+// 表格行样式
+.tracker-table tbody tr {
+    border: none;
+    border-bottom: 1px solid @border-color-light;
+    transition: background @transition-fast;
+}
+
+.tracker-table tbody tr:hover {
+    background: @background-hover;
+}
+
+.tracker-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+// 单元格样式
+.tracker-table th,
+.tracker-table td {
+    padding: @spacing-sm @spacing-md;
+    text-align: center;
+    vertical-align: middle;
+    border: none;
+}
+
+.tracker-table td {
+    font-size: @font-size-sm;
+}
+
+// 辅导员名称列左对齐
+.tracker-table .col-coordinator {
+    text-align: left;
+    width: auto;
+    min-width: 150px;
+}
+
+// ============================================================================
+// Status Icons (Number Buttons) - Story 10.5
+// ============================================================================
+
+.status-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: @radius-round;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: @font-weight-bold;
+    font-size: @font-size-sm;
+    cursor: pointer;
+    transition: all @transition-fast;
+    box-shadow: @shadow-button;
+
+    &:hover {
+        transform: scale(1.05);
+        box-shadow: @shadow-card;
+        opacity: 0.9;
+    }
+
+    &:active {
+        transform: scale(0.95);
+        box-shadow: @shadow-button;
+    }
+
+    // 0 值禁用样式
+    &.status-disabled {
+        opacity: 0.5;
+        cursor: default;
+
+        &:hover {
+            transform: none;
+            opacity: 0.5;
+            box-shadow: @shadow-button;
         }
-
-        100% {
-            transform: rotate(360deg);
-        }
     }
+}
 
-    .tracker-toast {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #333;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 5px;
-        z-index: 10000;
-        opacity: 0;
-        transition: opacity 0.3s, bottom 0.3s;
-    }
+.status-ok {
+    background-color: @success-color;
+}
 
-    .tracker-toast.show {
+.status-error {
+    background-color: @danger-color;
+    animation: blink-animation 1.5s infinite;
+}
+
+@keyframes blink-animation {
+    0%, 100% {
         opacity: 1;
-        bottom: 40px;
+    }
+    50% {
+        opacity: 0.4;
+    }
+}
+
+// ============================================================================
+// Edit List Actions - Story 10.8
+// ============================================================================
+
+.edit-list-actions {
+    text-align: right;
+    padding-right: @spacing-md;
+}
+
+.edit-list-actions button {
+    font-size: @font-size-sm;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: @radius-round;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: @font-weight-semibold;
+    transition: all @transition-fast;
+
+    &:hover:not(:disabled) {
+        filter: brightness(1.15);
+        box-shadow: @shadow-button;
+        transform: scale(1.05);
     }
 
-    .tracker-toast.success {
-        background-color: #28a745;
+    &:active:not(:disabled) {
+        transform: translateY(1px) scale(1.05);
     }
+}
 
-    .tracker-toast.error {
-        background-color: #dc3545;
+.edit-list-actions button.add-btn {
+    background-color: @success-color;
+    color: white;
+
+    &:hover:not(:disabled) {
+        background-color: @success-hover;
     }
+}
+
+.edit-list-actions button.remove-btn {
+    background-color: @danger-color;
+    color: white;
+
+    &:hover:not(:disabled) {
+        background-color: @danger-hover;
+    }
+}
+
+.edit-list-actions button:disabled {
+    background-color: @border-color;
+    color: @text-disabled;
+    cursor: not-allowed;
+    opacity: 0.6;
+
+    &:hover {
+        filter: none;
+        box-shadow: none;
+        transform: none;
+    }
+}
+
+// ============================================================================
+// Loader & Spinner
+// ============================================================================
+
+.loader {
+    text-align: center;
+    padding: @spacing-xl;
+}
+
+.spinner {
+    border: 4px solid @border-color-light;
+    border-top: 4px solid @spinner-color;
+    border-radius: @radius-round;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+// ============================================================================
+// Toast Notifications
+// ============================================================================
+
+.tracker-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: @text-primary;
+    color: white;
+    padding: @spacing-sm @spacing-md;
+    border-radius: @radius-md;
+    z-index: 100000;
+    opacity: 0;
+    transition: opacity @transition-slow, top @transition-slow;
+    font-size: @font-size-sm;
+}
+
+.tracker-toast.show {
+    opacity: 1;
+    top: 40px;
+}
+
+.tracker-toast.success {
+    background-color: @success-color;
+}
+
+.tracker-toast.error {
+    background-color: @danger-color;
+}
+
+// ============================================================================
+// Details Popover - Story 10.9
+// ============================================================================
+
+#details-popover {
+    position: fixed;
+    background: @background-white;
+    border: 1px solid @border-color;
+    border-radius: @radius-lg;
+    box-shadow: @shadow-panel;
+    min-width: 600px;
+    max-width: 90vw;
+    min-height: 400px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    z-index: 100000;
+    overflow: hidden;
+}
+
+.popover-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: @spacing-xs @spacing-md;
+    background: @background-white;
+    border-bottom: 1px solid @border-color;
+    height: 44px;
+    box-sizing: border-box;
+    cursor: move;
+    flex-shrink: 0;
+}
+
+.popover-header h4 {
+    margin: 0;
+    font-size: @font-size-base;
+    font-weight: @font-weight-semibold;
+    color: @text-primary;
+    display: flex;
+    align-items: center;
+    gap: @spacing-xs;
+}
+
+.popover-close-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid @border-color;
+    border-radius: @radius-sm;
+    background: @background-white;
+    color: @text-secondary;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: @font-size-lg;
+    transition: all @transition-fast;
+
+    &:hover {
+        border-color: @danger-color;
+        color: @danger-color;
+        background: #fff5f5;
+    }
+}
+
+.popover-content {
+    flex: 1;
+    overflow: auto;
+    padding: @spacing-sm;
+}
+
+// Popover 表格样式
+.popover-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: @font-size-sm;
+}
+
+.popover-table thead th {
+    background: @background-alt;
+    color: @text-primary;
+    font-weight: @font-weight-semibold;
+    font-size: @font-size-xs;
+    text-align: left;
+    padding: @spacing-sm @spacing-md;
+    border: none;
+    border-bottom: 2px solid @border-color;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+}
+
+.popover-table tbody tr {
+    border: none;
+    border-bottom: 1px solid @border-color-light;
+    transition: background @transition-fast;
+}
+
+.popover-table tbody tr:hover {
+    background: @background-hover;
+}
+
+.popover-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.popover-table td {
+    padding: @spacing-sm @spacing-md;
+    font-size: @font-size-xs;
+    color: @text-primary;
+    vertical-align: middle;
+}
+
+// 特殊单元格样式
+.note-cell {
+    max-width: 300px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.datetime-cell {
+    white-space: nowrap;
+}
+
+// ============================================================================
+// Resize Handles - Story 10.10
+// ============================================================================
+
+// 基础resize handle样式（JS生成的类名是 popover-resize-handle-{direction}）
+// 只支持左(w)、右(e)、底(s)边和右下角(se)
+.popover-resize-handle {
+    position: absolute;
+    background: transparent;
+    z-index: 10;
+
+    &:hover {
+        background: rgba(102, 126, 234, 0.15);
+    }
+}
+
+// 下边缘 (s)
+.popover-resize-handle-s {
+    bottom: 0;
+    left: 16px;
+    right: 16px;
+    height: 8px;
+    cursor: s-resize;
+}
+
+// 左边缘 (w)
+.popover-resize-handle-w {
+    top: 16px;
+    bottom: 16px;
+    left: 0;
+    width: 8px;
+    cursor: w-resize;
+}
+
+// 右边缘 (e)
+.popover-resize-handle-e {
+    top: 16px;
+    bottom: 16px;
+    right: 0;
+    width: 8px;
+    cursor: e-resize;
+}
+
+// 右下角 (se) - 纯透明，只有cursor效果
+.popover-resize-handle-se {
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: se-resize;
+    z-index: 11;
+    border-radius: 0 0 @radius-lg 0;
+}

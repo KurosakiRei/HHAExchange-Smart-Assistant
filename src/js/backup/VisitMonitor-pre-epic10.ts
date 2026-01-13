@@ -651,34 +651,24 @@ export const visitMonitor = async () => {
   panel.innerHTML = `
          <div id="tracking-view" class="tracker-view">
             <div class="tracker-header">
-              <div class="tracker-header-left">
-                <span id="last-refresh-time">⏰ 上次更新: --:--:--</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span id="last-refresh-time" style="font-size: 13px; color: #666;">上次更新: --:--:--</span>
               </div>
-              <div class="tracker-header-right">
-                <button id="edit-list-btn" class="tracker-btn-secondary">📝 编辑列表</button>
-              </div>
+              <button id="edit-list-btn" class="tracker-header-btn">编辑追踪列表</button>
             </div>
             <div class="tracker-content"><table class="tracker-table"><thead><tr>
-                    <th style="width:40px;">编号</th>
-                    <th class="col-coordinator">辅导员 (Ext.)</th>
-                    <th style="width:80px;">上班钟</th>
-                    <th style="width:80px;">下班钟</th>
-                    <th style="width:80px;">异常打钟</th>
-                    <th style="width:80px;">消息</th>
+                    <th style="width:40px;color: #333 !important;">编号</th>
+                    <th style="width:40px;color: #333 !important;"class="col-coordinator">辅导员 (Ext.)</th>
+                    <th style="width:80px;color: #333 !important;">上班钟</th>
+                    <th style="width:80px;color: #333 !important;">下班钟</th>
+                    <th style="width:80px;color: #333 !important;">异常打钟</th>
+                    <th style="width:80px;color: #333 !important;">消息</th>
                 </tr></thead><tbody id="tracking-table-body"></tbody></table></div>
         </div>
         <div id="editing-view" class="tracker-view hidden">
-            <div class="tracker-header">
-              <div class="tracker-header-left">
-                <button id="back-btn" class="tracker-btn-icon tracker-btn-secondary">←</button>
-                <h3>编辑追踪列表</h3>
-              </div>
-            </div>
+            <div class="tracker-header"><button id="back-btn" class="tracker-header-btn back-btn">←</button><h3 style="color: #333 !important;">编辑追踪列表</h3></div>
             <div id="editing-content" class="tracker-content"></div>
-            <div class="tracker-footer">
-              <button id="cancel-btn" class="tracker-btn-secondary">取消</button>
-              <button id="save-btn" class="tracker-btn-primary">💾 保存</button>
-            </div>
+            <div class="tracker-footer"><button id="cancel-btn" class="tracker-header-btn">取消</button><button id="save-btn" class="tracker-header-btn" style="background-color:#007bff;color:white">保存</button></div>
         </div>
     `;
   container.appendChild(dragHandle);
@@ -2093,7 +2083,7 @@ export const visitMonitor = async () => {
   // --- 视图渲染 (renderTrackingView 已更新) ---
   function renderTrackingView(): void {
     if (trackedCoordinators.length === 0) {
-      trackingTableBody.innerHTML = `<tr><td colspan="6">没有正在追踪的 Coordinator</td></tr>`;
+      trackingTableBody.innerHTML = `<tr><td colspan="6" style="color: #333 !important;">没有正在追踪的 Coordinator</td></tr>`; // colspan 改为 6
       return;
     }
     const rowsHtml = trackedCoordinators
@@ -2111,34 +2101,22 @@ export const visitMonitor = async () => {
         const anomalyStatus = anomalyCount > 0 ? "status-error" : "status-ok";
         const messageStatus = messageCount > 0 ? "status-error" : "status-ok";
 
-        // Add disabled class for zero-count status icons
-        const clockInClass = `status-icon ${clockInStatus}${
-          clockInCount === 0 ? " status-disabled" : ""
-        }`;
-        const clockOutClass = `status-icon ${clockOutStatus}${
-          clockOutCount === 0 ? " status-disabled" : ""
-        }`;
-        const anomalyClass = `status-icon ${anomalyStatus}${
-          anomalyCount === 0 ? " status-disabled" : ""
-        }`;
-        const messageClass = `status-icon ${messageStatus}${
-          messageCount === 0 ? " status-disabled" : ""
-        }`;
-
         return `
                 <tr>
-                    <td>${index + 1}</td>
-                    <td class="col-coordinator">${coordinator.name}</td>
-                    <td><div class="${clockInClass}" data-coordinator-id="${
+                    <td style="color: #333 !important;">${index + 1}</td>
+                    <td class="col-coordinator" style="color: #333 !important;">${
+                      coordinator.name
+                    }</td>
+                    <td><div class="status-icon ${clockInStatus}" data-coordinator-id="${
           coordinator.id
         }" data-call-type="2">${clockInCount}</div></td>
-                    <td><div class="${clockOutClass}" data-coordinator-id="${
+                    <td><div class="status-icon ${clockOutStatus}" data-coordinator-id="${
           coordinator.id
         }" data-call-type="3">${clockOutCount}</div></td>
-                    <td><div class="${anomalyClass}" data-coordinator-id="${
+                    <td><div class="status-icon ${anomalyStatus}" data-coordinator-id="${
           coordinator.id
         }" data-call-type="anomaly">${anomalyCount}</div></td>
-                    <td><div class="${messageClass}" data-coordinator-id="${
+                    <td><div class="status-icon ${messageStatus}" data-coordinator-id="${
           coordinator.id
         }" data-call-type="message">${messageCount}</div></td>
                 </tr>`;
@@ -2151,13 +2129,15 @@ export const visitMonitor = async () => {
   function renderEditingView(): void {
     const tableHtml = `
             <table class="tracker-table">
-                <thead><tr><th class="col-coordinator">所有可用 Coordinator</th><th>操作</th></tr></thead>
+                <thead><tr><th style="color: #333 !important;"class="col-coordinator">所有可用 Coordinator</th><th style="color: #333 !important;">操作</th></tr></thead>
                 <tbody id="editing-table-body">
                     ${allCoordinators
                       .map(
                         (c) => `
                         <tr data-id="${c.id}">
-                            <td class="col-coordinator">${c.name}</td>
+                            <td class="col-coordinator" style="color: #333 !important;">${
+                              c.name
+                            }</td>
                             <td class="edit-list-actions">
                                 <button class="${
                                   tempTrackedIds.has(c.id)
@@ -2415,117 +2395,7 @@ export const visitMonitor = async () => {
       .trim();
   }
 
-  // 多方向调整大小功能 (左、右、底边和右下角)
-  type ResizeDirection = "e" | "se" | "s" | "w";
-
-  function makeMultiDirectionResizable(element: HTMLElement) {
-    // 只创建左(w)、右(e)、底(s)边和右下角(se)的resize handle
-    const directions: ResizeDirection[] = ["e", "se", "s", "w"];
-
-    directions.forEach((direction) => {
-      const handle = document.createElement("div");
-      handle.className = `popover-resize-handle popover-resize-handle-${direction}`;
-      element.appendChild(handle);
-
-      let isResizing = false;
-      let startX = 0;
-      let startY = 0;
-      let startWidth = 0;
-      let startHeight = 0;
-      let startLeft = 0;
-      let startTop = 0;
-      let overlay: HTMLDivElement | null = null;
-
-      const onMouseDown = (e: MouseEvent) => {
-        isResizing = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        startWidth = element.offsetWidth;
-        startHeight = element.offsetHeight;
-
-        // 使用 getBoundingClientRect() 获取正确的位置（因为 popover 使用 position: fixed）
-        const rect = element.getBoundingClientRect();
-        startLeft = rect.left;
-        startTop = rect.top;
-
-        // 创建透明遮罩层
-        overlay = document.createElement("div");
-        overlay.style.cssText =
-          "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;";
-        document.body.appendChild(overlay);
-
-        document.body.style.userSelect = "none";
-        document.addEventListener("mousemove", onMouseMove, true);
-        document.addEventListener("mouseup", onMouseUp, true);
-        e.preventDefault();
-        e.stopPropagation();
-      };
-
-      const onMouseMove = (e: MouseEvent) => {
-        if (!isResizing) return;
-
-        const deltaX = e.clientX - startX;
-        const deltaY = e.clientY - startY;
-        const minWidth = 400;
-        const minHeight = 300;
-
-        let newWidth = startWidth;
-        let newHeight = startHeight;
-        let newLeft = startLeft;
-        let newTop = startTop;
-
-        // 根据方向计算新尺寸和位置
-        if (direction.includes("e")) {
-          newWidth = Math.max(minWidth, startWidth + deltaX);
-        }
-        if (direction.includes("w")) {
-          const possibleWidth = startWidth - deltaX;
-          if (possibleWidth >= minWidth) {
-            newWidth = possibleWidth;
-            newLeft = startLeft + deltaX;
-          }
-        }
-        if (direction.includes("s")) {
-          newHeight = Math.max(minHeight, startHeight + deltaY);
-        }
-        if (direction.includes("n")) {
-          const possibleHeight = startHeight - deltaY;
-          if (possibleHeight >= minHeight) {
-            newHeight = possibleHeight;
-            newTop = startTop + deltaY;
-          }
-        }
-
-        element.style.width = `${newWidth}px`;
-        element.style.height = `${newHeight}px`;
-        element.style.left = `${newLeft}px`;
-        element.style.top = `${newTop}px`;
-
-        e.preventDefault();
-        e.stopPropagation();
-      };
-
-      const onMouseUp = (e: MouseEvent) => {
-        if (!isResizing) return;
-        isResizing = false;
-        document.body.style.userSelect = "";
-
-        if (overlay) {
-          overlay.remove();
-          overlay = null;
-        }
-
-        document.removeEventListener("mousemove", onMouseMove, true);
-        document.removeEventListener("mouseup", onMouseUp, true);
-        e.preventDefault();
-        e.stopPropagation();
-      };
-
-      handle.addEventListener("mousedown", onMouseDown);
-    });
-  }
-
-  // 保留旧的单方向调整大小功能以兼容
+  // 调整大小功能 (修复：移除最大尺寸限制，使用capture捕获事件，添加iframe遮罩)
   function makeResizable(element: HTMLElement, handleElement: HTMLElement) {
     let isResizing = false;
     let startX = 0;
@@ -2543,11 +2413,13 @@ export const visitMonitor = async () => {
       startWidth = element.offsetWidth;
       startHeight = element.offsetHeight;
 
+      // 创建透明遮罩层覆盖整个页面，防止iframe或其他元素抦截鼠标事件
       overlay = document.createElement("div");
       overlay.style.cssText =
         "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;cursor:nwse-resize;";
       document.body.appendChild(overlay);
 
+      // 防止拖动时选中文字
       document.body.style.userSelect = "none";
       document.addEventListener("mousemove", onMouseMove, true);
       document.addEventListener("mouseup", onMouseUp, true);
@@ -2561,6 +2433,7 @@ export const visitMonitor = async () => {
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
 
+      // 计算新尺寸，只有最小限制，没有最大限制
       const newWidth = Math.max(400, startWidth + deltaX);
       const newHeight = Math.max(300, startHeight + deltaY);
 
@@ -2602,7 +2475,7 @@ export const visitMonitor = async () => {
   function renderPatientNameCell(detail: VisitDetail): string {
     // 如果没有电话或电话列表为空，则只返回简单的姓名单元格
     if (!detail.phones || detail.phones.length === 0) {
-      return `<td>${detail.patientName}</td>`;
+      return `<td style="color: #333 !important;">${detail.patientName}</td>`;
     }
 
     // 如果有电话，则生成带有悬浮提示的复杂HTML
@@ -2618,7 +2491,7 @@ export const visitMonitor = async () => {
       .join("");
     return `
             <td>
-                <div class="phone-icon-wrapper">
+                <div class="phone-icon-wrapper" style="color: #333 !important;">
                     <span>${detail.patientName}</span>
                     <span class="phone-icon">📞</span>
                     <div class="phone-tooltip">${phoneItems}</div>
@@ -2655,33 +2528,33 @@ export const visitMonitor = async () => {
           (d) => `
             <tr>
                     ${renderPatientNameCell(d)}
-                    <td>${d.assignmentId}</td>
-                    <td>${d.admissionId}</td>
-                    <td>${d.caregiverName}</td>
-                    <td>${d.visitDate}</td>
-                    <td>${d.coordinators}</td>
-                    <td>${d.schedule}</td>
-                    <td>${d.contract}</td>
-                    <td>${d.discipline}</td>
-                    <td>${d.serviceCode}</td>
-                    <td>${d.caregiverTeam}</td>
+                    <td style="color: #333 !important;">${d.assignmentId}</td>
+                    <td style="color: #333 !important;">${d.admissionId}</td>
+                    <td style="color: #333 !important;">${d.caregiverName}</td>
+                    <td style="color: #333 !important;">${d.visitDate}</td>
+                    <td style="color: #333 !important;">${d.coordinators}</td>
+                    <td style="color: #333 !important;">${d.schedule}</td>
+                    <td style="color: #333 !important;">${d.contract}</td>
+                    <td style="color: #333 !important;">${d.discipline}</td>
+                    <td style="color: #333 !important;">${d.serviceCode}</td>
+                    <td style="color: #333 !important;">${d.caregiverTeam}</td>
                 </tr>`
         )
         .join("");
 
       tableHtml = `
             <thead><tr>
-                <th>Patient Name</th>
-                <th>Assignment ID</th>
-                <th>Admission ID</th>
-                <th>Caregiver Name</th>
-                <th>Visit Date</th>
-                <th>Coordinators</th>
-                <th>Schedule</th>
-                <th>Contract</th>
-                <th>Discipline</th>
-                <th>Service Code</th>
-                <th>Caregiver Team</th>
+                <th style="color: #333 !important;">Patient Name</th>
+                <th style="color: #333 !important;">Assignment ID</th>
+                <th style="color: #333 !important;">Admission ID</th>
+                <th style="color: #333 !important;">Caregiver Name</th>
+                <th style="color: #333 !important;">Visit Date</th>
+                <th style="color: #333 !important;">Coordinators</th>
+                <th style="color: #333 !important;">Schedule</th>
+                <th style="color: #333 !important;">Contract</th>
+                <th style="color: #333 !important;">Discipline</th>
+                <th style="color: #333 !important;">Service Code</th>
+                <th style="color: #333 !important;">Caregiver Team</th>
             </tr></thead>
             <tbody>${tableRows}</tbody>
         `;
@@ -2691,12 +2564,12 @@ export const visitMonitor = async () => {
         .map(
           (d) => `
             <tr>
-                    <td>${d.assignId}</td><td>${d.caregiverCode}</td>
-                    <td>${d.caregiverName}</td><td>${d.officeName}</td>
-                    <td>${d.caregiverPhone}</td><td>${d.caregiverTeam}</td>
-                    <td>${d.patientName}</td><td>${d.callDate}</td>
-                    <td>${d.callTime}</td><td>${d.callType}</td>
-                    <td>${d.callerId}</td><td>${d.status}</td>
+                    <td style="color: #333 !important;">${d.assignId}</td><td style="color: #333 !important;">${d.caregiverCode}</td>
+                    <td style="color: #333 !important;">${d.caregiverName}</td><td style="color: #333 !important;">${d.officeName}</td>
+                    <td style="color: #333 !important;">${d.caregiverPhone}</td><td style="color: #333 !important;">${d.caregiverTeam}</td>
+                    <td style="color: #333 !important;">${d.patientName}</td><td style="color: #333 !important;">${d.callDate}</td>
+                    <td style="color: #333 !important;">${d.callTime}</td><td style="color: #333 !important;">${d.callType}</td>
+                    <td style="color: #333 !important;">${d.callerId}</td><td style="color: #333 !important;">${d.status}</td>
                 </tr>`
         )
         .join("");
@@ -2704,18 +2577,18 @@ export const visitMonitor = async () => {
       tableHtml = `
             <thead>
             <tr>
-                <th>Assign. ID#</th>
-                <th>Caregiver Code</th>
-                <th>Caregiver Name</th>
-                <th>Office Name</th>
-                <th>Caregiver Phone</th>
-                <th>Caregiver Team</th>
-                <th>Patient Name</th>
-                <th>Call Date</th>
-                <th>Call Time</th>
-                <th>Call Type</th>
-                <th>Caller ID</th>
-                <th>Status</th>
+                <th style="color: #333 !important;">Assign. ID#</th>
+                <th style="color: #333 !important;">Caregiver Code</th>
+                <th style="color: #333 !important;">Caregiver Name</th>
+                <th style="color: #333 !important;">Office Name</th>
+                <th style="color: #333 !important;">Caregiver Phone</th>
+                <th style="color: #333 !important;">Caregiver Team</th>
+                <th style="color: #333 !important;">Patient Name</th>
+                <th style="color: #333 !important;">Call Date</th>
+                <th style="color: #333 !important;">Call Time</th>
+                <th style="color: #333 !important;">Call Type</th>
+                <th style="color: #333 !important;">Caller ID</th>
+                <th style="color: #333 !important;">Status</th>
             </tr>
             </thead>
             <tbody>${tableRows}</tbody>
@@ -2728,11 +2601,11 @@ export const visitMonitor = async () => {
           const formattedNote = formatAuthorizationNote(d.note);
           return `
             <tr>
-                    <td>${d.memberName}</td>
-                    <td>${d.payerName}</td>
-                    <td>${d.reason}</td>
-                    <td class="note-cell">${formattedNote}</td>
-                    <td class="datetime-cell">${d.createdDateTimeDisplay}</td>
+                    <td style="color: #333 !important;">${d.memberName}</td>
+                    <td style="color: #333 !important;">${d.payerName}</td>
+                    <td style="color: #333 !important;">${d.reason}</td>
+                    <td style="color: #333 !important;" class="note-cell">${formattedNote}</td>
+                    <td style="color: #333 !important; white-space: nowrap;">${d.createdDateTimeDisplay}</td>
                 </tr>`;
         })
         .join("");
@@ -2740,24 +2613,25 @@ export const visitMonitor = async () => {
       tableHtml = `
             <thead>
             <tr>
-                <th>Member Name</th>
-                <th>Payer</th>
-                <th>Reason</th>
-                <th>Note</th>
-                <th>DateTime</th>
+                <th style="color: #333 !important;">Member Name</th>
+                <th style="color: #333 !important;">Payer</th>
+                <th style="color: #333 !important;">Reason</th>
+                <th style="color: #333 !important;">Note</th>
+                <th style="color: #333 !important;">DateTime</th>
             </tr>
             </thead>
             <tbody>${tableRows}</tbody>
         `;
     } else {
       // 备用情况
-      tableHtml = `<tbody><tr><td>未知的数据类型</td></tr></tbody>`;
+      tableHtml = `<tbody><tr><td style="color: #333 !important;">未知的数据类型</td></tr></tbody>`;
     }
 
     // --- 4. 组装：将头部、内容和表格组装成完整的 Popover HTML ---
     popover.innerHTML = `
-        <div class="popover-header"><h4>📋 详情列表（最新10条） <span class="record-count">(${data.count} 条记录)</span></h4><button class="popover-close-btn">&times;</button></div>
+        <div class="popover-header"><h4 style="color: #333 !important;">详情列表（只显示最新10条） (${data.count} 条记录)</h4><button class="popover-close-btn">&times;</button></div>
             <div class="popover-content"><table class="popover-table">${tableHtml}</table></div>
+            <div class="popover-resize-handle"></div>
         `;
 
     // --- 5. 注入与激活 ---
@@ -2771,8 +2645,13 @@ export const visitMonitor = async () => {
       makeDraggable(popover, popoverHeader);
     }
 
-    // 激活多方向调整大小功能 (8个方向)
-    makeMultiDirectionResizable(popover);
+    // 激活调整大小功能
+    const resizeHandle = popover.querySelector(
+      ".popover-resize-handle"
+    ) as HTMLElement;
+    if (resizeHandle) {
+      makeResizable(popover, resizeHandle);
+    }
 
     // 智能定位
     const targetRect = targetElement.getBoundingClientRect();

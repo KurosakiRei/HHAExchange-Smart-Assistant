@@ -1,3 +1,9 @@
+/**
+ * Main Stylesheet Entry Point
+ * 
+ * This file imports all component stylesheets.
+ * Visit Monitor (Coordinator Tracker) styles are in coordinator-tracker.less
+ */
 .hha-smart-panel {
   position: absolute;
   top: 0;
@@ -80,9 +86,9 @@
   isolation: isolate;
 }
 .hha-smart-tab-bar {
-  width: 140px;
+  width: 100px;
   min-width: 40px;
-  background: #fafafa;
+  background: #f7f8fa;
   border-right: 1px solid #e0e0e0;
   transition: width 0.2s ease;
   overflow: hidden;
@@ -109,17 +115,17 @@
 }
 .hha-smart-tab-item {
   position: relative;
-  padding: 12px 16px;
+  padding: 12px 8px;
   cursor: pointer;
   transition: background 0.15s ease;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   white-space: nowrap;
   border-bottom: 1px solid #f0f0f0;
 }
 .hha-smart-tab-item:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
 }
 .hha-smart-tab-item.active {
   background: #f0efff;
@@ -137,6 +143,15 @@
   opacity: 1;
   transition: opacity 0.2s ease;
   font-size: 13px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  flex: 1;
+  scroll-behavior: smooth;
+}
+.hha-smart-tab-text::-webkit-scrollbar {
+  height: 0;
+  display: none;
 }
 .hha-smart-tab-bar.collapsed .hha-smart-tab-text {
   opacity: 0;
@@ -172,7 +187,7 @@
   z-index: 10;
 }
 .hha-smart-tab-collapse-btn:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
 }
 .hha-smart-collapse-icon {
   display: inline-block;
@@ -195,7 +210,7 @@
 }
 .hha-smart-panel-footer {
   height: 28px;
-  background: #fafafa;
+  background: #f7f8fa;
   border-top: 1px solid #e0e0e0;
   display: flex;
   align-items: center;
@@ -314,7 +329,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #fafafa;
+  background: #f7f8fa;
   color: #333333;
   border: 1px solid #e0e0e0;
 }
@@ -323,7 +338,7 @@
   cursor: not-allowed;
 }
 .hha-smart-btn-secondary:hover:not(:disabled) {
-  background: #f5f5f5;
+  background: #f0f2f5;
   border-color: #a29bfe;
 }
 .hha-smart-placeholder {
@@ -951,7 +966,7 @@
   box-shadow: 0 0 0 2px #a29bfe;
 }
 .qa-coordinator-select:disabled {
-  background: #fafafa;
+  background: #f7f8fa;
   cursor: not-allowed;
 }
 .qa-load-btn {
@@ -970,7 +985,7 @@
 .qa-export-btn {
   padding: 0 12px;
   font-size: 13px;
-  background: #fafafa;
+  background: #f7f8fa;
   border: 1px solid #e0e0e0;
   border-radius: 2px;
   color: #333333;
@@ -982,7 +997,7 @@
   justify-content: center;
 }
 .qa-export-btn:hover:not(:disabled) {
-  background: #f5f5f5;
+  background: #f0f2f5;
   border-color: #667eea;
 }
 .qa-export-btn:disabled {
@@ -1018,7 +1033,7 @@
   border-right: 1px solid #e0e0e0;
 }
 .qa-view-btn:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   color: #667eea;
 }
 .qa-view-btn.active {
@@ -1029,7 +1044,7 @@
   flex: 1;
   overflow: auto;
   padding: 8px;
-  background: #fafafa;
+  background: #f7f8fa;
 }
 .qa-empty-state {
   display: flex;
@@ -1064,7 +1079,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 .qa-report-table thead {
-  background: #fafafa;
+  background: #f7f8fa;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -1077,12 +1092,32 @@
   border-bottom: 2px solid #e0e0e0;
   white-space: nowrap;
 }
+.qa-report-table thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.qa-report-table thead th.sortable:hover {
+  background: #e7eaf0;
+}
+.qa-report-table thead th.sortable .sort-icon {
+  margin-left: 4px;
+  font-size: 10px;
+  opacity: 0.5;
+  display: inline-block;
+  vertical-align: middle;
+}
+.qa-report-table thead th.sortable .sort-icon.sort-asc,
+.qa-report-table thead th.sortable .sort-icon.sort-desc {
+  opacity: 1;
+  color: #667eea;
+}
 .qa-report-table tbody tr {
   border-bottom: 1px solid #f0f0f0;
   transition: background 0.15s;
 }
 .qa-report-table tbody tr:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
 }
 .qa-report-table tbody tr:last-child {
   border-bottom: none;
@@ -1090,6 +1125,12 @@
 .qa-report-table tbody td {
   padding: 8px 16px;
   vertical-align: middle;
+  user-select: text;
+  cursor: text;
+}
+.qa-report-table tbody td.col-action {
+  user-select: none;
+  cursor: default;
 }
 .qa-report-table .col-id {
   width: 110px;
@@ -1103,7 +1144,79 @@
   font-weight: 500;
 }
 .qa-report-table .col-phone {
-  width: 120px;
+  width: 140px;
+}
+.qa-report-table .phone-loading {
+  color: #666666;
+  font-style: italic;
+  font-size: 13px;
+}
+.qa-report-table .phone-error {
+  color: #dc3545;
+  font-size: 13px;
+}
+.qa-report-table .phone-single {
+  color: #333333;
+  font-family: "Monaco", "Menlo", "Consolas", monospace;
+  font-size: 13px;
+}
+.qa-report-table .phone-single a {
+  color: #667eea;
+  text-decoration: none;
+}
+.qa-report-table .phone-single a:hover {
+  text-decoration: underline;
+}
+.qa-report-table .phone-multiple {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+.qa-report-table .phone-multiple .phone-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid #667eea;
+  border-radius: 2px;
+  color: #667eea;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.qa-report-table .phone-multiple .phone-trigger:hover {
+  background: #667eea;
+  color: white;
+}
+.qa-report-table .phone-multiple .phone-trigger .phone-count {
+  font-weight: 600;
+}
+.qa-report-table .phone-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  min-width: 160px;
+  padding: 4px 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 4px;
+}
+.qa-report-table .phone-dropdown .phone-item {
+  display: block;
+  padding: 4px 8px;
+  color: #333333;
+  font-family: "Monaco", "Menlo", "Consolas", monospace;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.qa-report-table .phone-dropdown .phone-item:hover {
+  background: #f0f2f5;
+  color: #667eea;
 }
 .qa-report-table .col-qa {
   width: 100px;
@@ -1136,7 +1249,7 @@
   transition: all 0.2s;
 }
 .qa-action-btn:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   color: #667eea;
 }
 .qa-report-grid {
@@ -1154,6 +1267,7 @@
   transition: all 0.2s;
   position: relative;
   overflow: hidden;
+  user-select: text;
 }
 .qa-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -1184,9 +1298,10 @@
   color: #666666;
   border-radius: 2px;
   flex-shrink: 0;
+  user-select: none;
 }
 .card-action-btn:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   color: #667eea;
 }
 .card-id {
@@ -1245,7 +1360,7 @@
   border-radius: 2px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   overflow: hidden;
-  z-index: 1000;
+  z-index: 100000;
   min-width: 140px;
 }
 .export-menu-item {
@@ -1255,7 +1370,7 @@
   transition: background 0.15s;
 }
 .export-menu-item:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   color: #667eea;
 }
 .export-menu-item + .export-menu-item {
@@ -1267,7 +1382,7 @@
   border-radius: 2px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   overflow: hidden;
-  z-index: 1000;
+  z-index: 100000;
   min-width: 180px;
 }
 .action-menu-item {
@@ -1280,7 +1395,7 @@
   transition: background 0.15s;
 }
 .action-menu-item:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   color: #667eea;
 }
 .action-menu-item + .action-menu-item {
@@ -1313,6 +1428,138 @@
 .qa-toast.qa-toast-info {
   background: #667eea;
 }
+.qa-note-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100002;
+}
+.qa-note-modal {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  width: 90%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.qa-note-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+.qa-note-modal-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+.qa-note-modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+.qa-note-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.qa-note-modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+.qa-note-section {
+  margin-bottom: 16px;
+}
+.qa-note-section:last-child {
+  margin-bottom: 0;
+}
+.qa-note-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666666;
+  margin-bottom: 4px;
+}
+.qa-note-template {
+  padding: 8px 16px;
+  background: #f0f2f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 2px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #333333;
+}
+.qa-note-textarea {
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 2px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.qa-note-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+.qa-note-textarea::placeholder {
+  color: #666666;
+}
+.qa-note-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+  background: #f0f2f5;
+}
+.qa-note-btn {
+  padding: 4px 16px;
+  font-size: 13px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.qa-note-btn.qa-note-btn-cancel {
+  background: white;
+  border: 1px solid #e0e0e0;
+  color: #666666;
+}
+.qa-note-btn.qa-note-btn-cancel:hover {
+  background: #f0f2f5;
+  border-color: #666666;
+}
+.qa-note-btn.qa-note-btn-submit {
+  background: #667eea;
+  border: 1px solid #667eea;
+  color: white;
+}
+.qa-note-btn.qa-note-btn-submit:hover {
+  background: #5a6fd6;
+  border-color: #5a6fd6;
+}
 /**
  * Status Tracking Tab Styles
  * Epic 7: Multi-Tab Panel - 状态追踪 Tab
@@ -1336,20 +1583,49 @@
 #status-tracking-wrapper #tracker-panel {
   background: #ffffff;
 }
-#status-tracking-wrapper #tracker-panel::-webkit-scrollbar {
+#status-tracking-wrapper #tracker-panel .tracker-view {
+  height: 100%;
+  overflow: hidden;
+  min-height: 0;
+}
+#status-tracking-wrapper #tracker-panel .tracker-view.hidden {
+  display: none !important;
+}
+#status-tracking-wrapper #tracker-panel .tracker-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#status-tracking-wrapper #tracker-panel .tracker-header,
+#status-tracking-wrapper #tracker-panel .tracker-footer {
+  flex-shrink: 0;
+}
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar,
+#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar {
   width: 6px;
 }
-#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb {
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb,
+#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb {
   background: #e0e0e0;
   border-radius: 2px;
 }
-#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover {
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover,
+#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb:hover {
   background: #666666;
 }
-#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track {
-  background: #fafafa;
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,
+#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {
+  background: #f7f8fa;
 }
-/* --- General Container --- */
+/**
+ * Visit Monitor (Coordinator Tracker) Styles
+ * Epic 10: UI 现代化升级
+ *
+ * 依赖: variables.less
+ * @author HHA Smart Assistant
+ * @date 2026-01-12
+ */
 #tracker-container {
   position: fixed;
   top: 20px;
@@ -1361,53 +1637,51 @@
 #tracker-drag-handle {
   width: 48px;
   height: 48px;
-  background-color: #007bff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: move;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   font-size: 24px;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition: all 0.15s ease;
 }
 #tracker-drag-handle:hover {
   transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 #tracker-drag-handle:active {
   transform: scale(0.95);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-/* --- Panel & Views --- */
 #tracker-panel {
   position: absolute;
   top: 0;
   width: 550px;
-  min-height: 500px;
-  background: #f9f9f9;
-  border: 1px solid #ccc;
+  height: 480px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   display: none;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  color: #333;
+  color: #333333;
   overflow: hidden;
+  transition: height 0.3s ease;
 }
 .tracker-view {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease-in-out;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  transition: transform 0.3s ease;
 }
 .tracker-view.hidden {
   display: none;
 }
-/* View Transition Animations */
 .slide-in {
   transform: translateX(0);
 }
@@ -1417,57 +1691,188 @@
 .slide-in-from-right {
   transform: translateX(100%);
 }
-/* --- Header --- */
+.slide-out-to-right {
+  transform: translateX(100%);
+}
+.slide-in-from-left {
+  transform: translateX(-100%);
+}
 .tracker-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px 15px;
+  justify-content: space-between;
+  padding: 4px 16px;
   background: #ffffff;
   border-bottom: 1px solid #e0e0e0;
   flex-shrink: 0;
   height: 44px;
   box-sizing: border-box;
+  gap: 8px;
+}
+.tracker-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.tracker-header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 .tracker-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
+  color: #333333;
+}
+#last-refresh-time {
+  font-size: 13px;
+  color: #666666;
+  line-height: 28px;
+}
+.tracker-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  border-radius: 2px;
+  height: 28px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.tracker-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.tracker-btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.tracker-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.tracker-btn-secondary {
+  background: white;
+  border: 1px solid #e0e0e0;
+  color: #333333;
+  border-radius: 2px;
+  height: 28px;
+  padding: 0 14px;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.tracker-btn-secondary:hover:not(:disabled) {
+  border-color: #667eea;
+  color: #667eea;
+  background: #f0efff;
+}
+.tracker-btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.tracker-btn-icon {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  font-size: 16px;
 }
 .tracker-header-btn {
-  background: #e0e0e0;
-  border: 1px solid #ccc;
-  padding: 4px 10px;
-  border-radius: 5px;
+  background: #f7f8fa;
+  border: 1px solid #e0e0e0;
+  padding: 0 14px;
+  height: 28px;
+  border-radius: 2px;
   cursor: pointer;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s ease;
 }
-.tracker-header-btn:hover {
-  background: #d4d4d4;
+.tracker-header-btn:hover:not(:disabled) {
+  border-color: #667eea;
+  color: #667eea;
+  background: #f0efff;
+}
+.tracker-header-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .back-btn {
-  font-size: 20px;
-  padding: 0 10px;
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
 }
-/* --- 4. 内容与表格 --- */
+.tracker-footer {
+  padding: 8px 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid #e0e0e0;
+  background: #f7f8fa;
+  flex-shrink: 0;
+}
 .tracker-content {
-  flex-grow: 1;
-  padding: 10px;
+  flex: 1 1 auto;
+  padding: 8px 16px;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  min-height: 0;
 }
 .tracker-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 13px;
+}
+.tracker-table thead th {
+  background: #f7f8fa;
+  color: #333333;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: center;
+  padding: 8px 16px;
+  border: none;
+  border-bottom: 2px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.tracker-table tbody tr {
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.15s ease;
+}
+.tracker-table tbody tr:hover {
+  background: #f0f2f5;
+}
+.tracker-table tbody tr:last-child {
+  border-bottom: none;
 }
 .tracker-table th,
 .tracker-table td {
-  border: 1px solid #ddd;
-  padding: 8px 12px;
+  padding: 8px 16px;
   text-align: center;
   vertical-align: middle;
-}
-.tracker-table th {
-  background-color: #e9ecef;
-  font-size: 14px;
+  border: none;
 }
 .tracker-table td {
   font-size: 13px;
@@ -1485,14 +1890,29 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .status-icon:hover {
-  opacity: 0.8;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
+}
+.status-icon:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.status-icon.status-disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.status-icon.status-disabled:hover {
+  transform: none;
+  opacity: 0.5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .status-ok {
   background-color: #28a745;
@@ -1502,54 +1922,70 @@
   animation: blink-animation 1.5s infinite;
 }
 @keyframes blink-animation {
-  0% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
     opacity: 0.4;
   }
-  100% {
-    opacity: 1;
-  }
 }
-/* --- Edit View Specifics --- */
+.edit-list-actions {
+  text-align: right;
+  padding-right: 16px;
+}
 .edit-list-actions button {
-  font-size: 18px;
-  width: 36px;
-  height: 36px;
+  font-size: 13px;
+  width: 28px;
+  height: 28px;
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.edit-list-actions button:hover:not(:disabled) {
+  filter: brightness(1.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+}
+.edit-list-actions button:active:not(:disabled) {
+  transform: translateY(1px) scale(1.05);
 }
 .edit-list-actions button.add-btn {
   background-color: #28a745;
   color: white;
 }
+.edit-list-actions button.add-btn:hover:not(:disabled) {
+  background-color: #218838;
+}
 .edit-list-actions button.remove-btn {
   background-color: #dc3545;
   color: white;
 }
+.edit-list-actions button.remove-btn:hover:not(:disabled) {
+  background-color: #c82333;
+}
 .edit-list-actions button:disabled {
-  background-color: #ccc;
+  background-color: #e0e0e0;
+  color: #999999;
   cursor: not-allowed;
+  opacity: 0.6;
 }
-.tracker-footer {
-  padding: 10px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  border-top: 1px solid #ddd;
-  background: #f1f1f1;
-  flex-shrink: 0;
+.edit-list-actions button:disabled:hover {
+  filter: none;
+  box-shadow: none;
+  transform: none;
 }
-/* --- Loader --- */
 .loader {
   text-align: center;
-  padding: 40px;
+  padding: 32px;
 }
 .spinner {
-  border: 4px solid #f3f3f3;
+  border: 4px solid #f0f0f0;
   border-top: 4px solid #3498db;
   border-radius: 50%;
   width: 40px;
@@ -1565,19 +2001,19 @@
     transform: rotate(360deg);
   }
 }
-/* --- Toast Notification --- */
 .tracker-toast {
   position: fixed;
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #333;
+  background-color: #333333;
   color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
-  z-index: 10000;
+  padding: 8px 16px;
+  border-radius: 4px;
+  z-index: 100000;
   opacity: 0;
-  transition: opacity 0.3s, bottom 0.3s;
+  transition: opacity 0.3s ease, top 0.3s ease;
+  font-size: 13px;
 }
 .tracker-toast.show {
   opacity: 1;
@@ -1589,28 +2025,170 @@
 .tracker-toast.error {
   background-color: #dc3545;
 }
-/* --- 7. Details Popover (气泡) --- */
 #details-popover {
   position: fixed;
-  z-index: 10001;
-  /* Must be higher than the panel */
-  /* MODIFIED: 增加宽度以容纳更多列 */
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  min-width: 600px;
+  max-width: 90vw;
+  min-height: 400px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 100000;
+  overflow: hidden;
+}
+.popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  height: 44px;
+  box-sizing: border-box;
+  cursor: move;
+  flex-shrink: 0;
+}
+.popover-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333333;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.popover-close-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e0e0e0;
+  border-radius: 2px;
+  background: #ffffff;
+  color: #666666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.15s ease;
+}
+.popover-close-btn:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+  background: #fff5f5;
+}
+.popover-content {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+}
+.popover-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.popover-table thead th {
+  background: #f7f8fa;
+  color: #333333;
+  font-weight: 600;
+  font-size: 12px;
+  text-align: left;
+  padding: 8px 16px;
+  border: none;
+  border-bottom: 2px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  white-space: nowrap;
+}
+.popover-table tbody tr {
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.15s ease;
+}
+.popover-table tbody tr:hover {
+  background: #f0f2f5;
+}
+.popover-table tbody tr:last-child {
+  border-bottom: none;
+}
+.popover-table td {
+  padding: 8px 16px;
+  font-size: 12px;
+  color: #333333;
+  vertical-align: middle;
+}
+.note-cell {
+  max-width: 300px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.datetime-cell {
+  white-space: nowrap;
+}
+.popover-resize-handle {
+  position: absolute;
+  background: transparent;
+  z-index: 10;
+}
+.popover-resize-handle:hover {
+  background: rgba(102, 126, 234, 0.15);
+}
+.popover-resize-handle-s {
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 8px;
+  cursor: s-resize;
+}
+.popover-resize-handle-w {
+  top: 16px;
+  bottom: 16px;
+  left: 0;
+  width: 8px;
+  cursor: w-resize;
+}
+.popover-resize-handle-e {
+  top: 16px;
+  bottom: 16px;
+  right: 0;
+  width: 8px;
+  cursor: e-resize;
+}
+.popover-resize-handle-se {
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  z-index: 11;
+  border-radius: 0 0 8px 0;
+}
+/* 
+ * ==========================================================================
+ * Legacy Popover Styles (Details Popover)
+ * These styles are for the patient details popover that appears
+ * when clicking status icons in the Visit Monitor
+ * ==========================================================================
+ */
+#details-popover {
+  position: fixed;
+  z-index: 100001;
   width: 800px;
   max-width: 95vw;
   max-height: 90vh;
-  /* 提高最大高度限制 */
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
   border: 1px solid #ddd;
   display: flex;
   flex-direction: column;
-  /* Initial state for fade-in animation */
   opacity: 0;
   transform: scale(0.95);
   transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-  /* FIX: 提高 z-index, 确保它在所有元素之上 */
-  z-index: 100001;
 }
 #details-popover.visible {
   opacity: 1;
@@ -1625,7 +2203,6 @@
   border-bottom: 1px solid #ddd;
   flex-shrink: 0;
   cursor: move;
-  /* ADDED: 让用户知道这里可以拖动 */
 }
 .popover-header h4 {
   margin: 0;
@@ -1664,16 +2241,15 @@
   position: sticky;
   top: 0;
 }
-/* --- Note Cell Styling --- */
+/* Note Cell Styling */
 .popover-table td.note-cell {
   white-space: normal !important;
-  /* 允许换行 */
   max-width: 350px;
   word-wrap: break-word;
   overflow-wrap: break-word;
   vertical-align: top;
 }
-/* --- Authorization Note Table (格式化后的内容) --- */
+/* Authorization Note Table */
 .auth-note-table {
   width: 100%;
   border-collapse: collapse;
@@ -1700,31 +2276,38 @@
   color: #212529;
   background: #fff;
 }
-/* --- Popover Resize Handle --- */
+/* Popover Resize Handle - Legacy (disabled, handled by coordinator-tracker.less) */
+/* 
 .popover-resize-handle {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 16px;
-  height: 16px;
-  cursor: nwse-resize;
-  background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);
-  border-bottom-right-radius: 8px;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);
+    border-bottom-right-radius: 8px;
 }
+
 .popover-resize-handle::before {
-  content: '';
-  position: absolute;
-  right: 4px;
-  bottom: 4px;
-  width: 4px;
-  height: 4px;
-  background: #666;
-  border-radius: 1px;
+    content: '';
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 4px;
+    height: 4px;
+    background: #666;
+    border-radius: 1px;
 }
-/* --- 8. Phone Tooltip (新增) --- */
+*/
+/* 
+ * ==========================================================================
+ * Phone Tooltip Styles
+ * Tooltip that appears when hovering over phone icons in patient rows
+ * ==========================================================================
+ */
 .phone-icon-wrapper {
   position: relative;
-  /* 为内部的 tooltip 提供定位上下文 */
   display: inline-flex;
   align-items: center;
 }
@@ -1735,10 +2318,8 @@
 }
 .phone-tooltip {
   display: none;
-  /* 默认隐藏 */
   position: absolute;
   top: 100%;
-  /* 显示在图标正下方 */
   left: 0;
   width: 220px;
   background: #fff;
@@ -1747,9 +2328,7 @@
   border-radius: 4px;
   padding: 10px;
   z-index: 100002;
-  /* 确保在气泡本身之上 */
 }
-/* 核心交互：当鼠标悬浮在 wrapper 上时，显示 tooltip */
 .phone-icon-wrapper:hover .phone-tooltip {
   display: block;
 }

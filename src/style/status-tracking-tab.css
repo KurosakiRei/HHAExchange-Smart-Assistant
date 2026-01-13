@@ -21,16 +21,38 @@
 #status-tracking-wrapper #tracker-panel {
   background: #ffffff;
 }
-#status-tracking-wrapper #tracker-panel::-webkit-scrollbar {
+#status-tracking-wrapper #tracker-panel .tracker-view {
+  height: 100%;
+  overflow: hidden;
+  min-height: 0;
+}
+#status-tracking-wrapper #tracker-panel .tracker-view.hidden {
+  display: none !important;
+}
+#status-tracking-wrapper #tracker-panel .tracker-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#status-tracking-wrapper #tracker-panel .tracker-header,
+#status-tracking-wrapper #tracker-panel .tracker-footer {
+  flex-shrink: 0;
+}
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar,
+#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar {
   width: 6px;
 }
-#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb {
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb,
+#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb {
   background: #e0e0e0;
   border-radius: 2px;
 }
-#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover {
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover,
+#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb:hover {
   background: #666666;
 }
-#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track {
-  background: #fafafa;
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,
+#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {
+  background: #f7f8fa;
 }

@@ -101,15 +101,16 @@ export class StatusTrackingTab extends BaseTab {
 
       // Reset positioning styles to fit in tab container
       // CRITICAL: 必须设置 display: block 因为 VisitMonitor 可能设置了 display: none
+      // Epic 10 修复: 使用 height: 100% 填充父容器，避免内容溢出
       trackerPanel.style.cssText = `
-        display: block !important;
+        display: flex !important;
+        flex-direction: column !important;
         position: static !important;
         width: 100% !important;
         max-width: 100% !important;
-        height: auto !important;
+        height: 100% !important;
         max-height: 100% !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
+        overflow: hidden !important;
         top: auto !important;
         left: auto !important;
         right: auto !important;
