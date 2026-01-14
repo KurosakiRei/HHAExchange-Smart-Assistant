@@ -24,6 +24,8 @@ import {
 import { MultiTabPanel } from "./js/MultiTabPanel";
 import { StatusTrackingTab } from "./js/tabs/StatusTrackingTab";
 import { QAReportTab } from "./js/tabs/QAReportTab";
+import { CleanerTab } from "./js/tabs/CleanerTab";
+import { CleaningController } from "./js/services/CleaningController";
 
 async function main() {
   console.log("HHA Exchange Smart Assistant: script start");
@@ -218,6 +220,10 @@ async function main() {
   // Initialize Multi-Tab Panel (Epic 7: Story 7.1, 7.2, 7.3)
   // This will be shown when clicking the floating button
   initMultiTabPanel();
+
+  // Epic 11: Check for pending cleaning tasks on page load
+  // This enables automatic resume of cleaning after page refresh
+  checkAndResumeCleaningTasks();
 }
 
 /**
@@ -303,6 +309,7 @@ function embedMultiTabPanel(
   // Register tabs
   panel.registerTab(new StatusTrackingTab());
   panel.registerTab(new QAReportTab());
+  panel.registerTab(new CleanerTab());
 
   // Initialize panel
   panel
@@ -450,6 +457,72 @@ function positionPanelRelativeToHandle(
       viewportHalf: w / 2,
       rightValue: `${handle.offsetWidth + 10}px`,
     });
+  }
+}
+
+/**
+ * Epic 11: Check and Resume Cleaning Tasks
+ * 
+ * Called on every page load to:
+ * 1. Check for pending cleaning tasks in GM_getValue
+ * 2. If on visit detail page with pending task, auto-execute POCResolver
+ * 3. Resume cleaning progress display
+ */
+async function checkAndResumeCleaningTasks(): Promise<void> {
+  // 检查是否在 visit 详情页 (NonSkilledVisitInfo_ns.aspx)
+  const isVisitDetailPage = window.location.href.includes("NonSkilledVisitInfo_ns.aspx");
+
+  if (isVisitDetailPage) {
+    // 获取待处理的任务队列
+    const queue = CleaningController.getQueue();
+
+    if (queue && queue.status === "IN_PROGRESS" && queue.pageType === "PREBILLING") {
+      console.log("[Epic 11] Visit detail page detected with pending POC task");
+
+      // 延迟执行，确保页面完全加载
+      setTimeout(async () => {
+        try {
+          // 导入并执行 POCResolver
+          const { CleaningOverlay } = await import("./js/services/CleaningOverlay");
+
+          // 显示蒙版
+          CleaningOverlay.show(
+            queue.currentIndex + 1,
+            queue.tasks.length,
+            "正在处理 POC..."
+          );
+
+          // 执行 POC 清理
+          setTimeout(() => {
+            POCResolver();
+
+            // 点击保存按钮
+            setTimeout(() => {
+              const saveButton = document.getElementById("ctl00_ContentPlaceHolder1_uxBtnSaveVisit") as HTMLButtonElement;
+              if (saveButton) {
+                console.log("[Epic 11] Clicking save button...");
+                saveButton.click();
+                // 页面会刷新回 Prebilling Report，在那里会继续下一个任务
+              } else {
+                console.error("[Epic 11] Save button not found");
+                CleaningOverlay.showError("Save button not found");
+              }
+            }, 1000);
+          }, 500);
+        } catch (error) {
+          console.error("[Epic 11] Auto POC execution failed:", error);
+        }
+      }, 1500);
+
+      return;
+    }
+  }
+
+  // 不在详情页，检查是否有待恢复的任务（在 Prebilling 或 Call Maintenance 页面）
+  const hasPendingTasks = await CleaningController.checkPendingTasks();
+
+  if (hasPendingTasks) {
+    console.log("[Epic 11] Cleaning tasks resumed");
   }
 }
 

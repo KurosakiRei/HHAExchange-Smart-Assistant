@@ -1,0 +1,479 @@
+/**
+ * Cleaner Tab Styles
+ * Epic 11: POC 和 Duplicate Call 智能清理器
+ */
+
+.cleaner-tab {
+    height: 100%;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.cleaner-wrapper {
+    padding: 16px;
+}
+
+/* Header */
+.cleaner-header {
+    margin-bottom: 12px;
+}
+
+.cleaner-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.cleaner-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.cleaner-page-tag {
+    font-size: 12px;
+    color: #666;
+    background: #f0f4f8;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.cleaner-btn-refresh {
+    background: #f8f9fa;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    margin-left: auto;
+    outline: none;
+
+    &:hover {
+        background: #e8f4fd;
+    }
+
+    &:focus {
+        outline: none;
+    }
+}
+
+.cleaner-hint {
+    font-size: 12px;
+    color: #888;
+    margin-top: 8px;
+    font-style: italic;
+}
+
+/* Status */
+.cleaner-status {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.cleaner-spinner {
+    animation: cleaner-spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes cleaner-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Toolbar */
+.cleaner-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.cleaner-select-all {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    line-height: 1;
+
+    input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        cursor: pointer;
+        vertical-align: middle;
+    }
+
+    span {
+        vertical-align: middle;
+    }
+}
+
+/* Buttons */
+.cleaner-btn-primary {
+    background: linear-gradient(135deg, #4a90d9, #357abd);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #357abd, #2d6aa3);
+        transform: translateY(-1px);
+    }
+
+    &:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+}
+
+.cleaner-btn-secondary {
+    background: white;
+    color: #666;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: #f5f5f5;
+        border-color: #ccc;
+    }
+}
+
+/* Records List */
+.cleaner-records-list {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    overscroll-behavior: contain;
+}
+
+.cleaner-record-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.15s ease;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: #f8f9fa;
+    }
+
+    input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin-right: 10px;
+        margin-top: 2px;
+        cursor: pointer;
+    }
+}
+
+.cleaner-record-info {
+    flex: 1;
+    font-size: 13px;
+
+    .record-main {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 4px;
+    }
+
+    .record-detail {
+        color: #666;
+        font-size: 12px;
+    }
+}
+
+.cleaner-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-right: 8px;
+
+    &.badge-poc {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    &.badge-poc-caregiver {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+}
+
+/* Call Summary */
+.cleaner-call-summary {
+    text-align: center;
+    padding: 16px;
+    background: #e8f4fd;
+    border-radius: 8px;
+    margin-bottom: 12px;
+
+    .cleaner-call-count {
+        font-size: 15px;
+        color: #1976d2;
+
+        strong {
+            font-size: 20px;
+            font-weight: 600;
+        }
+    }
+}
+
+.cleaner-call-details {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin-top: 12px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.cleaner-call-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+    color: #333;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &::before {
+        content: "•";
+        color: #1976d2;
+        margin-right: 8px;
+    }
+}
+
+/* Empty State */
+.cleaner-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+
+    .cleaner-empty-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+
+    p {
+        font-size: 15px;
+        color: #4caf50;
+        font-weight: 500;
+        margin: 0;
+    }
+}
+
+/* No Page Detected */
+.cleaner-no-page-info {
+    text-align: left;
+    margin-top: 16px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+
+    p {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+        color: #333;
+    }
+
+    ul {
+        margin: 0 0 12px 20px;
+        padding: 0;
+
+        li {
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #555;
+        }
+    }
+
+    .cleaner-hint {
+        color: #999;
+        font-size: 13px;
+        font-style: italic;
+        margin-bottom: 0;
+    }
+}
+
+/* Cleaning Overlay - 浅色半透明蒙版 */
+#hha-cleaning-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    // 浅色半透明蒙版 - 让用户能看到背后的自动化操作
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(2px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: all;
+
+    .cleaning-modal {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 12px;
+        text-align: center;
+        min-width: 400px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+
+        .cleaning-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+
+            &.success {
+                color: #4CAF50;
+            }
+        }
+
+        h3 {
+            margin: 0 0 10px;
+            font-size: 20px;
+            color: #333;
+        }
+
+        p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+
+            .progress-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #4CAF50, #8BC34A);
+                transition: width 0.3s ease;
+            }
+        }
+
+        .cleaning-warning {
+            color: #ff9800;
+            font-size: 14px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .success-note {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .error-message {
+            color: #e53935;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+
+            &:hover {
+                background: #1565c0;
+            }
+        }
+
+        .cleaning-btn-close {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+
+            &:hover {
+                background: #1565c0;
+            }
+        }
+
+        /* 确认对话框按钮 */
+        .dialog-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+
+            .btn-cancel {
+                padding: 10px 24px;
+                background: #f5f5f5;
+                color: #666;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+
+                &:hover {
+                    background: #e0e0e0;
+                }
+            }
+
+            .btn-confirm {
+                padding: 10px 24px;
+                background: #4caf50;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+
+                &:hover {
+                    background: #43a047;
+                }
+            }
+        }
+    }
+
+    /* 旋转动画 */
+    .spinning {
+        animation: cleaner-spin 1s linear infinite;
+    }
+}
