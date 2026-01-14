@@ -77,4 +77,3 @@ export const CALL_STATE_SELECTOR: string =
 export const MAIN_CONTENT_SELECTOR: string = ".main-content";
 export const CALL_INFO_PANEL_SELECTOR: string = "div.call-info";
 export const PHONE_NUMBER_CONTAINER_SELECTOR: string = ".contact-otherinfo";
-  
