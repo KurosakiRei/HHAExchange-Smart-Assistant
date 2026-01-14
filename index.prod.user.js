@@ -11088,6 +11088,11 @@ async function checkAndResumeCleaningTasks() {
                             if (saveButton) {
                                 console.log("[Epic 11] Clicking save button...", saveButton.id);
                                 saveButton.click();
+                                // 处理保存后可能弹出的确认对话框
+                                // HHAeXchange 会弹出 "HHAeXchange - Confirm" 对话框，需要点击 OK
+                                setTimeout(() => {
+                                    handleConfirmationDialog();
+                                }, 500);
                                 // 页面会刷新回 Prebilling Report，在那里会继续下一个任务
                             }
                             else {
@@ -11108,6 +11113,78 @@ async function checkAndResumeCleaningTasks() {
     const hasPendingTasks = await CleaningController.checkPendingTasks();
     if (hasPendingTasks) {
         console.log("[Epic 11] Cleaning tasks resumed");
+    }
+}
+/**
+ * Handle HHAeXchange confirmation dialogs that appear after Save
+ * The dialog has title "HHAeXchange - Confirm" and an OK button
+ *
+ * Tries multiple selectors to find and click the OK button
+ */
+function handleConfirmationDialog(retryCount = 0) {
+    const MAX_RETRIES = 10; // 最多重试 10 次，每次间隔 300ms，共 3 秒
+    // 尝试多种选择器查找 OK 按钮
+    // 基于截图，对话框标题是 "HHAeXchange - Confirm"
+    const selectors = [
+        // 常见的确认按钮选择器
+        '.ui-dialog-buttonset button:contains("OK")',
+        '.ui-dialog-buttonpane button:contains("OK")',
+        'button.ui-button:contains("OK")',
+        '.modal-footer button.btn-primary',
+        '.modal-footer button:contains("OK")',
+        'button[data-bb-handler="confirm"]',
+        '.bootbox-accept',
+        // ASP.NET 风格的按钮
+        'input[type="button"][value="OK"]',
+        'input[type="submit"][value="OK"]',
+        // 通用选择器
+        'button:contains("OK")',
+        'input[value="OK"]',
+    ];
+    let okButton = null;
+    // jQuery 选择器
+    for (const selector of selectors) {
+        try {
+            const $btn = $(selector);
+            if ($btn.length > 0 && $btn.is(':visible')) {
+                okButton = $btn[0];
+                console.log("[Epic 11] Found OK button with selector:", selector);
+                break;
+            }
+        }
+        catch (e) {
+            // jQuery :contains 可能在某些情况下失败，静默忽略
+        }
+    }
+    // 如果 jQuery 选择器没找到，尝试原生 DOM 查找
+    if (!okButton) {
+        // 查找所有按钮，找包含 "OK" 文本的
+        const allButtons = document.querySelectorAll('button, input[type="button"], input[type="submit"]');
+        for (const btn of allButtons) {
+            const text = btn.textContent?.trim() || btn.value?.trim() || '';
+            if (text.toUpperCase() === 'OK') {
+                // 检查是否可见
+                const style = window.getComputedStyle(btn);
+                if (style.display !== 'none' && style.visibility !== 'hidden') {
+                    okButton = btn;
+                    console.log("[Epic 11] Found OK button via DOM search:", btn);
+                    break;
+                }
+            }
+        }
+    }
+    if (okButton) {
+        console.log("[Epic 11] Clicking confirmation dialog OK button...");
+        okButton.click();
+        // 点击后页面会刷新
+    }
+    else if (retryCount < MAX_RETRIES) {
+        // 对话框可能还没出现，重试
+        setTimeout(() => handleConfirmationDialog(retryCount + 1), 300);
+    }
+    else {
+        // 可能没有确认对话框（某些情况下直接保存成功），不报错
+        console.log("[Epic 11] No confirmation dialog found after retries (may not be needed)");
     }
 }
 src_main().catch((e) => {
