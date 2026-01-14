@@ -11075,14 +11075,23 @@ async function checkAndResumeCleaningTasks() {
                         POCResolver();
                         // 点击保存按钮
                         setTimeout(() => {
-                            const saveButton = document.getElementById("ctl00_ContentPlaceHolder1_uxBtnSaveVisit");
+                            // 尝试多种选择器找到保存按钮
+                            let saveButton = document.getElementById("uxBtnSaveVisit");
+                            if (!saveButton) {
+                                // 回退到完整 ID 选择器
+                                saveButton = document.getElementById("ctl00_ContentPlaceHolder1_uxBtnSaveVisit");
+                            }
+                            if (!saveButton) {
+                                // 使用 querySelector 查找任何匹配的保存按钮
+                                saveButton = document.querySelector('[id$="uxBtnSaveVisit"]');
+                            }
                             if (saveButton) {
-                                console.log("[Epic 11] Clicking save button...");
+                                console.log("[Epic 11] Clicking save button...", saveButton.id);
                                 saveButton.click();
                                 // 页面会刷新回 Prebilling Report，在那里会继续下一个任务
                             }
                             else {
-                                console.error("[Epic 11] Save button not found");
+                                console.error("[Epic 11] Save button not found with any selector");
                                 CleaningOverlay.showError("Save button not found");
                             }
                         }, 1000);
