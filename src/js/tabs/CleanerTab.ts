@@ -270,7 +270,7 @@ export class CleanerTab extends BaseTab {
 
       if (this.visitRecords.length === 0) {
         // 无符合条件的记录，显示成功状态
-        if (emptyState) emptyState.style.display = "block";
+        if (emptyState) emptyState.style.display = "flex";
         if (recordsContainer) recordsContainer.style.display = "none";
       } else {
         // 有记录，渲染列表
@@ -439,7 +439,7 @@ export class CleanerTab extends BaseTab {
 
       if (this.callRecords.length === 0) {
         // 无 Duplicate Call，显示成功状态
-        if (emptyState) emptyState.style.display = "block";
+        if (emptyState) emptyState.style.display = "flex";
         if (callContainer) callContainer.style.display = "none";
       } else {
         // 有记录，显示 UI
