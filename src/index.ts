@@ -26,9 +26,10 @@ import { StatusTrackingTab } from "./js/tabs/StatusTrackingTab";
 import { QAReportTab } from "./js/tabs/QAReportTab";
 import { CleanerTab } from "./js/tabs/CleanerTab";
 import { CleaningController } from "./js/services/CleaningController";
+import { version } from "../package.json";
 
 async function main() {
-  console.log("HHA Exchange Smart Assistant: script start");
+  console.log("HHA Exchange Smart Assistant " + version + " : script start");
   incomingCallHandler();
 
   async function FetchTester() {

@@ -255,6 +255,10 @@
   font-size: 48px;
   margin-bottom: 12px;
 }
+.cleaner-empty-state .cleaner-hint {
+  font-size: 13px;
+  color: #666;
+}
 .cleaner-empty-state p {
   font-size: 15px;
   color: #4caf50;
