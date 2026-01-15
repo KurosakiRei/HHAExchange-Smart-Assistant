@@ -462,7 +462,7 @@ function positionPanelRelativeToHandle(
 
 /**
  * Epic 11: Check and Resume Cleaning Tasks
- * 
+ *
  * Called on every page load to:
  * 1. Check for pending cleaning tasks in GM_getValue
  * 2. If on visit detail page with pending task, auto-execute POCResolver
@@ -470,20 +470,28 @@ function positionPanelRelativeToHandle(
  */
 async function checkAndResumeCleaningTasks(): Promise<void> {
   // 检查是否在 visit 详情页 (NonSkilledVisitInfo_ns.aspx)
-  const isVisitDetailPage = window.location.href.includes("NonSkilledVisitInfo_ns.aspx");
+  const isVisitDetailPage = window.location.href.includes(
+    "NonSkilledVisitInfo_ns.aspx"
+  );
 
   if (isVisitDetailPage) {
     // 获取待处理的任务队列
     const queue = CleaningController.getQueue();
 
-    if (queue && queue.status === "IN_PROGRESS" && queue.pageType === "PREBILLING") {
+    if (
+      queue &&
+      queue.status === "IN_PROGRESS" &&
+      queue.pageType === "PREBILLING"
+    ) {
       console.log("[Epic 11] Visit detail page detected with pending POC task");
 
       // 延迟执行，确保页面完全加载
       setTimeout(async () => {
         try {
           // 导入并执行 POCResolver
-          const { CleaningOverlay } = await import("./js/services/CleaningOverlay");
+          const { CleaningOverlay } = await import(
+            "./js/services/CleaningOverlay"
+          );
 
           // 显示蒙版
           CleaningOverlay.show(
@@ -499,14 +507,20 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
             // 点击保存按钮
             setTimeout(() => {
               // 尝试多种选择器找到保存按钮
-              let saveButton = document.getElementById("uxBtnSaveVisit") as HTMLButtonElement;
+              let saveButton = document.getElementById(
+                "uxBtnSaveVisit"
+              ) as HTMLButtonElement;
               if (!saveButton) {
                 // 回退到完整 ID 选择器
-                saveButton = document.getElementById("ctl00_ContentPlaceHolder1_uxBtnSaveVisit") as HTMLButtonElement;
+                saveButton = document.getElementById(
+                  "ctl00_ContentPlaceHolder1_uxBtnSaveVisit"
+                ) as HTMLButtonElement;
               }
               if (!saveButton) {
                 // 使用 querySelector 查找任何匹配的保存按钮
-                saveButton = document.querySelector('[id$="uxBtnSaveVisit"]') as HTMLButtonElement;
+                saveButton = document.querySelector(
+                  '[id$="uxBtnSaveVisit"]'
+                ) as HTMLButtonElement;
               }
 
               if (saveButton) {
@@ -521,7 +535,9 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
 
                 // 页面会刷新回 Prebilling Report，在那里会继续下一个任务
               } else {
-                console.error("[Epic 11] Save button not found with any selector");
+                console.error(
+                  "[Epic 11] Save button not found with any selector"
+                );
                 CleaningOverlay.showError("Save button not found");
               }
             }, 1000);
@@ -545,68 +561,84 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
 
 /**
  * Handle HHAeXchange confirmation dialogs that appear after Save
- * The dialog has title "HHAeXchange - Confirm" and an OK button
- * 
- * Tries multiple selectors to find and click the OK button
+ *
+ * 基于用户提供的 HTML，对话框结构如下：
+ * - 对话框容器: #confirmation.reveal.hhax-modal
+ * - OK 按钮: button.button.primary.yes
+ *
+ * 关键发现：对话框在 window.top（主文档）中，但脚本运行在 iframe 内
+ * 必须使用 window.top.document 来访问对话框
  */
 function handleConfirmationDialog(retryCount = 0): void {
-  const MAX_RETRIES = 10; // 最多重试 10 次，每次间隔 300ms，共 3 秒
+  const MAX_RETRIES = 15; // 最多重试 15 次，每次间隔 300ms，共 4.5 秒
 
-  // 尝试多种选择器查找 OK 按钮
-  // 基于截图，对话框标题是 "HHAeXchange - Confirm"
+  console.log(
+    `[Epic 11] Looking for confirmation dialog (attempt ${
+      retryCount + 1
+    }/${MAX_RETRIES})...`
+  );
+
+  // 基于用户提供的 HTML 的精确选择器
   const selectors = [
-    // 常见的确认按钮选择器
-    '.ui-dialog-buttonset button:contains("OK")',
-    '.ui-dialog-buttonpane button:contains("OK")',
-    'button.ui-button:contains("OK")',
-    '.modal-footer button.btn-primary',
-    '.modal-footer button:contains("OK")',
-    'button[data-bb-handler="confirm"]',
-    '.bootbox-accept',
-    // ASP.NET 风格的按钮
-    'input[type="button"][value="OK"]',
-    'input[type="submit"][value="OK"]',
-    // 通用选择器
-    'button:contains("OK")',
-    'input[value="OK"]',
+    // 用户提供的准确选择器
+    "#confirmation button.button.primary.yes",
+    "#confirmation .footer button.button.primary",
+    "#confirmation button.primary",
+    ".hhax-modal button.button.primary.yes",
+    ".reveal button.button.primary.yes",
+    // 回退选择器
+    "button.button.primary.yes",
+    ".footer button.primary",
   ];
 
   let okButton: HTMLElement | null = null;
 
-  // jQuery 选择器
-  for (const selector of selectors) {
-    try {
-      const $btn = $(selector);
-      if ($btn.length > 0 && $btn.is(':visible')) {
-        okButton = $btn[0] as HTMLElement;
-        console.log("[Epic 11] Found OK button with selector:", selector);
-        break;
+  // ★★★ 关键修复：首先在 window.top（主文档）中搜索 ★★★
+  // 因为脚本运行在 iframe 内，但确认对话框在主文档中
+  try {
+    if (window.top && window.top.document) {
+      okButton = findOkButtonInDocument(window.top.document, selectors);
+      if (okButton) {
+        console.log("[Epic 11] Found OK button in window.top.document");
       }
-    } catch (e) {
-      // jQuery :contains 可能在某些情况下失败，静默忽略
     }
+  } catch (e) {
+    console.log("[Epic 11] Cannot access window.top.document:", e);
   }
 
-  // 如果 jQuery 选择器没找到，尝试原生 DOM 查找
+  // 如果没找到，在当前文档中搜索（可能脚本在主文档运行）
   if (!okButton) {
-    // 查找所有按钮，找包含 "OK" 文本的
-    const allButtons = document.querySelectorAll('button, input[type="button"], input[type="submit"]');
-    for (const btn of allButtons) {
-      const text = btn.textContent?.trim() || (btn as HTMLInputElement).value?.trim() || '';
-      if (text.toUpperCase() === 'OK') {
-        // 检查是否可见
-        const style = window.getComputedStyle(btn);
-        if (style.display !== 'none' && style.visibility !== 'hidden') {
-          okButton = btn as HTMLElement;
-          console.log("[Epic 11] Found OK button via DOM search:", btn);
-          break;
-        }
-      }
-    }
+    okButton = findOkButtonInDocument(document, selectors);
+  }
+
+  // 如果还没找到，在所有 iframe 中搜索
+  if (!okButton) {
+    okButton = findOkButtonInAllFrames(window, selectors);
   }
 
   if (okButton) {
-    console.log("[Epic 11] Clicking confirmation dialog OK button...");
+    // ★★★ 关键修复：在点击 OK 之前，增加任务索引 ★★★
+    // 这样页面刷新后，checkPendingTasks 会处理下一个任务
+    try {
+      const queue = CleaningController.getQueue();
+      if (queue && queue.status === "IN_PROGRESS") {
+        // 标记当前任务完成
+        queue.tasks[queue.currentIndex].completed = true;
+        // 增加索引
+        queue.currentIndex++;
+        // 保存更新的队列
+        GM_setValue("hha_cleaner_task_queue", queue);
+        console.log(
+          `[Epic 11] Task index advanced to ${queue.currentIndex}/${queue.tasks.length}`
+        );
+      }
+    } catch (e) {
+      console.error("[Epic 11] Failed to update task queue:", e);
+    }
+
+    console.log(
+      "[Epic 11] Found and clicking confirmation dialog OK button..."
+    );
     okButton.click();
     // 点击后页面会刷新
   } else if (retryCount < MAX_RETRIES) {
@@ -614,8 +646,75 @@ function handleConfirmationDialog(retryCount = 0): void {
     setTimeout(() => handleConfirmationDialog(retryCount + 1), 300);
   } else {
     // 可能没有确认对话框（某些情况下直接保存成功），不报错
-    console.log("[Epic 11] No confirmation dialog found after retries (may not be needed)");
+    console.log(
+      "[Epic 11] No confirmation dialog found after retries (may not be needed)"
+    );
   }
+}
+
+/**
+ * 在指定文档中查找 OK 按钮
+ */
+function findOkButtonInDocument(
+  doc: Document,
+  selectors: string[]
+): HTMLElement | null {
+  for (const selector of selectors) {
+    try {
+      const btn = doc.querySelector(selector) as HTMLElement;
+      if (btn) {
+        // 检查是否可见
+        const style = doc.defaultView?.getComputedStyle(btn);
+        if (
+          style &&
+          style.display !== "none" &&
+          style.visibility !== "hidden"
+        ) {
+          console.log("[Epic 11] Found OK button with selector:", selector);
+          return btn;
+        }
+      }
+    } catch (e) {
+      // 选择器可能无效，静默忽略
+    }
+  }
+  return null;
+}
+
+/**
+ * 在所有 iframe 中递归查找 OK 按钮
+ */
+function findOkButtonInAllFrames(
+  win: Window,
+  selectors: string[]
+): HTMLElement | null {
+  // 遍历所有 frames
+  try {
+    for (let i = 0; i < win.frames.length; i++) {
+      try {
+        const frame = win.frames[i];
+        if (frame && frame.document) {
+          // 在这个 frame 的文档中查找
+          const btn = findOkButtonInDocument(frame.document, selectors);
+          if (btn) {
+            return btn;
+          }
+
+          // 递归搜索嵌套的 iframes
+          const nestedBtn = findOkButtonInAllFrames(frame, selectors);
+          if (nestedBtn) {
+            return nestedBtn;
+          }
+        }
+      } catch (e) {
+        // 跨域 iframe 无法访问，静默忽略
+      }
+    }
+  } catch (e) {
+    // 无法访问 frames，静默忽略
+  }
+
+  return null;
 }
 
 main().catch((e) => {

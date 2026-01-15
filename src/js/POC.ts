@@ -18,8 +18,41 @@ export const POCResolver = () => {
   POCReasonChooser();
   $(visitNotesSelector).val("task does not match plan of care");
   $(visitNotesSelector)[0].dispatchEvent(new Event("change"));
-  if ($(visitVerifyStarSelector).length > 0)
+
+  // 如果需要验证（有星号标记），则填写验证信息
+  if ($(visitVerifyStarSelector).length > 0) {
+    // 点击 Caregiver 复选框
     $(visitAuditCaregiverSelector).click();
+
+    // 填写 Date Verified 字段（MM/DD/YYYY 格式）
+    const dateVerifiedInput = document.getElementById(
+      "uxtxtDateVerified"
+    ) as HTMLInputElement;
+    if (dateVerifiedInput) {
+      const today = new Date();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const year = today.getFullYear();
+      const dateStr = `${month}/${day}/${year}`;
+      dateVerifiedInput.value = dateStr;
+      dateVerifiedInput.dispatchEvent(new Event("change", { bubbles: true }));
+      console.log("[POCResolver] Date Verified set to:", dateStr);
+    }
+
+    // 填写 Time Verified 字段（HHmm 格式，如 1430）
+    const timeVerifiedInput = document.getElementById(
+      "uxtxttimeVerified"
+    ) as HTMLInputElement;
+    if (timeVerifiedInput) {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const timeStr = `${hours}${minutes}`;
+      timeVerifiedInput.value = timeStr;
+      timeVerifiedInput.dispatchEvent(new Event("change", { bubbles: true }));
+      console.log("[POCResolver] Time Verified set to:", timeStr);
+    }
+  }
 };
 
 function POCSafeTick(el: any) {

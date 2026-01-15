@@ -44,6 +44,8 @@ export class CleanerTab extends BaseTab {
   private callRecords: CallRecord[] = [];
   /** Call 清理器：是否显示详情 */
   private showCallDetails: boolean = false;
+  /** Call 清理器：事件处理器是否已设置（防止重复添加监听器） */
+  private callEventHandlersSet: boolean = false;
 
   async init(): Promise<void> {
     this.initialized = true;
@@ -105,7 +107,9 @@ export class CleanerTab extends BaseTab {
       <div class="cleaner-header">
         <div class="cleaner-title-row">
           <h3 class="cleaner-title">🧹 POC Compliance 清理器</h3>
-          <span class="cleaner-page-tag">📍 当前页面: ${PageDetector.getPageDisplayName(this.currentPageType)}</span>
+          <span class="cleaner-page-tag">📍 当前页面: ${PageDetector.getPageDisplayName(
+            this.currentPageType
+          )}</span>
           <button id="cleaner-refresh-btn" class="cleaner-btn-refresh" title="刷新分析">🔄</button>
         </div>
       </div>
@@ -166,7 +170,9 @@ export class CleanerTab extends BaseTab {
       <div class="cleaner-header">
         <div class="cleaner-title-row">
           <h3 class="cleaner-title">🧹 Duplicate Call 清理器</h3>
-          <span class="cleaner-page-tag">📍 当前页面: ${PageDetector.getPageDisplayName(this.currentPageType)}</span>
+          <span class="cleaner-page-tag">📍 当前页面: ${PageDetector.getPageDisplayName(
+            this.currentPageType
+          )}</span>
           <button id="cleaner-refresh-btn" class="cleaner-btn-refresh" title="刷新分析">🔄</button>
         </div>
       </div>
@@ -203,6 +209,9 @@ export class CleanerTab extends BaseTab {
 
     this.container.appendChild(wrapper);
 
+    // 重置事件处理器标志（新渲染时需要重新设置）
+    this.callEventHandlersSet = false;
+
     // 刷新按钮事件监听
     const refreshBtn = document.getElementById("cleaner-refresh-btn");
     refreshBtn?.addEventListener("click", () => {
@@ -223,11 +232,7 @@ export class CleanerTab extends BaseTab {
   private renderNoPageDetected(): void {
     if (!this.container) return;
 
-    const placeholder = this.createPlaceholder(
-      "⚠️",
-      "未检测到有效页面",
-      ""
-    );
+    const placeholder = this.createPlaceholder("⚠️", "未检测到有效页面", "");
 
     // 添加支持的页面列表
     const infoDiv = document.createElement("div");
@@ -251,7 +256,9 @@ export class CleanerTab extends BaseTab {
    */
   private async analyzePrebillingTable(): Promise<void> {
     const statusEl = document.getElementById("cleaner-analysis-status");
-    const recordsContainer = document.getElementById("cleaner-records-container");
+    const recordsContainer = document.getElementById(
+      "cleaner-records-container"
+    );
     const emptyState = document.getElementById("cleaner-empty-state");
 
     try {
@@ -294,8 +301,11 @@ export class CleanerTab extends BaseTab {
         <input type="checkbox" class="cleaner-record-checkbox" data-index="${index}">
         <div class="cleaner-record-info">
           <div class="record-main">
-            <span class="cleaner-badge ${record.matchType === "POC_ONLY" ? "badge-poc" : "badge-poc-caregiver"
-          }">
+            <span class="cleaner-badge ${
+              record.matchType === "POC_ONLY"
+                ? "badge-poc"
+                : "badge-poc-caregiver"
+            }">
               ${record.matchType === "POC_ONLY" ? "POC" : "POC+CG"}
             </span>
             ${record.patientName} | ${record.admissionId}
@@ -328,9 +338,7 @@ export class CleanerTab extends BaseTab {
       ) as NodeListOf<HTMLInputElement>;
 
       if (selectAllCheckbox.checked) {
-        this.selectedIndices = new Set(
-          this.visitRecords.map((_, i) => i)
-        );
+        this.selectedIndices = new Set(this.visitRecords.map((_, i) => i));
         checkboxes.forEach((cb) => (cb.checked = true));
       } else {
         this.selectedIndices.clear();
@@ -341,26 +349,28 @@ export class CleanerTab extends BaseTab {
     });
 
     // 单个复选框
-    document.querySelectorAll(".cleaner-record-checkbox").forEach((checkbox) => {
-      checkbox.addEventListener("change", (e) => {
-        const target = e.target as HTMLInputElement;
-        const index = parseInt(target.dataset.index || "0", 10);
+    document
+      .querySelectorAll(".cleaner-record-checkbox")
+      .forEach((checkbox) => {
+        checkbox.addEventListener("change", (e) => {
+          const target = e.target as HTMLInputElement;
+          const index = parseInt(target.dataset.index || "0", 10);
 
-        if (target.checked) {
-          this.selectedIndices.add(index);
-        } else {
-          this.selectedIndices.delete(index);
-        }
+          if (target.checked) {
+            this.selectedIndices.add(index);
+          } else {
+            this.selectedIndices.delete(index);
+          }
 
-        // 更新全选状态
-        if (selectAllCheckbox) {
-          selectAllCheckbox.checked =
-            this.selectedIndices.size === this.visitRecords.length;
-        }
+          // 更新全选状态
+          if (selectAllCheckbox) {
+            selectAllCheckbox.checked =
+              this.selectedIndices.size === this.visitRecords.length;
+          }
 
-        this.updateCleanButtonState();
+          this.updateCleanButtonState();
+        });
       });
-    });
 
     // 清理按钮（Story 4-6 实现真实清理逻辑）
     cleanBtn?.addEventListener("click", () => {
@@ -372,7 +382,9 @@ export class CleanerTab extends BaseTab {
    * 更新清理按钮状态
    */
   private updateCleanButtonState(): void {
-    const cleanBtn = document.getElementById("cleaner-clean-btn") as HTMLButtonElement;
+    const cleanBtn = document.getElementById(
+      "cleaner-clean-btn"
+    ) as HTMLButtonElement;
     if (!cleanBtn) return;
 
     const count = this.selectedIndices.size;
@@ -410,7 +422,6 @@ export class CleanerTab extends BaseTab {
     await CleaningController.startCleaning(selectedRecords, "PREBILLING");
   }
 
-
   /**
    * 分析 Call Maintenance 表格
    * Story 7: 使用 CallMaintenanceTableParser 解析并渲染
@@ -440,17 +451,28 @@ export class CleanerTab extends BaseTab {
         if (countEl) countEl.textContent = String(this.callRecords.length);
 
         // 启用清理按钮
-        const cleanBtn = document.getElementById("cleaner-clean-all-btn") as HTMLButtonElement;
+        const cleanBtn = document.getElementById(
+          "cleaner-clean-all-btn"
+        ) as HTMLButtonElement;
         if (cleanBtn) cleanBtn.disabled = false;
 
         // 渲染详情列表
         this.renderCallDetailsList();
 
-        // 设置事件处理器
-        this.setupCallEventHandlers();
+        // 设置事件处理器 - 只在首次设置，避免重复添加监听器
+        if (!this.callEventHandlersSet) {
+          this.setupCallEventHandlers();
+          this.callEventHandlersSet = true;
+        } else {
+          // 更新 toggle 按钮和详情显示状态（保持之前的展开/收起状态）
+          this.updateCallToggleState();
+        }
       }
     } catch (error) {
-      console.error("[CleanerTab] Error analyzing Call Maintenance table:", error);
+      console.error(
+        "[CleanerTab] Error analyzing Call Maintenance table:",
+        error
+      );
       if (statusEl) {
         statusEl.innerHTML = `<span style="color: #e53935;">❌ 分析表格时出错</span>`;
       }
@@ -464,11 +486,17 @@ export class CleanerTab extends BaseTab {
     const detailsContainer = document.getElementById("cleaner-call-details");
     if (!detailsContainer) return;
 
-    detailsContainer.innerHTML = this.callRecords.map(record => `
+    detailsContainer.innerHTML = this.callRecords
+      .map(
+        (record) => `
       <div class="cleaner-call-item">
-        • ${record.assignCode} | ${record.caregiverName} | ${record.patientName || "-"} | ${record.callDate} ${record.callTime}
+        • ${record.assignCode} | ${record.caregiverName} | ${
+          record.patientName || "-"
+        } | ${record.callDate} ${record.callTime}
       </div>
-    `).join("");
+    `
+      )
+      .join("");
   }
 
   /**
@@ -482,10 +510,14 @@ export class CleanerTab extends BaseTab {
     toggleBtn?.addEventListener("click", () => {
       this.showCallDetails = !this.showCallDetails;
       if (toggleBtn) {
-        toggleBtn.textContent = this.showCallDetails ? "▲ 隐藏详情" : "▼ 显示详情";
+        toggleBtn.textContent = this.showCallDetails
+          ? "▲ 隐藏详情"
+          : "▼ 显示详情";
       }
       if (detailsContainer) {
-        detailsContainer.style.display = this.showCallDetails ? "block" : "none";
+        detailsContainer.style.display = this.showCallDetails
+          ? "block"
+          : "none";
       }
     });
 
@@ -494,6 +526,24 @@ export class CleanerTab extends BaseTab {
     cleanAllBtn?.addEventListener("click", () => {
       this.handleCleanAllCalls();
     });
+  }
+
+  /**
+   * 更新 toggle 按钮和详情显示状态（不重新添加事件监听器）
+   * 用于轮询刷新时保持展开/收起状态
+   */
+  private updateCallToggleState(): void {
+    const toggleBtn = document.getElementById("cleaner-toggle-details");
+    const detailsContainer = document.getElementById("cleaner-call-details");
+
+    if (toggleBtn) {
+      toggleBtn.textContent = this.showCallDetails
+        ? "▲ 隐藏详情"
+        : "▼ 显示详情";
+    }
+    if (detailsContainer) {
+      detailsContainer.style.display = this.showCallDetails ? "block" : "none";
+    }
   }
 
   /**
@@ -515,13 +565,13 @@ export class CleanerTab extends BaseTab {
 
     // 启动清理流程
     await CleaningController.startCleaning(
-      this.callRecords.map(record => ({
+      this.callRecords.map((record) => ({
         assignCode: record.assignCode,
         caregiverName: record.caregiverName,
         patientName: record.patientName,
         callDate: record.callDate,
         callTime: record.callTime,
-        rowElement: record.rowElement
+        rowElement: record.rowElement,
       })),
       "CALL_MAINTENANCE"
     );
@@ -565,14 +615,20 @@ export class CleanerTab extends BaseTab {
       return;
     }
 
-    console.log("[CleanerTab] Starting auto-polling (interval: " + CleanerTab.POLLING_INTERVAL + "ms)");
+    console.log(
+      "[CleanerTab] Starting auto-polling (interval: " +
+        CleanerTab.POLLING_INTERVAL +
+        "ms)"
+    );
 
     this.pollingTimer = setInterval(() => {
       // 检测表格行数是否变化
       const currentRowCount = PrebillingTableParser.getTotalRowCount();
 
       if (currentRowCount !== this.lastTableRowCount) {
-        console.log(`[CleanerTab] Table changed: ${this.lastTableRowCount} -> ${currentRowCount} rows`);
+        console.log(
+          `[CleanerTab] Table changed: ${this.lastTableRowCount} -> ${currentRowCount} rows`
+        );
         this.lastTableRowCount = currentRowCount;
 
         // 只有当有新数据时才重新分析
@@ -606,14 +662,20 @@ export class CleanerTab extends BaseTab {
       return;
     }
 
-    console.log("[CleanerTab] Starting Call Maintenance auto-polling (interval: " + CleanerTab.POLLING_INTERVAL + "ms)");
+    console.log(
+      "[CleanerTab] Starting Call Maintenance auto-polling (interval: " +
+        CleanerTab.POLLING_INTERVAL +
+        "ms)"
+    );
 
     this.pollingTimer = setInterval(() => {
       // 检测表格行数是否变化
       const currentRowCount = CallMaintenanceTableParser.getTotalRowCount();
 
       if (currentRowCount !== this.lastTableRowCount) {
-        console.log(`[CleanerTab] Call table changed: ${this.lastTableRowCount} -> ${currentRowCount} rows`);
+        console.log(
+          `[CleanerTab] Call table changed: ${this.lastTableRowCount} -> ${currentRowCount} rows`
+        );
         this.lastTableRowCount = currentRowCount;
 
         // 只有当有新数据时才重新分析

@@ -7,8 +7,8 @@
 | **Epic ID**    | EPIC-011                                       |
 | **标题**       | Cleaner Tab - POC 和 Duplicate Call 智能清理器 |
 | **优先级**     | P1 - 高优先级功能                              |
-| **状态**       | 📋 Planning                                     |
-| **预估工作量** | 5-7 个 Story                                   |
+| **状态**       | ✅ Complete                                     |
+| **预估工作量** | 8 个 Story                                     |
 | **关联系统**   | HHAExchange Prebilling, Call Maintenance       |
 
 ## 背景与目标
@@ -582,52 +582,52 @@ function initVisitPage(): void {
 
 ### 功能性
 
-- [ ] 第三个 Tab "清理器" 成功添加到面板
-- [ ] 自动检测当前页面类型（Prebilling / Call Maintenance / 其他）
-- [ ] 在 Prebilling 页面显示 POC 清理界面
-- [ ] 在 Call Maintenance 页面显示 Duplicate Call 清理界面
-- [ ] 非目标页面显示"未检测到有效页面"提示
-- [ ] 异步分析不阻塞 UI
+- [x] 第三个 Tab "清理器" 成功添加到面板
+- [x] 自动检测当前页面类型（Prebilling / Call Maintenance / 其他）
+- [x] 在 Prebilling 页面显示 POC 清理界面
+- [x] 在 Call Maintenance 页面显示 Duplicate Call 清理界面
+- [x] 非目标页面显示"未检测到有效页面"提示
+- [x] 异步分析不阻塞 UI
 
 ### POC 清理功能
 
-- [ ] 正确识别"仅 POC Compliance"的 visits
-- [ ] 正确识别"POC + Caregiver Compliance"的 visits
-- [ ] **详细列出每个 visit**，显示：患者名、Admission ID、Visit Date、Scheduled Time
-- [ ] 省略无用列：Office、Coordinator、Service Code、Disciplines、TF、Actions
-- [ ] 每个 visit 可勾选
-- [ ] 提供"全选"/"取消全选"功能
-- [ ] 点击"清理选中项"显示确认对话框
-- [ ] **使用 `GM_setValue` 存储任务队列**
-- [ ] **页面刷新后自动恢复清理进度**
-- [ ] **清理过程显示蒙版和进度**
-- [ ] **蒙版使用浅色半透明背景**（让用户看到自动化过程）
-- [ ] **蒙版中心显示模态框**，提醒用户不要操作
-- [ ] **清理完成后显示**"恭喜，当前页面已清空 POC 问题！"
-- [ ] **无任务时也显示**"恭喜，当前页面已清空 POC 问题！"（表格为空）
+- [x] 正确识别"仅 POC Compliance"的 visits
+- [x] 正确识别"POC + Caregiver Compliance"的 visits
+- [x] **详细列出每个 visit**，显示：患者名、Admission ID、Visit Date、Scheduled Time
+- [x] 省略无用列：Office、Coordinator、Service Code、Disciplines、TF、Actions
+- [x] 每个 visit 可勾选
+- [x] 提供"全选"/"取消全选"功能
+- [x] 点击"清理选中项"显示确认对话框
+- [x] **使用 `GM_setValue` 存储任务队列**
+- [x] **页面刷新后自动恢复清理进度**
+- [x] **清理过程显示蒙版和进度**
+- [x] **蒙版使用浅色半透明背景**（让用户看到自动化过程）
+- [x] **蒙版中心显示模态框**，提醒用户不要操作
+- [x] **清理完成后显示**"恭喜，当前页面已清空 POC 问题！"
+- [x] **无任务时也显示**"恭喜，当前页面已清空 POC 问题！"（表格为空）
 
 ### Duplicate Call 清理功能
 
-- [ ] 正确识别 "Duplicate Call" 状态的记录
-- [ ] **默认仅显示检测到的数量**
-- [ ] **可切换显示/隐藏详情**
-- [ ] 详情显示时省略无用列：Office Name、Caregiver Phone、Caregiver Team、Status、TF、Actions
-- [ ] 提供"一键清理全部"按钮
-- [ ] 点击清理后显示确认对话框
-- [ ] **使用 `GM_setValue` 存储任务队列**
-- [ ] **页面刷新后自动恢复清理进度**
-- [ ] **清理过程显示蒙版和进度**
-- [ ] **蒙版使用浅色半透明背景**（让用户看到自动化过程）
-- [ ] **蒙版中心显示模态框**，提醒用户不要操作
-- [ ] **清理完成后显示**"恭喜，当前页面已清空 Duplicate Call 问题！"
-- [ ] **无任务时也显示**"恭喜，当前页面已清空 Duplicate Call 问题！"（表格为空）
+- [x] 正确识别 "Duplicate Call" 状态的记录
+- [x] **默认仅显示检测到的数量**
+- [x] **可切换显示/隐藏详情**
+- [x] 详情显示时省略无用列：Office Name、Caregiver Phone、Caregiver Team、Status、TF、Actions
+- [x] 提供"一键清理全部"按钮
+- [x] 点击清理后显示确认对话框
+- [x] **使用 `GM_setValue` 存储任务队列**
+- [x] **页面刷新后自动恢复清理进度**
+- [x] **清理过程显示蒙版和进度**
+- [x] **蒙版使用浅色半透明背景**（让用户看到自动化过程）
+- [x] **蒙版中心显示模态框**，提醒用户不要操作
+- [x] **清理完成后显示**"恭喜，当前页面已清空 Duplicate Call 问题！"
+- [x] **无任务时也显示**"恭喜，当前页面已清空 Duplicate Call 问题！"（表格为空）
 
 ### 非功能性
 
-- [ ] 分析过程不超过 3 秒（对于 100 条记录）
-- [ ] 清理过程提供详细日志
-- [ ] 出错时有明确提示
-- [ ] 清理后自动刷新列表
+- [x] 分析过程不超过 3 秒（对于 100 条记录）
+- [x] 清理过程提供详细日志
+- [x] 出错时有明确提示
+- [x] 清理后自动刷新列表
 
 ## 架构设计
 
@@ -771,12 +771,12 @@ class CallMaintenanceTableParser {
 **目标**: 创建 Cleaner Tab 并实现页面检测
 
 **验收标准**:
-- [ ] 新增第三个 Tab "清理器"
-- [ ] 实现 `PageDetector` 服务
-- [ ] URL 变化时自动重新检测
-- [ ] 在未检测到有效页面时显示提示
-- [ ] 在 Prebilling 页面显示 "POC 清理器" 标题
-- [ ] 在 Call Maintenance 页面显示 "Call 清理器" 标题
+- [x] 新增第三个 Tab "清理器"
+- [x] 实现 `PageDetector` 服务
+- [x] URL 变化时自动重新检测
+- [x] 在未检测到有效页面时显示提示
+- [x] 在 Prebilling 页面显示 "POC 清理器" 标题
+- [x] 在 Call Maintenance 页面显示 "Call 清理器" 标题
 
 **文件**:
 - `src/js/tabs/CleanerTab.ts`
@@ -790,13 +790,13 @@ class CallMaintenanceTableParser {
 **目标**: 实现 Prebilling Report 表格的异步解析
 
 **验收标准**:
-- [ ] 实现 `PrebillingTableParser` 类
-- [ ] 正确提取所有 visit 记录
-- [ ] 正确识别 "POC Only" visits
-- [ ] 正确识别 "POC + Caregiver" visits
-- [ ] 提取必要字段：Visit ID, Date, Patient, Admission ID, Scheduled Time, Visit Time
-- [ ] **省略无用字段**：Office, Coordinator, Service Code, Disciplines, TF, Actions
-- [ ] 异步解析不阻塞 UI
+- [x] 实现 `PrebillingTableParser` 类
+- [x] 正确提取所有 visit 记录
+- [x] 正确识别 "POC Only" visits
+- [x] 正确识别 "POC + Caregiver" visits
+- [x] 提取必要字段：Visit ID, Date, Patient, Admission ID, Scheduled Time, Visit Time
+- [x] **省略无用字段**：Office, Coordinator, Service Code, Disciplines, TF, Actions
+- [x] 异步解析不阻塞 UI
 
 **文件**:
 - `src/js/services/PrebillingTableParser.ts`
@@ -808,13 +808,13 @@ class CallMaintenanceTableParser {
 **目标**: 在 Cleaner Tab 中显示详细的可勾选 visit 列表
 
 **验收标准**:
-- [ ] 调用解析器获取数据
-- [ ] **详细列出每个 visit**
-- [ ] 显示关键信息：患者名、Admission ID、Visit Date、Scheduled Time、问题类型徽章
-- [ ] 每个 visit 可勾选
-- [ ] 提供"全选"和"取消全选"按钮
-- [ ] "清理选中项"按钮显示已选数量
-- [ ] 未选择时按钮禁用
+- [x] 调用解析器获取数据
+- [x] **详细列出每个 visit**
+- [x] 显示关键信息：患者名、Admission ID、Visit Date、Scheduled Time、问题类型徽章
+- [x] 每个 visit 可勾选
+- [x] 提供"全选"和"取消全选"按钮
+- [x] "清理选中项"按钮显示已选数量
+- [x] 未选择时按钮禁用
 
 **文件**:
 - `src/js/tabs/CleanerTab.ts` (UI 部分)
@@ -826,17 +826,17 @@ class CallMaintenanceTableParser {
 **目标**: 实现清理过程的蒙版遮罩和进度追踪
 
 **验收标准**:
-- [ ] 实现 `CleaningOverlay` 类
-- [ ] 点击"清理"后显示确认对话框
-- [ ] 确认后显示全屏蒙版
-- [ ] **蒙版使用浅色半透明背景** `rgba(0, 0, 0, 0.15)` + `backdrop-filter: blur(2px)`
-- [ ] **用户能看到背后页面的自动化操作**
-- [ ] **中心模态框阻止点击穿透，并提醒用户不要操作**
-- [ ] 显示进度条和当前任务信息："正在执行清理中 (1/7)"
-- [ ] 显示当前处理的任务详情："正在处理: Wang Zihua - AHC-902986"
-- [ ] **完成后显示成功消息**（包含两种场景）
-- [ ] **无任务时直接显示成功消息**（无需清理）
-- [ ] 提供关闭按钮
+- [x] 实现 `CleaningOverlay` 类
+- [x] 点击"清理"后显示确认对话框
+- [x] 确认后显示全屏蒙版
+- [x] **蒙版使用浅色半透明背景** `rgba(0, 0, 0, 0.15)` + `backdrop-filter: blur(2px)`
+- [x] **用户能看到背后页面的自动化操作**
+- [x] **中心模态框阻止点击穿透，并提醒用户不要操作**
+- [x] 显示进度条和当前任务信息："正在执行清理中 (1/7)"
+- [x] 显示当前处理的任务详情："正在处理: Wang Zihua - AHC-902986"
+- [x] **完成后显示成功消息**（包含两种场景）
+- [x] **无任务时直接显示成功消息**（无需清理）
+- [x] 提供关闭按钮
 
 **文件**:
 - `src/js/services/CleaningOverlay.ts`
@@ -849,12 +849,12 @@ class CallMaintenanceTableParser {
 **目标**: 使用 GM_setValue 实现任务队列持久化，支持页面刷新恢复
 
 **验收标准**:
-- [ ] 实现 `CleaningController` 类
-- [ ] 使用 `GM_setValue` 存储任务队列
-- [ ] 页面加载时调用 `checkPendingTasks()` 检查未完成任务
-- [ ] **页面刷新后自动恢复清理进度**
-- [ ] 正确追踪 currentIndex
-- [ ] 任务完成后清除队列
+- [x] 实现 `CleaningController` 类
+- [x] 使用 `GM_setValue` 存储任务队列
+- [x] 页面加载时调用 `checkPendingTasks()` 检查未完成任务
+- [x] **页面刷新后自动恢复清理进度**
+- [x] 正确追踪 currentIndex
+- [x] 任务完成后清除队列
 
 **文件**:
 - `src/js/services/CleaningController.ts`
@@ -867,12 +867,12 @@ class CallMaintenanceTableParser {
 **目标**: 集成 POC.ts，实现批量 POC 清理
 
 **验收标准**:
-- [ ] 点击 Edit 按钮导航到 visit 详情页
-- [ ] 在详情页检测到清理任务后自动执行 `POCResolver()`
-- [ ] 自动点击保存按钮
-- [ ] 页面刷新回 Prebilling Report 后继续下一个任务
-- [ ] 所有任务完成后显示"恭喜，当前页面已清空 POC 问题！"
-- [ ] 错误处理和日志记录
+- [x] 点击 Edit 按钮导航到 visit 详情页
+- [x] 在详情页检测到清理任务后自动执行 `POCResolver()`
+- [x] 自动点击保存按钮
+- [x] 页面刷新回 Prebilling Report 后继续下一个任务
+- [x] 所有任务完成后显示"恭喜，当前页面已清空 POC 问题！"
+- [x] 错误处理和日志记录
 
 **文件**:
 - `src/js/services/CleaningController.ts` (POC 执行部分)
@@ -885,12 +885,12 @@ class CallMaintenanceTableParser {
 **目标**: 实现 Call Maintenance 表格解析和简洁 UI
 
 **验收标准**:
-- [ ] 实现 `CallMaintenanceTableParser` 类
-- [ ] 筛选 status 为 "Duplicate Call" 的记录
-- [ ] **默认仅显示数量**："检测到 X 个 Duplicate Call"
-- [ ] **提供切换按钮**："显示详情" / "隐藏详情"
-- [ ] 详情显示关键字段，省略无用字段
-- [ ] 提供"一键清理全部"按钮
+- [x] 实现 `CallMaintenanceTableParser` 类
+- [x] 筛选 status 为 "Duplicate Call" 的记录
+- [x] **默认仅显示数量**："检测到 X 个 Duplicate Call"
+- [x] **提供切换按钮**："显示详情" / "隐藏详情"
+- [x] 详情显示关键字段，省略无用字段
+- [x] 提供"一键清理全部"按钮
 
 **文件**:
 - `src/js/services/CallMaintenanceTableParser.ts`
@@ -903,11 +903,12 @@ class CallMaintenanceTableParser {
 **目标**: 实现批量 Reject Duplicate Calls
 
 **验收标准**:
-- [ ] 找到并点击 Reject 按钮
-- [ ] 使用 `GM_setValue` 持久化任务
-- [ ] 页面刷新后继续下一个任务
-- [ ] 所有任务完成后显示"当前页面已清空 Duplicate Call 问题！"
-- [ ] 错误处理和日志记录
+- [x] 找到并点击 Reject 按钮
+- [x] 处理确认对话框 (#confirmDelete button.primary)
+- [x] 使用 `GM_setValue` 持久化任务
+- [x] 页面刷新后继续下一个任务
+- [x] 所有任务完成后显示"当前页面已清空 Duplicate Call 问题！"
+- [x] 错误处理和日志记录
 
 **文件**:
 - `src/js/services/CleaningController.ts` (Call 执行部分)
@@ -934,15 +935,15 @@ class CallMaintenanceTableParser {
 
 ## 完成定义 (DoD)
 
-- [ ] 所有 Story 验收标准通过
-- [ ] 代码已添加 JSDoc 注释
-- [ ] 无 TypeScript 编译错误
-- [ ] UI 美观，符合现有风格
-- [ ] 使用 GM_setValue 而非 localStorage
-- [ ] 复用现有 POC.ts 逻辑
-- [ ] 手动测试通过（Prebilling 和 Call Maintenance）
-- [ ] 页面刷新后能正确恢复进度
-- [ ] 清理蒙版正常工作
+- [x] 所有 Story 验收标准通过
+- [x] 代码已添加 JSDoc 注释
+- [x] 无 TypeScript 编译错误
+- [x] UI 美观，符合现有风格
+- [x] 使用 GM_setValue 而非 localStorage
+- [x] 复用现有 POC.ts 逻辑
+- [x] 手动测试通过（Prebilling 和 Call Maintenance）
+- [x] 页面刷新后能正确恢复进度
+- [x] 清理蒙版正常工作
 
 ## 变更日志
 
@@ -950,6 +951,7 @@ class CallMaintenanceTableParser {
 | ---------- | ---- | ------------------------------------------------- | ------------ |
 | 2026-01-13 | 1.0  | Epic 初始创建                                     | AI Developer |
 | 2026-01-14 | 1.1  | 更新：页面刷新处理、UI 差异、蒙版 UX、复用 POC.ts | AI Developer |
+| 2026-01-14 | 2.0  | 完成全部 8 个 Story，通过 QA 验收                 | AI Developer |
 
 ---
 
