@@ -218,6 +218,9 @@
   overscroll-behavior: contain;
   min-height: 0;
 }
+.tracker-content.tracker-content-empty {
+  padding: 0 !important;
+}
 .tracker-table {
   width: 100%;
   border-collapse: collapse;
@@ -547,4 +550,31 @@
   cursor: se-resize;
   z-index: 11;
   border-radius: 0 0 8px 0;
+}
+/* Empty State Styles - matches QA Report empty state */
+.tracker-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  text-align: center;
+  color: #666666;
+  background: #f7f8fa;
+}
+.tracker-empty-state .tracker-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+.tracker-empty-state .tracker-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 8px;
+}
+.tracker-empty-state .tracker-empty-text {
+  font-size: 13px;
+  color: #666666;
 }

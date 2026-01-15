@@ -14,17 +14,17 @@
 // ============================================================================
 
 .status-tracking-tab {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  padding: 0; // 无内边距，让 VisitMonitor 面板填满整个区域
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    padding: 0; // 无内边距，让 VisitMonitor 面板填满整个区域
 }
 
 #status-tracking-wrapper {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
 // ============================================================================
@@ -33,51 +33,92 @@
 
 // 当 tracker-panel 被嵌入到 tab 中时的样式调整
 #status-tracking-wrapper #tracker-panel {
-  // 继承自内联样式，这里只做补充
-  background: @background-white;
-  
-  // Epic 10 修复: 确保面板内的布局正确
-  .tracker-view {
+    // 继承自内联样式，这里只做补充
+    background: @background-white;
+
+    // Epic 10 修复: 确保面板内的布局正确
+    .tracker-view {
+        height: 100%;
+        overflow: hidden;
+        min-height: 0;
+
+        // 确保 .hidden 类优先级最高
+        &.hidden {
+            display: none !important;
+        }
+    }
+
+    .tracker-content {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        &.tracker-content-empty {
+            padding: 0 !important;
+        }
+    }
+
+    .tracker-header,
+    .tracker-footer {
+        flex-shrink: 0;
+    }
+
+    // 确保面板内的滚动条样式一致
+    &::-webkit-scrollbar,
+    .tracker-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb,
+    .tracker-content::-webkit-scrollbar-thumb {
+        background: @border-color;
+        border-radius: @radius-sm;
+
+        &:hover {
+            background: @text-secondary;
+        }
+    }
+
+    &::-webkit-scrollbar-track,
+    .tracker-content::-webkit-scrollbar-track {
+        background: @background-alt;
+    }
+}
+
+#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,
+#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {
+    background: #f7f8fa;
+}
+
+/* Empty State Styles - matches QA Report empty state */
+#status-tracking-wrapper .tracker-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     height: 100%;
-    overflow: hidden;
-    min-height: 0;
-    
-    // 确保 .hidden 类优先级最高
-    &.hidden {
-      display: none !important;
-    }
-  }
-  
-  .tracker-content {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  
-  .tracker-header,
-  .tracker-footer {
-    flex-shrink: 0;
-  }
-  
-  // 确保面板内的滚动条样式一致
-  &::-webkit-scrollbar,
-  .tracker-content::-webkit-scrollbar {
-    width: 6px;
-  }
+    min-height: 200px;
+    padding: 40px 20px;
+    text-align: center;
+    color: #666;
+    background: #f7f8fa;
 
-  &::-webkit-scrollbar-thumb,
-  .tracker-content::-webkit-scrollbar-thumb {
-    background: @border-color;
-    border-radius: @radius-sm;
-    
-    &:hover {
-      background: @text-secondary;
+    .tracker-empty-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.7;
     }
-  }
 
-  &::-webkit-scrollbar-track,
-  .tracker-content::-webkit-scrollbar-track {
-    background: @background-alt;
-  }
+    .tracker-empty-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+    }
+
+    .tracker-empty-text {
+        font-size: 14px;
+        color: #888;
+    }
 }

@@ -655,7 +655,7 @@ export const visitMonitor = async () => {
                 <span id="last-refresh-time">⏰ 上次更新: --:--:--</span>
               </div>
               <div class="tracker-header-right">
-                <button id="edit-list-btn" class="tracker-btn-secondary">📝 编辑列表</button>
+                <button id="edit-list-btn" class="tracker-btn-secondary">📝 选择要追踪的辅导员</button>
               </div>
             </div>
             <div class="tracker-content"><table class="tracker-table"><thead><tr>
@@ -2092,10 +2092,46 @@ export const visitMonitor = async () => {
 
   // --- 视图渲染 (renderTrackingView 已更新) ---
   function renderTrackingView(): void {
+    // 获取 tracker-content 容器和表格元素
+    const trackerContent = document.querySelector(
+      "#tracking-view .tracker-content"
+    ) as HTMLElement;
+    const trackerTable = trackerContent?.querySelector(
+      ".tracker-table"
+    ) as HTMLElement;
+
     if (trackedCoordinators.length === 0) {
-      trackingTableBody.innerHTML = `<tr><td colspan="6">没有正在追踪的 Coordinator</td></tr>`;
+      // 隐藏表格，显示类似 QA 报告的居中提示
+      if (trackerTable) trackerTable.style.display = "none";
+
+      // 添加空状态类以移除 padding
+      trackerContent.classList.add("tracker-content-empty");
+
+      // 创建或更新空状态提示
+      let emptyState = trackerContent.querySelector(
+        ".tracker-empty-state"
+      ) as HTMLElement;
+      if (!emptyState) {
+        emptyState = document.createElement("div");
+        emptyState.className = "tracker-empty-state";
+        trackerContent.appendChild(emptyState);
+      }
+      emptyState.innerHTML = `
+        <div class="tracker-empty-icon">📊</div>
+        <div class="tracker-empty-title">状态追踪</div>
+        <div class="tracker-empty-text">请选择要追踪的辅导员</div>
+      `;
+      emptyState.style.display = "flex";
       return;
     }
+
+    // 有数据时显示表格，隐藏空状态，移除空状态类
+    if (trackerTable) trackerTable.style.display = "";
+    trackerContent.classList.remove("tracker-content-empty");
+    const emptyState = trackerContent?.querySelector(
+      ".tracker-empty-state"
+    ) as HTMLElement;
+    if (emptyState) emptyState.style.display = "none";
     const rowsHtml = trackedCoordinators
       .map((coordinator, index) => {
         const clockInData = statusDataCache.get(`${coordinator.id}-2`);
