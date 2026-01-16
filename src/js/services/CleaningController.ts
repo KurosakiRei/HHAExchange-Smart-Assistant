@@ -102,10 +102,34 @@ export class CleaningController {
       this.getTaskInfo(currentTask, queue.pageType)
     );
 
-    // 延迟执行，确保 DOM 加载完成
-    setTimeout(() => {
-      this.executeCurrentTask(queue);
-    }, 1000);
+    // 更新蒙版状态提示
+    CleaningOverlay.update(
+      queue.currentIndex + 1,
+      queue.tasks.length,
+      `${this.getTaskInfo(currentTask, queue.pageType)} (等待页面加载...)`
+    );
+
+    // 智能等待表格加载，最长等待 15 秒
+    this.waitForTable(queue.pageType, 15000)
+      .then(() => {
+        // 表格加载完成，执行任务
+        console.log("[CleaningController] Table loaded, executing task...");
+        // 再次更新蒙版状态
+        CleaningOverlay.update(
+          queue.currentIndex + 1,
+          queue.tasks.length,
+          this.getTaskInfo(currentTask, queue.pageType)
+        );
+        this.executeCurrentTask(queue);
+      })
+      .catch((error) => {
+        console.error("[CleaningController] Timeout waiting for table:", error);
+        queue.status = "FAILED";
+        GM_setValue(CLEANING_QUEUE_KEY, queue);
+        CleaningOverlay.showError(
+          `页面加载超时，无法找到表格。\n请手动刷新页面，脚本将尝试恢复。`
+        );
+      });
 
     return true;
   }
@@ -433,5 +457,57 @@ export class CleaningController {
       GM_setValue(CLEANING_QUEUE_KEY, queue);
     }
     CleaningOverlay.hide();
+  }
+  /**
+   * 等待表格元素加载完成
+   * @param pageType 页面类型
+   * @param timeoutMs 超时时间（毫秒）
+   */
+  private static waitForTable(
+    pageType: PageType,
+    timeoutMs: number
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      const selector =
+        pageType === "PREBILLING"
+          ? "#ctl00_ContentPlaceHolder1_divPrebillingReportInternalScroll" // Prebilling 容器
+          : "#ctl00_ContentPlaceHolder1_uxGvSearch"; // Call Maintenance 表格
+
+      const check = () => {
+        const element = document.querySelector(selector);
+        // 确保元素不仅存在，而且有内容（行数 > 0）
+        // 对于 Call Maintenance，至少应该有 header row
+        let isReady = false;
+        if (element) {
+          if (pageType === "PREBILLING") {
+            isReady = true; // Prebilling 容器存在即可
+          } else {
+            // Call Maintenance 表格应该有 tbody 或 tr
+            const table = element as HTMLTableElement;
+            isReady = table.rows.length > 0;
+          }
+        }
+
+        if (isReady) {
+          resolve();
+          return;
+        }
+
+        if (Date.now() - startTime > timeoutMs) {
+          reject(new Error(`Timeout waiting for selector: ${selector}`));
+          return;
+        }
+
+        // 使用 requestAnimationFrame 或 setTimeout 轮询
+        if (window.requestAnimationFrame) {
+          window.requestAnimationFrame(check);
+        } else {
+          setTimeout(check, 100);
+        }
+      };
+
+      check();
+    });
   }
 }
