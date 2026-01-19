@@ -62,28 +62,28 @@
 - **URL 模式**: `https://app.hhaexchange.com/*/Patient/InternalPatientInfo_ns.aspx?PatientId=*`
 - **关键选择器**：
 
-| 字段       | CSS 选择器                                                 | 示例值                                            |
-| ---------- | ---------------------------------------------------------- | ------------------------------------------------- |
-| 姓名       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientName` | `Zhao Guohua`                                     |
-| Patient ID | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientId`   | `144284443`                                       |
-| 生日       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientDOB`  | `10/15/1950`                                      |
-| 地址       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblAddress`     | `72 Mayberry Promenade, STATEN ISLAND, NY, 10312` |
-| 保险/合同  | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblContracts`   | `Healthfirst (AHC)`                               |
-| 电话       | `a[href^="tel:"]`                                          | `917-622-0826`                                    |
+| 字段       | CSS 选择器                                                   | 示例值                                            |
+| ---------- | ------------------------------------------------------------ | ------------------------------------------------- |
+| 姓名       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientName`   | `Zhao Guohua`                                     |
+| Patient ID | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientNumber` | `144284443`                                       |
+| 生日       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientDOB`    | `10/15/1950`                                      |
+| 地址       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblAddress`       | `72 Mayberry Promenade, STATEN ISLAND, NY, 10312` |
+| 保险/合同  | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblContracts`     | `Healthfirst (AHC)`                               |
+| 电话       | `a[href^="tel:"]`                                            | `917-622-0826`                                    |
 
 #### 2. 病人 Profile 页面 - Patient_ns
 
 - **URL 模式**: `https://app.hhaexchange.com/*/Patient/Patient_ns.aspx?PatientId=*`
 - **关键选择器**：
 
-| 字段       | CSS 选择器                                                 | 示例值                                          |
-| ---------- | ---------------------------------------------------------- | ----------------------------------------------- |
-| 姓名       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientName` | `CHEN TZEN`                                     |
-| Patient ID | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientID`   | `000211664`（注意：ID 大写）                    |
-| 生日       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientDOB`  | `11/29/1933`                                    |
-| 地址       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblAddress`     | `80 BEEKMAN STREET APT 3K, NEW YORK, NY, 10038` |
-| 支付方     | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblChhaName`    | `Americare`                                     |
-| 电话       | `a[href^="tel:"]`                                          | `917-623-6566`                                  |
+| 字段       | CSS 选择器                                                   | 示例值                                          |
+| ---------- | ------------------------------------------------------------ | ----------------------------------------------- |
+| 姓名       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientName`   | `CHEN TZEN`                                     |
+| Patient ID | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientNumber` | `000211664`（注意：ID 大写）                    |
+| 生日       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientDOB`    | `11/29/1933`                                    |
+| 地址       | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblAddress`       | `80 BEEKMAN STREET APT 3K, NEW YORK, NY, 10038` |
+| 支付方     | `#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblChhaName`      | `Americare`                                     |
+| 电话       | `a[href^="tel:"]`                                            | `917-623-6566`                                  |
 
 > [!IMPORTANT]
 > **两种病人页面的差异**：
@@ -327,7 +327,7 @@ class ProfileDataExtractor {
     return {
       type: 'PATIENT',
       name: this.getText('#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientName'),
-      id: this.getText('#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientId'),
+      id: this.getText('#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientNumber'),
       dob: this.getText('#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientDOB'),
       address: this.getText('#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblAddress'),
       phone: this.getPhoneFromTelLink(),

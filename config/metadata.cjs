@@ -17,12 +17,13 @@ module.exports = {
   // 使用 GitHub raw URL 从 dist 分支获取更新（仓库公开后可用）
   updateURL: "https://raw.githubusercontent.com/KurosakiRei/HHAExchange-Smart-Assistant/dist/index.prod.user.js",
   downloadURL: "https://raw.githubusercontent.com/KurosakiRei/HHAExchange-Smart-Assistant/dist/index.prod.user.js",
-  match: ["*://app.hhaexchange.com/", "*://app.hhaexchange.com/*","*://mt3.1voicetech.com/webapp/*"],
+  match: ["*://app.hhaexchange.com/", "*://app.hhaexchange.com/*", "*://mt3.1voicetech.com/webapp/*", "*://outlook.office.com/*", "*://outlook.office.com/mail/*", "https://outlook.office.com/mail/*", "*://*.office.com/*"],
   require: [
     // 使用具体版本号确保兼容性
     `https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js`,
+    // TinyMCE is now manually bundled via TinyMCEBundler to bypass CSP
   ],
-  grant: ["GM.xmlHttpRequest","GM_openInTab", "GM_addStyle", "GM_setValue", "GM_getValue"],
-  connect: ["app.hhaexchange.com","reports.hhaexchange.com"],
+  grant: ["GM.xmlHttpRequest", "GM_openInTab", "GM_addStyle", "GM_setValue", "GM_getValue"],
+  connect: ["app.hhaexchange.com", "reports.hhaexchange.com", "outlook.office.com", "unpkg.com"],
   "run-at": "document-idle",
 };

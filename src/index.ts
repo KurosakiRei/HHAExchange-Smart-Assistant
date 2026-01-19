@@ -25,11 +25,31 @@ import { MultiTabPanel } from "./js/MultiTabPanel";
 import { StatusTrackingTab } from "./js/tabs/StatusTrackingTab";
 import { QAReportTab } from "./js/tabs/QAReportTab";
 import { CleanerTab } from "./js/tabs/CleanerTab";
+import { MailBuilderTab } from "./js/tabs/MailBuilderTab";
 import { CleaningController } from "./js/services/CleaningController";
+import { OutlookAdapter } from "./js/services/OutlookAdapter";
+import { TinyMCEBundler } from "./js/services/TinyMCEBundler";
 import { version } from "../package.json";
 
 async function main() {
   console.log("HHA Exchange Smart Assistant " + version + " : script start");
+
+  // Set a global flag to indicate script is running (for debugging)
+  (window as any).HHA_SMART_ASSISTANT_STARTED = true;
+  (window as any).HHA_SMART_ASSISTANT_VERSION = version;
+
+  // Initialize OutlookAdapter if on Outlook page
+  OutlookAdapter.init();
+
+  // Preload TinyMCE in the background (fire and forget)
+  // This gives it time to load before user opens the mail template editor
+  TinyMCEBundler.load().catch((err) => {
+    console.warn(
+      "[main] TinyMCE preload failed (will retry on modal open):",
+      err
+    );
+  });
+
   incomingCallHandler();
 
   async function FetchTester() {
@@ -311,6 +331,7 @@ function embedMultiTabPanel(
   panel.registerTab(new StatusTrackingTab());
   panel.registerTab(new QAReportTab());
   panel.registerTab(new CleanerTab());
+  panel.registerTab(new MailBuilderTab());
 
   // Initialize panel
   panel

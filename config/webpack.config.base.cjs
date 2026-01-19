@@ -42,7 +42,7 @@ const webpackConfig = {
       {
         test: /\.css$/,
         use: ["style-loader", "css-loader"],
-      },{
+      }, {
         test: /\.(scss)$/,
         use: [
           {
@@ -65,7 +65,7 @@ const webpackConfig = {
             loader: 'sass-loader'
           }
         ]
-      },{
+      }, {
         test: /\.vue$/,
         use: [
           /* config.module.rule('vue').use('vue-loader') */
@@ -108,10 +108,10 @@ const webpackConfig = {
     ],
   },
   plugins: process.env.npm_config_report ? [new BundleAnalyzerPlugin()] : [new VueLoaderPlugin(),
-    new webpack.DefinePlugin({
-        __VUE_OPTIONS_API__: false,
-        __VUE_PROD_DEVTOOLS__: false,
-      }),],
+  new webpack.DefinePlugin({
+    __VUE_OPTIONS_API__: false,
+    __VUE_PROD_DEVTOOLS__: false,
+  }),],
 };
 
 module.exports = webpackConfig;
