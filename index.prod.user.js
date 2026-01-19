@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.9.3
+// @version             3.9.4
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -12,6 +12,10 @@
 // @match               *://app.hhaexchange.com/
 // @match               *://app.hhaexchange.com/*
 // @match               *://mt3.1voicetech.com/webapp/*
+// @match               *://outlook.office.com/*
+// @match               *://outlook.office.com/mail/*
+// @match               https://outlook.office.com/mail/*
+// @match               *://*.office.com/*
 // @require             https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js
 // @grant               GM.xmlHttpRequest
 // @grant               GM_openInTab
@@ -20,6 +24,8 @@
 // @grant               GM_getValue
 // @connect             app.hhaexchange.com
 // @connect             reports.hhaexchange.com
+// @connect             outlook.office.com
+// @connect             unpkg.com
 // @run-at              document-idle
 // ==/UserScript==
 
@@ -47,7 +53,7 @@ var ___CSS_LOADER_URL_IMPORT_0___ = new URL(/* asset import */ __webpack_require
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 var ___CSS_LOADER_URL_REPLACEMENT_0___ = _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default()(___CSS_LOADER_URL_IMPORT_0___);
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "/**\n * Main Stylesheet Entry Point\n * \n * This file imports all component stylesheets.\n * Visit Monitor (Coordinator Tracker) styles are in coordinator-tracker.less\n */\n.hha-smart-panel {\n  position: absolute;\n  top: 0;\n  width: 680px;\n  height: 460px;\n  max-height: 80vh;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n  font-size: 14px;\n  color: #333333;\n}\n.hha-smart-panel-header {\n  height: 40px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 16px;\n  border-bottom: none;\n  cursor: move;\n  user-select: none;\n}\n.hha-smart-panel-title {\n  font-size: 14px;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-panel-controls {\n  display: flex;\n  gap: 8px;\n  position: relative;\n  z-index: 100000;\n}\n.hha-smart-panel-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 2px;\n  background: rgba(255, 255, 255, 0.2);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: background 0.15s ease;\n  font-size: 14px;\n  padding: 0;\n  position: relative;\n  z-index: 100001;\n}\n.hha-smart-panel-btn:hover {\n  background: rgba(255, 255, 255, 0.3);\n}\n.hha-smart-panel-btn:active {\n  background: rgba(255, 255, 255, 0.4);\n}\n.hha-smart-panel-body {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-content-wrapper {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n  position: relative;\n  isolation: isolate;\n}\n.hha-smart-tab-bar {\n  width: 100px;\n  min-width: 40px;\n  background: #f7f8fa;\n  border-right: 1px solid #e0e0e0;\n  transition: width 0.2s ease;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  flex-shrink: 0;\n  position: relative;\n  z-index: 2;\n}\n.hha-smart-tab-bar.collapsed {\n  width: 40px;\n}\n.hha-smart-tab-list {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n}\n.hha-smart-tab-list::-webkit-scrollbar {\n  width: 4px;\n}\n.hha-smart-tab-list::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n.hha-smart-tab-item {\n  position: relative;\n  padding: 12px 8px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  white-space: nowrap;\n  border-bottom: 1px solid #f0f0f0;\n}\n.hha-smart-tab-item:hover {\n  background: #f0f2f5;\n}\n.hha-smart-tab-item.active {\n  background: #f0efff;\n  color: #667eea;\n  font-weight: 500;\n}\n.hha-smart-tab-icon {\n  flex-shrink: 0;\n  font-size: 18px;\n  line-height: 1;\n  width: 20px;\n  text-align: center;\n}\n.hha-smart-tab-text {\n  opacity: 1;\n  transition: opacity 0.2s ease;\n  font-size: 13px;\n  overflow-x: auto;\n  overflow-y: hidden;\n  white-space: nowrap;\n  flex: 1;\n  scroll-behavior: smooth;\n}\n.hha-smart-tab-text::-webkit-scrollbar {\n  height: 0;\n  display: none;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-tab-text {\n  opacity: 0;\n  width: 0;\n  overflow: hidden;\n  pointer-events: none;\n}\n.hha-smart-tab-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 4px;\n  height: 100%;\n  background: #667eea;\n  opacity: 0;\n  transition: opacity 0.2s ease;\n  z-index: 1;\n}\n.hha-smart-tab-item.active .hha-smart-tab-indicator {\n  opacity: 1;\n}\n.hha-smart-tab-collapse-btn {\n  padding: 8px;\n  text-align: center;\n  cursor: pointer;\n  border-top: 1px solid #e0e0e0;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 36px;\n  position: relative;\n  z-index: 10;\n}\n.hha-smart-tab-collapse-btn:hover {\n  background: #f0f2f5;\n}\n.hha-smart-collapse-icon {\n  display: inline-block;\n  transition: transform 0.2s ease;\n  font-size: 14px;\n  color: #666666;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-collapse-icon {\n  transform: rotate(180deg);\n}\n.hha-smart-content-area {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: #ffffff;\n  min-height: 0;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-panel-footer {\n  height: 28px;\n  background: #f7f8fa;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  padding: 0 16px;\n  font-size: 12px;\n  color: #666666;\n  flex-shrink: 0;\n}\n.footer-branding {\n  font-style: italic;\n  opacity: 0.6;\n  user-select: none;\n}\n.hha-smart-tab-content {\n  display: none !important;\n  padding: 0;\n  animation: fadeIn 0.2s ease;\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  box-sizing: border-box;\n  min-height: 0;\n  position: relative;\n  z-index: 0;\n}\n.hha-smart-tab-content.active {\n  display: flex !important;\n  flex-direction: column;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n.hha-smart-config-card {\n  background: #ffffff;\n  border-radius: 4px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: box-shadow 0.2s ease;\n}\n.hha-smart-config-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.hha-smart-config-card-title {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-config-card-body {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.hha-smart-btn {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.hha-smart-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #667eea;\n  color: white;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.hha-smart-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary:hover:not(:disabled) {\n  background: #5a6fd6;\n}\n.hha-smart-btn-primary:active:not(:disabled) {\n  background: #4c5ec2;\n}\n.hha-smart-btn-secondary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #f7f8fa;\n  color: #333333;\n  border: 1px solid #e0e0e0;\n}\n.hha-smart-btn-secondary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-secondary:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #a29bfe;\n}\n.hha-smart-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 32px;\n  text-align: center;\n  color: #666666;\n  min-height: 300px;\n}\n.hha-smart-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.hha-smart-placeholder-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.hha-smart-placeholder-text {\n  font-size: 14px;\n  color: #666666;\n}\n#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/**\n * QA Report Tab Styles\n * Epic 8: QA 报告功能\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.qa-report-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n}\n.qa-report-wrapper {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  gap: 0;\n}\n.qa-report-header {\n  display: none;\n}\n.qa-report-title {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.qa-report-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.qa-toolbar-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-left > * {\n  margin: 0;\n  vertical-align: middle;\n}\n.qa-toolbar-actions {\n  display: flex;\n  align-items: center;\n  gap: 0;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-actions .qa-load-btn {\n  border-radius: 2px 0 0 2px;\n  border-right: 1px solid rgba(255, 255, 255, 0.3);\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-actions .qa-export-btn {\n  border-radius: 0 2px 2px 0;\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-select-label {\n  font-size: 13px;\n  color: #666666;\n  font-weight: 500;\n  line-height: 28px;\n  white-space: nowrap;\n}\n.qa-coordinator-select {\n  padding: 0 28px 0 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: white;\n  background-image: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n  background-repeat: no-repeat;\n  background-position: right 8px center;\n  background-size: 12px 12px;\n  font-size: 13px;\n  min-width: 180px;\n  max-width: 300px;\n  height: 28px !important;\n  line-height: 26px;\n  vertical-align: middle;\n  cursor: pointer;\n  box-sizing: border-box;\n  appearance: none;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.qa-coordinator-select:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px #a29bfe;\n}\n.qa-coordinator-select:disabled {\n  background: #f7f8fa;\n  cursor: not-allowed;\n}\n.qa-load-btn {\n  padding: 0 14px;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-load-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.qa-export-btn {\n  padding: 0 12px;\n  font-size: 13px;\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  color: #333333;\n  cursor: pointer;\n  transition: all 0.2s;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-export-btn:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #667eea;\n}\n.qa-export-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.qa-status-text {\n  font-size: 12px;\n  color: #666666;\n  white-space: nowrap;\n}\n.qa-view-toggle {\n  display: flex;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  overflow: hidden;\n  height: 28px;\n}\n.qa-view-btn {\n  padding: 0 10px;\n  border: none;\n  background: white;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  transition: all 0.2s;\n  height: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-view-btn:first-child {\n  border-right: 1px solid #e0e0e0;\n}\n.qa-view-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-view-btn.active {\n  background: #667eea;\n  color: white;\n}\n.qa-report-content-body {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n  background: #f7f8fa;\n}\n.qa-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  text-align: center;\n  color: #666666;\n}\n.qa-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.qa-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.qa-empty-text {\n  font-size: 13px;\n}\n.qa-report-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n  background: white;\n  border-radius: 2px;\n  overflow: hidden;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.qa-report-table thead {\n  background: #f7f8fa;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n}\n.qa-report-table thead th {\n  padding: 8px 16px;\n  text-align: left;\n  font-weight: 600;\n  color: #666666;\n  border-bottom: 2px solid #e0e0e0;\n  white-space: nowrap;\n}\n.qa-report-table thead th.sortable {\n  cursor: pointer;\n  user-select: none;\n  transition: background 0.15s;\n}\n.qa-report-table thead th.sortable:hover {\n  background: #e7eaf0;\n}\n.qa-report-table thead th.sortable .sort-icon {\n  margin-left: 4px;\n  font-size: 10px;\n  opacity: 0.5;\n  display: inline-block;\n  vertical-align: middle;\n}\n.qa-report-table thead th.sortable .sort-icon.sort-asc,\n.qa-report-table thead th.sortable .sort-icon.sort-desc {\n  opacity: 1;\n  color: #667eea;\n}\n.qa-report-table tbody tr {\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s;\n}\n.qa-report-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.qa-report-table tbody tr:last-child {\n  border-bottom: none;\n}\n.qa-report-table tbody td {\n  padding: 8px 16px;\n  vertical-align: middle;\n  user-select: text;\n  cursor: text;\n}\n.qa-report-table tbody td.col-action {\n  user-select: none;\n  cursor: default;\n}\n.qa-report-table .col-id {\n  width: 110px;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  color: #667eea;\n  font-weight: 500;\n}\n.qa-report-table .col-name {\n  width: auto;\n  min-width: 150px;\n  font-weight: 500;\n}\n.qa-report-table .col-phone {\n  width: 140px;\n}\n.qa-report-table .phone-loading {\n  color: #666666;\n  font-style: italic;\n  font-size: 13px;\n}\n.qa-report-table .phone-error {\n  color: #dc3545;\n  font-size: 13px;\n}\n.qa-report-table .phone-single {\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n}\n.qa-report-table .phone-single a {\n  color: #667eea;\n  text-decoration: none;\n}\n.qa-report-table .phone-single a:hover {\n  text-decoration: underline;\n}\n.qa-report-table .phone-multiple {\n  position: relative;\n  display: inline-block;\n  cursor: pointer;\n}\n.qa-report-table .phone-multiple .phone-trigger {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  padding: 2px 6px;\n  background: rgba(102, 126, 234, 0.1);\n  border: 1px solid #667eea;\n  border-radius: 2px;\n  color: #667eea;\n  cursor: pointer;\n  font-size: 13px;\n  transition: all 0.2s;\n}\n.qa-report-table .phone-multiple .phone-trigger:hover {\n  background: #667eea;\n  color: white;\n}\n.qa-report-table .phone-multiple .phone-trigger .phone-count {\n  font-weight: 600;\n}\n.qa-report-table .phone-dropdown {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  z-index: 1000;\n  min-width: 160px;\n  padding: 4px 0;\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  margin-top: 4px;\n}\n.qa-report-table .phone-dropdown .phone-item {\n  display: block;\n  padding: 4px 8px;\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n  text-decoration: none;\n  transition: background 0.15s;\n}\n.qa-report-table .phone-dropdown .phone-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-table .col-qa {\n  width: 100px;\n  font-weight: 500;\n}\n.qa-report-table .col-action {\n  width: 50px;\n  text-align: center;\n}\n.phone-item {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.phone-item + .phone-item {\n  margin-top: 2px;\n}\n.qa-never {\n  color: #dc3545 !important;\n  font-weight: 600;\n}\n.qa-action-btn {\n  padding: 4px 8px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 16px;\n  color: #666666;\n  border-radius: 2px;\n  transition: all 0.2s;\n}\n.qa-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 8px;\n  padding: 8px;\n}\n.qa-card {\n  background: white;\n  border-radius: 2px;\n  padding: 16px;\n  border-left: 4px solid #e0e0e0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  transition: all 0.2s;\n  position: relative;\n  overflow: hidden;\n  user-select: text;\n}\n.qa-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  transform: translateY(-2px);\n}\n.card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  margin-bottom: 8px;\n}\n.card-name {\n  font-weight: 600;\n  font-size: 13px;\n  color: #333333;\n  flex: 1;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  padding-right: 8px;\n}\n.card-action-btn {\n  padding: 2px 6px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  border-radius: 2px;\n  flex-shrink: 0;\n  user-select: none;\n}\n.card-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.card-id {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #667eea;\n  margin-bottom: 8px;\n}\n.card-phones {\n  margin-bottom: 8px;\n}\n.card-phone {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.card-phone + .card-phone {\n  margin-top: 2px;\n}\n.card-qa {\n  font-weight: 600;\n  font-size: 13px;\n  margin-bottom: 8px;\n}\n.card-priority-badge {\n  position: absolute;\n  bottom: 0;\n  right: 0;\n  padding: 2px 8px;\n  font-size: 12px;\n  color: white;\n  border-radius: 2px 0 0 0;\n  font-weight: 500;\n}\n.priority-critical .col-qa {\n  color: #dc3545;\n}\n.priority-high .col-qa {\n  color: #e74c3c;\n}\n.priority-medium-high .col-qa {\n  color: #fd7e14;\n}\n.priority-medium .col-qa {\n  color: #ffc107;\n}\n.priority-low-medium .col-qa {\n  color: #a8d08d;\n}\n.priority-low .col-qa {\n  color: #28a745;\n}\n.qa-export-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 140px;\n}\n.export-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  transition: background 0.15s;\n}\n.export-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.export-menu-item + .export-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-action-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 180px;\n}\n.action-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: background 0.15s;\n}\n.action-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.action-menu-item + .action-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-toast {\n  position: fixed;\n  top: 24px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100%);\n  padding: 8px 24px;\n  border-radius: 2px;\n  font-size: 13px;\n  color: white;\n  z-index: 100001;\n  opacity: 0;\n  transition: all 0.3s ease;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n}\n.qa-toast.show {\n  transform: translateX(-50%) translateY(0);\n  opacity: 1;\n}\n.qa-toast.qa-toast-success {\n  background: #28a745;\n}\n.qa-toast.qa-toast-error {\n  background: #dc3545;\n}\n.qa-toast.qa-toast-info {\n  background: #667eea;\n}\n.qa-note-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n}\n.qa-note-modal {\n  background: white;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  width: 90%;\n  max-width: 520px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.qa-note-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.qa-note-modal-title {\n  font-size: 14px;\n  font-weight: 600;\n}\n.qa-note-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 28px;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  transition: background 0.15s;\n}\n.qa-note-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.qa-note-modal-body {\n  padding: 16px;\n  overflow-y: auto;\n  flex: 1;\n}\n.qa-note-section {\n  margin-bottom: 16px;\n}\n.qa-note-section:last-child {\n  margin-bottom: 0;\n}\n.qa-note-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #666666;\n  margin-bottom: 4px;\n}\n.qa-note-template {\n  padding: 8px 16px;\n  background: #f0f2f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  line-height: 1.5;\n  color: #333333;\n}\n.qa-note-textarea {\n  width: 100%;\n  padding: 8px 16px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  font-family: inherit;\n  resize: vertical;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.qa-note-textarea:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);\n}\n.qa-note-textarea::placeholder {\n  color: #666666;\n}\n.qa-note-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  padding: 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #f0f2f5;\n}\n.qa-note-btn {\n  padding: 4px 16px;\n  font-size: 13px;\n  border-radius: 2px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.qa-note-btn.qa-note-btn-cancel {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #666666;\n}\n.qa-note-btn.qa-note-btn-cancel:hover {\n  background: #f0f2f5;\n  border-color: #666666;\n}\n.qa-note-btn.qa-note-btn-submit {\n  background: #667eea;\n  border: 1px solid #667eea;\n  color: white;\n}\n.qa-note-btn.qa-note-btn-submit:hover {\n  background: #5a6fd6;\n  border-color: #5a6fd6;\n}\n/**\n * Status Tracking Tab Styles\n * Epic 7: Multi-Tab Panel - 状态追踪 Tab\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.status-tracking-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n  padding: 0;\n}\n#status-tracking-wrapper {\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n#status-tracking-wrapper #tracker-panel {\n  background: #ffffff;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view {\n  height: 100%;\n  overflow: hidden;\n  min-height: 0;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view.hidden {\n  display: none !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content {\n  flex: 1 1 auto;\n  min-height: 0;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-header,\n#status-tracking-wrapper #tracker-panel .tracker-footer {\n  flex-shrink: 0;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar {\n  width: 6px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb:hover {\n  background: #666666;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n/* Empty State Styles - matches QA Report empty state */\n#status-tracking-wrapper .tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 200px;\n  padding: 40px 20px;\n  text-align: center;\n  color: #666;\n  background: #f7f8fa;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.7;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-title {\n  font-size: 18px;\n  font-weight: 600;\n  color: #333;\n  margin-bottom: 8px;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-text {\n  font-size: 14px;\n  color: #888;\n}\n/**\n * Cleaner Tab Styles\n * Epic 11: POC 和 Duplicate Call 智能清理器\n */\n.cleaner-tab {\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  padding: 0;\n}\n.cleaner-wrapper {\n  flex: 1;\n  overflow-y: auto;\n  padding: 12px 16px;\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n}\n/* Header */\n.cleaner-header {\n  margin-bottom: 12px;\n}\n.cleaner-title-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cleaner-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.cleaner-page-tag {\n  font-size: 12px;\n  color: #666;\n  background: #f0f4f8;\n  padding: 3px 8px;\n  border-radius: 4px;\n  white-space: nowrap;\n}\n.cleaner-btn-refresh {\n  background: #f8f9fa;\n  border: none;\n  border-radius: 4px;\n  padding: 4px 8px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background 0.2s ease;\n  margin-left: auto;\n  outline: none;\n}\n.cleaner-btn-refresh:hover {\n  background: #e8f4fd;\n}\n.cleaner-btn-refresh:focus {\n  outline: none;\n}\n.cleaner-hint {\n  font-size: 12px;\n  color: #888;\n  margin-top: 8px;\n  font-style: italic;\n}\n/* Status */\n.cleaner-status {\n  text-align: center;\n  padding: 20px;\n  color: #666;\n}\n.cleaner-spinner {\n  animation: cleaner-spin 1s linear infinite;\n  display: inline-block;\n}\n@keyframes cleaner-spin {\n  from {\n    transform: rotate(0deg);\n  }\n  to {\n    transform: rotate(360deg);\n  }\n}\n/* Toolbar */\n.cleaner-toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 12px;\n  padding: 10px 12px;\n  background: #f8f9fa;\n  border-radius: 6px;\n}\n.cleaner-select-all {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  color: #333;\n  line-height: 1;\n}\n.cleaner-select-all input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin: 0;\n  cursor: pointer;\n  vertical-align: middle;\n}\n.cleaner-select-all span {\n  vertical-align: middle;\n}\n/* Buttons */\n.cleaner-btn-primary {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-primary:hover:not(:disabled) {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n  transform: translateY(-1px);\n}\n.cleaner-btn-primary:disabled {\n  background: #ccc;\n  cursor: not-allowed;\n  transform: none;\n}\n.cleaner-btn-secondary {\n  background: white;\n  color: #666;\n  border: 1px solid #ddd;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-secondary:hover {\n  background: #f5f5f5;\n  border-color: #ccc;\n}\n/* Records List */\n.cleaner-records-list {\n  max-height: 260px;\n  overflow-y: auto;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  overscroll-behavior: contain;\n}\n.cleaner-record-item {\n  display: flex;\n  align-items: flex-start;\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.cleaner-record-item:last-child {\n  border-bottom: none;\n}\n.cleaner-record-item:hover {\n  background: #f8f9fa;\n}\n.cleaner-record-item input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin-right: 10px;\n  margin-top: 2px;\n  cursor: pointer;\n}\n.cleaner-record-info {\n  flex: 1;\n  font-size: 13px;\n}\n.cleaner-record-info .record-main {\n  font-weight: 500;\n  color: #333;\n  margin-bottom: 4px;\n}\n.cleaner-record-info .record-detail {\n  color: #666;\n  font-size: 12px;\n}\n.cleaner-badge {\n  display: inline-block;\n  padding: 2px 8px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 500;\n  margin-right: 8px;\n}\n.cleaner-badge.badge-poc {\n  background: #e3f2fd;\n  color: #1976d2;\n}\n.cleaner-badge.badge-poc-caregiver {\n  background: #fff3e0;\n  color: #f57c00;\n}\n/* Call Summary */\n.cleaner-call-summary {\n  text-align: center;\n  padding: 16px;\n  background: #e8f4fd;\n  border-radius: 8px;\n  margin-bottom: 12px;\n}\n.cleaner-call-summary .cleaner-call-count {\n  font-size: 15px;\n  color: #1976d2;\n}\n.cleaner-call-summary .cleaner-call-count strong {\n  font-size: 20px;\n  font-weight: 600;\n}\n.cleaner-call-details {\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  margin-top: 12px;\n  max-height: 250px;\n  overflow-y: auto;\n}\n.cleaner-call-item {\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 13px;\n  color: #333;\n}\n.cleaner-call-item:last-child {\n  border-bottom: none;\n}\n.cleaner-call-item::before {\n  content: \"•\";\n  color: #1976d2;\n  margin-right: 8px;\n}\n/* Empty State */\n.cleaner-empty-state {\n  text-align: center;\n  padding: 40px 20px;\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  min-height: 300px;\n}\n.cleaner-empty-state .cleaner-empty-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n}\n.cleaner-empty-state .cleaner-hint {\n  font-size: 13px;\n  color: #666;\n}\n.cleaner-empty-state p {\n  font-size: 15px;\n  color: #4caf50;\n  font-weight: 500;\n  margin: 0;\n}\n/* No Page Detected */\n.cleaner-no-page-info {\n  text-align: left;\n  margin-top: 16px;\n  padding: 16px;\n  background: #f8f9fa;\n  border-radius: 8px;\n}\n.cleaner-no-page-info p {\n  margin: 0 0 12px 0;\n  font-size: 14px;\n  color: #333;\n}\n.cleaner-no-page-info ul {\n  margin: 0 0 12px 20px;\n  padding: 0;\n}\n.cleaner-no-page-info ul li {\n  margin-bottom: 8px;\n  font-size: 13px;\n  color: #555;\n}\n.cleaner-no-page-info .cleaner-hint {\n  color: #999;\n  font-size: 13px;\n  font-style: italic;\n  margin-bottom: 0;\n}\n/* Cleaning Overlay - 浅色半透明蒙版 */\n#hha-cleaning-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.15);\n  backdrop-filter: blur(2px);\n  z-index: 999999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  pointer-events: all;\n  /* 旋转动画 */\n}\n#hha-cleaning-overlay .cleaning-modal {\n  background: white;\n  padding: 30px 40px;\n  border-radius: 12px;\n  text-align: center;\n  min-width: 400px;\n  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);\n  /* 确认对话框按钮 */\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon {\n  font-size: 48px;\n  margin-bottom: 15px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon.success {\n  color: #4CAF50;\n}\n#hha-cleaning-overlay .cleaning-modal h3 {\n  margin: 0 0 10px;\n  font-size: 20px;\n  color: #333;\n}\n#hha-cleaning-overlay .cleaning-modal p {\n  margin: 0;\n  color: #666;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar {\n  height: 8px;\n  background: #e0e0e0;\n  border-radius: 4px;\n  overflow: hidden;\n  margin: 20px 0;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar .progress-fill {\n  height: 100%;\n  background: linear-gradient(90deg, #4CAF50, #8BC34A);\n  transition: width 0.3s ease;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-warning {\n  color: #ff9800;\n  font-size: 14px;\n  margin-top: 15px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .success-note {\n  color: #666;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .error-message {\n  color: #e53935;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n  margin-top: 20px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel {\n  padding: 10px 24px;\n  background: #f5f5f5;\n  color: #666;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel:hover {\n  background: #e0e0e0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm {\n  padding: 10px 24px;\n  background: #4caf50;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm:hover {\n  background: #43a047;\n}\n#hha-cleaning-overlay .spinning {\n  animation: cleaner-spin 1s linear infinite;\n}\n/**\n * Visit Monitor (Coordinator Tracker) Styles\n * Epic 10: UI 现代化升级\n *\n * 依赖: variables.less\n * @author HHA Smart Assistant\n * @date 2026-01-12\n */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  font-size: 24px;\n  transition: all 0.15s ease;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  height: 480px;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333333;\n  overflow: hidden;\n  transition: height 0.3s ease;\n}\n.tracker-view {\n  display: flex;\n  flex-direction: column;\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n  transition: transform 0.3s ease;\n}\n.tracker-view.hidden {\n  display: none;\n}\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n.slide-out-to-right {\n  transform: translateX(100%);\n}\n.slide-in-from-left {\n  transform: translateX(-100%);\n}\n.tracker-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.tracker-header-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.tracker-header-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n}\n#last-refresh-time {\n  font-size: 13px;\n  color: #666666;\n  line-height: 28px;\n}\n.tracker-btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border: none;\n  color: white;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  font-weight: 500;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-primary:hover:not(:disabled) {\n  filter: brightness(1.1);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.tracker-btn-primary:active:not(:disabled) {\n  transform: translateY(1px);\n}\n.tracker-btn-primary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-secondary {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #333333;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-secondary:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-btn-secondary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-icon {\n  width: 28px;\n  height: 28px;\n  padding: 0;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  font-size: 16px;\n}\n.tracker-header-btn {\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  padding: 0 14px;\n  height: 28px;\n  border-radius: 2px;\n  cursor: pointer;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-header-btn:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-header-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.back-btn {\n  font-size: 18px;\n  width: 28px;\n  height: 28px;\n  padding: 0;\n}\n.tracker-footer {\n  padding: 8px 16px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  border-top: 1px solid #e0e0e0;\n  background: #f7f8fa;\n  flex-shrink: 0;\n}\n.tracker-content {\n  flex: 1 1 auto;\n  padding: 8px 16px;\n  overflow-y: auto;\n  overflow-x: hidden;\n  overscroll-behavior: contain;\n  min-height: 0;\n}\n.tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.tracker-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 13px;\n  text-align: center;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.tracker-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.tracker-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.tracker-table tbody tr:last-child {\n  border-bottom: none;\n}\n.tracker-table th,\n.tracker-table td {\n  padding: 8px 16px;\n  text-align: center;\n  vertical-align: middle;\n  border: none;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon:hover {\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  opacity: 0.9;\n}\n.status-icon:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon.status-disabled {\n  opacity: 0.5;\n  cursor: default;\n}\n.status-icon.status-disabled:hover {\n  transform: none;\n  opacity: 0.5;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0%,\n  100% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n}\n.edit-list-actions {\n  text-align: right;\n  padding-right: 16px;\n}\n.edit-list-actions button {\n  font-size: 13px;\n  width: 28px;\n  height: 28px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 600;\n  transition: all 0.15s ease;\n}\n.edit-list-actions button:hover:not(:disabled) {\n  filter: brightness(1.15);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n  transform: scale(1.05);\n}\n.edit-list-actions button:active:not(:disabled) {\n  transform: translateY(1px) scale(1.05);\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.add-btn:hover:not(:disabled) {\n  background-color: #218838;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button.remove-btn:hover:not(:disabled) {\n  background-color: #c82333;\n}\n.edit-list-actions button:disabled {\n  background-color: #e0e0e0;\n  color: #999999;\n  cursor: not-allowed;\n  opacity: 0.6;\n}\n.edit-list-actions button:disabled:hover {\n  filter: none;\n  box-shadow: none;\n  transform: none;\n}\n.loader {\n  text-align: center;\n  padding: 32px;\n}\n.spinner {\n  border: 4px solid #f0f0f0;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333333;\n  color: white;\n  padding: 8px 16px;\n  border-radius: 4px;\n  z-index: 100000;\n  opacity: 0;\n  transition: opacity 0.3s ease, top 0.3s ease;\n  font-size: 13px;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n#details-popover {\n  position: fixed;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  min-width: 600px;\n  max-width: 90vw;\n  min-height: 400px;\n  max-height: 80vh;\n  display: flex;\n  flex-direction: column;\n  z-index: 100000;\n  overflow: hidden;\n}\n.popover-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  height: 44px;\n  box-sizing: border-box;\n  cursor: move;\n  flex-shrink: 0;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.popover-close-btn {\n  width: 28px;\n  height: 28px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: #ffffff;\n  color: #666666;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 16px;\n  transition: all 0.15s ease;\n}\n.popover-close-btn:hover {\n  border-color: #dc3545;\n  color: #dc3545;\n  background: #fff5f5;\n}\n.popover-content {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n}\n.popover-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.popover-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 12px;\n  text-align: left;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.popover-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.popover-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.popover-table tbody tr:last-child {\n  border-bottom: none;\n}\n.popover-table td {\n  padding: 8px 16px;\n  font-size: 12px;\n  color: #333333;\n  vertical-align: middle;\n}\n.note-cell {\n  max-width: 300px;\n  word-wrap: break-word;\n  white-space: pre-wrap;\n}\n.datetime-cell {\n  white-space: nowrap;\n}\n.popover-resize-handle {\n  position: absolute;\n  background: transparent;\n  z-index: 10;\n}\n.popover-resize-handle:hover {\n  background: rgba(102, 126, 234, 0.15);\n}\n.popover-resize-handle-s {\n  bottom: 0;\n  left: 16px;\n  right: 16px;\n  height: 4px;\n  cursor: s-resize;\n}\n.popover-resize-handle-w {\n  top: 16px;\n  bottom: 16px;\n  left: 0;\n  width: 8px;\n  cursor: w-resize;\n}\n.popover-resize-handle-e {\n  top: 16px;\n  bottom: 16px;\n  right: 0;\n  width: 8px;\n  cursor: e-resize;\n}\n.popover-resize-handle-se {\n  bottom: 0;\n  right: 0;\n  width: 16px;\n  height: 16px;\n  cursor: se-resize;\n  z-index: 11;\n  border-radius: 0 0 8px 0;\n}\n/* Empty State Styles - matches QA Report empty state */\n.tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 300px;\n  text-align: center;\n  color: #666666;\n  background: #f7f8fa;\n}\n.tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.tracker-empty-state .tracker-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.tracker-empty-state .tracker-empty-text {\n  font-size: 13px;\n  color: #666666;\n}\n/* \n * ==========================================================================\n * Legacy Popover Styles (Details Popover)\n * These styles are for the patient details popover that appears\n * when clicking status icons in the Visit Monitor\n * ==========================================================================\n */\n#details-popover {\n  position: fixed;\n  z-index: 100001;\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* Note Cell Styling */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* Authorization Note Table */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* Popover Resize Handle - Legacy (disabled, handled by coordinator-tracker.less) */\n/* \n.popover-resize-handle {\n    position: absolute;\n    right: 0;\n    bottom: 0;\n    width: 16px;\n    height: 16px;\n    cursor: nwse-resize;\n    background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n    border-bottom-right-radius: 8px;\n}\n\n.popover-resize-handle::before {\n    content: '';\n    position: absolute;\n    right: 4px;\n    bottom: 4px;\n    width: 4px;\n    height: 4px;\n    background: #666;\n    border-radius: 1px;\n}\n*/\n/* \n * ==========================================================================\n * Phone Tooltip Styles\n * Tooltip that appears when hovering over phone icons in patient rows\n * ==========================================================================\n */\n.phone-icon-wrapper {\n  position: relative;\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  position: absolute;\n  top: 100%;\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n}\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "/**\n * Main Stylesheet Entry Point\n * \n * This file imports all component stylesheets.\n * Visit Monitor (Coordinator Tracker) styles are in coordinator-tracker.less\n */\n.hha-smart-panel {\n  position: absolute;\n  top: 0;\n  width: 680px;\n  height: 460px;\n  max-height: 80vh;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n  font-size: 14px;\n  color: #333333;\n}\n.hha-smart-panel-header {\n  height: 40px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 16px;\n  border-bottom: none;\n  cursor: move;\n  user-select: none;\n}\n.hha-smart-panel-title {\n  font-size: 14px;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-panel-controls {\n  display: flex;\n  gap: 8px;\n  position: relative;\n  z-index: 100000;\n}\n.hha-smart-panel-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 2px;\n  background: rgba(255, 255, 255, 0.2);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: background 0.15s ease;\n  font-size: 14px;\n  padding: 0;\n  position: relative;\n  z-index: 100001;\n}\n.hha-smart-panel-btn:hover {\n  background: rgba(255, 255, 255, 0.3);\n}\n.hha-smart-panel-btn:active {\n  background: rgba(255, 255, 255, 0.4);\n}\n.hha-smart-panel-body {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-content-wrapper {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n  position: relative;\n  isolation: isolate;\n}\n.hha-smart-tab-bar {\n  width: 100px;\n  min-width: 40px;\n  background: #f7f8fa;\n  border-right: 1px solid #e0e0e0;\n  transition: width 0.2s ease;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  flex-shrink: 0;\n  position: relative;\n  z-index: 2;\n}\n.hha-smart-tab-bar.collapsed {\n  width: 40px;\n}\n.hha-smart-tab-list {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n}\n.hha-smart-tab-list::-webkit-scrollbar {\n  width: 4px;\n}\n.hha-smart-tab-list::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n.hha-smart-tab-item {\n  position: relative;\n  padding: 12px 8px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  white-space: nowrap;\n  border-bottom: 1px solid #f0f0f0;\n}\n.hha-smart-tab-item:hover {\n  background: #f0f2f5;\n}\n.hha-smart-tab-item.active {\n  background: #f0efff;\n  color: #667eea;\n  font-weight: 500;\n}\n.hha-smart-tab-icon {\n  flex-shrink: 0;\n  font-size: 18px;\n  line-height: 1;\n  width: 20px;\n  text-align: center;\n}\n.hha-smart-tab-text {\n  opacity: 1;\n  transition: opacity 0.2s ease;\n  font-size: 13px;\n  overflow-x: auto;\n  overflow-y: hidden;\n  white-space: nowrap;\n  flex: 1;\n  scroll-behavior: smooth;\n}\n.hha-smart-tab-text::-webkit-scrollbar {\n  height: 0;\n  display: none;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-tab-text {\n  opacity: 0;\n  width: 0;\n  overflow: hidden;\n  pointer-events: none;\n}\n.hha-smart-tab-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 4px;\n  height: 100%;\n  background: #667eea;\n  opacity: 0;\n  transition: opacity 0.2s ease;\n  z-index: 1;\n}\n.hha-smart-tab-item.active .hha-smart-tab-indicator {\n  opacity: 1;\n}\n.hha-smart-tab-collapse-btn {\n  padding: 8px;\n  text-align: center;\n  cursor: pointer;\n  border-top: 1px solid #e0e0e0;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 36px;\n  position: relative;\n  z-index: 10;\n}\n.hha-smart-tab-collapse-btn:hover {\n  background: #f0f2f5;\n}\n.hha-smart-collapse-icon {\n  display: inline-block;\n  transition: transform 0.2s ease;\n  font-size: 14px;\n  color: #666666;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-collapse-icon {\n  transform: rotate(180deg);\n}\n.hha-smart-content-area {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: #ffffff;\n  min-height: 0;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-panel-footer {\n  height: 28px;\n  background: #f7f8fa;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  padding: 0 16px;\n  font-size: 12px;\n  color: #666666;\n  flex-shrink: 0;\n}\n.footer-branding {\n  font-style: italic;\n  opacity: 0.6;\n  user-select: none;\n}\n.hha-smart-tab-content {\n  display: none !important;\n  padding: 0;\n  animation: fadeIn 0.2s ease;\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  box-sizing: border-box;\n  min-height: 0;\n  position: relative;\n  z-index: 0;\n}\n.hha-smart-tab-content.active {\n  display: flex !important;\n  flex-direction: column;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n.hha-smart-config-card {\n  background: #ffffff;\n  border-radius: 4px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: box-shadow 0.2s ease;\n}\n.hha-smart-config-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.hha-smart-config-card-title {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-config-card-body {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.hha-smart-btn {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.hha-smart-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #667eea;\n  color: white;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.hha-smart-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary:hover:not(:disabled) {\n  background: #5a6fd6;\n}\n.hha-smart-btn-primary:active:not(:disabled) {\n  background: #4c5ec2;\n}\n.hha-smart-btn-secondary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #f7f8fa;\n  color: #333333;\n  border: 1px solid #e0e0e0;\n}\n.hha-smart-btn-secondary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-secondary:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #a29bfe;\n}\n.hha-smart-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 32px;\n  text-align: center;\n  color: #666666;\n  min-height: 300px;\n}\n.hha-smart-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.hha-smart-placeholder-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.hha-smart-placeholder-text {\n  font-size: 14px;\n  color: #666666;\n}\n#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/**\n * QA Report Tab Styles\n * Epic 8: QA 报告功能\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.qa-report-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n}\n.qa-report-wrapper {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  gap: 0;\n}\n.qa-report-header {\n  display: none;\n}\n.qa-report-title {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.qa-report-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.qa-toolbar-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-left > * {\n  margin: 0;\n  vertical-align: middle;\n}\n.qa-toolbar-actions {\n  display: flex;\n  align-items: center;\n  gap: 0;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-actions .qa-load-btn {\n  border-radius: 2px 0 0 2px;\n  border-right: 1px solid rgba(255, 255, 255, 0.3);\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-actions .qa-export-btn {\n  border-radius: 0 2px 2px 0;\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-select-label {\n  font-size: 13px;\n  color: #666666;\n  font-weight: 500;\n  line-height: 28px;\n  white-space: nowrap;\n}\n.qa-coordinator-select {\n  padding: 0 28px 0 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: white;\n  background-image: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n  background-repeat: no-repeat;\n  background-position: right 8px center;\n  background-size: 12px 12px;\n  font-size: 13px;\n  min-width: 180px;\n  max-width: 300px;\n  height: 28px !important;\n  line-height: 26px;\n  vertical-align: middle;\n  cursor: pointer;\n  box-sizing: border-box;\n  appearance: none;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.qa-coordinator-select:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px #a29bfe;\n}\n.qa-coordinator-select:disabled {\n  background: #f7f8fa;\n  cursor: not-allowed;\n}\n.qa-load-btn {\n  padding: 0 14px;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-load-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.qa-export-btn {\n  padding: 0 12px;\n  font-size: 13px;\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  color: #333333;\n  cursor: pointer;\n  transition: all 0.2s;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-export-btn:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #667eea;\n}\n.qa-export-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.qa-status-text {\n  font-size: 12px;\n  color: #666666;\n  white-space: nowrap;\n}\n.qa-view-toggle {\n  display: flex;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  overflow: hidden;\n  height: 28px;\n}\n.qa-view-btn {\n  padding: 0 10px;\n  border: none;\n  background: white;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  transition: all 0.2s;\n  height: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-view-btn:first-child {\n  border-right: 1px solid #e0e0e0;\n}\n.qa-view-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-view-btn.active {\n  background: #667eea;\n  color: white;\n}\n.qa-report-content-body {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n  background: #f7f8fa;\n}\n.qa-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  text-align: center;\n  color: #666666;\n}\n.qa-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.qa-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.qa-empty-text {\n  font-size: 13px;\n}\n.qa-report-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n  background: white;\n  border-radius: 2px;\n  overflow: hidden;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.qa-report-table thead {\n  background: #f7f8fa;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n}\n.qa-report-table thead th {\n  padding: 8px 16px;\n  text-align: left;\n  font-weight: 600;\n  color: #666666;\n  border-bottom: 2px solid #e0e0e0;\n  white-space: nowrap;\n}\n.qa-report-table thead th.sortable {\n  cursor: pointer;\n  user-select: none;\n  transition: background 0.15s;\n}\n.qa-report-table thead th.sortable:hover {\n  background: #e7eaf0;\n}\n.qa-report-table thead th.sortable .sort-icon {\n  margin-left: 4px;\n  font-size: 10px;\n  opacity: 0.5;\n  display: inline-block;\n  vertical-align: middle;\n}\n.qa-report-table thead th.sortable .sort-icon.sort-asc,\n.qa-report-table thead th.sortable .sort-icon.sort-desc {\n  opacity: 1;\n  color: #667eea;\n}\n.qa-report-table tbody tr {\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s;\n}\n.qa-report-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.qa-report-table tbody tr:last-child {\n  border-bottom: none;\n}\n.qa-report-table tbody td {\n  padding: 8px 16px;\n  vertical-align: middle;\n  user-select: text;\n  cursor: text;\n}\n.qa-report-table tbody td.col-action {\n  user-select: none;\n  cursor: default;\n}\n.qa-report-table .col-id {\n  width: 110px;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  color: #667eea;\n  font-weight: 500;\n}\n.qa-report-table .col-name {\n  width: auto;\n  min-width: 150px;\n  font-weight: 500;\n}\n.qa-report-table .col-phone {\n  width: 140px;\n}\n.qa-report-table .phone-loading {\n  color: #666666;\n  font-style: italic;\n  font-size: 13px;\n}\n.qa-report-table .phone-error {\n  color: #dc3545;\n  font-size: 13px;\n}\n.qa-report-table .phone-single {\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n}\n.qa-report-table .phone-single a {\n  color: #667eea;\n  text-decoration: none;\n}\n.qa-report-table .phone-single a:hover {\n  text-decoration: underline;\n}\n.qa-report-table .phone-multiple {\n  position: relative;\n  display: inline-block;\n  cursor: pointer;\n}\n.qa-report-table .phone-multiple .phone-trigger {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  padding: 2px 6px;\n  background: rgba(102, 126, 234, 0.1);\n  border: 1px solid #667eea;\n  border-radius: 2px;\n  color: #667eea;\n  cursor: pointer;\n  font-size: 13px;\n  transition: all 0.2s;\n}\n.qa-report-table .phone-multiple .phone-trigger:hover {\n  background: #667eea;\n  color: white;\n}\n.qa-report-table .phone-multiple .phone-trigger .phone-count {\n  font-weight: 600;\n}\n.qa-report-table .phone-dropdown {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  z-index: 1000;\n  min-width: 160px;\n  padding: 4px 0;\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  margin-top: 4px;\n}\n.qa-report-table .phone-dropdown .phone-item {\n  display: block;\n  padding: 4px 8px;\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n  text-decoration: none;\n  transition: background 0.15s;\n}\n.qa-report-table .phone-dropdown .phone-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-table .col-qa {\n  width: 100px;\n  font-weight: 500;\n}\n.qa-report-table .col-action {\n  width: 50px;\n  text-align: center;\n}\n.phone-item {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.phone-item + .phone-item {\n  margin-top: 2px;\n}\n.qa-never {\n  color: #dc3545 !important;\n  font-weight: 600;\n}\n.qa-action-btn {\n  padding: 4px 8px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 16px;\n  color: #666666;\n  border-radius: 2px;\n  transition: all 0.2s;\n}\n.qa-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 8px;\n  padding: 8px;\n}\n.qa-card {\n  background: white;\n  border-radius: 2px;\n  padding: 16px;\n  border-left: 4px solid #e0e0e0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  transition: all 0.2s;\n  position: relative;\n  overflow: hidden;\n  user-select: text;\n}\n.qa-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  transform: translateY(-2px);\n}\n.card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  margin-bottom: 8px;\n}\n.card-name {\n  font-weight: 600;\n  font-size: 13px;\n  color: #333333;\n  flex: 1;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  padding-right: 8px;\n}\n.card-action-btn {\n  padding: 2px 6px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  border-radius: 2px;\n  flex-shrink: 0;\n  user-select: none;\n}\n.card-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.card-id {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #667eea;\n  margin-bottom: 8px;\n}\n.card-phones {\n  margin-bottom: 8px;\n}\n.card-phone {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.card-phone + .card-phone {\n  margin-top: 2px;\n}\n.card-qa {\n  font-weight: 600;\n  font-size: 13px;\n  margin-bottom: 8px;\n}\n.card-priority-badge {\n  position: absolute;\n  bottom: 0;\n  right: 0;\n  padding: 2px 8px;\n  font-size: 12px;\n  color: white;\n  border-radius: 2px 0 0 0;\n  font-weight: 500;\n}\n.priority-critical .col-qa {\n  color: #dc3545;\n}\n.priority-high .col-qa {\n  color: #e74c3c;\n}\n.priority-medium-high .col-qa {\n  color: #fd7e14;\n}\n.priority-medium .col-qa {\n  color: #ffc107;\n}\n.priority-low-medium .col-qa {\n  color: #a8d08d;\n}\n.priority-low .col-qa {\n  color: #28a745;\n}\n.qa-export-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 140px;\n}\n.export-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  transition: background 0.15s;\n}\n.export-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.export-menu-item + .export-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-action-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 180px;\n}\n.action-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: background 0.15s;\n}\n.action-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.action-menu-item + .action-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-toast {\n  position: fixed;\n  top: 24px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100%);\n  padding: 8px 24px;\n  border-radius: 2px;\n  font-size: 13px;\n  color: white;\n  z-index: 100001;\n  opacity: 0;\n  transition: all 0.3s ease;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n}\n.qa-toast.show {\n  transform: translateX(-50%) translateY(0);\n  opacity: 1;\n}\n.qa-toast.qa-toast-success {\n  background: #28a745;\n}\n.qa-toast.qa-toast-error {\n  background: #dc3545;\n}\n.qa-toast.qa-toast-info {\n  background: #667eea;\n}\n.qa-note-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n}\n.qa-note-modal {\n  background: white;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  width: 90%;\n  max-width: 520px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.qa-note-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.qa-note-modal-title {\n  font-size: 14px;\n  font-weight: 600;\n}\n.qa-note-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 28px;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  transition: background 0.15s;\n}\n.qa-note-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.qa-note-modal-body {\n  padding: 16px;\n  overflow-y: auto;\n  flex: 1;\n}\n.qa-note-section {\n  margin-bottom: 16px;\n}\n.qa-note-section:last-child {\n  margin-bottom: 0;\n}\n.qa-note-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #666666;\n  margin-bottom: 4px;\n}\n.qa-note-template {\n  padding: 8px 16px;\n  background: #f0f2f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  line-height: 1.5;\n  color: #333333;\n}\n.qa-note-textarea {\n  width: 100%;\n  padding: 8px 16px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  font-family: inherit;\n  resize: vertical;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.qa-note-textarea:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);\n}\n.qa-note-textarea::placeholder {\n  color: #666666;\n}\n.qa-note-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  padding: 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #f0f2f5;\n}\n.qa-note-btn {\n  padding: 4px 16px;\n  font-size: 13px;\n  border-radius: 2px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.qa-note-btn.qa-note-btn-cancel {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #666666;\n}\n.qa-note-btn.qa-note-btn-cancel:hover {\n  background: #f0f2f5;\n  border-color: #666666;\n}\n.qa-note-btn.qa-note-btn-submit {\n  background: #667eea;\n  border: 1px solid #667eea;\n  color: white;\n}\n.qa-note-btn.qa-note-btn-submit:hover {\n  background: #5a6fd6;\n  border-color: #5a6fd6;\n}\n/**\n * Status Tracking Tab Styles\n * Epic 7: Multi-Tab Panel - 状态追踪 Tab\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.status-tracking-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n  padding: 0;\n}\n#status-tracking-wrapper {\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n#status-tracking-wrapper #tracker-panel {\n  background: #ffffff;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view {\n  height: 100%;\n  overflow: hidden;\n  min-height: 0;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view.hidden {\n  display: none !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content {\n  flex: 1 1 auto;\n  min-height: 0;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-header,\n#status-tracking-wrapper #tracker-panel .tracker-footer {\n  flex-shrink: 0;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar {\n  width: 6px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb:hover {\n  background: #666666;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n/* Empty State Styles - matches QA Report empty state */\n#status-tracking-wrapper .tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 200px;\n  padding: 40px 20px;\n  text-align: center;\n  color: #666;\n  background: #f7f8fa;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.7;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-title {\n  font-size: 18px;\n  font-weight: 600;\n  color: #333;\n  margin-bottom: 8px;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-text {\n  font-size: 14px;\n  color: #888;\n}\n/**\n * Cleaner Tab Styles\n * Epic 11: POC 和 Duplicate Call 智能清理器\n */\n.cleaner-tab {\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  padding: 0;\n}\n.cleaner-wrapper {\n  flex: 1;\n  overflow-y: auto;\n  padding: 12px 16px;\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n}\n/* Header */\n.cleaner-header {\n  margin-bottom: 12px;\n}\n.cleaner-title-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cleaner-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.cleaner-page-tag {\n  font-size: 12px;\n  color: #666;\n  background: #f0f4f8;\n  padding: 3px 8px;\n  border-radius: 4px;\n  white-space: nowrap;\n}\n.cleaner-btn-refresh {\n  background: #f8f9fa;\n  border: none;\n  border-radius: 4px;\n  padding: 4px 8px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background 0.2s ease;\n  margin-left: auto;\n  outline: none;\n}\n.cleaner-btn-refresh:hover {\n  background: #e8f4fd;\n}\n.cleaner-btn-refresh:focus {\n  outline: none;\n}\n.cleaner-hint {\n  font-size: 12px;\n  color: #888;\n  margin-top: 8px;\n  font-style: italic;\n}\n/* Status */\n.cleaner-status {\n  text-align: center;\n  padding: 20px;\n  color: #666;\n}\n.cleaner-spinner {\n  animation: cleaner-spin 1s linear infinite;\n  display: inline-block;\n}\n@keyframes cleaner-spin {\n  from {\n    transform: rotate(0deg);\n  }\n  to {\n    transform: rotate(360deg);\n  }\n}\n/* Toolbar */\n.cleaner-toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 12px;\n  padding: 10px 12px;\n  background: #f8f9fa;\n  border-radius: 6px;\n}\n.cleaner-select-all {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  color: #333;\n  line-height: 1;\n}\n.cleaner-select-all input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin: 0;\n  cursor: pointer;\n  vertical-align: middle;\n}\n.cleaner-select-all span {\n  vertical-align: middle;\n}\n/* Buttons */\n.cleaner-btn-primary {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-primary:hover:not(:disabled) {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n  transform: translateY(-1px);\n}\n.cleaner-btn-primary:disabled {\n  background: #ccc;\n  cursor: not-allowed;\n  transform: none;\n}\n.cleaner-btn-secondary {\n  background: white;\n  color: #666;\n  border: 1px solid #ddd;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-secondary:hover {\n  background: #f5f5f5;\n  border-color: #ccc;\n}\n/* Records List */\n.cleaner-records-list {\n  max-height: 260px;\n  overflow-y: auto;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  overscroll-behavior: contain;\n}\n.cleaner-record-item {\n  display: flex;\n  align-items: flex-start;\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.cleaner-record-item:last-child {\n  border-bottom: none;\n}\n.cleaner-record-item:hover {\n  background: #f8f9fa;\n}\n.cleaner-record-item input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin-right: 10px;\n  margin-top: 2px;\n  cursor: pointer;\n}\n.cleaner-record-info {\n  flex: 1;\n  font-size: 13px;\n}\n.cleaner-record-info .record-main {\n  font-weight: 500;\n  color: #333;\n  margin-bottom: 4px;\n}\n.cleaner-record-info .record-detail {\n  color: #666;\n  font-size: 12px;\n}\n.cleaner-badge {\n  display: inline-block;\n  padding: 2px 8px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 500;\n  margin-right: 8px;\n}\n.cleaner-badge.badge-poc {\n  background: #e3f2fd;\n  color: #1976d2;\n}\n.cleaner-badge.badge-poc-caregiver {\n  background: #fff3e0;\n  color: #f57c00;\n}\n/* Call Summary */\n.cleaner-call-summary {\n  text-align: center;\n  padding: 16px;\n  background: #e8f4fd;\n  border-radius: 8px;\n  margin-bottom: 12px;\n}\n.cleaner-call-summary .cleaner-call-count {\n  font-size: 15px;\n  color: #1976d2;\n}\n.cleaner-call-summary .cleaner-call-count strong {\n  font-size: 20px;\n  font-weight: 600;\n}\n.cleaner-call-details {\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  margin-top: 12px;\n  max-height: 250px;\n  overflow-y: auto;\n}\n.cleaner-call-item {\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 13px;\n  color: #333;\n}\n.cleaner-call-item:last-child {\n  border-bottom: none;\n}\n.cleaner-call-item::before {\n  content: \"•\";\n  color: #1976d2;\n  margin-right: 8px;\n}\n/* Empty State */\n.cleaner-empty-state {\n  text-align: center;\n  padding: 40px 20px;\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  min-height: 300px;\n}\n.cleaner-empty-state .cleaner-empty-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n}\n.cleaner-empty-state .cleaner-hint {\n  font-size: 13px;\n  color: #666;\n}\n.cleaner-empty-state p {\n  font-size: 15px;\n  color: #4caf50;\n  font-weight: 500;\n  margin: 0;\n}\n/* No Page Detected */\n.cleaner-no-page-info {\n  text-align: left;\n  margin-top: 16px;\n  padding: 16px;\n  background: #f8f9fa;\n  border-radius: 8px;\n}\n.cleaner-no-page-info p {\n  margin: 0 0 12px 0;\n  font-size: 14px;\n  color: #333;\n}\n.cleaner-no-page-info ul {\n  margin: 0 0 12px 20px;\n  padding: 0;\n}\n.cleaner-no-page-info ul li {\n  margin-bottom: 8px;\n  font-size: 13px;\n  color: #555;\n}\n.cleaner-no-page-info .cleaner-hint {\n  color: #999;\n  font-size: 13px;\n  font-style: italic;\n  margin-bottom: 0;\n}\n/* Cleaning Overlay - 浅色半透明蒙版 */\n#hha-cleaning-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.15);\n  backdrop-filter: blur(2px);\n  z-index: 999999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  pointer-events: all;\n  /* 旋转动画 */\n}\n#hha-cleaning-overlay .cleaning-modal {\n  background: white;\n  padding: 30px 40px;\n  border-radius: 12px;\n  text-align: center;\n  min-width: 400px;\n  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);\n  /* 确认对话框按钮 */\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon {\n  font-size: 48px;\n  margin-bottom: 15px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon.success {\n  color: #4CAF50;\n}\n#hha-cleaning-overlay .cleaning-modal h3 {\n  margin: 0 0 10px;\n  font-size: 20px;\n  color: #333;\n}\n#hha-cleaning-overlay .cleaning-modal p {\n  margin: 0;\n  color: #666;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar {\n  height: 8px;\n  background: #e0e0e0;\n  border-radius: 4px;\n  overflow: hidden;\n  margin: 20px 0;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar .progress-fill {\n  height: 100%;\n  background: linear-gradient(90deg, #4CAF50, #8BC34A);\n  transition: width 0.3s ease;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-warning {\n  color: #ff9800;\n  font-size: 14px;\n  margin-top: 15px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .success-note {\n  color: #666;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .error-message {\n  color: #e53935;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n  margin-top: 20px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel {\n  padding: 10px 24px;\n  background: #f5f5f5;\n  color: #666;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel:hover {\n  background: #e0e0e0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm {\n  padding: 10px 24px;\n  background: #4caf50;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm:hover {\n  background: #43a047;\n}\n#hha-cleaning-overlay .spinning {\n  animation: cleaner-spin 1s linear infinite;\n}\n/**\n * Mail Builder Tab Styles\n * Epic 12: 智能邮件构筑助手\n */\n.mail-builder-tab {\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  padding: 0;\n}\n.mail-builder-wrapper {\n  flex: 1;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n}\n/* Header */\n.mail-builder-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: #fafbfc;\n  flex-shrink: 0;\n}\n.mail-builder-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.mail-builder-page-tag {\n  font-size: 12px;\n  color: #666;\n  background: #e8f4fd;\n  padding: 4px 10px;\n  border-radius: 12px;\n  white-space: nowrap;\n}\n/* Main Content - 35% / 65% Split */\n.mail-builder-main {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n}\n.mail-builder-main.full-width .mail-builder-template-panel {\n  width: 100%;\n  border-left: none;\n}\n/* Left Info Panel (35%) */\n.mail-builder-info-panel {\n  width: 35%;\n  min-width: 200px;\n  border-right: 1px solid #e0e0e0;\n  padding: 12px;\n  display: flex;\n  flex-direction: column;\n  overflow-y: auto;\n  background: #fff;\n}\n.mail-builder-info-list {\n  flex: 1;\n}\n.mail-builder-info-item {\n  display: flex;\n  align-items: center;\n  padding: 8px 0;\n  border-bottom: 1px solid #f0f0f0;\n  gap: 8px;\n}\n.mail-builder-info-item:last-child {\n  border-bottom: none;\n}\n.info-label {\n  font-size: 12px;\n  color: #888;\n  min-width: 40px;\n  flex-shrink: 0;\n}\n.info-value {\n  flex: 1;\n  font-size: 13px;\n  color: #333;\n  font-weight: 500;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.info-copy-btn {\n  background: #f0f4f8;\n  border: none;\n  border-radius: 4px;\n  padding: 4px 6px;\n  font-size: 11px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  flex-shrink: 0;\n}\n.info-copy-btn:hover {\n  background: #e0e8f0;\n  transform: scale(1.05);\n}\n.info-copy-btn:active {\n  transform: scale(0.95);\n}\n/* Quick Copy Buttons */\n.mail-builder-quick-copy {\n  margin-top: 12px;\n  padding-top: 12px;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.quick-copy-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  font-size: 12px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  text-align: center;\n}\n.quick-copy-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n  transform: translateY(-1px);\n}\n.quick-copy-btn:active {\n  transform: translateY(0);\n}\n/* Right Template Panel (65%) */\n.mail-builder-template-panel {\n  flex: 1;\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  background: #fafbfc;\n}\n.mail-builder-template-tabs {\n  display: flex;\n  border-bottom: 1px solid #e0e0e0;\n  background: #fff;\n  flex-shrink: 0;\n}\n.template-tab-btn {\n  flex: 1;\n  padding: 10px 16px;\n  background: transparent;\n  border: none;\n  border-bottom: 2px solid transparent;\n  font-size: 13px;\n  color: #666;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.template-tab-btn:hover {\n  color: #333;\n  background: #f5f5f5;\n}\n.template-tab-btn.active {\n  color: #1976d2;\n  border-bottom-color: #1976d2;\n  font-weight: 500;\n}\n.mail-builder-template-content {\n  flex: 1;\n  padding: 16px;\n  overflow-y: auto;\n}\n.template-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 200px;\n  color: #999;\n}\n.template-placeholder .template-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n.template-placeholder p {\n  margin: 0;\n  font-size: 14px;\n}\n.template-placeholder .template-hint {\n  margin-top: 8px;\n  font-size: 12px;\n  color: #bbb;\n}\n.mail-builder-template-actions {\n  display: flex;\n  gap: 8px;\n  padding: 12px;\n  border-top: 1px solid #e0e0e0;\n  background: #fff;\n  flex-shrink: 0;\n}\n.template-action-btn {\n  flex: 1;\n  padding: 8px 12px;\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  font-size: 12px;\n  color: #666;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.template-action-btn:hover:not(:disabled) {\n  background: #e8e8e8;\n  color: #333;\n}\n.template-action-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n/* No Data State */\n.mail-builder-no-data {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  color: #999;\n  font-size: 13px;\n}\n/* No Page Detected */\n.mail-builder-no-page-info {\n  text-align: left;\n  margin-top: 16px;\n  padding: 16px;\n  background: #f8f9fa;\n  border-radius: 8px;\n}\n.mail-builder-no-page-info p {\n  margin: 0 0 12px 0;\n  font-size: 14px;\n  color: #333;\n}\n.mail-builder-no-page-info ul {\n  margin: 0 0 12px 20px;\n  padding: 0;\n}\n.mail-builder-no-page-info ul li {\n  margin-bottom: 8px;\n  font-size: 13px;\n  color: #555;\n}\n.mail-builder-no-page-info .mail-builder-hint {\n  color: #999;\n  font-size: 13px;\n  font-style: italic;\n  margin-bottom: 0;\n}\n/* Template List */\n.template-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.template-empty {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  min-height: 200px;\n  color: #999;\n}\n.template-empty .template-empty-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n.template-empty p {\n  margin: 0;\n  font-size: 14px;\n}\n.template-empty .template-hint {\n  margin-top: 8px;\n  font-size: 12px;\n  color: #bbb;\n}\n/* Template Card */\n.template-card {\n  background: #fff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  padding: 12px;\n  transition: all 0.2s ease;\n}\n.template-card:hover {\n  border-color: #1976d2;\n  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);\n}\n.template-card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 8px;\n}\n.template-name {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333;\n}\n.template-target-badge {\n  font-size: 11px;\n  padding: 2px 8px;\n  border-radius: 12px;\n  background: #e3f2fd;\n  color: #1976d2;\n}\n.template-badges {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n}\n.template-builtin-badge {\n  font-size: 10px;\n  padding: 2px 6px;\n  border-radius: 10px;\n  background: #fff3e0;\n  color: #f57c00;\n  font-weight: 500;\n}\n.template-card-preview {\n  margin-bottom: 10px;\n}\n.template-card-preview .template-subject {\n  font-size: 12px;\n  color: #666;\n}\n.template-card-actions {\n  display: flex;\n  gap: 8px;\n  justify-content: flex-end;\n}\n.template-card-btn {\n  padding: 4px 10px;\n  border-radius: 4px;\n  font-size: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: 1px solid #e0e0e0;\n  background: #fff;\n}\n.template-card-btn.use-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n}\n.template-card-btn.use-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n}\n.template-card-btn.edit-btn,\n.template-card-btn.delete-btn {\n  background: #f5f5f5;\n}\n.template-card-btn.edit-btn:hover,\n.template-card-btn.delete-btn:hover {\n  background: #e0e0e0;\n}\n.template-card-btn.delete-btn:hover {\n  background: #ffebee;\n  border-color: #e53935;\n}\n/* Template Editor */\n.template-editor {\n  background: #fff;\n  border-radius: 8px;\n  overflow: hidden;\n}\n.editor-header {\n  padding: 12px 16px;\n  background: #f5f5f5;\n  border-bottom: 1px solid #e0e0e0;\n}\n.editor-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.editor-form {\n  padding: 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.form-group label {\n  font-size: 12px;\n  color: #666;\n  font-weight: 500;\n}\n.form-group input,\n.form-group select,\n.form-group textarea {\n  padding: 8px 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  font-size: 13px;\n  transition: border-color 0.2s ease;\n}\n.form-group input:focus,\n.form-group select:focus,\n.form-group textarea:focus {\n  outline: none;\n  border-color: #1976d2;\n}\n.form-group textarea {\n  resize: vertical;\n  min-height: 80px;\n  font-family: inherit;\n}\n.editor-actions {\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n  padding: 12px 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n}\n.editor-btn {\n  padding: 8px 20px;\n  border-radius: 6px;\n  font-size: 13px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.editor-btn.cancel-btn {\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  color: #666;\n}\n.editor-btn.cancel-btn:hover {\n  background: #e0e0e0;\n}\n.editor-btn.save-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n}\n.editor-btn.save-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n}\n/* Toast Notification */\n.mail-builder-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100px);\n  background: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-size: 14px;\n  z-index: 1000000;\n  opacity: 0;\n  transition: all 0.3s ease;\n  pointer-events: none;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.mail-builder-toast.show {\n  opacity: 1;\n  transform: translateX(-50%) translateY(0);\n}\n/* ============================================================================\n   Template Editor Modal\n   ============================================================================ */\n.template-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n  backdrop-filter: blur(2px);\n}\n.template-modal {\n  background: white;\n  border-radius: 12px;\n  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);\n  width: 90%;\n  max-width: 700px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.template-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.template-modal-title {\n  font-size: 16px;\n  font-weight: 600;\n  margin: 0;\n}\n.template-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 32px;\n  height: 32px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 6px;\n  transition: background 0.15s;\n}\n.template-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.template-modal-body {\n  padding: 20px;\n  overflow-y: auto;\n  flex: 1;\n  max-height: calc(90vh - 140px);\n}\n.template-form-group {\n  margin-bottom: 16px;\n}\n.template-form-group:last-child {\n  margin-bottom: 0;\n}\n.template-form-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #555;\n  margin-bottom: 6px;\n}\n.template-form-input,\n.template-form-select {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  font-size: 14px;\n  transition: border-color 0.2s, box-shadow 0.2s;\n  box-sizing: border-box;\n}\n.template-form-input:focus,\n.template-form-select:focus {\n  outline: none;\n  border-color: #4a90d9;\n  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);\n}\n.template-form-row {\n  display: flex;\n  gap: 12px;\n}\n.template-form-row .template-form-group {\n  flex: 1;\n}\n/* TinyMCE wrapper */\n.template-body-editor {\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  overflow: hidden;\n}\n.template-body-editor .tox-tinymce {\n  border: none !important;\n}\n.template-body-editor textarea {\n  width: 100%;\n  min-height: 150px;\n  padding: 12px;\n  border: none;\n  font-family: inherit;\n  font-size: 14px;\n  resize: vertical;\n  box-sizing: border-box;\n}\n.template-body-editor textarea:focus {\n  outline: none;\n}\n/* Custom Variables Section */\n.template-variables-section {\n  margin-top: 20px;\n  padding-top: 16px;\n  border-top: 1px solid #e0e0e0;\n}\n.template-variables-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  margin-bottom: 12px;\n}\n.template-variables-header h5 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333;\n}\n.template-add-var-btn {\n  padding: 4px 10px;\n  font-size: 12px;\n  background: #e3f2fd;\n  color: #1976d2;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.template-add-var-btn:hover {\n  background: #bbdefb;\n}\n.template-variables-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.template-variables-table th,\n.template-variables-table td {\n  padding: 8px 10px;\n  text-align: left;\n  border: 1px solid #e0e0e0;\n}\n.template-variables-table th {\n  background: #f5f5f5;\n  font-weight: 500;\n  color: #666;\n}\n.template-variables-table input {\n  width: 100%;\n  padding: 6px 8px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  font-size: 12px;\n  box-sizing: border-box;\n}\n.template-variables-table input:focus {\n  outline: none;\n  border-color: #4a90d9;\n}\n.template-variables-table .var-delete-btn {\n  padding: 4px 8px;\n  background: #ffebee;\n  color: #e53935;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  font-size: 14px;\n}\n.template-variables-table .var-delete-btn:hover {\n  background: #ffcdd2;\n}\n.template-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  padding: 16px 20px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n}\n.template-modal-btn {\n  padding: 10px 24px;\n  font-size: 14px;\n  font-weight: 500;\n  border-radius: 6px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.template-modal-btn.btn-cancel {\n  background: #f5f5f5;\n  border: 1px solid #ddd;\n  color: #666;\n}\n.template-modal-btn.btn-cancel:hover {\n  background: #e0e0e0;\n}\n.template-modal-btn.btn-save {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border: none;\n  color: white;\n}\n.template-modal-btn.btn-save:hover {\n  background: linear-gradient(135deg, #5a6fd6 0%, #6b4199 100%);\n}\n/**\n * Visit Monitor (Coordinator Tracker) Styles\n * Epic 10: UI 现代化升级\n *\n * 依赖: variables.less\n * @author HHA Smart Assistant\n * @date 2026-01-12\n */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  font-size: 24px;\n  transition: all 0.15s ease;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  height: 480px;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333333;\n  overflow: hidden;\n  transition: height 0.3s ease;\n}\n.tracker-view {\n  display: flex;\n  flex-direction: column;\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n  transition: transform 0.3s ease;\n}\n.tracker-view.hidden {\n  display: none;\n}\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n.slide-out-to-right {\n  transform: translateX(100%);\n}\n.slide-in-from-left {\n  transform: translateX(-100%);\n}\n.tracker-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.tracker-header-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.tracker-header-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n}\n#last-refresh-time {\n  font-size: 13px;\n  color: #666666;\n  line-height: 28px;\n}\n.tracker-btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border: none;\n  color: white;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  font-weight: 500;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-primary:hover:not(:disabled) {\n  filter: brightness(1.1);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.tracker-btn-primary:active:not(:disabled) {\n  transform: translateY(1px);\n}\n.tracker-btn-primary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-secondary {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #333333;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-secondary:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-btn-secondary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-icon {\n  width: 28px;\n  height: 28px;\n  padding: 0;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  font-size: 16px;\n}\n.tracker-header-btn {\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  padding: 0 14px;\n  height: 28px;\n  border-radius: 2px;\n  cursor: pointer;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-header-btn:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-header-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.back-btn {\n  font-size: 18px;\n  width: 28px;\n  height: 28px;\n  padding: 0;\n}\n.tracker-footer {\n  padding: 8px 16px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  border-top: 1px solid #e0e0e0;\n  background: #f7f8fa;\n  flex-shrink: 0;\n}\n.tracker-content {\n  flex: 1 1 auto;\n  padding: 8px 16px;\n  overflow-y: auto;\n  overflow-x: hidden;\n  overscroll-behavior: contain;\n  min-height: 0;\n}\n.tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.tracker-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 13px;\n  text-align: center;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.tracker-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.tracker-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.tracker-table tbody tr:last-child {\n  border-bottom: none;\n}\n.tracker-table th,\n.tracker-table td {\n  padding: 8px 16px;\n  text-align: center;\n  vertical-align: middle;\n  border: none;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon:hover {\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  opacity: 0.9;\n}\n.status-icon:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon.status-disabled {\n  opacity: 0.5;\n  cursor: default;\n}\n.status-icon.status-disabled:hover {\n  transform: none;\n  opacity: 0.5;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0%,\n  100% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n}\n.edit-list-actions {\n  text-align: right;\n  padding-right: 16px;\n}\n.edit-list-actions button {\n  font-size: 13px;\n  width: 28px;\n  height: 28px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 600;\n  transition: all 0.15s ease;\n}\n.edit-list-actions button:hover:not(:disabled) {\n  filter: brightness(1.15);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n  transform: scale(1.05);\n}\n.edit-list-actions button:active:not(:disabled) {\n  transform: translateY(1px) scale(1.05);\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.add-btn:hover:not(:disabled) {\n  background-color: #218838;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button.remove-btn:hover:not(:disabled) {\n  background-color: #c82333;\n}\n.edit-list-actions button:disabled {\n  background-color: #e0e0e0;\n  color: #999999;\n  cursor: not-allowed;\n  opacity: 0.6;\n}\n.edit-list-actions button:disabled:hover {\n  filter: none;\n  box-shadow: none;\n  transform: none;\n}\n.loader {\n  text-align: center;\n  padding: 32px;\n}\n.spinner {\n  border: 4px solid #f0f0f0;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333333;\n  color: white;\n  padding: 8px 16px;\n  border-radius: 4px;\n  z-index: 100000;\n  opacity: 0;\n  transition: opacity 0.3s ease, top 0.3s ease;\n  font-size: 13px;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n#details-popover {\n  position: fixed;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  min-width: 600px;\n  max-width: 90vw;\n  min-height: 400px;\n  max-height: 80vh;\n  display: flex;\n  flex-direction: column;\n  z-index: 100000;\n  overflow: hidden;\n}\n.popover-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  height: 44px;\n  box-sizing: border-box;\n  cursor: move;\n  flex-shrink: 0;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.popover-close-btn {\n  width: 28px;\n  height: 28px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: #ffffff;\n  color: #666666;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 16px;\n  transition: all 0.15s ease;\n}\n.popover-close-btn:hover {\n  border-color: #dc3545;\n  color: #dc3545;\n  background: #fff5f5;\n}\n.popover-content {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n}\n.popover-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.popover-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 12px;\n  text-align: left;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.popover-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.popover-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.popover-table tbody tr:last-child {\n  border-bottom: none;\n}\n.popover-table td {\n  padding: 8px 16px;\n  font-size: 12px;\n  color: #333333;\n  vertical-align: middle;\n}\n.note-cell {\n  max-width: 300px;\n  word-wrap: break-word;\n  white-space: pre-wrap;\n}\n.datetime-cell {\n  white-space: nowrap;\n}\n.popover-resize-handle {\n  position: absolute;\n  background: transparent;\n  z-index: 10;\n}\n.popover-resize-handle:hover {\n  background: rgba(102, 126, 234, 0.15);\n}\n.popover-resize-handle-s {\n  bottom: 0;\n  left: 16px;\n  right: 16px;\n  height: 4px;\n  cursor: s-resize;\n}\n.popover-resize-handle-w {\n  top: 16px;\n  bottom: 16px;\n  left: 0;\n  width: 8px;\n  cursor: w-resize;\n}\n.popover-resize-handle-e {\n  top: 16px;\n  bottom: 16px;\n  right: 0;\n  width: 8px;\n  cursor: e-resize;\n}\n.popover-resize-handle-se {\n  bottom: 0;\n  right: 0;\n  width: 16px;\n  height: 16px;\n  cursor: se-resize;\n  z-index: 11;\n  border-radius: 0 0 8px 0;\n}\n/* Empty State Styles - matches QA Report empty state */\n.tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 300px;\n  text-align: center;\n  color: #666666;\n  background: #f7f8fa;\n}\n.tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.tracker-empty-state .tracker-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.tracker-empty-state .tracker-empty-text {\n  font-size: 13px;\n  color: #666666;\n}\n/* \n * ==========================================================================\n * Legacy Popover Styles (Details Popover)\n * These styles are for the patient details popover that appears\n * when clicking status icons in the Visit Monitor\n * ==========================================================================\n */\n#details-popover {\n  position: fixed;\n  z-index: 100001;\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* Note Cell Styling */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* Authorization Note Table */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* Popover Resize Handle - Legacy (disabled, handled by coordinator-tracker.less) */\n/* \n.popover-resize-handle {\n    position: absolute;\n    right: 0;\n    bottom: 0;\n    width: 16px;\n    height: 16px;\n    cursor: nwse-resize;\n    background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n    border-bottom-right-radius: 8px;\n}\n\n.popover-resize-handle::before {\n    content: '';\n    position: absolute;\n    right: 4px;\n    bottom: 4px;\n    width: 4px;\n    height: 4px;\n    background: #666;\n    border-radius: 1px;\n}\n*/\n/* \n * ==========================================================================\n * Phone Tooltip Styles\n * Tooltip that appears when hovering over phone icons in patient rows\n * ==========================================================================\n */\n.phone-icon-wrapper {\n  position: relative;\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  position: absolute;\n  top: 100%;\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n}\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -1411,30 +1417,35 @@ const POCResolver = () => {
     // 如果需要验证（有星号标记），则填写验证信息
     if ($(visitVerifyStarSelector).length > 0) {
         // 点击 Caregiver 复选框
-        $(visitAuditCaregiverSelector).click();
-        // 填写 Date Verified 字段（MM/DD/YYYY 格式）
-        const dateVerifiedInput = document.getElementById("uxtxtDateVerified");
-        if (dateVerifiedInput) {
-            const today = new Date();
-            const month = String(today.getMonth() + 1).padStart(2, "0");
-            const day = String(today.getDate()).padStart(2, "0");
-            const year = today.getFullYear();
-            const dateStr = `${month}/${day}/${year}`;
-            dateVerifiedInput.value = dateStr;
-            dateVerifiedInput.dispatchEvent(new Event("change", { bubbles: true }));
-            console.log("[POCResolver] Date Verified set to:", dateStr);
-        }
-        // 填写 Time Verified 字段（HHmm 格式，如 1430）
-        const timeVerifiedInput = document.getElementById("uxtxttimeVerified");
-        if (timeVerifiedInput) {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, "0");
-            const minutes = String(now.getMinutes()).padStart(2, "0");
-            const timeStr = `${hours}${minutes}`;
-            timeVerifiedInput.value = timeStr;
-            timeVerifiedInput.dispatchEvent(new Event("change", { bubbles: true }));
-            console.log("[POCResolver] Time Verified set to:", timeStr);
-        }
+        $(visitAuditCaregiverSelector).trigger("click");
+        /*     // 填写 Date Verified 字段（MM/DD/YYYY 格式）
+            const dateVerifiedInput = document.getElementById(
+              "uxtxtDateVerified"
+            ) as HTMLInputElement;
+            if (dateVerifiedInput) {
+              const today = new Date();
+              const month = String(today.getMonth() + 1).padStart(2, "0");
+              const day = String(today.getDate()).padStart(2, "0");
+              const year = today.getFullYear();
+              const dateStr = `${month}/${day}/${year}`;
+              dateVerifiedInput.value = dateStr;
+              dateVerifiedInput.dispatchEvent(new Event("change", { bubbles: true }));
+              console.log("[POCResolver] Date Verified set to:", dateStr);
+            }
+        
+            // 填写 Time Verified 字段（HHmm 格式，如 1430）
+            const timeVerifiedInput = document.getElementById(
+              "uxtxttimeVerified"
+            ) as HTMLInputElement;
+            if (timeVerifiedInput) {
+              const now = new Date();
+              const hours = String(now.getHours()).padStart(2, "0");
+              const minutes = String(now.getMinutes()).padStart(2, "0");
+              const timeStr = `${hours}${minutes}`;
+              timeVerifiedInput.value = timeStr;
+              timeVerifiedInput.dispatchEvent(new Event("change", { bubbles: true }));
+              console.log("[POCResolver] Time Verified set to:", timeStr);
+            } */
     }
 };
 function POCSafeTick(el) {
@@ -10935,9 +10946,2351 @@ class CleanerTab extends BaseTab {
 /** 自动轮询间隔（毫秒） */
 CleanerTab.POLLING_INTERVAL = 5000;
 
+;// ./src/js/services/ProfileDataExtractor.ts
+/**
+ * ProfileDataExtractor Service
+ * Epic 12, Story 1 & 2: 页面数据提取服务
+ *
+ * 识别当前页面类型并从 DOM 提取病人/护理员信息：
+ * - PATIENT_INTERNAL: InternalPatientInfo_ns.aspx
+ * - PATIENT_NS: Patient_ns.aspx
+ * - CAREGIVER: Aide_ns.aspx
+ * - UNKNOWN: 其他页面
+ */
+/**
+ * CSS 选择器配置
+ * 基于 Chrome MCP DOM 分析结果
+ */
+const ProfileDataExtractor_SELECTORS = {
+    // 病人 InternalPatientInfo 页面
+    PATIENT_INTERNAL: {
+        name: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientName",
+        id: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientNumber", // 小写 d
+        dob: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientDOB",
+        address: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblAddress",
+        insurance: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblContracts",
+    },
+    // 病人 Patient_ns 页面
+    PATIENT_NS: {
+        name: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientName",
+        id: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientNumber", // 大写 ID
+        dob: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientDOB",
+        address: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblAddress",
+        insurance: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblChhaName", // 不同字段
+    },
+    // 护理员 Aide_ns 页面
+    CAREGIVER: {
+        name: "#ctl00_ContentPlaceHolder1_uxlblInfoName",
+        id: "#ctl00_ContentPlaceHolder1_uxlblInfoAideInitials",
+        dob: "#ctl00_ContentPlaceHolder1_uxlblInfoDOB",
+        address: "#uxHyPAddress",
+        addressFallback: "#lblInfoAddress",
+    },
+};
+class ProfileDataExtractor {
+    /**
+     * 检测当前页面类型
+     */
+    static detectPageType() {
+        const url = window.location.href;
+        if (url.includes("InternalPatientInfo_ns.aspx")) {
+            return "PATIENT_INTERNAL";
+        }
+        if (url.includes("Patient_ns.aspx")) {
+            return "PATIENT_NS";
+        }
+        if (url.includes("Aide_ns.aspx")) {
+            return "CAREGIVER";
+        }
+        return "UNKNOWN";
+    }
+    /**
+     * 获取当前页面类型（缓存版本）
+     */
+    static getCurrentPageType() {
+        this.currentPageType = this.detectPageType();
+        return this.currentPageType;
+    }
+    /**
+     * 提取页面数据
+     */
+    static extract() {
+        const pageType = this.detectPageType();
+        switch (pageType) {
+            case "PATIENT_INTERNAL":
+                return this.extractPatientInternal();
+            case "PATIENT_NS":
+                return this.extractPatientNs();
+            case "CAREGIVER":
+                return this.extractCaregiver();
+            default:
+                return null;
+        }
+    }
+    /**
+     * 从 InternalPatientInfo 页面提取数据
+     */
+    static extractPatientInternal() {
+        const selectors = ProfileDataExtractor_SELECTORS.PATIENT_INTERNAL;
+        return {
+            type: "PATIENT",
+            name: this.getText(selectors.name),
+            id: this.getText(selectors.id),
+            dob: this.getText(selectors.dob),
+            address: this.getText(selectors.address),
+            phone: this.getPhoneFromTelLink(),
+            insurance: this.getText(selectors.insurance),
+        };
+    }
+    /**
+     * 从 Patient_ns 页面提取数据
+     */
+    static extractPatientNs() {
+        const selectors = ProfileDataExtractor_SELECTORS.PATIENT_NS;
+        return {
+            type: "PATIENT",
+            name: this.getText(selectors.name),
+            id: this.getText(selectors.id),
+            dob: this.getText(selectors.dob),
+            address: this.getText(selectors.address),
+            phone: this.getPhoneFromTelLink(),
+            insurance: this.getText(selectors.insurance),
+        };
+    }
+    /**
+     * 从 Aide_ns 页面提取数据
+     */
+    static extractCaregiver() {
+        const selectors = ProfileDataExtractor_SELECTORS.CAREGIVER;
+        // 地址尝试两个选择器
+        let address = this.getText(selectors.address);
+        if (!address) {
+            address = this.getText(selectors.addressFallback);
+        }
+        return {
+            type: "CAREGIVER",
+            name: this.getText(selectors.name),
+            id: this.getText(selectors.id),
+            dob: this.getText(selectors.dob),
+            address: address,
+            phone: this.getPhoneFromTelLink(),
+        };
+    }
+    /**
+     * 获取元素文本内容
+     */
+    static getText(selector) {
+        const el = document.querySelector(selector);
+        return el?.textContent?.trim() || "";
+    }
+    /**
+     * 从 tel: 链接提取电话号码
+     */
+    static getPhoneFromTelLink() {
+        const telLink = document.querySelector('a[href^="tel:"]');
+        if (telLink) {
+            // 从 href="tel:917-622-0826" 提取号码
+            const href = telLink.getAttribute("href") || "";
+            return href.replace("tel:", "").trim();
+        }
+        return "";
+    }
+    /**
+     * 注册页面变化监听器
+     */
+    static onPageChange(callback) {
+        this.listeners.push(callback);
+        // 首次调用时启动监听
+        if (this.checkInterval === null) {
+            this.startWatching();
+        }
+    }
+    /**
+     * 移除页面变化监听器
+     */
+    static offPageChange(callback) {
+        const index = this.listeners.indexOf(callback);
+        if (index > -1) {
+            this.listeners.splice(index, 1);
+        }
+        // 如果没有监听器，停止监听
+        if (this.listeners.length === 0 && this.checkInterval !== null) {
+            this.stopWatching();
+        }
+    }
+    /**
+     * 开始监听 URL 变化
+     */
+    static startWatching() {
+        this.currentPageType = this.detectPageType();
+        // 每 500ms 检查一次 URL 变化
+        this.checkInterval = window.setInterval(() => {
+            const newPageType = this.detectPageType();
+            if (newPageType !== this.currentPageType) {
+                console.log(`[ProfileDataExtractor] Page changed: ${this.currentPageType} -> ${newPageType}`);
+                this.currentPageType = newPageType;
+                this.notifyListeners(newPageType);
+            }
+        }, 500);
+        console.log("[ProfileDataExtractor] Started watching for page changes");
+    }
+    /**
+     * 停止监听 URL 变化
+     */
+    static stopWatching() {
+        if (this.checkInterval !== null) {
+            window.clearInterval(this.checkInterval);
+            this.checkInterval = null;
+            console.log("[ProfileDataExtractor] Stopped watching for page changes");
+        }
+    }
+    /**
+     * 通知所有监听器
+     */
+    static notifyListeners(pageType) {
+        this.listeners.forEach((callback) => {
+            try {
+                callback(pageType);
+            }
+            catch (error) {
+                console.error("[ProfileDataExtractor] Error in listener callback:", error);
+            }
+        });
+    }
+    /**
+     * 获取页面友好名称
+     */
+    static getPageDisplayName(pageType) {
+        switch (pageType) {
+            case "PATIENT_INTERNAL":
+            case "PATIENT_NS":
+                return "病人主页";
+            case "CAREGIVER":
+                return "护理员主页";
+            default:
+                return "未知页面";
+        }
+    }
+    /**
+     * 判断是否为 Profile 页面
+     */
+    static isProfilePage(pageType) {
+        return pageType !== "UNKNOWN";
+    }
+    /**
+     * 清理资源
+     */
+    static cleanup() {
+        this.stopWatching();
+        this.listeners = [];
+    }
+}
+ProfileDataExtractor.currentPageType = "UNKNOWN";
+ProfileDataExtractor.listeners = [];
+ProfileDataExtractor.checkInterval = null;
+
+;// ./src/js/services/TemplateManager.ts
+/**
+ * TemplateManager Service
+ * Epic 12, Story 3: 模板管理器
+ *
+ * 处理自定义邮件模板的 CRUD 和导入导出
+ * 使用 GM_setValue 持久化存储
+ */
+/**
+ * 模板管理器
+ */
+class TemplateManager {
+    /**
+     * 获取所有模板
+     */
+    static getAll() {
+        try {
+            const stored = GM_getValue(this.STORAGE_KEY, "[]");
+            return JSON.parse(stored);
+        }
+        catch (error) {
+            console.error("[TemplateManager] Error parsing templates:", error);
+            return [];
+        }
+    }
+    /**
+     * 根据 ID 获取模板
+     */
+    static getById(templateId) {
+        const templates = this.getAll();
+        return templates.find((t) => t.id === templateId) || null;
+    }
+    /**
+     * 保存模板（新增或更新）
+     */
+    static save(template) {
+        const templates = this.getAll();
+        const now = Date.now();
+        if (template.id) {
+            // 更新现有模板
+            const index = templates.findIndex((t) => t.id === template.id);
+            if (index >= 0) {
+                const updated = {
+                    ...templates[index],
+                    ...template,
+                    id: template.id,
+                    updatedAt: now,
+                };
+                templates[index] = updated;
+                this.saveAll(templates);
+                console.log("[TemplateManager] Updated template:", updated.name);
+                return updated;
+            }
+        }
+        // 新增模板
+        const newTemplate = {
+            ...template,
+            id: this.generateId(),
+            createdAt: now,
+            updatedAt: now,
+        };
+        templates.push(newTemplate);
+        this.saveAll(templates);
+        console.log("[TemplateManager] Created template:", newTemplate.name);
+        return newTemplate;
+    }
+    /**
+     * 删除模板
+     */
+    static delete(templateId) {
+        const templates = this.getAll();
+        const index = templates.findIndex((t) => t.id === templateId);
+        if (index >= 0) {
+            const deleted = templates.splice(index, 1)[0];
+            this.saveAll(templates);
+            console.log("[TemplateManager] Deleted template:", deleted.name);
+            return true;
+        }
+        return false;
+    }
+    /**
+     * 导出为 JSON 文件下载
+     */
+    static exportToFile() {
+        const templates = this.getAll();
+        const json = JSON.stringify(templates, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `hha-mail-templates-${new Date().toISOString().split("T")[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        console.log("[TemplateManager] Exported", templates.length, "templates");
+    }
+    /**
+     * 从文件导入
+     * @returns 导入的模板数量
+     */
+    static async importFromFile(file) {
+        const text = await file.text();
+        let imported;
+        try {
+            imported = JSON.parse(text);
+        }
+        catch (error) {
+            throw new Error("无法解析 JSON 文件，请检查文件格式。");
+        }
+        if (!Array.isArray(imported)) {
+            throw new Error("导入的数据格式不正确，应为模板数组。");
+        }
+        // 验证模板结构
+        for (const template of imported) {
+            if (!template.name || !template.subject) {
+                throw new Error(`模板 "${template.name || "未知"}" 缺少必要字段。`);
+            }
+        }
+        // 合并到现有模板（按 ID 去重）
+        const existing = this.getAll();
+        const existingIds = new Set(existing.map((t) => t.id));
+        let addedCount = 0;
+        for (const template of imported) {
+            if (!existingIds.has(template.id)) {
+                // 确保有时间戳
+                if (!template.createdAt)
+                    template.createdAt = Date.now();
+                if (!template.updatedAt)
+                    template.updatedAt = Date.now();
+                existing.push(template);
+                addedCount++;
+            }
+        }
+        this.saveAll(existing);
+        console.log("[TemplateManager] Imported", addedCount, "new templates");
+        return addedCount;
+    }
+    /**
+     * 根据页面类型筛选模板
+     */
+    static getByPageType(pageType) {
+        return this.getAll().filter((t) => t.targetPageType === pageType || t.targetPageType === "ANY");
+    }
+    /**
+     * 保存所有模板到 GM_setValue
+     */
+    static saveAll(templates) {
+        GM_setValue(this.STORAGE_KEY, JSON.stringify(templates));
+    }
+    /**
+     * 生成唯一 ID
+     */
+    static generateId() {
+        return `tpl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+    /**
+     * 创建默认示例模板（仅用于首次使用）
+     */
+    static createDefaultTemplates() {
+        const templates = this.getAll();
+        if (templates.length > 0)
+            return;
+        // 创建示例模板
+        this.save({
+            name: "护理员请假通知",
+            targetPageType: "CAREGIVER",
+            to: "scheduler@example.com",
+            cc: "",
+            subject: "Aide: {{aide_name}} {{aide_id}} Vacation Request",
+            body: `Hi,
+
+Please be advised that the following caregiver is requesting time off:
+
+Name: {{aide_name}}
+ID: {{aide_id}}
+
+Thank you.`,
+            variables: [
+                {
+                    placeholder: "{{aide_name}}",
+                    selector: "#ctl00_ContentPlaceHolder1_uxlblInfoName",
+                    method: "text",
+                },
+                {
+                    placeholder: "{{aide_id}}",
+                    selector: "#ctl00_ContentPlaceHolder1_uxlblInfoAideInitials",
+                    method: "text",
+                },
+            ],
+        });
+        this.save({
+            name: "病人信息请求",
+            targetPageType: "PATIENT",
+            to: "info@example.com",
+            cc: "",
+            subject: "Patient: {{patient_name}} {{patient_id}} - Information Request",
+            body: `Hi,
+
+I am requesting information for the following patient:
+
+Name: {{patient_name}}
+ID: {{patient_id}}
+
+Thank you.`,
+            variables: [
+                {
+                    placeholder: "{{patient_name}}",
+                    selector: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientName",
+                    method: "text",
+                },
+                {
+                    placeholder: "{{patient_id}}",
+                    selector: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientNumber",
+                    method: "text",
+                },
+            ],
+        });
+        console.log("[TemplateManager] Created default templates");
+    }
+}
+TemplateManager.STORAGE_KEY = "hha_mail_templates";
+
+;// ./src/js/services/TemplateEngine.ts
+/**
+ * TemplateEngine Service
+ * Epic 12, Story 4: 模板变量替换引擎
+ *
+ * 处理模板中的变量占位符替换
+ * 支持内置变量和自定义 CSS 选择器变量
+ */
+/**
+ * 模板变量引擎
+ */
+class TemplateEngine {
+    /**
+     * 渲染模板
+     * 将模板中的变量替换为实际值
+     */
+    static render(template, profileData) {
+        return {
+            to: this.replaceVariables(template.to, profileData, template.variables),
+            cc: this.replaceVariables(template.cc || "", profileData, template.variables),
+            subject: this.replaceVariables(template.subject, profileData, template.variables),
+            body: this.replaceVariables(template.body, profileData, template.variables),
+        };
+    }
+    /**
+     * 替换字符串中的变量
+     */
+    static replaceVariables(text, profileData, customVariables) {
+        if (!text)
+            return text;
+        let result = text;
+        // 1. 替换内置变量
+        if (profileData) {
+            for (const [placeholder, getter] of Object.entries(this.BUILTIN_VARIABLES)) {
+                if (result.includes(placeholder)) {
+                    const value = getter(profileData);
+                    result = result.split(placeholder).join(value);
+                }
+            }
+        }
+        // 2. 替换自定义变量（通过 CSS 选择器获取）
+        for (const variable of customVariables) {
+            if (result.includes(variable.placeholder)) {
+                const value = this.extractValueBySelector(variable);
+                result = result.split(variable.placeholder).join(value);
+            }
+        }
+        // 3. 清理未替换的变量（替换为空字符串）
+        result = result.replace(/\{\{[^}]+\}\}/g, "");
+        return result;
+    }
+    /**
+     * 通过 CSS 选择器提取值
+     */
+    static extractValueBySelector(variable) {
+        try {
+            const element = document.querySelector(variable.selector);
+            if (!element)
+                return "";
+            switch (variable.method) {
+                case "text":
+                    return element.textContent?.trim() || "";
+                case "val":
+                    return element.value?.trim() || "";
+                case "attr":
+                    return variable.attrName
+                        ? element.getAttribute(variable.attrName) || ""
+                        : "";
+                default:
+                    return element.textContent?.trim() || "";
+            }
+        }
+        catch (error) {
+            console.error(`[TemplateEngine] Error extracting value for ${variable.placeholder}:`, error);
+            return "";
+        }
+    }
+    /**
+     * 解析模板中使用的变量列表
+     */
+    static parseVariables(text) {
+        const regex = /\{\{([^}]+)\}\}/g;
+        const variables = [];
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+            const placeholder = `{{${match[1]}}}`;
+            if (!variables.includes(placeholder)) {
+                variables.push(placeholder);
+            }
+        }
+        return variables;
+    }
+    /**
+     * 检查变量是否为内置变量
+     */
+    static isBuiltinVariable(placeholder) {
+        return placeholder in this.BUILTIN_VARIABLES;
+    }
+    /**
+     * 获取所有内置变量列表
+     */
+    static getBuiltinVariables() {
+        return Object.keys(this.BUILTIN_VARIABLES);
+    }
+    /**
+     * 预览模板渲染结果
+     * 用于在编辑器中实时预览
+     */
+    static preview(template, profileData) {
+        return {
+            to: this.replaceVariables(template.to || "", profileData, []),
+            cc: this.replaceVariables(template.cc || "", profileData, []),
+            subject: this.replaceVariables(template.subject || "", profileData, []),
+            body: this.replaceVariables(template.body || "", profileData, []),
+        };
+    }
+}
+/**
+ * 内置变量映射
+ * 这些变量可以直接使用 ProfileData 中的数据
+ */
+TemplateEngine.BUILTIN_VARIABLES = {
+    // 病人相关变量
+    "{{patient_name}}": (data) => (data.type === "PATIENT" ? data.name : ""),
+    "{{patient_id}}": (data) => (data.type === "PATIENT" ? data.id : ""),
+    "{{patient_dob}}": (data) => data.type === "PATIENT" ? data.dob || "" : "",
+    "{{patient_phone}}": (data) => data.type === "PATIENT" ? data.phone || "" : "",
+    "{{patient_address}}": (data) => data.type === "PATIENT" ? data.address || "" : "",
+    "{{patient_insurance}}": (data) => data.type === "PATIENT" ? data.insurance || "" : "",
+    // 护理员相关变量
+    "{{aide_name}}": (data) => (data.type === "CAREGIVER" ? data.name : ""),
+    "{{aide_id}}": (data) => (data.type === "CAREGIVER" ? data.id : ""),
+    "{{caregiver_name}}": (data) => data.type === "CAREGIVER" ? data.name : "",
+    "{{caregiver_id}}": (data) => (data.type === "CAREGIVER" ? data.id : ""),
+    "{{caregiver_dob}}": (data) => data.type === "CAREGIVER" ? data.dob || "" : "",
+    "{{caregiver_phone}}": (data) => data.type === "CAREGIVER" ? data.phone || "" : "",
+    "{{caregiver_address}}": (data) => data.type === "CAREGIVER" ? data.address || "" : "",
+    // 通用变量
+    "{{name}}": (data) => data.name,
+    "{{id}}": (data) => data.id,
+    "{{dob}}": (data) => data.dob || "",
+    "{{phone}}": (data) => data.phone || "",
+    "{{address}}": (data) => data.address || "",
+    // 日期变量
+    "{{today}}": () => new Date().toLocaleDateString("en-US"),
+    "{{today_cn}}": () => new Date().toLocaleDateString("zh-CN"),
+    "{{now}}": () => new Date().toLocaleString("en-US"),
+};
+
+;// ./src/js/services/MailService.ts
+/**
+ * MailService - 跨 Tab 邮件任务通讯服务
+ * Epic 12, Story 7: 独立的跨 Tab 通讯服务
+ *
+ * 职责：
+ * - HHA Tab 发送邮件任务到 Outlook Tab
+ * - 使用 GM_setValue 实现跨域数据共享
+ * - 轮询检测任务更新
+ *
+ * 独立实现：不依赖 VisitMonitor.ts 的 TabSyncManager
+ */
+/**
+ * MailService 类
+ * 独立的跨 Tab 通讯服务
+ */
+class MailService {
+    /**
+     * 初始化服务
+     */
+    static init() {
+        this.tabId = this.generateTabId();
+        console.log("[MailService] Initialized with tabId:", this.tabId);
+    }
+    /**
+     * 生成唯一的 Tab ID
+     */
+    static generateTabId() {
+        return `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+    /**
+     * 获取当前 Tab ID
+     */
+    static getTabId() {
+        if (!this.tabId) {
+            this.init();
+        }
+        return this.tabId;
+    }
+    /**
+     * 发送邮件任务（HHA 端调用）
+     */
+    static sendMailTask(task) {
+        const taskId = `task_${Date.now()}_${Math.random()
+            .toString(36)
+            .substr(2, 9)}`;
+        const payload = {
+            id: taskId,
+            status: "PENDING",
+            data: task,
+            timestamp: Date.now(),
+            sourceTabId: this.getTabId(),
+        };
+        GM_setValue(this.TASK_KEY, JSON.stringify(payload));
+        console.log("[MailService] Sent mail task:", taskId, task);
+        return taskId;
+    }
+    /**
+     * 获取当前任务载荷
+     */
+    static getTaskPayload() {
+        try {
+            const stored = GM_getValue(this.TASK_KEY, "");
+            if (!stored)
+                return null;
+            const payload = JSON.parse(stored);
+            // 检查是否过期
+            if (Date.now() - payload.timestamp > this.TASK_EXPIRY) {
+                console.log("[MailService] Task expired, clearing...");
+                this.clearTask();
+                return null;
+            }
+            return payload;
+        }
+        catch (error) {
+            console.error("[MailService] Error parsing task payload:", error);
+            return null;
+        }
+    }
+    /**
+     * 开始监听任务（Outlook 端调用）
+     */
+    static startListening(callback) {
+        this.taskListeners.push(callback);
+        if (this.pollingTimer === null) {
+            this.startPolling();
+        }
+    }
+    /**
+     * 停止监听
+     */
+    static stopListening(callback) {
+        if (callback) {
+            const index = this.taskListeners.indexOf(callback);
+            if (index > -1) {
+                this.taskListeners.splice(index, 1);
+            }
+        }
+        else {
+            this.taskListeners = [];
+        }
+        if (this.taskListeners.length === 0) {
+            this.stopPolling();
+        }
+    }
+    /**
+     * 监听任务状态变化（HHA 端调用）
+     */
+    static onStatusChange(callback) {
+        this.statusListeners.push(callback);
+        if (this.pollingTimer === null) {
+            this.startPolling();
+        }
+    }
+    /**
+     * 停止监听状态变化
+     */
+    static offStatusChange(callback) {
+        if (callback) {
+            const index = this.statusListeners.indexOf(callback);
+            if (index > -1) {
+                this.statusListeners.splice(index, 1);
+            }
+        }
+        else {
+            this.statusListeners = [];
+        }
+    }
+    /**
+     * 开始轮询
+     */
+    static startPolling() {
+        if (this.pollingTimer !== null)
+            return;
+        console.log("[MailService] Starting polling...");
+        this.pollingTimer = window.setInterval(() => {
+            const payload = this.getTaskPayload();
+            if (payload) {
+                // 通知状态监听器
+                this.statusListeners.forEach((cb) => {
+                    try {
+                        cb(payload);
+                    }
+                    catch (e) {
+                        console.error("[MailService] Status callback error:", e);
+                    }
+                });
+                // 检查是否有待处理的任务（Outlook 端）
+                if (payload.status === "PENDING" &&
+                    payload.id !== this.lastProcessedTaskId) {
+                    this.lastProcessedTaskId = payload.id;
+                    // 标记为处理中
+                    this.updateTaskStatus(payload.id, "PROCESSING");
+                    // 通知任务监听器
+                    this.taskListeners.forEach((cb) => {
+                        try {
+                            cb(payload.data, payload.id);
+                        }
+                        catch (e) {
+                            console.error("[MailService] Task callback error:", e);
+                        }
+                    });
+                }
+            }
+        }, this.POLL_INTERVAL);
+    }
+    /**
+     * 停止轮询
+     */
+    static stopPolling() {
+        if (this.pollingTimer !== null) {
+            window.clearInterval(this.pollingTimer);
+            this.pollingTimer = null;
+            console.log("[MailService] Polling stopped");
+        }
+    }
+    /**
+     * 更新任务状态
+     */
+    static updateTaskStatus(taskId, status, error) {
+        const payload = this.getTaskPayload();
+        if (payload && payload.id === taskId) {
+            payload.status = status;
+            if (error)
+                payload.error = error;
+            payload.timestamp = Date.now();
+            GM_setValue(this.TASK_KEY, JSON.stringify(payload));
+            console.log("[MailService] Updated task status:", taskId, status);
+        }
+    }
+    /**
+     * 报告任务完成（Outlook 端调用）
+     */
+    static reportComplete(taskId) {
+        this.updateTaskStatus(taskId, "COMPLETED");
+        console.log("[MailService] Task completed:", taskId);
+    }
+    /**
+     * 报告任务失败（Outlook 端调用）
+     */
+    static reportFailed(taskId, error) {
+        this.updateTaskStatus(taskId, "FAILED", error);
+        console.log("[MailService] Task failed:", taskId, error);
+    }
+    /**
+     * 清除任务
+     */
+    static clearTask() {
+        GM_setValue(this.TASK_KEY, "");
+    }
+    /**
+     * 检查是否在 Outlook 页面
+     */
+    static isOutlookPage() {
+        return window.location.hostname === "outlook.office.com";
+    }
+    /**
+     * 检查是否在 HHA 页面
+     */
+    static isHHAPage() {
+        return window.location.hostname.includes("hhaexchange.com");
+    }
+    /**
+     * 清理资源
+     */
+    static cleanup() {
+        this.stopPolling();
+        this.taskListeners = [];
+        this.statusListeners = [];
+    }
+}
+MailService.TASK_KEY = "hha_mail_service_bus";
+MailService.POLL_INTERVAL = 1000; // 1秒轮询
+MailService.TASK_EXPIRY = 5 * 60 * 1000; // 5分钟过期
+MailService.tabId = "";
+MailService.pollingTimer = null;
+MailService.taskListeners = [];
+MailService.statusListeners = [];
+MailService.lastProcessedTaskId = "";
+
+;// ./src/js/services/BuiltinTemplates.ts
+/**
+ * BuiltinTemplates - 内置邮件模板
+ * Epic 12, Story 9: 预设常用模板
+ *
+ * 注意：内置模板需要根据实际业务需求单独实现
+ * 目前暂时清空，后续再添加
+ */
+/**
+ * 内置模板列表
+ * TODO: 根据实际业务需求添加内置模板
+ */
+const BUILTIN_TEMPLATES = [];
+/**
+ * 获取所有内置模板
+ */
+function getBuiltinTemplates() {
+    return BUILTIN_TEMPLATES;
+}
+/**
+ * 根据页面类型获取内置模板
+ */
+function getBuiltinTemplatesByType(pageType) {
+    return BUILTIN_TEMPLATES.filter((t) => t.targetPageType === pageType || t.targetPageType === "ANY");
+}
+/**
+ * 检查是否为内置模板
+ */
+function isBuiltinTemplate(templateId) {
+    return templateId.startsWith("builtin_");
+}
+
+;// ./src/js/services/TinyMCEBundler.ts
+/**
+ * TinyMCE Bundler Service
+ *
+ * Manually loads TinyMCE components using GM.xmlHttpRequest to bypass CSP restrictions.
+ * Based on the approach from Email Assistant.js
+ */
+const TINYMCE_BASE_URL = "https://unpkg.com/tinymce@6/";
+// JS components to bundle (simplified list for basic functionality)
+const TINYMCE_JS_COMPONENTS = [
+    "tinymce.min.js",
+    "models/dom/model.min.js",
+    "themes/silver/theme.min.js",
+    "icons/default/icons.min.js",
+    "plugins/lists/plugin.min.js",
+    "plugins/link/plugin.min.js",
+];
+// CSS components
+const TINYMCE_CSS_COMPONENTS = {
+    ui: "skins/ui/oxide/skin.min.css",
+    content: "skins/content/default/content.min.css",
+};
+// Cached CSS content
+let tinyMceCss = null;
+let isLoaded = false;
+let loadingPromise = null;
+/**
+ * Fetch a single asset using GM.xmlHttpRequest
+ */
+function fetchAsset(url) {
+    return new Promise((resolve, reject) => {
+        // Use the GM object's xmlHttpRequest method
+        if (typeof GM !== "undefined" && GM.xmlHttpRequest) {
+            GM.xmlHttpRequest({
+                method: "GET",
+                url: url,
+                onload: (response) => {
+                    if (response.status >= 200 && response.status < 300) {
+                        resolve(response.responseText);
+                    }
+                    else {
+                        reject(new Error(`Failed to load: ${url}. Status: ${response.status}`));
+                    }
+                },
+                onerror: (error) => {
+                    reject(new Error(`Failed to load: ${url}. Error: ${error}`));
+                },
+            });
+        }
+        else {
+            // Fallback to fetch (may fail due to CSP)
+            fetch(url)
+                .then((response) => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error(`Failed to load: ${url}`);
+            })
+                .then(resolve)
+                .catch(reject);
+        }
+    });
+}
+/**
+ * Load and inject the TinyMCE JS bundle
+ */
+async function loadAndInjectJsBundle() {
+    console.log("[TinyMCEBundler] Loading TinyMCE JS components...");
+    try {
+        const promises = TINYMCE_JS_COMPONENTS.map((c) => fetchAsset(TINYMCE_BASE_URL + c));
+        const contents = await Promise.all(promises);
+        const bundle = contents.join("\n\n// --- Bundled ---\n\n");
+        const scriptEl = document.createElement("script");
+        scriptEl.type = "text/javascript";
+        scriptEl.textContent = bundle;
+        document.head.appendChild(scriptEl);
+        console.log("[TinyMCEBundler] TinyMCE JS bundle injected successfully!");
+        // Note: Don't wait here - the script may take time to execute
+        // We'll wait in init() instead
+    }
+    catch (error) {
+        console.error("[TinyMCEBundler] Failed to build TinyMCE JS bundle:", error);
+        throw error;
+    }
+}
+/**
+ * Wait for window.tinymce to become available after script injection
+ * Note: We use unsafeWindow because TinyMCE is injected into the page's window context,
+ * not the userscript's sandboxed window
+ */
+function waitForTinyMCE(timeout = 30000) {
+    // Get reference to page's window object (unsafeWindow in Tampermonkey, or regular window)
+    const pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+    return new Promise((resolve, reject) => {
+        const startTime = Date.now();
+        let checkCount = 0;
+        const check = () => {
+            checkCount++;
+            if (typeof pageWindow.tinymce !== "undefined") {
+                console.log(`[TinyMCEBundler] TinyMCE detected after ${checkCount} checks (${Date.now() - startTime}ms)`);
+                resolve();
+                return;
+            }
+            if (Date.now() - startTime > timeout) {
+                console.error(`[TinyMCEBundler] Timeout after ${checkCount} checks (${timeout}ms)`);
+                reject(new Error("Timeout waiting for TinyMCE to be available"));
+                return;
+            }
+            setTimeout(check, 100);
+        };
+        check();
+    });
+}
+/**
+ * Load the TinyMCE CSS components
+ */
+async function loadCssBundle() {
+    console.log("[TinyMCEBundler] Loading TinyMCE CSS...");
+    try {
+        const uiCssPromise = fetchAsset(TINYMCE_BASE_URL + TINYMCE_CSS_COMPONENTS.ui);
+        const contentCssPromise = fetchAsset(TINYMCE_BASE_URL + TINYMCE_CSS_COMPONENTS.content);
+        const [ui, content] = await Promise.all([uiCssPromise, contentCssPromise]);
+        console.log("[TinyMCEBundler] TinyMCE CSS loaded successfully!");
+        return { ui, content };
+    }
+    catch (error) {
+        console.error("[TinyMCEBundler] Failed to load TinyMCE CSS:", error);
+        throw error;
+    }
+}
+/**
+ * TinyMCE Bundler - provides methods to load and initialize TinyMCE
+ */
+const TinyMCEBundler = {
+    /**
+     * Check if TinyMCE is loaded
+     */
+    isLoaded() {
+        return isLoaded && typeof window.tinymce !== "undefined";
+    },
+    /**
+     * Get the cached CSS content
+     */
+    getCss() {
+        return tinyMceCss;
+    },
+    /**
+     * Load TinyMCE (call this once at app startup or when first needed)
+     */
+    async load() {
+        if (isLoaded) {
+            return;
+        }
+        if (loadingPromise) {
+            return loadingPromise;
+        }
+        loadingPromise = (async () => {
+            try {
+                const jsPromise = loadAndInjectJsBundle();
+                const cssPromise = loadCssBundle();
+                const [_, css] = await Promise.all([jsPromise, cssPromise]);
+                tinyMceCss = css;
+                // Inject UI CSS globally
+                if (typeof GM_addStyle !== "undefined") {
+                    GM_addStyle(tinyMceCss.ui);
+                }
+                else {
+                    const styleEl = document.createElement("style");
+                    styleEl.textContent = tinyMceCss.ui;
+                    document.head.appendChild(styleEl);
+                }
+                isLoaded = true;
+                console.log("[TinyMCEBundler] TinyMCE fully loaded!");
+            }
+            catch (error) {
+                console.error("[TinyMCEBundler] Failed to load TinyMCE:", error);
+                loadingPromise = null;
+                throw error;
+            }
+        })();
+        return loadingPromise;
+    },
+    /**
+     * Initialize TinyMCE on a selector
+     */
+    async init(selector, options = {}) {
+        // Start loading TinyMCE bundles (if not already)
+        await this.load();
+        // Wait for window.tinymce to be available (script execution may be slow)
+        console.log("[TinyMCEBundler] Waiting for window.tinymce...");
+        await waitForTinyMCE();
+        console.log("[TinyMCEBundler] window.tinymce is available!");
+        // Use unsafeWindow to access TinyMCE in page context
+        const pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+        const tinymce = pageWindow.tinymce;
+        return tinymce.init({
+            selector,
+            skin: false,
+            content_css: false,
+            content_style: tinyMceCss?.content || "",
+            plugins: "lists link",
+            toolbar: "undo redo | bold italic underline strikethrough | bullist numlist | link | removeformat",
+            menubar: false,
+            statusbar: false,
+            branding: false,
+            resize: false,
+            height: 200,
+            ...options,
+        });
+    },
+    /**
+     * Remove TinyMCE instance by selector
+     */
+    remove(selector) {
+        const pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+        if (typeof pageWindow.tinymce !== "undefined") {
+            const editor = pageWindow.tinymce.get(selector.replace("#", ""));
+            if (editor) {
+                editor.remove();
+            }
+        }
+    },
+    /**
+     * Get content from TinyMCE editor
+     */
+    getContent(selector, format = "html") {
+        const pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+        if (typeof pageWindow.tinymce !== "undefined") {
+            const editor = pageWindow.tinymce.get(selector.replace("#", ""));
+            if (editor) {
+                return editor.getContent({ format });
+            }
+        }
+        return "";
+    },
+};
+
+;// ./src/js/tabs/MailBuilderTab.ts
+
+
+
+
+
+
+
+/**
+ * Mail Builder Tab
+ * Epic 12: 智能邮件构筑助手
+ *
+ * 功能：
+ * - 自动检测当前页面（病人 / 护理员）
+ * - 从页面 DOM 提取关键信息
+ * - 左侧展示提取的信息，支持一键复制
+ * - 右侧管理邮件模板（内置 + 自定义）
+ */
+class MailBuilderTab extends BaseTab {
+    constructor() {
+        super(...arguments);
+        this.id = "mail-builder";
+        this.label = "邮件助手";
+        this.icon = "📧";
+        this.currentPageType = "UNKNOWN";
+        this.profileData = null;
+        this.pageChangeHandler = null;
+        // Template state
+        this.templates = [];
+        this.activeTemplateTab = "custom";
+        this.editingTemplate = null;
+        this.isEditorOpen = false;
+    }
+    async init() {
+        this.initialized = true;
+        // Load templates
+        this.templates = TemplateManager.getAll();
+        // Create default templates if none exist
+        if (this.templates.length === 0) {
+            TemplateManager.createDefaultTemplates();
+            this.templates = TemplateManager.getAll();
+        }
+        console.log("[MailBuilderTab] Initialized with", this.templates.length, "templates");
+    }
+    render(container) {
+        this.container = container;
+        container.classList.add("mail-builder-tab");
+        // 每次渲染时重新加载模板（解决页面刷新后模板不显示的问题）
+        this.templates = TemplateManager.getAll();
+        // 检测当前页面类型
+        this.currentPageType = ProfileDataExtractor.getCurrentPageType();
+        this.profileData = ProfileDataExtractor.extract();
+        // 渲染对应的 UI
+        this.renderContent();
+        // 监听页面变化
+        this.pageChangeHandler = (pageType) => {
+            if (pageType !== this.currentPageType) {
+                this.currentPageType = pageType;
+                this.profileData = ProfileDataExtractor.extract();
+                this.renderContent();
+            }
+        };
+        ProfileDataExtractor.onPageChange(this.pageChangeHandler);
+    }
+    /**
+     * 根据页面类型渲染内容
+     */
+    renderContent() {
+        if (!this.container)
+            return;
+        // 清空容器
+        this.container.innerHTML = "";
+        // 始终渲染主布局，根据页面类型决定是否显示左侧信息面板
+        this.renderMainLayout();
+    }
+    /**
+     * 渲染主布局
+     * - 在个人信息页面：35% 左侧信息区 + 65% 右侧模板区
+     * - 在其他页面：100% 模板区
+     */
+    renderMainLayout() {
+        if (!this.container)
+            return;
+        const isProfilePage = ProfileDataExtractor.isProfilePage(this.currentPageType);
+        const wrapper = document.createElement("div");
+        wrapper.className = "mail-builder-wrapper";
+        // Header
+        const header = this.renderHeader();
+        wrapper.appendChild(header);
+        // 主内容区
+        const mainContent = document.createElement("div");
+        mainContent.className = isProfilePage
+            ? "mail-builder-main"
+            : "mail-builder-main full-width";
+        // 仅在个人信息页面显示左侧信息面板
+        if (isProfilePage) {
+            const infoPanel = this.renderInfoPanel();
+            mainContent.appendChild(infoPanel);
+        }
+        // 右侧模板面板（或全宽模板面板）
+        const templatePanel = this.renderTemplatePanel();
+        mainContent.appendChild(templatePanel);
+        wrapper.appendChild(mainContent);
+        this.container.appendChild(wrapper);
+    }
+    /**
+     * 渲染 Header
+     */
+    renderHeader() {
+        const header = document.createElement("div");
+        header.className = "mail-builder-header";
+        header.innerHTML = `
+      <h3 class="mail-builder-title">📧 邮件助手</h3>
+      <span class="mail-builder-page-tag">当前页面：${ProfileDataExtractor.getPageDisplayName(this.currentPageType)}</span>
+    `;
+        return header;
+    }
+    /**
+     * 渲染左侧信息面板
+     */
+    renderInfoPanel() {
+        const panel = document.createElement("div");
+        panel.className = "mail-builder-info-panel";
+        if (!this.profileData) {
+            panel.innerHTML = `
+        <div class="mail-builder-no-data">
+          <span>⚠️ 无法提取页面数据</span>
+        </div>
+      `;
+            return panel;
+        }
+        // 构建信息字段列表
+        const fields = this.buildFieldsList();
+        panel.innerHTML = `
+      <div class="mail-builder-info-list">
+        ${fields
+            .map((field) => `
+          <div class="mail-builder-info-item">
+            <span class="info-label">${field.label}:</span>
+            <span class="info-value" title="${field.value}">${this.truncateText(field.value, 20)}</span>
+            <button class="info-copy-btn" data-value="${this.escapeHtml(field.value)}" title="复制">📋</button>
+          </div>
+        `)
+            .join("")}
+      </div>
+      <div class="mail-builder-quick-copy">
+        <button class="quick-copy-btn" id="copy-name-id">📋 复制 名字+ID</button>
+      </div>
+    `;
+        // 添加事件监听
+        this.setupCopyHandlers(panel);
+        return panel;
+    }
+    /**
+     * 构建字段列表
+     */
+    buildFieldsList() {
+        if (!this.profileData)
+            return [];
+        const fields = [
+            { label: "名字", value: this.profileData.name },
+            { label: "ID", value: this.profileData.id },
+        ];
+        if (this.profileData.dob) {
+            fields.push({ label: "生日", value: this.profileData.dob });
+        }
+        if (this.profileData.phone) {
+            fields.push({ label: "电话", value: this.profileData.phone });
+        }
+        if (this.profileData.address) {
+            fields.push({ label: "地址", value: this.profileData.address });
+        }
+        if (this.profileData.insurance) {
+            fields.push({ label: "保险", value: this.profileData.insurance });
+        }
+        return fields;
+    }
+    /**
+     * 渲染右侧模板面板
+     */
+    renderTemplatePanel() {
+        const panel = document.createElement("div");
+        panel.className = "mail-builder-template-panel";
+        panel.id = "mail-builder-template-panel";
+        // 模板 Tabs
+        const tabs = document.createElement("div");
+        tabs.className = "mail-builder-template-tabs";
+        tabs.innerHTML = `
+            <button class="template-tab-btn ${this.activeTemplateTab === "builtin" ? "active" : ""}" data-tab="builtin">内置模板</button>
+            <button class="template-tab-btn ${this.activeTemplateTab === "custom" ? "active" : ""}" data-tab="custom">自定义模板</button>
+        `;
+        panel.appendChild(tabs);
+        // 模板内容区 - 始终显示模板列表
+        const content = document.createElement("div");
+        content.className = "mail-builder-template-content";
+        content.id = "template-content-area";
+        content.appendChild(this.renderTemplateList());
+        panel.appendChild(content);
+        // 底部操作按钮
+        const actions = document.createElement("div");
+        actions.className = "mail-builder-template-actions";
+        actions.innerHTML = `
+            <button class="template-action-btn" id="add-template-btn">+ 添加模板</button>
+            <button class="template-action-btn" id="export-btn">⬇ 导出</button>
+            <button class="template-action-btn" id="import-btn">⬆ 导入</button>
+            <input type="file" id="import-file-input" accept=".json" style="display: none;">
+        `;
+        panel.appendChild(actions);
+        // 设置事件处理
+        this.setupTemplatePanelHandlers(panel);
+        return panel;
+    }
+    /**
+     * 渲染模板列表
+     */
+    renderTemplateList() {
+        const list = document.createElement("div");
+        list.className = "template-list";
+        // 根据当前 tab 筛选模板
+        const filteredTemplates = this.activeTemplateTab === "builtin"
+            ? getBuiltinTemplates()
+            : this.templates;
+        if (filteredTemplates.length === 0) {
+            list.innerHTML = `
+                <div class="template-empty">
+                    <div class="template-empty-icon">📝</div>
+                    <p>暂无自定义模板</p>
+                    <p class="template-hint">点击下方 "+ 添加模板" 创建您的第一个模板</p>
+                </div>
+            `;
+        }
+        else {
+            filteredTemplates.forEach((template) => {
+                const card = this.renderTemplateCard(template);
+                list.appendChild(card);
+            });
+        }
+        return list;
+    }
+    /**
+     * 渲染单个模板卡片
+     */
+    renderTemplateCard(template) {
+        const card = document.createElement("div");
+        card.className = "template-card";
+        card.dataset.templateId = template.id;
+        const isBuiltin = isBuiltinTemplate(template.id);
+        const targetLabel = template.targetPageType === "PATIENT"
+            ? "病人"
+            : template.targetPageType === "CAREGIVER"
+                ? "护理员"
+                : "通用";
+        // 内置模板不显示编辑/删除按钮
+        const actionButtons = isBuiltin
+            ? `
+                <button class="template-card-btn use-btn" data-id="${template.id}" title="复制到剪贴板">📋 复制</button>
+                <button class="template-card-btn outlook-btn" data-id="${template.id}" title="发送到 Outlook">📧 Outlook</button>
+            `
+            : `
+                <button class="template-card-btn use-btn" data-id="${template.id}" title="复制到剪贴板">📋 复制</button>
+                <button class="template-card-btn outlook-btn" data-id="${template.id}" title="发送到 Outlook">📧 Outlook</button>
+                <button class="template-card-btn edit-btn" data-id="${template.id}" title="编辑">✏️</button>
+                <button class="template-card-btn delete-btn" data-id="${template.id}" title="删除">🗑️</button>
+            `;
+        card.innerHTML = `
+            <div class="template-card-header">
+                <span class="template-name">${this.escapeHtml(template.name)}</span>
+                <div class="template-badges">
+                    ${isBuiltin
+            ? '<span class="template-builtin-badge">内置</span>'
+            : ""}
+                    <span class="template-target-badge">${targetLabel}</span>
+                </div>
+            </div>
+            <div class="template-card-preview">
+                <span class="template-subject">📧 ${this.escapeHtml(this.truncateText(template.subject, 40))}</span>
+            </div>
+            <div class="template-card-actions">
+                ${actionButtons}
+            </div>
+        `;
+        return card;
+    }
+    /**
+     * 渲染模板编辑器
+     */
+    renderTemplateEditor() {
+        const editor = document.createElement("div");
+        editor.className = "template-editor";
+        const template = this.editingTemplate;
+        const isNew = !template?.id;
+        editor.innerHTML = `
+            <div class="editor-header">
+                <h4>${isNew ? "新建模板" : "编辑模板"}</h4>
+            </div>
+            <div class="editor-form">
+                <div class="form-group">
+                    <label>模板名称 *</label>
+                    <input type="text" id="tpl-name" value="${this.escapeHtml(template?.name || "")}" placeholder="例：护理员请假通知">
+                </div>
+                <div class="form-group">
+                    <label>适用页面</label>
+                    <select id="tpl-target">
+                        <option value="ANY" ${template?.targetPageType === "ANY" ? "selected" : ""}>通用</option>
+                        <option value="PATIENT" ${template?.targetPageType === "PATIENT"
+            ? "selected"
+            : ""}>病人页面</option>
+                        <option value="CAREGIVER" ${template?.targetPageType === "CAREGIVER"
+            ? "selected"
+            : ""}>护理员页面</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>收件人 (To)</label>
+                    <input type="text" id="tpl-to" value="${this.escapeHtml(template?.to || "")}" placeholder="email@example.com">
+                </div>
+                <div class="form-group">
+                    <label>抄送 (CC)</label>
+                    <input type="text" id="tpl-cc" value="${this.escapeHtml(template?.cc || "")}" placeholder="可选">
+                </div>
+                <div class="form-group">
+                    <label>主题 *</label>
+                    <input type="text" id="tpl-subject" value="${this.escapeHtml(template?.subject || "")}" placeholder="使用 {{变量名}} 插入动态内容">
+                </div>
+                <div class="form-group">
+                    <label>正文 *</label>
+                    <textarea id="tpl-body" rows="6" placeholder="使用 {{变量名}} 插入动态内容">${this.escapeHtml(template?.body || "")}</textarea>
+                </div>
+            </div>
+            <div class="editor-actions">
+                <button class="editor-btn cancel-btn" id="editor-cancel">取消</button>
+                <button class="editor-btn save-btn" id="editor-save">保存</button>
+            </div>
+        `;
+        return editor;
+    }
+    /**
+     * 设置模板面板事件处理
+     */
+    setupTemplatePanelHandlers(panel) {
+        // Tab 切换
+        panel.querySelectorAll(".template-tab-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                const target = e.currentTarget;
+                const tab = target.dataset.tab;
+                if (tab !== this.activeTemplateTab) {
+                    this.activeTemplateTab = tab;
+                    this.refreshTemplatePanel();
+                }
+            });
+        });
+        // 添加模板按钮
+        const addBtn = panel.querySelector("#add-template-btn");
+        addBtn?.addEventListener("click", () => {
+            this.openEditor(null);
+        });
+        // 导出按钮
+        const exportBtn = panel.querySelector("#export-btn");
+        exportBtn?.addEventListener("click", () => {
+            TemplateManager.exportToFile();
+            this.showToast("✅ 模板已导出");
+        });
+        // 导入按钮
+        const importBtn = panel.querySelector("#import-btn");
+        const importInput = panel.querySelector("#import-file-input");
+        importBtn?.addEventListener("click", () => {
+            importInput?.click();
+        });
+        importInput?.addEventListener("change", async (e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+                try {
+                    const count = await TemplateManager.importFromFile(file);
+                    this.templates = TemplateManager.getAll();
+                    this.refreshTemplatePanel();
+                    this.showToast(`✅ 导入了 ${count} 个模板`);
+                }
+                catch (error) {
+                    this.showToast(`❌ ${error.message}`);
+                }
+                importInput.value = "";
+            }
+        });
+        // 模板卡片操作按钮
+        panel.querySelectorAll(".use-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.id;
+                if (id)
+                    this.useTemplate(id);
+            });
+        });
+        panel.querySelectorAll(".edit-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.id;
+                if (id) {
+                    const template = this.templates.find((t) => t.id === id);
+                    if (template)
+                        this.openEditor(template);
+                }
+            });
+        });
+        panel.querySelectorAll(".delete-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.id;
+                if (id)
+                    this.deleteTemplate(id);
+            });
+        });
+        // Outlook 按钮
+        panel.querySelectorAll(".outlook-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.id;
+                if (id)
+                    this.sendToOutlook(id);
+            });
+        });
+        // 编辑器按钮
+        const cancelBtn = panel.querySelector("#editor-cancel");
+        cancelBtn?.addEventListener("click", () => {
+            this.closeEditor();
+        });
+        const saveBtn = panel.querySelector("#editor-save");
+        saveBtn?.addEventListener("click", () => {
+            this.saveTemplate();
+        });
+    }
+    /**
+     * 打开模板编辑器 (模态框)
+     */
+    openEditor(template) {
+        this.editingTemplate = template
+            ? { ...template }
+            : {
+                id: "",
+                name: "",
+                targetPageType: "ANY",
+                to: "",
+                cc: "",
+                subject: "",
+                body: "",
+                variables: [],
+                createdAt: 0,
+                updatedAt: 0,
+            };
+        this.isEditorOpen = true;
+        this.showEditorModal();
+    }
+    /**
+     * 显示编辑器模态框
+     */
+    showEditorModal() {
+        const template = this.editingTemplate;
+        const isNew = !template?.id;
+        // 创建模态框覆盖层
+        const overlay = document.createElement("div");
+        overlay.className = "template-modal-overlay";
+        overlay.id = "template-modal-overlay";
+        // 构建数据字段 HTML
+        const dataFieldsHtml = this.buildDataFieldsHtml(template?.variables || []);
+        overlay.innerHTML = `
+            <div class="template-modal">
+                <div class="template-modal-header">
+                    <h3 class="template-modal-title">${isNew ? "新建模板" : "编辑模板"}</h3>
+                    <button class="template-modal-close" id="modal-close-btn">&times;</button>
+                </div>
+                <div class="template-modal-body">
+                    <div class="template-form-group">
+                        <label class="template-form-label">模板名称 *</label>
+                        <input type="text" class="template-form-input" id="modal-tpl-name" 
+                            value="${this.escapeHtml(template?.name || "")}" 
+                            placeholder="例：护理员请假通知">
+                    </div>
+                    <div class="template-form-group">
+                        <label class="template-form-label">收件人 (To)</label>
+                        <input type="text" class="template-form-input" id="modal-tpl-to" 
+                            value="${this.escapeHtml(template?.to || "")}" 
+                            placeholder="email@example.com">
+                    </div>
+                    <div class="template-form-group">
+                        <label class="template-form-label">抄送 (CC)</label>
+                        <input type="text" class="template-form-input" id="modal-tpl-cc" 
+                            value="${this.escapeHtml(template?.cc || "")}" 
+                            placeholder="可选，多个邮箱用逗号分隔">
+                    </div>
+                    <div class="template-form-row">
+                        <div class="template-form-group">
+                            <label class="template-form-label">主题 *</label>
+                            <input type="text" class="template-form-input" id="modal-tpl-subject" 
+                                value="${this.escapeHtml(template?.subject || "")}" 
+                                placeholder="使用 {{变量名}} 插入动态内容">
+                        </div>
+                        <div class="template-form-group" style="flex: 0 0 140px;">
+                            <label class="template-form-label">适用页面</label>
+                            <select class="template-form-select" id="modal-tpl-target">
+                                <option value="ANY" ${template?.targetPageType === "ANY"
+            ? "selected"
+            : ""}>通用</option>
+                                <option value="PATIENT" ${template?.targetPageType === "PATIENT"
+            ? "selected"
+            : ""}>病人页面</option>
+                                <option value="CAREGIVER" ${template?.targetPageType === "CAREGIVER"
+            ? "selected"
+            : ""}>护理员页面</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="template-form-group">
+                        <label class="template-form-label">正文 (富文本编辑器) *</label>
+                        <div class="template-body-editor">
+                            <textarea id="modal-tpl-body">${this.escapeHtml(template?.body || "")}</textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- 数据字段部分 -->
+                    <div class="template-variables-section">
+                        <div class="template-variables-header">
+                            <h5>数据字段</h5>
+                            <button type="button" class="template-add-var-btn" id="add-var-btn">+ 添加字段</button>
+                        </div>
+                        <table class="template-variables-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15%;">占位符</th>
+                                    <th style="width: 35%;">CSS选择器</th>
+                                    <th style="width: 15%;">处理类型</th>
+                                    <th style="width: 25%;">规则/表达式</th>
+                                    <th style="width: 10%;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="var-fields-body">
+                                ${dataFieldsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="template-modal-footer">
+                    <button class="template-modal-btn btn-cancel" id="modal-cancel-btn">取消</button>
+                    <button class="template-modal-btn btn-save" id="modal-save-btn">保存模板</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        // 禁用 body 滚动
+        document.body.style.overflow = "hidden";
+        // 设置事件处理
+        this.setupModalHandlers(overlay);
+        // 初始化 TinyMCE
+        this.initTinyMCE();
+    }
+    /**
+     * 构建数据字段 HTML
+     */
+    buildDataFieldsHtml(variables) {
+        if (!variables || variables.length === 0) {
+            return "";
+        }
+        return variables
+            .map((v, idx) => `
+            <tr data-var-idx="${idx}">
+                <td><input type="text" class="var-key" value="${this.escapeHtml(v.key || "")}" placeholder="e.g. {{name}}"></td>
+                <td><input type="text" class="var-selector" value="${this.escapeHtml(v.selector || "")}" placeholder="e.g. #elementId"></td>
+                <td><input type="text" class="var-process-type" value="${this.escapeHtml(v.process_type || "")}" placeholder="e.g. regex"></td>
+                <td><input type="text" class="var-process-rule" value="${this.escapeHtml(v.process_rule || "")}" placeholder="e.g. \\d+"></td>
+                <td style="text-align: center;"><button type="button" class="var-delete-btn" data-idx="${idx}">✕</button></td>
+            </tr>
+        `)
+            .join("");
+    }
+    /**
+     * 添加新的数据字段行
+     */
+    addVariableRow() {
+        const tbody = document.getElementById("var-fields-body");
+        if (!tbody)
+            return;
+        const idx = tbody.querySelectorAll("tr").length;
+        const row = document.createElement("tr");
+        row.dataset.varIdx = String(idx);
+        row.innerHTML = `
+            <td><input type="text" class="var-key" value="" placeholder="e.g. {{name}}"></td>
+            <td><input type="text" class="var-selector" value="" placeholder="e.g. #elementId"></td>
+            <td><input type="text" class="var-process-type" value="" placeholder="e.g. regex"></td>
+            <td><input type="text" class="var-process-rule" value="" placeholder="e.g. \\d+"></td>
+            <td style="text-align: center;"><button type="button" class="var-delete-btn" data-idx="${idx}">✕</button></td>
+        `;
+        tbody.appendChild(row);
+        // 绑定删除按钮
+        row.querySelector(".var-delete-btn")?.addEventListener("click", () => {
+            row.remove();
+        });
+    }
+    /**
+     * 收集数据字段
+     */
+    collectVariables() {
+        const rows = document.querySelectorAll("#var-fields-body tr");
+        const variables = [];
+        rows.forEach((row) => {
+            const key = row.querySelector(".var-key")?.value.trim();
+            const selector = row.querySelector(".var-selector")?.value.trim();
+            const process_type = row.querySelector(".var-process-type")?.value.trim();
+            const process_rule = row.querySelector(".var-process-rule")?.value.trim();
+            if (key && selector) {
+                variables.push({ key, selector, process_type, process_rule });
+            }
+        });
+        return variables;
+    }
+    /**
+     * 初始化 TinyMCE 编辑器
+     */
+    async initTinyMCE() {
+        try {
+            // 使用 TinyMCEBundler 加载并初始化 TinyMCE
+            await TinyMCEBundler.init("#modal-tpl-body", {
+                height: 200,
+            });
+            console.log("[MailBuilderTab] TinyMCE initialized successfully");
+        }
+        catch (error) {
+            console.warn("[MailBuilderTab] TinyMCE failed to load, using textarea fallback", error);
+        }
+    }
+    /**
+     * 设置模态框事件处理
+     */
+    setupModalHandlers(overlay) {
+        // 关闭按钮
+        const closeBtn = overlay.querySelector("#modal-close-btn");
+        closeBtn?.addEventListener("click", () => this.closeEditor());
+        // 取消按钮
+        const cancelBtn = overlay.querySelector("#modal-cancel-btn");
+        cancelBtn?.addEventListener("click", () => this.closeEditor());
+        // 保存按钮
+        const saveBtn = overlay.querySelector("#modal-save-btn");
+        saveBtn?.addEventListener("click", () => this.saveTemplate());
+        // 添加字段按钮
+        const addVarBtn = overlay.querySelector("#add-var-btn");
+        addVarBtn?.addEventListener("click", () => this.addVariableRow());
+        // 删除字段按钮（已有行）
+        overlay.querySelectorAll(".var-delete-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                e.target.closest("tr")?.remove();
+            });
+        });
+        // 点击遮罩关闭
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) {
+                this.closeEditor();
+            }
+        });
+        // ESC 键关闭
+        const escHandler = (e) => {
+            if (e.key === "Escape") {
+                this.closeEditor();
+                document.removeEventListener("keydown", escHandler);
+            }
+        };
+        document.addEventListener("keydown", escHandler);
+    }
+    /**
+     * 关闭编辑器
+     */
+    closeEditor() {
+        // 销毁 TinyMCE 实例
+        if (typeof window.tinymce !== "undefined") {
+            const editor = window.tinymce.get("modal-tpl-body");
+            if (editor) {
+                editor.remove();
+            }
+        }
+        // 移除模态框
+        const overlay = document.querySelector("#template-modal-overlay");
+        if (overlay) {
+            overlay.remove();
+        }
+        // 恢复 body 滚动
+        document.body.style.overflow = "";
+        this.editingTemplate = null;
+        this.isEditorOpen = false;
+    }
+    /**
+     * 保存模板
+     */
+    saveTemplate() {
+        const nameInput = document.querySelector("#modal-tpl-name");
+        const targetSelect = document.querySelector("#modal-tpl-target");
+        const toInput = document.querySelector("#modal-tpl-to");
+        const ccInput = document.querySelector("#modal-tpl-cc");
+        const subjectInput = document.querySelector("#modal-tpl-subject");
+        // 获取 TinyMCE 内容，如果 TinyMCE 不存在则使用 textarea
+        let body = "";
+        if (typeof window.tinymce !== "undefined") {
+            const editor = window.tinymce.get("modal-tpl-body");
+            if (editor) {
+                body = editor.getContent({ format: "text" }); // 获取纯文本
+            }
+        }
+        if (!body) {
+            const bodyInput = document.querySelector("#modal-tpl-body");
+            body = bodyInput?.value.trim() || "";
+        }
+        const name = nameInput?.value.trim();
+        const subject = subjectInput?.value.trim();
+        if (!name || !subject || !body) {
+            this.showToast("❌ 请填写必填字段");
+            return;
+        }
+        const templateData = {
+            id: this.editingTemplate?.id || undefined,
+            name,
+            targetPageType: targetSelect?.value,
+            to: toInput?.value.trim() || "",
+            cc: ccInput?.value.trim() || "",
+            subject,
+            body,
+            variables: this.collectVariables(),
+        };
+        TemplateManager.save(templateData);
+        this.templates = TemplateManager.getAll();
+        this.showToast("✅ 模板已保存");
+        this.closeEditor();
+        this.refreshTemplatePanel();
+    }
+    /**
+     * 删除模板
+     */
+    deleteTemplate(templateId) {
+        const template = this.templates.find((t) => t.id === templateId);
+        if (!template)
+            return;
+        if (confirm(`确定要删除模板 "${template.name}" 吗？`)) {
+            TemplateManager.delete(templateId);
+            this.templates = TemplateManager.getAll();
+            this.refreshTemplatePanel();
+            this.showToast("✅ 模板已删除");
+        }
+    }
+    /**
+     * 查找模板（包括内置和自定义）
+     */
+    findTemplateById(templateId) {
+        // 先在自定义模板中查找
+        let template = this.templates.find((t) => t.id === templateId);
+        if (!template) {
+            // 再在内置模板中查找
+            template = getBuiltinTemplates().find((t) => t.id === templateId);
+        }
+        return template;
+    }
+    /**
+     * 使用模板
+     */
+    useTemplate(templateId) {
+        const template = this.findTemplateById(templateId);
+        if (!template)
+            return;
+        // 使用 TemplateEngine 进行变量替换
+        const rendered = TemplateEngine.render(template, this.profileData);
+        const content = `To: ${rendered.to}\nCC: ${rendered.cc}\nSubject: ${rendered.subject}\n\n${rendered.body}`;
+        this.copyToClipboard(content);
+        this.showToast("✅ 模板内容已复制（变量已替换）");
+    }
+    /**
+     * 发送到 Outlook
+     */
+    sendToOutlook(templateId) {
+        const template = this.findTemplateById(templateId);
+        if (!template)
+            return;
+        // 使用 TemplateEngine 进行变量替换
+        const rendered = TemplateEngine.render(template, this.profileData);
+        // 通过 MailService 发送任务
+        const taskId = MailService.sendMailTask({
+            to: rendered.to,
+            cc: rendered.cc,
+            subject: rendered.subject,
+            body: rendered.body,
+        });
+        this.showToast("📧 已发送到 Outlook，请切换到 Outlook 标签页");
+        console.log("[MailBuilderTab] Sent mail task:", taskId);
+        // 监听任务状态
+        const statusHandler = (payload) => {
+            if (payload.id === taskId) {
+                if (payload.status === "COMPLETED") {
+                    this.showToast("✅ Outlook 已准备好邮件");
+                    MailService.offStatusChange(statusHandler);
+                }
+                else if (payload.status === "FAILED") {
+                    this.showToast(`❌ Outlook 错误: ${payload.error}`);
+                    MailService.offStatusChange(statusHandler);
+                }
+            }
+        };
+        MailService.onStatusChange(statusHandler);
+    }
+    /**
+     * 刷新模板面板
+     */
+    refreshTemplatePanel() {
+        const panel = document.querySelector("#mail-builder-template-panel");
+        if (panel && panel.parentElement) {
+            const newPanel = this.renderTemplatePanel();
+            panel.parentElement.replaceChild(newPanel, panel);
+        }
+    }
+    /**
+     * 设置复制按钮事件处理
+     */
+    setupCopyHandlers(panel) {
+        // 单字段复制按钮
+        panel.querySelectorAll(".info-copy-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                const target = e.currentTarget;
+                const value = target.dataset.value || "";
+                this.copyToClipboard(value);
+            });
+        });
+        // 快捷复制：名字+ID
+        const copyNameIdBtn = panel.querySelector("#copy-name-id");
+        copyNameIdBtn?.addEventListener("click", () => {
+            if (this.profileData) {
+                const text = `${this.profileData.name} ${this.profileData.id}`;
+                this.copyToClipboard(text);
+            }
+        });
+    }
+    /**
+     * 复制到剪贴板
+     */
+    async copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            this.showToast("✅ 已复制");
+        }
+        catch (error) {
+            console.error("[MailBuilderTab] Copy failed:", error);
+            this.showToast("❌ 复制失败");
+        }
+    }
+    /**
+     * 显示 Toast 提示
+     */
+    showToast(message) {
+        // 检查是否已有 toast
+        let toast = document.querySelector(".mail-builder-toast");
+        if (toast) {
+            toast.remove();
+        }
+        toast = document.createElement("div");
+        toast.className = "mail-builder-toast";
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        // 动画显示
+        requestAnimationFrame(() => {
+            toast.classList.add("show");
+        });
+        // 2秒后隐藏
+        setTimeout(() => {
+            toast.classList.remove("show");
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
+    }
+    /**
+     * 渲染未检测到 Profile 页面的提示
+     */
+    renderNoProfileDetected() {
+        if (!this.container)
+            return;
+        const placeholder = this.createPlaceholder("📧", "未检测到个人信息页面", "");
+        // 添加支持的页面列表
+        const infoDiv = document.createElement("div");
+        infoDiv.className = "mail-builder-no-page-info";
+        infoDiv.innerHTML = `
+      <p>邮件助手目前支持以下页面：</p>
+      <ul>
+        <li><strong>Patient Info</strong> - 病人信息页</li>
+        <li><strong>Internal Patient Info</strong> - 病人内部信息页</li>
+        <li><strong>Aide Info</strong> - 护理员信息页</li>
+      </ul>
+      <p class="mail-builder-hint">请导航到上述页面之一来使用邮件助手功能。</p>
+    `;
+        placeholder.appendChild(infoDiv);
+        this.container.appendChild(placeholder);
+    }
+    /**
+     * 截断文本
+     */
+    truncateText(text, maxLength) {
+        if (text.length <= maxLength)
+            return text;
+        return text.substring(0, maxLength) + "...";
+    }
+    /**
+     * HTML 转义
+     */
+    escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    onActivate() {
+        console.log("[MailBuilderTab] Activated");
+        // 重新检测页面类型
+        this.currentPageType = ProfileDataExtractor.getCurrentPageType();
+        this.profileData = ProfileDataExtractor.extract();
+        // 每次激活都重新渲染
+        this.renderContent();
+    }
+    onDeactivate() {
+        console.log("[MailBuilderTab] Deactivated");
+    }
+    destroy() {
+        // 移除页面变化监听器
+        if (this.pageChangeHandler) {
+            ProfileDataExtractor.offPageChange(this.pageChangeHandler);
+            this.pageChangeHandler = null;
+        }
+        super.destroy();
+    }
+}
+
+;// ./src/js/services/OutlookAdapter.ts
+/**
+ * OutlookAdapter - Outlook Web 自动化适配器
+ * Epic 12, Story 8: Outlook DOM 自动化
+ *
+ * 职责：
+ * - 在 Outlook Web 页面监听邮件任务
+ * - 自动填充 New Mail 表单
+ * - 操作 DOM 元素发送邮件
+ *
+ * 注意：仅在 https://outlook.office.com/mail/ 页面运行
+ */
+
+/**
+ * Outlook DOM 选择器
+ * 基于 Chrome MCP DOM 分析结果
+ */
+const OUTLOOK_SELECTORS = {
+    // 新邮件按钮
+    newMailButton: 'button[aria-label="New mail"]',
+    newMailButtonAlt: '[data-testid="new-message-button"]',
+    // 邮件编辑器字段
+    toField: 'input[aria-label="To"]',
+    toFieldAlt: '[role="combobox"][aria-label="To"]',
+    ccButton: 'button[aria-label="Cc"]',
+    ccField: 'input[aria-label="Cc"]',
+    subjectField: 'input[aria-label="Add a subject"]',
+    subjectFieldAlt: '[placeholder="Add a subject"]',
+    // 邮件正文 - contenteditable div
+    bodyEditor: '[role="textbox"][aria-label="Message body"]',
+    bodyEditorAlt: 'div[aria-label="Message body, press Alt+F10 to exit"]',
+    // 发送按钮
+    sendButton: 'button[aria-label="Send"]',
+    sendButtonAlt: '[data-testid="send-button"]',
+};
+/**
+ * OutlookAdapter 类
+ */
+class OutlookAdapter {
+    /**
+     * 初始化适配器（仅在 Outlook 页面调用）
+     */
+    static init() {
+        const hostname = window.location.hostname;
+        const isOutlook = MailService.isOutlookPage();
+        console.log("[OutlookAdapter] Checking page...", {
+            hostname,
+            isOutlook,
+            href: window.location.href.substring(0, 50),
+        });
+        if (!isOutlook) {
+            console.log("[OutlookAdapter] Not on Outlook page, skipping init");
+            return;
+        }
+        console.log("[OutlookAdapter] Initializing on Outlook page...");
+        MailService.init();
+        // 开始监听邮件任务
+        this.startListening();
+        // 创建状态 Toast
+        this.createStatusToast();
+        console.log("[OutlookAdapter] Initialization complete!");
+    }
+    /**
+     * 开始监听任务
+     */
+    static startListening() {
+        if (this.isListening)
+            return;
+        this.isListening = true;
+        MailService.startListening((task, taskId) => {
+            console.log("[OutlookAdapter] Received task:", taskId, task);
+            this.handleMailTask(task, taskId);
+        });
+        console.log("[OutlookAdapter] Started listening for mail tasks");
+    }
+    /**
+     * 处理邮件任务
+     */
+    static async handleMailTask(task, taskId) {
+        try {
+            this.showStatus("📧 正在打开新邮件...");
+            // 1. 点击 New Mail 按钮
+            const clicked = await this.clickNewMail();
+            if (!clicked) {
+                throw new Error("无法点击 New Mail 按钮");
+            }
+            // 等待编辑器加载
+            await this.wait(1500);
+            this.showStatus("📝 正在填充邮件内容...");
+            // 2. 填充 To 字段
+            if (task.to) {
+                await this.fillField("to", task.to);
+                await this.wait(300);
+            }
+            // 3. 填充 CC 字段（如果有）
+            if (task.cc) {
+                await this.expandCC();
+                await this.wait(300);
+                await this.fillField("cc", task.cc);
+                await this.wait(300);
+            }
+            // 4. 填充 Subject
+            await this.fillField("subject", task.subject);
+            await this.wait(300);
+            // 5. 填充 Body
+            await this.fillBody(task.body);
+            this.showStatus("✅ 邮件已准备就绪！");
+            // 报告完成
+            MailService.reportComplete(taskId);
+            // 3秒后隐藏状态
+            setTimeout(() => this.hideStatus(), 3000);
+        }
+        catch (error) {
+            const errorMsg = error.message;
+            console.error("[OutlookAdapter] Error handling mail task:", error);
+            this.showStatus(`❌ 错误: ${errorMsg}`, true);
+            MailService.reportFailed(taskId, errorMsg);
+            setTimeout(() => this.hideStatus(), 5000);
+        }
+    }
+    /**
+     * 点击 New Mail 按钮
+     */
+    static async clickNewMail() {
+        const selectors = [
+            OUTLOOK_SELECTORS.newMailButton,
+            OUTLOOK_SELECTORS.newMailButtonAlt,
+        ];
+        for (const selector of selectors) {
+            const btn = document.querySelector(selector);
+            if (btn) {
+                btn.click();
+                console.log("[OutlookAdapter] Clicked New Mail button");
+                return true;
+            }
+        }
+        console.error("[OutlookAdapter] New Mail button not found");
+        return false;
+    }
+    /**
+     * 展开 CC 字段
+     */
+    static async expandCC() {
+        const ccButton = document.querySelector(OUTLOOK_SELECTORS.ccButton);
+        if (ccButton) {
+            ccButton.click();
+            await this.wait(300);
+        }
+    }
+    /**
+     * 填充字段
+     */
+    static async fillField(fieldType, value) {
+        let selectors;
+        switch (fieldType) {
+            case "to":
+                selectors = [OUTLOOK_SELECTORS.toField, OUTLOOK_SELECTORS.toFieldAlt];
+                break;
+            case "cc":
+                selectors = [OUTLOOK_SELECTORS.ccField];
+                break;
+            case "subject":
+                selectors = [
+                    OUTLOOK_SELECTORS.subjectField,
+                    OUTLOOK_SELECTORS.subjectFieldAlt,
+                ];
+                break;
+        }
+        for (const selector of selectors) {
+            const field = document.querySelector(selector);
+            if (field) {
+                // Focus the field
+                field.focus();
+                await this.wait(100);
+                // Set value
+                field.value = value;
+                // Trigger input event for React/Angular apps
+                field.dispatchEvent(new Event("input", { bubbles: true }));
+                field.dispatchEvent(new Event("change", { bubbles: true }));
+                console.log(`[OutlookAdapter] Filled ${fieldType}: ${value}`);
+                return;
+            }
+        }
+        console.warn(`[OutlookAdapter] ${fieldType} field not found`);
+    }
+    /**
+     * 填充邮件正文
+     */
+    static async fillBody(body) {
+        const selectors = [
+            OUTLOOK_SELECTORS.bodyEditor,
+            OUTLOOK_SELECTORS.bodyEditorAlt,
+        ];
+        for (const selector of selectors) {
+            const editor = document.querySelector(selector);
+            if (editor) {
+                // Focus editor
+                editor.focus();
+                await this.wait(100);
+                // 将换行转换为 HTML
+                const htmlBody = body.replace(/\n/g, "<br>");
+                // 使用 innerHTML 设置内容
+                editor.innerHTML = htmlBody;
+                // Trigger input event
+                editor.dispatchEvent(new Event("input", { bubbles: true }));
+                console.log("[OutlookAdapter] Filled body");
+                return;
+            }
+        }
+        console.warn("[OutlookAdapter] Body editor not found");
+    }
+    /**
+     * 点击发送按钮（可选功能）
+     */
+    static async clickSend() {
+        const selectors = [
+            OUTLOOK_SELECTORS.sendButton,
+            OUTLOOK_SELECTORS.sendButtonAlt,
+        ];
+        for (const selector of selectors) {
+            const btn = document.querySelector(selector);
+            if (btn) {
+                btn.click();
+                console.log("[OutlookAdapter] Clicked Send button");
+                return true;
+            }
+        }
+        console.error("[OutlookAdapter] Send button not found");
+        return false;
+    }
+    /**
+     * 创建状态 Toast
+     */
+    static createStatusToast() {
+        if (this.statusToast)
+            return;
+        this.statusToast = document.createElement("div");
+        this.statusToast.id = "hha-outlook-status";
+        this.statusToast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 999999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: none;
+      max-width: 300px;
+    `;
+        document.body.appendChild(this.statusToast);
+    }
+    /**
+     * 显示状态
+     */
+    static showStatus(message, isError = false) {
+        if (!this.statusToast)
+            return;
+        this.statusToast.textContent = message;
+        this.statusToast.style.background = isError ? "#e53935" : "#333";
+        this.statusToast.style.display = "block";
+    }
+    /**
+     * 隐藏状态
+     */
+    static hideStatus() {
+        if (this.statusToast) {
+            this.statusToast.style.display = "none";
+        }
+    }
+    /**
+     * 等待工具函数
+     */
+    static wait(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+    /**
+     * 清理资源
+     */
+    static cleanup() {
+        this.isListening = false;
+        MailService.stopListening();
+        if (this.statusToast) {
+            this.statusToast.remove();
+            this.statusToast = null;
+        }
+    }
+}
+OutlookAdapter.isListening = false;
+OutlookAdapter.statusToast = null;
+
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.9.3"};
+const package_namespaceObject = {"rE":"3.9.4"};
 ;// ./src/index.ts
+
+
+
 
 
 
@@ -10959,6 +13312,16 @@ const package_namespaceObject = {"rE":"3.9.3"};
 
 async function src_main() {
     console.log("HHA Exchange Smart Assistant " + package_namespaceObject.rE + " : script start");
+    // Set a global flag to indicate script is running (for debugging)
+    window.HHA_SMART_ASSISTANT_STARTED = true;
+    window.HHA_SMART_ASSISTANT_VERSION = package_namespaceObject.rE;
+    // Initialize OutlookAdapter if on Outlook page
+    OutlookAdapter.init();
+    // Preload TinyMCE in the background (fire and forget)
+    // This gives it time to load before user opens the mail template editor
+    TinyMCEBundler.load().catch((err) => {
+        console.warn("[main] TinyMCE preload failed (will retry on modal open):", err);
+    });
     incomingCallHandler();
     async function FetchTester() {
         try {
@@ -11150,6 +13513,7 @@ function embedMultiTabPanel(trackerContainer, dragHandle, trackerPanel) {
     panel.registerTab(new StatusTrackingTab());
     panel.registerTab(new QAReportTab());
     panel.registerTab(new CleanerTab());
+    panel.registerTab(new MailBuilderTab());
     // Initialize panel
     panel
         .init()
