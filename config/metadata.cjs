@@ -23,7 +23,7 @@ module.exports = {
     `https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js`,
     // TinyMCE is now manually bundled via TinyMCEBundler to bypass CSP
   ],
-  grant: ["GM.xmlHttpRequest", "GM_openInTab", "GM_addStyle", "GM_setValue", "GM_getValue"],
+  grant: ["GM.xmlHttpRequest", "GM_openInTab", "GM_addStyle", "GM_setValue", "GM_getValue", "GM.addElement"],
   connect: ["app.hhaexchange.com", "reports.hhaexchange.com", "outlook.office.com", "unpkg.com"],
   "run-at": "document-idle",
 };

@@ -13,6 +13,8 @@ import {
 } from "../services/BuiltinTemplates";
 import { TinyMCEBundler } from "../services/TinyMCEBundler";
 
+declare const unsafeWindow: Window;
+
 /**
  * Mail Builder Tab
  * Epic 12: 智能邮件构筑助手
@@ -498,6 +500,8 @@ export class MailBuilderTab extends BaseTab {
       btn.addEventListener("click", (e) => {
         const id = (e.currentTarget as HTMLButtonElement).dataset.id;
         if (id) {
+          // 每次编辑时从存储重新加载模板，避免使用过期的缓存数据
+          this.templates = TemplateManager.getAll();
           const template = this.templates.find((t) => t.id === id);
           if (template) this.openEditor(template);
         }
@@ -627,6 +631,14 @@ export class MailBuilderTab extends BaseTab {
                     </div>
                     <div class="template-form-group">
                         <label class="template-form-label">正文 (富文本编辑器) *</label>
+                        <div class="template-placeholder-hint" style="font-size: 12px; color: #666; margin-bottom: 8px; padding: 8px; background: #f5f5f5; border-radius: 4px;">
+                            <strong>💡 可用占位符:</strong> 
+                            <span style="font-family: monospace; color: #0066cc;">{{aide_name}}</span>, 
+                            <span style="font-family: monospace; color: #0066cc;">{{aide_id}}</span>, 
+                            <span style="font-family: monospace; color: #0066cc;">{{patient_name}}</span>, 
+                            <span style="font-family: monospace; color: #0066cc;">{{patient_id}}</span>
+                            <br><small style="color: #999;">在下方"数据字段"区域可以添加自定义占位符</small>
+                        </div>
                         <div class="template-body-editor">
                             <textarea id="modal-tpl-body">${this.escapeHtml(
                               template?.body || ""
@@ -761,9 +773,12 @@ export class MailBuilderTab extends BaseTab {
    */
   private async initTinyMCE(): Promise<void> {
     try {
+      // 先清理任何现有的 TinyMCE 实例（防止重复初始化导致的问题）
+      this.cleanupTinyMCE();
+
       // 使用 TinyMCEBundler 加载并初始化 TinyMCE
       await TinyMCEBundler.init("#modal-tpl-body", {
-        height: 200,
+        height: 350,
       });
       console.log("[MailBuilderTab] TinyMCE initialized successfully");
     } catch (error) {
@@ -771,6 +786,26 @@ export class MailBuilderTab extends BaseTab {
         "[MailBuilderTab] TinyMCE failed to load, using textarea fallback",
         error
       );
+    }
+  }
+
+  /**
+   * 清理 TinyMCE 实例
+   */
+  private cleanupTinyMCE(): void {
+    try {
+      // TinyMCE 在 unsafeWindow（页面主世界）中，不是在 window 中
+      const pageWindow =
+        typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+      if (typeof (pageWindow as any).tinymce !== "undefined") {
+        const editor = (pageWindow as any).tinymce.get("modal-tpl-body");
+        if (editor) {
+          editor.remove();
+          console.log("[MailBuilderTab] Cleaned up existing TinyMCE instance");
+        }
+      }
+    } catch (e) {
+      console.warn("[MailBuilderTab] Failed to cleanup TinyMCE:", e);
     }
   }
 
@@ -822,13 +857,8 @@ export class MailBuilderTab extends BaseTab {
    * 关闭编辑器
    */
   private closeEditor(): void {
-    // 销毁 TinyMCE 实例
-    if (typeof (window as any).tinymce !== "undefined") {
-      const editor = (window as any).tinymce.get("modal-tpl-body");
-      if (editor) {
-        editor.remove();
-      }
-    }
+    // 销毁 TinyMCE 实例（使用 unsafeWindow 因为 TinyMCE 在页面主世界）
+    this.cleanupTinyMCE();
 
     // 移除模态框
     const overlay = document.querySelector("#template-modal-overlay");
@@ -860,11 +890,14 @@ export class MailBuilderTab extends BaseTab {
     ) as HTMLInputElement;
 
     // 获取 TinyMCE 内容，如果 TinyMCE 不存在则使用 textarea
+    // TinyMCE 在 unsafeWindow（页面主世界）中
     let body = "";
-    if (typeof (window as any).tinymce !== "undefined") {
-      const editor = (window as any).tinymce.get("modal-tpl-body");
+    const pageWindow =
+      typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+    if (typeof (pageWindow as any).tinymce !== "undefined") {
+      const editor = (pageWindow as any).tinymce.get("modal-tpl-body");
       if (editor) {
-        body = editor.getContent({ format: "text" }); // 获取纯文本
+        body = editor.getContent({ format: "html" }); // 获取 HTML 格式
       }
     }
     if (!body) {
@@ -904,6 +937,8 @@ export class MailBuilderTab extends BaseTab {
    * 删除模板
    */
   private deleteTemplate(templateId: string): void {
+    // 每次删除时从存储重新加载模板，避免使用过期的缓存数据
+    this.templates = TemplateManager.getAll();
     const template = this.templates.find((t) => t.id === templateId);
     if (!template) return;
 
@@ -919,6 +954,8 @@ export class MailBuilderTab extends BaseTab {
    * 查找模板（包括内置和自定义）
    */
   private findTemplateById(templateId: string): MailTemplate | undefined {
+    // 每次查找时从存储重新加载模板，避免使用过期的缓存数据
+    this.templates = TemplateManager.getAll();
     // 先在自定义模板中查找
     let template = this.templates.find((t) => t.id === templateId);
     if (!template) {

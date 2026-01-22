@@ -2,8 +2,10 @@
  * TinyMCE Bundler Service
  *
  * Manually loads TinyMCE components using GM.xmlHttpRequest to bypass CSP restrictions.
- * Based on the approach from Email Assistant.js
+ * Uses CSPBypassInjector for proper script/style injection.
  */
+
+import { CSPBypassInjector } from "./CSPBypassInjector";
 
 declare const GM: {
   xmlHttpRequest: (options: {
@@ -93,13 +95,24 @@ async function loadAndInjectJsBundle(): Promise<void> {
     );
     const contents = await Promise.all(promises);
     const bundle = contents.join("\n\n// --- Bundled ---\n\n");
-    const scriptEl = document.createElement("script");
-    scriptEl.type = "text/javascript";
-    scriptEl.textContent = bundle;
-    document.head.appendChild(scriptEl);
-    console.log("[TinyMCEBundler] TinyMCE JS bundle injected successfully!");
-    // Note: Don't wait here - the script may take time to execute
-    // We'll wait in init() instead
+
+    // Use CSPBypassInjector for proper CSP bypass via GM.addElement
+    if (CSPBypassInjector.isAvailable()) {
+      await CSPBypassInjector.injectPayloadScript(bundle, "tinymce-bundle");
+      console.log(
+        "[TinyMCEBundler] TinyMCE JS bundle injected via CSPBypassInjector!"
+      );
+    } else {
+      // Fallback to direct injection (may be blocked by CSP)
+      console.warn(
+        "[TinyMCEBundler] CSPBypassInjector not available, using fallback"
+      );
+      const scriptEl = document.createElement("script");
+      scriptEl.type = "text/javascript";
+      scriptEl.textContent = bundle;
+      document.head.appendChild(scriptEl);
+      console.log("[TinyMCEBundler] TinyMCE JS bundle injected via fallback!");
+    }
   } catch (error) {
     console.error("[TinyMCEBundler] Failed to build TinyMCE JS bundle:", error);
     throw error;
@@ -176,7 +189,10 @@ export const TinyMCEBundler = {
    * Check if TinyMCE is loaded
    */
   isLoaded(): boolean {
-    return isLoaded && typeof (window as any).tinymce !== "undefined";
+    // Use unsafeWindow since TinyMCE is injected into the page's window context
+    const pageWindow =
+      typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+    return isLoaded && typeof (pageWindow as any).tinymce !== "undefined";
   },
 
   /**
@@ -206,8 +222,10 @@ export const TinyMCEBundler = {
         const [_, css] = await Promise.all([jsPromise, cssPromise]);
         tinyMceCss = css;
 
-        // Inject UI CSS globally
-        if (typeof GM_addStyle !== "undefined") {
+        // Inject UI CSS globally using CSPBypassInjector
+        if (CSPBypassInjector.isAvailable()) {
+          CSPBypassInjector.injectStyle(tinyMceCss.ui, "tinymce-ui-css");
+        } else if (typeof GM_addStyle !== "undefined") {
           GM_addStyle(tinyMceCss.ui);
         } else {
           const styleEl = document.createElement("style");

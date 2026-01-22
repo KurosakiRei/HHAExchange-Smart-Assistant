@@ -5,6 +5,7 @@ import {
   newMessageButtonSelector,
   prebillingSearchButtonSelector,
   homePageSearchButtonSelector,
+  visitReasonSelector,
 } from "./utils/templates&const";
 import GM_fetch from "@trim21/gm-fetch";
 import { assignIntervalTimer } from "./utils/util";
@@ -491,12 +492,40 @@ function positionPanelRelativeToHandle(
  * 3. Resume cleaning progress display
  */
 async function checkAndResumeCleaningTasks(): Promise<void> {
-  // 检查是否在 visit 详情页 (NonSkilledVisitInfo_ns.aspx)
-  const isVisitDetailPage = window.location.href.includes(
-    "NonSkilledVisitInfo_ns.aspx"
-  );
+  // Wait loop to detect page type (Visit Detail OR Prebilling List)
+  // We need to wait because elements might not be immediately available on document.ready
+  const detectPageType = async (
+    retries = 20
+  ): Promise<"DETAIL" | "LIST" | "UNKNOWN"> => {
+    // 1. Check for Visit Detail Page specific element (Dropdowns or Headers)
+    if (
+      $(visitReasonSelector).length > 0 ||
+      window.location.href.includes("NonSkilledVisitInfo_ns.aspx")
+    ) {
+      return "DETAIL";
+    }
 
-  if (isVisitDetailPage) {
+    // 2. Check for Prebilling List specific element (Container or Search Button)
+    // Note: Prebilling page also has a search button, Detail page does NOT
+    if (
+      $("#ctl00_ContentPlaceHolder1_divPrebillingReportInternalScroll").length >
+        0 ||
+      $(prebillingSearchButtonSelector).length > 0 ||
+      $("#prebillingSelector").length > 0
+    ) {
+      return "LIST";
+    }
+
+    if (retries <= 0) return "UNKNOWN";
+
+    await new Promise((r) => setTimeout(r, 500));
+    return detectPageType(retries - 1);
+  };
+
+  const pageType = await detectPageType();
+  console.log(`[Epic 11] Page Type Detected: ${pageType}`);
+
+  if (pageType === "DETAIL") {
     // 获取待处理的任务队列
     const queue = CleaningController.getQueue();
 
@@ -515,16 +544,16 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
             "./js/services/CleaningOverlay"
           );
 
-          // 显示蒙版
+          // 显示蒙版 (Important: Update text because previous page might have left it at 'Refreshing table...')
           CleaningOverlay.show(
             queue.currentIndex + 1,
             queue.tasks.length,
-            "正在处理 POC..."
+            "正在处理 POC... (已进入详情页)"
           );
 
           // 执行 POC 清理
-          setTimeout(() => {
-            POCResolver();
+          setTimeout(async () => {
+            await POCResolver();
 
             // 点击保存按钮
             setTimeout(() => {
@@ -571,13 +600,27 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
 
       return;
     }
-  }
+  } else if (pageType === "LIST") {
+    // 不在详情页，检查是否有待恢复的任务（在 Prebilling 或 Call Maintenance 页面）
+    const hasPendingTasks = await CleaningController.checkPendingTasks();
 
-  // 不在详情页，检查是否有待恢复的任务（在 Prebilling 或 Call Maintenance 页面）
-  const hasPendingTasks = await CleaningController.checkPendingTasks();
-
-  if (hasPendingTasks) {
-    console.log("[Epic 11] Cleaning tasks resumed");
+    if (hasPendingTasks) {
+      console.log("[Epic 11] Cleaning tasks resumed (List Page)");
+    }
+  } else {
+    // UNKNOWN or Timeout
+    // Can't confirm page type, so safe to do nothing or check generic logic
+    // But we should verify if 'checkPendingTasks' is safe to run?
+    // If we run it here, it might trigger false "Refreshing table" error.
+    // Better to check queue first.
+    const queue = CleaningController.getQueue();
+    if (queue && queue.status === "IN_PROGRESS") {
+      // If we are stuck in UNKNOWN state but have tasks...
+      // Maybe just wait a bit longer?
+      console.warn(
+        "[Epic 11] Could not detect page type, but tasks are pending."
+      );
+    }
   }
 }
 
@@ -663,14 +706,48 @@ function handleConfirmationDialog(retryCount = 0): void {
     );
     okButton.click();
     // 点击后页面会刷新
+
+    // CRITICAL FIX: Ensure parent page reloads if the modal/dialog close action fails to trigger it
+    console.log(
+      "[Epic 11] Waiting 3s for page reload, otherwise forcing reload of top window..."
+    );
+    setTimeout(() => {
+      try {
+        if (window.top) {
+          console.log("[Epic 11] Forcing top window reload...");
+          window.top.location.reload();
+        } else {
+          window.location.reload();
+        }
+      } catch (e) {
+        console.error("Failed to reload top window:", e);
+        window.location.reload();
+      }
+    }, 3000);
   } else if (retryCount < MAX_RETRIES) {
     // 对话框可能还没出现，重试
     setTimeout(() => handleConfirmationDialog(retryCount + 1), 300);
   } else {
-    // 可能没有确认对话框（某些情况下直接保存成功），不报错
+    // Possible scenario: Save successful without confirmation dialog
     console.log(
-      "[Epic 11] No confirmation dialog found after retries (may not be needed)"
+      "[Epic 11] No confirmation dialog found after retries. Assuming silent success and advancing task."
     );
+
+    // CRITICAL FIX: Ensure we advance the task index even if no dialog appeared
+    // This prevents the "stuck" issue where the script keeps retrying the same task
+    try {
+      const queue = CleaningController.getQueue();
+      if (queue && queue.status === "IN_PROGRESS") {
+        queue.tasks[queue.currentIndex].completed = true;
+        queue.currentIndex++;
+        GM_setValue("hha_cleaner_task_queue", queue);
+        console.log(
+          `[Epic 11] Task index advanced (fallback) to ${queue.currentIndex}/${queue.tasks.length}`
+        );
+      }
+    } catch (e) {
+      console.error("[Epic 11] Failed to update task queue (fallback):", e);
+    }
   }
 }
 

@@ -1,50 +1,57 @@
 /**
- * OutlookAdapter - Outlook Web 自动化适配器
- * Epic 12, Story 8: Outlook DOM 自动化
+ * OutlookAdapter - Outlook Web 自动化适配器 (CSP-Compliant)
+ * Epic 12, Story 11: CSP 合规的 Outlook 集成重构
  *
  * 职责：
  * - 在 Outlook Web 页面监听邮件任务
- * - 自动填充 New Mail 表单
- * - 操作 DOM 元素发送邮件
+ * - 使用 GM.addElement 注入 DOM Controller 到主世界
+ * - 通过 CustomEvent 与注入的脚本通信
  *
- * 注意：仅在 https://outlook.office.com/mail/ 页面运行
+ * 重构说明：
+ * - 原实现直接使用 DOM API 操作，被 Outlook CSP 阻止
+ * - 新实现使用 CSPBypassInjector 注入自包含的控制器脚本
+ * - 控制器在页面主世界运行，不受 CSP 限制
+ *
+ * 注意：仅在 https://outlook.office.com/* 页面运行
+ *
+ * @see docs/guides/Outlook CSP 绕过 Userscript 方案.md
  */
 
 import { MailService, MailTask } from "./MailService";
+import { CSPBypassInjector } from "./CSPBypassInjector";
+import {
+  OutlookDOMControllerPayload,
+  OUTLOOK_DOM_CONTROLLER_ID,
+} from "./OutlookDOMControllerPayload";
 
 /**
- * Outlook DOM 选择器
- * 基于 Chrome MCP DOM 分析结果
+ * 声明 Tampermonkey 的 unsafeWindow API
+ * unsafeWindow 提供对页面真实 window 对象的访问
+ * 这是必要的，因为 Tampermonkey 脚本运行在隔离的沙箱中
+ * 而 HHAOutlookController 被注入到页面的主世界
  */
-const OUTLOOK_SELECTORS = {
-  // 新邮件按钮
-  newMailButton: 'button[aria-label="New mail"]',
-  newMailButtonAlt: '[data-testid="new-message-button"]',
+declare const unsafeWindow: Window & typeof globalThis;
 
-  // 邮件编辑器字段
-  toField: 'input[aria-label="To"]',
-  toFieldAlt: '[role="combobox"][aria-label="To"]',
-
-  ccButton: 'button[aria-label="Cc"]',
-  ccField: 'input[aria-label="Cc"]',
-
-  subjectField: 'input[aria-label="Add a subject"]',
-  subjectFieldAlt: '[placeholder="Add a subject"]',
-
-  // 邮件正文 - contenteditable div
-  bodyEditor: '[role="textbox"][aria-label="Message body"]',
-  bodyEditorAlt: 'div[aria-label="Message body, press Alt+F10 to exit"]',
-
-  // 发送按钮
-  sendButton: 'button[aria-label="Send"]',
-  sendButtonAlt: '[data-testid="send-button"]',
-} as const;
+/**
+ * 声明全局 HHAOutlookController 类型
+ */
+declare global {
+  interface Window {
+    HHAOutlookController?: {
+      executeMailTask: (task: MailTask) => Promise<void>;
+      version: string;
+      selectors: Record<string, string>;
+    };
+  }
+}
 
 /**
  * OutlookAdapter 类
+ * CSP 合规的 Outlook Web 自动化适配器
  */
 export class OutlookAdapter {
   private static isListening: boolean = false;
+  private static controllerInjected: boolean = false;
   private static statusToast: HTMLElement | null = null;
 
   /**
@@ -65,16 +72,55 @@ export class OutlookAdapter {
       return;
     }
 
-    console.log("[OutlookAdapter] Initializing on Outlook page...");
+    console.log(
+      "[OutlookAdapter] Initializing on Outlook page (CSP-Compliant)..."
+    );
     MailService.init();
+
+    // 注入 DOM Controller 到主世界（使用 GM.addElement 绕过 CSP）
+    this.injectDOMController();
 
     // 开始监听邮件任务
     this.startListening();
 
-    // 创建状态 Toast
+    // 创建状态 Toast（使用 GM.addElement 绕过 CSP）
     this.createStatusToast();
 
     console.log("[OutlookAdapter] Initialization complete!");
+  }
+
+  /**
+   * 注入 DOM Controller（仅执行一次）
+   * 使用 CSPBypassInjector 将控制器脚本注入到页面主世界
+   */
+  private static async injectDOMController(): Promise<void> {
+    if (this.controllerInjected) {
+      console.log("[OutlookAdapter] DOM Controller already injected");
+      return;
+    }
+
+    try {
+      // 检查 GM.addElement 是否可用
+      if (!CSPBypassInjector.isAvailable()) {
+        console.error(
+          "[OutlookAdapter] GM.addElement not available. Please upgrade Tampermonkey to version 4.10 or later."
+        );
+        this.showStatus("❌ 请升级 Tampermonkey 到 4.10 或更高版本", true);
+        return;
+      }
+
+      // 使用 CSPBypassInjector 注入控制器脚本
+      await CSPBypassInjector.injectPayloadScript(
+        OutlookDOMControllerPayload,
+        OUTLOOK_DOM_CONTROLLER_ID
+      );
+
+      this.controllerInjected = true;
+      console.log("[OutlookAdapter] DOM Controller injected successfully");
+    } catch (error) {
+      console.error("[OutlookAdapter] Failed to inject DOM Controller:", error);
+      this.showStatus(`❌ 注入失败: ${(error as Error).message}`, true);
+    }
   }
 
   /**
@@ -93,7 +139,7 @@ export class OutlookAdapter {
   }
 
   /**
-   * 处理邮件任务
+   * 处理邮件任务（调用注入的 Controller）
    */
   private static async handleMailTask(
     task: MailTask,
@@ -102,41 +148,56 @@ export class OutlookAdapter {
     try {
       this.showStatus("📧 正在打开新邮件...");
 
-      // 1. 点击 New Mail 按钮
-      const clicked = await this.clickNewMail();
-      if (!clicked) {
-        throw new Error("无法点击 New Mail 按钮");
+      // 确保 Controller 已注入
+      if (!this.controllerInjected) {
+        await this.injectDOMController();
       }
 
-      // 等待编辑器加载
-      await this.wait(1500);
+      // 等待 Controller 就绪
+      // 注意：使用 unsafeWindow 访问页面主世界中的 Controller
+      if (!unsafeWindow.HHAOutlookController) {
+        await this.waitForController();
+      }
 
+      // 监听完成事件
+      const completePromise = new Promise<void>((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          document.removeEventListener(
+            "hha-outlook-task-complete",
+            handler as EventListener
+          );
+          reject(new Error("Task execution timeout (10s)"));
+        }, 10000);
+
+        const handler = (e: CustomEvent) => {
+          clearTimeout(timeoutId);
+          const { status, error } = e.detail;
+          document.removeEventListener(
+            "hha-outlook-task-complete",
+            handler as EventListener
+          );
+
+          if (status === "SUCCESS") {
+            resolve();
+          } else {
+            reject(new Error(error || "Unknown error"));
+          }
+        };
+
+        document.addEventListener(
+          "hha-outlook-task-complete",
+          handler as EventListener
+        );
+      });
+
+      // 调用注入的 Controller（使用 unsafeWindow）
       this.showStatus("📝 正在填充邮件内容...");
+      unsafeWindow.HHAOutlookController!.executeMailTask(task);
 
-      // 2. 填充 To 字段
-      if (task.to) {
-        await this.fillField("to", task.to);
-        await this.wait(300);
-      }
-
-      // 3. 填充 CC 字段（如果有）
-      if (task.cc) {
-        await this.expandCC();
-        await this.wait(300);
-        await this.fillField("cc", task.cc);
-        await this.wait(300);
-      }
-
-      // 4. 填充 Subject
-      await this.fillField("subject", task.subject);
-      await this.wait(300);
-
-      // 5. 填充 Body
-      await this.fillBody(task.body);
+      // 等待完成
+      await completePromise;
 
       this.showStatus("✅ 邮件已准备就绪！");
-
-      // 报告完成
       MailService.reportComplete(taskId);
 
       // 3秒后隐藏状态
@@ -147,180 +208,91 @@ export class OutlookAdapter {
       this.showStatus(`❌ 错误: ${errorMsg}`, true);
       MailService.reportFailed(taskId, errorMsg);
 
+      // 5秒后隐藏状态
       setTimeout(() => this.hideStatus(), 5000);
     }
   }
 
   /**
-   * 点击 New Mail 按钮
+   * 等待 Controller 加载
+   * 使用 unsafeWindow 访问页面主世界中的 Controller
    */
-  private static async clickNewMail(): Promise<boolean> {
-    const selectors = [
-      OUTLOOK_SELECTORS.newMailButton,
-      OUTLOOK_SELECTORS.newMailButtonAlt,
-    ];
-
-    for (const selector of selectors) {
-      const btn = document.querySelector(selector) as HTMLElement;
-      if (btn) {
-        btn.click();
-        console.log("[OutlookAdapter] Clicked New Mail button");
-        return true;
-      }
-    }
-
-    console.error("[OutlookAdapter] New Mail button not found");
-    return false;
-  }
-
-  /**
-   * 展开 CC 字段
-   */
-  private static async expandCC(): Promise<void> {
-    const ccButton = document.querySelector(
-      OUTLOOK_SELECTORS.ccButton
-    ) as HTMLElement;
-    if (ccButton) {
-      ccButton.click();
-      await this.wait(300);
-    }
-  }
-
-  /**
-   * 填充字段
-   */
-  private static async fillField(
-    fieldType: "to" | "cc" | "subject",
-    value: string
-  ): Promise<void> {
-    let selectors: string[];
-
-    switch (fieldType) {
-      case "to":
-        selectors = [OUTLOOK_SELECTORS.toField, OUTLOOK_SELECTORS.toFieldAlt];
-        break;
-      case "cc":
-        selectors = [OUTLOOK_SELECTORS.ccField];
-        break;
-      case "subject":
-        selectors = [
-          OUTLOOK_SELECTORS.subjectField,
-          OUTLOOK_SELECTORS.subjectFieldAlt,
-        ];
-        break;
-    }
-
-    for (const selector of selectors) {
-      const field = document.querySelector(selector) as HTMLInputElement;
-      if (field) {
-        // Focus the field
-        field.focus();
-        await this.wait(100);
-
-        // Set value
-        field.value = value;
-
-        // Trigger input event for React/Angular apps
-        field.dispatchEvent(new Event("input", { bubbles: true }));
-        field.dispatchEvent(new Event("change", { bubbles: true }));
-
-        console.log(`[OutlookAdapter] Filled ${fieldType}: ${value}`);
-        return;
-      }
-    }
-
-    console.warn(`[OutlookAdapter] ${fieldType} field not found`);
-  }
-
-  /**
-   * 填充邮件正文
-   */
-  private static async fillBody(body: string): Promise<void> {
-    const selectors = [
-      OUTLOOK_SELECTORS.bodyEditor,
-      OUTLOOK_SELECTORS.bodyEditorAlt,
-    ];
-
-    for (const selector of selectors) {
-      const editor = document.querySelector(selector) as HTMLElement;
-      if (editor) {
-        // Focus editor
-        editor.focus();
-        await this.wait(100);
-
-        // 将换行转换为 HTML
-        const htmlBody = body.replace(/\n/g, "<br>");
-
-        // 使用 innerHTML 设置内容
-        editor.innerHTML = htmlBody;
-
-        // Trigger input event
-        editor.dispatchEvent(new Event("input", { bubbles: true }));
-
-        console.log("[OutlookAdapter] Filled body");
-        return;
-      }
-    }
-
-    console.warn("[OutlookAdapter] Body editor not found");
-  }
-
-  /**
-   * 点击发送按钮（可选功能）
-   */
-  static async clickSend(): Promise<boolean> {
-    const selectors = [
-      OUTLOOK_SELECTORS.sendButton,
-      OUTLOOK_SELECTORS.sendButtonAlt,
-    ];
-
-    for (const selector of selectors) {
-      const btn = document.querySelector(selector) as HTMLElement;
-      if (btn) {
-        btn.click();
-        console.log("[OutlookAdapter] Clicked Send button");
-        return true;
-      }
-    }
-
-    console.error("[OutlookAdapter] Send button not found");
-    return false;
+  private static waitForController(timeout = 5000): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      const check = () => {
+        if (unsafeWindow.HHAOutlookController) {
+          console.log(
+            "[OutlookAdapter] Controller ready, version:",
+            unsafeWindow.HHAOutlookController.version
+          );
+          resolve();
+        } else if (Date.now() - startTime > timeout) {
+          reject(new Error("Controller not loaded within timeout"));
+        } else {
+          requestAnimationFrame(check);
+        }
+      };
+      check();
+    });
   }
 
   /**
    * 创建状态 Toast
+   * 使用 GM.addElement 绕过 CSP 的 style-src 限制
    */
   private static createStatusToast(): void {
     if (this.statusToast) return;
 
+    // 注入 Toast 样式
+    const toastStyles = `
+      #hha-outlook-status {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #333;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        z-index: 999999;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        display: none;
+        max-width: 300px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        transition: opacity 0.3s ease;
+      }
+      #hha-outlook-status.error {
+        background: #e53935;
+      }
+      #hha-outlook-status.visible {
+        display: block;
+      }
+    `;
+
+    // 使用 CSPBypassInjector 注入样式
+    CSPBypassInjector.injectStyle(toastStyles, "outlook-status-toast");
+
+    // 创建 Toast 元素
     this.statusToast = document.createElement("div");
     this.statusToast.id = "hha-outlook-status";
-    this.statusToast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #333;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      z-index: 999999;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      display: none;
-      max-width: 300px;
-    `;
     document.body.appendChild(this.statusToast);
+
+    console.log("[OutlookAdapter] Status toast created");
   }
 
   /**
    * 显示状态
    */
   private static showStatus(message: string, isError: boolean = false): void {
-    if (!this.statusToast) return;
+    if (!this.statusToast) {
+      this.createStatusToast();
+    }
 
-    this.statusToast.textContent = message;
-    this.statusToast.style.background = isError ? "#e53935" : "#333";
-    this.statusToast.style.display = "block";
+    if (this.statusToast) {
+      this.statusToast.textContent = message;
+      this.statusToast.className = isError ? "error visible" : "visible";
+    }
   }
 
   /**
@@ -328,15 +300,32 @@ export class OutlookAdapter {
    */
   private static hideStatus(): void {
     if (this.statusToast) {
-      this.statusToast.style.display = "none";
+      this.statusToast.className = "";
     }
   }
 
   /**
-   * 等待工具函数
+   * 点击发送按钮（可选功能）
+   * 注意：此功能需要用户确认，不自动执行
    */
-  private static wait(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  static async clickSend(): Promise<boolean> {
+    if (!unsafeWindow.HHAOutlookController) {
+      console.error("[OutlookAdapter] Controller not available");
+      return false;
+    }
+
+    const sendBtn =
+      document.querySelector('button[aria-label="Send"]') ||
+      document.querySelector('[data-testid="send-button"]');
+
+    if (sendBtn) {
+      (sendBtn as HTMLElement).click();
+      console.log("[OutlookAdapter] Clicked Send button");
+      return true;
+    }
+
+    console.error("[OutlookAdapter] Send button not found");
+    return false;
   }
 
   /**
@@ -349,5 +338,6 @@ export class OutlookAdapter {
       this.statusToast.remove();
       this.statusToast = null;
     }
+    console.log("[OutlookAdapter] Cleaned up");
   }
 }

@@ -7,9 +7,10 @@
 | **Epic ID**    | EPIC-012                                                  |
 | **标题**       | Mail Builder - 智能邮件构筑助手                           |
 | **优先级**     | P1 - 高优先级功能                                         |
-| **状态**       | 📝 Planning                                                |
-| **预估工作量** | 10 个 Story                                               |
+| **状态**       | 🔧 In Progress (Technical Debt: CSP Blocking)              |
+| **预估工作量** | 11 个 Story (新增 Story 11: CSP 合规重构)                 |
 | **关联系统**   | HHAExchange Patient/Caregiver Profiles, Outlook Web (OWA) |
+| **技术阻塞**   | Outlook CSP 导致 Story 8 实现无法运行，需 Story 11 修复   |
 
 ## 背景与目标
 
@@ -757,6 +758,36 @@ class OutlookAdapter {
 
 **文件**:
 - 所有相关文件的最终集成
+
+---
+
+### Story 11: CSP-Compliant Outlook Integration (🆕 Technical Debt)
+
+> [!IMPORTANT]
+> **阻塞问题修复**：Story 8 实现的 `OutlookAdapter.ts` 因 Outlook CSP 策略无法运行。
+> 本 Story 使用 `GM_addElement` API 重构以绕过 CSP 限制。
+
+**目标**: 重构 Outlook 自动化适配器以符合 CSP 安全策略
+
+**验收标准**:
+- [ ] 添加 `GM.addElement` 到 `@grant` 权限列表
+- [ ] 创建 `CSPBypassInjector` 服务（封装 `GM_addElement` 调用）
+- [ ] 定义 `OutlookDOMController` Payload（自包含脚本字符串）
+- [ ] 重构 `OutlookAdapter.ts` 使用 Payload 注入方式
+- [ ] 通过 CustomEvent 实现跨上下文通讯
+- [ ] 保持单文件构建（`index.prod.user.js`）
+- [ ] 实际测试通过：控制台无 CSP 错误，邮件自动填充成功
+
+**文件**:
+- `config/metadata.cjs` (添加 `GM.addElement` grant)
+- `src/js/services/CSPBypassInjector.ts` (新建)
+- `src/js/services/OutlookDOMControllerPayload.ts` (新建)
+- `src/js/services/OutlookAdapter.ts` (重构)
+- `src/typings.d.ts` (可选：添加 `GM.addElement` 类型声明)
+
+**参考文档**:
+- 详细 Story 文档：`docs/stories/epic-12-story-11-csp-compliant-outlook-integration.md`
+- 技术研究指南：`docs/guides/Outlook CSP 绕过 Userscript 方案.md`
 
 ---
 

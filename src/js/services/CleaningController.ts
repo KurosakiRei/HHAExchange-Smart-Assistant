@@ -83,9 +83,6 @@ export class CleaningController {
 
     console.log("[CleaningController] Found pending tasks, resuming...", queue);
 
-    // 注意：任务完成标记和索引增加已经在 handleConfirmationDialog 中处理
-    // 这里只需要检查是否全部完成
-
     // 检查是否全部完成
     if (queue.currentIndex >= queue.tasks.length) {
       queue.status = "COMPLETED";
@@ -123,6 +120,67 @@ export class CleaningController {
         this.executeCurrentTask(queue);
       })
       .catch((error) => {
+        console.warn(
+          "[CleaningController] Initial wait table failed, trying recovery options...",
+          error
+        );
+
+        // Recovery mechanism for Prebilling: Click Search button if table is missing
+        // This is common after a page reload where the search results are cleared
+        if (queue.pageType === "PREBILLING") {
+          const searchBtn = (document.querySelector("#prebillingSelector") ||
+            document.querySelector(
+              "#ctl00_ContentPlaceHolder1_uxSearchPrebilling"
+            ) ||
+            document.querySelector(
+              "#ctl00_ContentPlaceHolder1_btnSearch"
+            )) as HTMLInputElement;
+
+          if (searchBtn) {
+            console.log(
+              "[CleaningController] Found Search button (" +
+                searchBtn.id +
+                "), clicking to refresh table..."
+            );
+            const isCustomBtn = searchBtn.id === "prebillingSelector";
+            searchBtn.click();
+
+            // Retry waiting for table
+            CleaningOverlay.update(
+              queue.currentIndex + 1,
+              queue.tasks.length,
+              `${this.getTaskInfo(
+                currentTask,
+                queue.pageType
+              )} (正在刷新表格...)`
+            );
+
+            // Important: Add delay if using custom button to allow event propagation and async loading start
+            const delayMs = isCustomBtn ? 1500 : 500;
+            setTimeout(() => {
+              this.waitForTable(queue.pageType, 15000)
+                .then(() => {
+                  console.log(
+                    "[CleaningController] Table loaded after auto-search, executing task..."
+                  );
+                  this.executeCurrentTask(queue);
+                })
+                .catch((retryError) => {
+                  console.error(
+                    "[CleaningController] Retry failed:",
+                    retryError
+                  );
+                  queue.status = "FAILED";
+                  GM_setValue(CLEANING_QUEUE_KEY, queue);
+                  CleaningOverlay.showError(
+                    `无法加载表格。尝试自动搜索失败。\n请手动点击搜索按钮，脚本将尝试恢复。`
+                  );
+                });
+            }, delayMs);
+            return;
+          }
+        }
+
         console.error("[CleaningController] Timeout waiting for table:", error);
         queue.status = "FAILED";
         GM_setValue(CLEANING_QUEUE_KEY, queue);
@@ -162,14 +220,16 @@ export class CleaningController {
         const callRecord = record as CallRecordLike;
         return {
           completed: false,
-          assignCode: callRecord.assignCode,
-          caregiverName: callRecord.caregiverName,
-          patientName: callRecord.patientName,
-          callDate: callRecord.callDate,
-          callTime: callRecord.callTime,
-        };
+          // Extract specific properties for call task...
+          ...callRecord,
+        } as unknown as CleaningTask; // Cast for now
       }
     });
+
+    console.log(
+      `[CleaningController] Starting batch cleaning for ${tasks.length} items.`
+    );
+    console.log("[CleaningController] Queue Tasks:", tasks);
 
     // 创建任务队列
     const queue: CleaningTaskQueue = {
@@ -247,32 +307,60 @@ export class CleaningController {
       : table.querySelectorAll("tr");
 
     // 通过 rowIndex 或匹配关键信息找到行
+    // Verify or find the row using Admission ID and Patient Name (Prioritize exact match over rowIndex)
+    // After a table reload/search, the rowIndex might have changed order.
     let targetRow: Element | null = null;
+    let foundByMatch = false;
 
-    // 首先尝试通过 rowIndex
-    if (task.rowIndex !== undefined && rows[task.rowIndex]) {
-      targetRow = rows[task.rowIndex];
-    } else {
-      // 通过匹配信息查找
-      for (const row of rows) {
-        const cells = row.querySelectorAll("td");
-        if (cells.length < 10) continue;
+    // First try to find by matching Admission ID and Patient Name
+    for (const row of rows) {
+      const cells = row.querySelectorAll("td");
+      if (cells.length < 10) continue;
 
-        const admissionId = cells[1]?.textContent?.trim();
-        const patientName = cells[2]?.textContent?.trim();
+      // Normalize spaces to match PrebillingTableParser logic
+      const admissionId = cells[1]?.textContent?.trim().replace(/\s+/g, " ");
+      const patientName = cells[2]?.textContent?.trim().replace(/\s+/g, " ");
 
-        if (
-          admissionId === task.admissionId &&
-          patientName?.includes(task.patientName || "")
-        ) {
-          targetRow = row;
-          break;
-        }
+      if (
+        admissionId === task.admissionId &&
+        patientName?.includes(task.patientName || "")
+      ) {
+        console.log(
+          `[CleaningController] Searching Row: Matched ${task.patientName} (${task.admissionId})`
+        );
+        targetRow = row;
+        foundByMatch = true;
+        console.log(
+          `[CleaningController] Found row by match for ${task.patientName} (${task.admissionId})`
+        );
+        break;
       }
     }
 
+    // Fallback to rowIndex ONLY if match failed and rowIndex seems plausible (but risky)
+    if (!foundByMatch && task.rowIndex !== undefined && rows[task.rowIndex]) {
+      console.warn(
+        `[CleaningController] Could not find by match, falling back to rowIndex ${task.rowIndex} for ${task.patientName}`
+      );
+      // Check if the row actually matches?
+      const fallbackRow = rows[task.rowIndex];
+      const cells = fallbackRow.querySelectorAll("td");
+      const admissionId = cells[1]?.textContent?.trim();
+      if (admissionId === task.admissionId) {
+        targetRow = fallbackRow;
+      } else {
+        console.error(
+          `[CleaningController] RowIndex ${task.rowIndex} mismatch! Expected ${task.admissionId}, found ${admissionId}`
+        );
+        // Do not use it if it mismatches
+      }
+    }
+
+    // Confirm found
     if (!targetRow) {
-      throw new Error(`Row not found for ${task.patientName}`);
+      throw new Error(
+        `Row not found for ${task.patientName} (${task.admissionId})`
+      );
     }
 
     // 查找 Edit 按钮
@@ -282,6 +370,19 @@ export class CleaningController {
 
     if (!editButton) {
       throw new Error("Edit button not found");
+    }
+
+    // Update overlay to indicate navigation
+    const queue = GM_getValue<CleaningTaskQueue | null>(
+      CLEANING_QUEUE_KEY,
+      null
+    );
+    if (queue) {
+      CleaningOverlay.update(
+        queue.currentIndex + 1,
+        queue.tasks.length,
+        `${this.getTaskInfo(task, queue.pageType)} (正在打开详情页...)`
+      );
     }
 
     // 点击 Edit 按钮，页面会导航到详情页
@@ -443,7 +544,7 @@ export class CleaningController {
   /**
    * 获取当前队列状态
    */
-  static getQueue(): CleaningTaskQueue | null {
+  public static getQueue(): CleaningTaskQueue | null {
     return GM_getValue<CleaningTaskQueue | null>(CLEANING_QUEUE_KEY, null);
   }
 
@@ -481,7 +582,9 @@ export class CleaningController {
         let isReady = false;
         if (element) {
           if (pageType === "PREBILLING") {
-            isReady = true; // Prebilling 容器存在即可
+            // Check for the actual data table, not just the container
+            const dataTable = document.querySelector("#tblDetails");
+            isReady = !!dataTable; // Prebilling table must exist
           } else {
             // Call Maintenance 表格应该有 tbody 或 tr
             const table = element as HTMLTableElement;

@@ -12,10 +12,10 @@ import {
 
 import { sleep } from "../utils/util";
 
-export const POCResolver = () => {
+export const POCResolver = async () => {
   console.log("clicked");
   POCTick();
-  POCReasonChooser();
+  await POCReasonChooser();
   $(visitNotesSelector).val("task does not match plan of care");
   $(visitNotesSelector)[0].dispatchEvent(new Event("change"));
 
@@ -100,10 +100,22 @@ async function POCReasonChooser() {
     if (flag) break;
   }
 
-  flag = false;
-  await sleep(500);
+  // Wait for the second dropdown (Action) to populate
+  if (flag) {
+    flag = false;
+    let maxRetries = 20; // 10 seconds
+    while (maxRetries > 0) {
+      if ($(visitActionOptionSelector).length > 1) {
+        // > 1 assuming "Select" proper options
+        break;
+      }
+      await sleep(500);
+      maxRetries--;
+    }
+  }
 
   let select2 = $(visitActionSelector);
+  // Ensure we re-query options after wait
   for (const expectedAction of expectedActionList) {
     //expectedReason = other
     for (const action of $(visitActionOptionSelector)) {
