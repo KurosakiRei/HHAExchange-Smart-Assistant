@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.9.4
+// @version             3.9.5
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -22,6 +22,7 @@
 // @grant               GM_addStyle
 // @grant               GM_setValue
 // @grant               GM_getValue
+// @grant               GM.addElement
 // @connect             app.hhaexchange.com
 // @connect             reports.hhaexchange.com
 // @connect             outlook.office.com
@@ -1408,10 +1409,10 @@ const searchElementInAllFrames = (win, selector) => {
 ;// ./src/js/POC.ts
 
 
-const POCResolver = () => {
+const POCResolver = async () => {
     console.log("clicked");
     POCTick();
-    POCReasonChooser();
+    await POCReasonChooser();
     $(visitNotesSelector).val("task does not match plan of care");
     $(visitNotesSelector)[0].dispatchEvent(new Event("change"));
     // 如果需要验证（有星号标记），则填写验证信息
@@ -1487,9 +1488,21 @@ async function POCReasonChooser() {
         if (flag)
             break;
     }
-    flag = false;
-    await sleep(500);
+    // Wait for the second dropdown (Action) to populate
+    if (flag) {
+        flag = false;
+        let maxRetries = 20; // 10 seconds
+        while (maxRetries > 0) {
+            if ($(visitActionOptionSelector).length > 1) {
+                // > 1 assuming "Select" proper options
+                break;
+            }
+            await sleep(500);
+            maxRetries--;
+        }
+    }
     let select2 = $(visitActionSelector);
+    // Ensure we re-query options after wait
     for (const expectedAction of expectedActionList) {
         //expectedReason = other
         for (const action of $(visitActionOptionSelector)) {
@@ -10035,8 +10048,6 @@ class CleaningController {
             return false;
         }
         console.log("[CleaningController] Found pending tasks, resuming...", queue);
-        // 注意：任务完成标记和索引增加已经在 handleConfirmationDialog 中处理
-        // 这里只需要检查是否全部完成
         // 检查是否全部完成
         if (queue.currentIndex >= queue.tasks.length) {
             queue.status = "COMPLETED";
@@ -10059,6 +10070,39 @@ class CleaningController {
             this.executeCurrentTask(queue);
         })
             .catch((error) => {
+            console.warn("[CleaningController] Initial wait table failed, trying recovery options...", error);
+            // Recovery mechanism for Prebilling: Click Search button if table is missing
+            // This is common after a page reload where the search results are cleared
+            if (queue.pageType === "PREBILLING") {
+                const searchBtn = (document.querySelector("#prebillingSelector") ||
+                    document.querySelector("#ctl00_ContentPlaceHolder1_uxSearchPrebilling") ||
+                    document.querySelector("#ctl00_ContentPlaceHolder1_btnSearch"));
+                if (searchBtn) {
+                    console.log("[CleaningController] Found Search button (" +
+                        searchBtn.id +
+                        "), clicking to refresh table...");
+                    const isCustomBtn = searchBtn.id === "prebillingSelector";
+                    searchBtn.click();
+                    // Retry waiting for table
+                    CleaningOverlay.CleaningOverlay.update(queue.currentIndex + 1, queue.tasks.length, `${this.getTaskInfo(currentTask, queue.pageType)} (正在刷新表格...)`);
+                    // Important: Add delay if using custom button to allow event propagation and async loading start
+                    const delayMs = isCustomBtn ? 1500 : 500;
+                    setTimeout(() => {
+                        this.waitForTable(queue.pageType, 15000)
+                            .then(() => {
+                            console.log("[CleaningController] Table loaded after auto-search, executing task...");
+                            this.executeCurrentTask(queue);
+                        })
+                            .catch((retryError) => {
+                            console.error("[CleaningController] Retry failed:", retryError);
+                            queue.status = "FAILED";
+                            GM_setValue(CLEANING_QUEUE_KEY, queue);
+                            CleaningOverlay.CleaningOverlay.showError(`无法加载表格。尝试自动搜索失败。\n请手动点击搜索按钮，脚本将尝试恢复。`);
+                        });
+                    }, delayMs);
+                    return;
+                }
+            }
             console.error("[CleaningController] Timeout waiting for table:", error);
             queue.status = "FAILED";
             GM_setValue(CLEANING_QUEUE_KEY, queue);
@@ -10092,14 +10136,13 @@ class CleaningController {
                 const callRecord = record;
                 return {
                     completed: false,
-                    assignCode: callRecord.assignCode,
-                    caregiverName: callRecord.caregiverName,
-                    patientName: callRecord.patientName,
-                    callDate: callRecord.callDate,
-                    callTime: callRecord.callTime,
-                };
+                    // Extract specific properties for call task...
+                    ...callRecord,
+                }; // Cast for now
             }
         });
+        console.log(`[CleaningController] Starting batch cleaning for ${tasks.length} items.`);
+        console.log("[CleaningController] Queue Tasks:", tasks);
         // 创建任务队列
         const queue = {
             pageType,
@@ -10158,33 +10201,55 @@ class CleaningController {
             ? tbody.querySelectorAll("tr")
             : table.querySelectorAll("tr");
         // 通过 rowIndex 或匹配关键信息找到行
+        // Verify or find the row using Admission ID and Patient Name (Prioritize exact match over rowIndex)
+        // After a table reload/search, the rowIndex might have changed order.
         let targetRow = null;
-        // 首先尝试通过 rowIndex
-        if (task.rowIndex !== undefined && rows[task.rowIndex]) {
-            targetRow = rows[task.rowIndex];
-        }
-        else {
-            // 通过匹配信息查找
-            for (const row of rows) {
-                const cells = row.querySelectorAll("td");
-                if (cells.length < 10)
-                    continue;
-                const admissionId = cells[1]?.textContent?.trim();
-                const patientName = cells[2]?.textContent?.trim();
-                if (admissionId === task.admissionId &&
-                    patientName?.includes(task.patientName || "")) {
-                    targetRow = row;
-                    break;
-                }
+        let foundByMatch = false;
+        // First try to find by matching Admission ID and Patient Name
+        for (const row of rows) {
+            const cells = row.querySelectorAll("td");
+            if (cells.length < 10)
+                continue;
+            // Normalize spaces to match PrebillingTableParser logic
+            const admissionId = cells[1]?.textContent?.trim().replace(/\s+/g, " ");
+            const patientName = cells[2]?.textContent?.trim().replace(/\s+/g, " ");
+            if (admissionId === task.admissionId &&
+                patientName?.includes(task.patientName || "")) {
+                console.log(`[CleaningController] Searching Row: Matched ${task.patientName} (${task.admissionId})`);
+                targetRow = row;
+                foundByMatch = true;
+                console.log(`[CleaningController] Found row by match for ${task.patientName} (${task.admissionId})`);
+                break;
             }
         }
+        // Fallback to rowIndex ONLY if match failed and rowIndex seems plausible (but risky)
+        if (!foundByMatch && task.rowIndex !== undefined && rows[task.rowIndex]) {
+            console.warn(`[CleaningController] Could not find by match, falling back to rowIndex ${task.rowIndex} for ${task.patientName}`);
+            // Check if the row actually matches?
+            const fallbackRow = rows[task.rowIndex];
+            const cells = fallbackRow.querySelectorAll("td");
+            const admissionId = cells[1]?.textContent?.trim();
+            if (admissionId === task.admissionId) {
+                targetRow = fallbackRow;
+            }
+            else {
+                console.error(`[CleaningController] RowIndex ${task.rowIndex} mismatch! Expected ${task.admissionId}, found ${admissionId}`);
+                // Do not use it if it mismatches
+            }
+        }
+        // Confirm found
         if (!targetRow) {
-            throw new Error(`Row not found for ${task.patientName}`);
+            throw new Error(`Row not found for ${task.patientName} (${task.admissionId})`);
         }
         // 查找 Edit 按钮
         const editButton = targetRow.querySelector('a[name="imgEditInternal"]');
         if (!editButton) {
             throw new Error("Edit button not found");
+        }
+        // Update overlay to indicate navigation
+        const queue = GM_getValue(CLEANING_QUEUE_KEY, null);
+        if (queue) {
+            CleaningOverlay.CleaningOverlay.update(queue.currentIndex + 1, queue.tasks.length, `${this.getTaskInfo(task, queue.pageType)} (正在打开详情页...)`);
         }
         // 点击 Edit 按钮，页面会导航到详情页
         editButton.click();
@@ -10337,7 +10402,9 @@ class CleaningController {
                 let isReady = false;
                 if (element) {
                     if (pageType === "PREBILLING") {
-                        isReady = true; // Prebilling 容器存在即可
+                        // Check for the actual data table, not just the container
+                        const dataTable = document.querySelector("#tblDetails");
+                        isReady = !!dataTable; // Prebilling table must exist
                     }
                     else {
                         // Call Maintenance 表格应该有 tbody 或 tr
@@ -11833,13 +11900,140 @@ function isBuiltinTemplate(templateId) {
     return templateId.startsWith("builtin_");
 }
 
+;// ./src/js/services/CSPBypassInjector.ts
+/**
+ * CSPBypassInjector - CSP 绕过注入器
+ * Epic 12, Story 11: CSP 合规的 Outlook 集成重构
+ *
+ * 职责：
+ * - 使用 GM.addElement 将 JavaScript 注入到页面主世界
+ * - 绕过 Outlook 的 script-src CSP 限制
+ * - 提供样式注入功能
+ *
+ * 原理：
+ * - Tampermonkey 作为浏览器扩展拥有特权上下文
+ * - 通过 GM.addElement 发起的 DOM 注入被浏览器视为"扩展操作"
+ * - 豁免于页面的 CSP 检查（CSP Level 3 规范推荐行为）
+ *
+ * @see https://www.tampermonkey.net/documentation.php#api:GM.addElement
+ */
+/**
+ * CSPBypassInjector 类
+ * 封装 Tampermonkey 的 GM.addElement API 用于 CSP 绕过
+ */
+class CSPBypassInjector {
+    /**
+     * 检查 GM.addElement API 是否可用
+     * @returns true 如果 API 可用
+     */
+    static isAvailable() {
+        return typeof GM !== "undefined" && typeof GM.addElement === "function";
+    }
+    /**
+     * 注入 Payload 脚本到页面主世界
+     * 使用 GM.addElement 绕过 CSP 的 script-src 限制
+     *
+     * @param payload - 要注入的 JavaScript 代码字符串
+     * @param id - 可选的脚本标识符，用于防止重复注入
+     * @returns Promise<void> - 注入完成后 resolve
+     * @throws Error - 如果 GM.addElement 不可用
+     */
+    static injectPayloadScript(payload, id) {
+        return new Promise((resolve, reject) => {
+            try {
+                // 检查是否已注入过（防止重复注入）
+                if (id && this.injectedScripts.has(id)) {
+                    console.log(`[CSPBypassInjector] Script "${id}" already injected, skipping`);
+                    resolve();
+                    return;
+                }
+                // 检查 GM.addElement API 是否可用
+                if (!this.isAvailable()) {
+                    throw new Error("GM.addElement not available. Please upgrade Tampermonkey to version 4.10 or later.");
+                }
+                // 使用特权 API 注入脚本
+                // GM.addElement 创建的元素被视为扩展注入，绕过页面 CSP
+                GM.addElement(document.body, "script", {
+                    textContent: payload,
+                    type: "text/javascript",
+                });
+                // 记录已注入的脚本
+                if (id) {
+                    this.injectedScripts.add(id);
+                }
+                console.log(`[CSPBypassInjector] Script${id ? ` "${id}"` : ""} injected successfully`);
+                resolve();
+            }
+            catch (error) {
+                console.error("[CSPBypassInjector] Injection failed:", error);
+                reject(error);
+            }
+        });
+    }
+    /**
+     * 注入样式到页面
+     * 使用 GM.addElement 绕过 CSP 的 style-src 限制
+     *
+     * @param css - CSS 样式字符串
+     * @param id - 可选的样式标识符，用于防止重复注入
+     */
+    static injectStyle(css, id) {
+        try {
+            // 检查是否已注入过
+            if (id && this.injectedScripts.has(`style_${id}`)) {
+                console.log(`[CSPBypassInjector] Style "${id}" already injected, skipping`);
+                return;
+            }
+            if (!this.isAvailable()) {
+                // 回退到 GM_addStyle（如果可用）
+                if (typeof GM_addStyle === "function") {
+                    GM_addStyle(css);
+                    console.log(`[CSPBypassInjector] Style${id ? ` "${id}"` : ""} injected via GM_addStyle fallback`);
+                    return;
+                }
+                console.warn("[CSPBypassInjector] GM.addElement not available for style injection");
+                return;
+            }
+            // 使用 GM.addElement 注入样式
+            GM.addElement(document.head, "style", {
+                textContent: css,
+            });
+            // 记录已注入的样式
+            if (id) {
+                this.injectedScripts.add(`style_${id}`);
+            }
+            console.log(`[CSPBypassInjector] Style${id ? ` "${id}"` : ""} injected successfully`);
+        }
+        catch (error) {
+            console.error("[CSPBypassInjector] Style injection failed:", error);
+        }
+    }
+    /**
+     * 检查脚本是否已注入
+     * @param id - 脚本标识符
+     * @returns true 如果已注入
+     */
+    static isInjected(id) {
+        return this.injectedScripts.has(id);
+    }
+    /**
+     * 清除注入记录（用于测试或重新注入）
+     */
+    static clearInjectionRecord() {
+        this.injectedScripts.clear();
+        console.log("[CSPBypassInjector] Injection records cleared");
+    }
+}
+CSPBypassInjector.injectedScripts = new Set();
+
 ;// ./src/js/services/TinyMCEBundler.ts
 /**
  * TinyMCE Bundler Service
  *
  * Manually loads TinyMCE components using GM.xmlHttpRequest to bypass CSP restrictions.
- * Based on the approach from Email Assistant.js
+ * Uses CSPBypassInjector for proper script/style injection.
  */
+
 const TINYMCE_BASE_URL = "https://unpkg.com/tinymce@6/";
 // JS components to bundle (simplified list for basic functionality)
 const TINYMCE_JS_COMPONENTS = [
@@ -11905,13 +12099,20 @@ async function loadAndInjectJsBundle() {
         const promises = TINYMCE_JS_COMPONENTS.map((c) => fetchAsset(TINYMCE_BASE_URL + c));
         const contents = await Promise.all(promises);
         const bundle = contents.join("\n\n// --- Bundled ---\n\n");
-        const scriptEl = document.createElement("script");
-        scriptEl.type = "text/javascript";
-        scriptEl.textContent = bundle;
-        document.head.appendChild(scriptEl);
-        console.log("[TinyMCEBundler] TinyMCE JS bundle injected successfully!");
-        // Note: Don't wait here - the script may take time to execute
-        // We'll wait in init() instead
+        // Use CSPBypassInjector for proper CSP bypass via GM.addElement
+        if (CSPBypassInjector.isAvailable()) {
+            await CSPBypassInjector.injectPayloadScript(bundle, "tinymce-bundle");
+            console.log("[TinyMCEBundler] TinyMCE JS bundle injected via CSPBypassInjector!");
+        }
+        else {
+            // Fallback to direct injection (may be blocked by CSP)
+            console.warn("[TinyMCEBundler] CSPBypassInjector not available, using fallback");
+            const scriptEl = document.createElement("script");
+            scriptEl.type = "text/javascript";
+            scriptEl.textContent = bundle;
+            document.head.appendChild(scriptEl);
+            console.log("[TinyMCEBundler] TinyMCE JS bundle injected via fallback!");
+        }
     }
     catch (error) {
         console.error("[TinyMCEBundler] Failed to build TinyMCE JS bundle:", error);
@@ -11971,7 +12172,9 @@ const TinyMCEBundler = {
      * Check if TinyMCE is loaded
      */
     isLoaded() {
-        return isLoaded && typeof window.tinymce !== "undefined";
+        // Use unsafeWindow since TinyMCE is injected into the page's window context
+        const pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+        return isLoaded && typeof pageWindow.tinymce !== "undefined";
     },
     /**
      * Get the cached CSS content
@@ -11995,8 +12198,11 @@ const TinyMCEBundler = {
                 const cssPromise = loadCssBundle();
                 const [_, css] = await Promise.all([jsPromise, cssPromise]);
                 tinyMceCss = css;
-                // Inject UI CSS globally
-                if (typeof GM_addStyle !== "undefined") {
+                // Inject UI CSS globally using CSPBypassInjector
+                if (CSPBypassInjector.isAvailable()) {
+                    CSPBypassInjector.injectStyle(tinyMceCss.ui, "tinymce-ui-css");
+                }
+                else if (typeof GM_addStyle !== "undefined") {
                     GM_addStyle(tinyMceCss.ui);
                 }
                 else {
@@ -12465,6 +12671,8 @@ class MailBuilderTab extends BaseTab {
             btn.addEventListener("click", (e) => {
                 const id = e.currentTarget.dataset.id;
                 if (id) {
+                    // 每次编辑时从存储重新加载模板，避免使用过期的缓存数据
+                    this.templates = TemplateManager.getAll();
                     const template = this.templates.find((t) => t.id === id);
                     if (template)
                         this.openEditor(template);
@@ -12578,6 +12786,14 @@ class MailBuilderTab extends BaseTab {
                     </div>
                     <div class="template-form-group">
                         <label class="template-form-label">正文 (富文本编辑器) *</label>
+                        <div class="template-placeholder-hint" style="font-size: 12px; color: #666; margin-bottom: 8px; padding: 8px; background: #f5f5f5; border-radius: 4px;">
+                            <strong>💡 可用占位符:</strong> 
+                            <span style="font-family: monospace; color: #0066cc;">{{aide_name}}</span>, 
+                            <span style="font-family: monospace; color: #0066cc;">{{aide_id}}</span>, 
+                            <span style="font-family: monospace; color: #0066cc;">{{patient_name}}</span>, 
+                            <span style="font-family: monospace; color: #0066cc;">{{patient_id}}</span>
+                            <br><small style="color: #999;">在下方"数据字段"区域可以添加自定义占位符</small>
+                        </div>
                         <div class="template-body-editor">
                             <textarea id="modal-tpl-body">${this.escapeHtml(template?.body || "")}</textarea>
                         </div>
@@ -12683,14 +12899,35 @@ class MailBuilderTab extends BaseTab {
      */
     async initTinyMCE() {
         try {
+            // 先清理任何现有的 TinyMCE 实例（防止重复初始化导致的问题）
+            this.cleanupTinyMCE();
             // 使用 TinyMCEBundler 加载并初始化 TinyMCE
             await TinyMCEBundler.init("#modal-tpl-body", {
-                height: 200,
+                height: 350,
             });
             console.log("[MailBuilderTab] TinyMCE initialized successfully");
         }
         catch (error) {
             console.warn("[MailBuilderTab] TinyMCE failed to load, using textarea fallback", error);
+        }
+    }
+    /**
+     * 清理 TinyMCE 实例
+     */
+    cleanupTinyMCE() {
+        try {
+            // TinyMCE 在 unsafeWindow（页面主世界）中，不是在 window 中
+            const pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+            if (typeof pageWindow.tinymce !== "undefined") {
+                const editor = pageWindow.tinymce.get("modal-tpl-body");
+                if (editor) {
+                    editor.remove();
+                    console.log("[MailBuilderTab] Cleaned up existing TinyMCE instance");
+                }
+            }
+        }
+        catch (e) {
+            console.warn("[MailBuilderTab] Failed to cleanup TinyMCE:", e);
         }
     }
     /**
@@ -12734,13 +12971,8 @@ class MailBuilderTab extends BaseTab {
      * 关闭编辑器
      */
     closeEditor() {
-        // 销毁 TinyMCE 实例
-        if (typeof window.tinymce !== "undefined") {
-            const editor = window.tinymce.get("modal-tpl-body");
-            if (editor) {
-                editor.remove();
-            }
-        }
+        // 销毁 TinyMCE 实例（使用 unsafeWindow 因为 TinyMCE 在页面主世界）
+        this.cleanupTinyMCE();
         // 移除模态框
         const overlay = document.querySelector("#template-modal-overlay");
         if (overlay) {
@@ -12761,11 +12993,13 @@ class MailBuilderTab extends BaseTab {
         const ccInput = document.querySelector("#modal-tpl-cc");
         const subjectInput = document.querySelector("#modal-tpl-subject");
         // 获取 TinyMCE 内容，如果 TinyMCE 不存在则使用 textarea
+        // TinyMCE 在 unsafeWindow（页面主世界）中
         let body = "";
-        if (typeof window.tinymce !== "undefined") {
-            const editor = window.tinymce.get("modal-tpl-body");
+        const pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+        if (typeof pageWindow.tinymce !== "undefined") {
+            const editor = pageWindow.tinymce.get("modal-tpl-body");
             if (editor) {
-                body = editor.getContent({ format: "text" }); // 获取纯文本
+                body = editor.getContent({ format: "html" }); // 获取 HTML 格式
             }
         }
         if (!body) {
@@ -12798,6 +13032,8 @@ class MailBuilderTab extends BaseTab {
      * 删除模板
      */
     deleteTemplate(templateId) {
+        // 每次删除时从存储重新加载模板，避免使用过期的缓存数据
+        this.templates = TemplateManager.getAll();
         const template = this.templates.find((t) => t.id === templateId);
         if (!template)
             return;
@@ -12812,6 +13048,8 @@ class MailBuilderTab extends BaseTab {
      * 查找模板（包括内置和自定义）
      */
     findTemplateById(templateId) {
+        // 每次查找时从存储重新加载模板，避免使用过期的缓存数据
+        this.templates = TemplateManager.getAll();
         // 先在自定义模板中查找
         let template = this.templates.find((t) => t.id === templateId);
         if (!template) {
@@ -12992,43 +13230,418 @@ class MailBuilderTab extends BaseTab {
     }
 }
 
-;// ./src/js/services/OutlookAdapter.ts
+;// ./src/js/services/OutlookDOMControllerPayload.ts
 /**
- * OutlookAdapter - Outlook Web 自动化适配器
- * Epic 12, Story 8: Outlook DOM 自动化
+ * OutlookDOMControllerPayload - Outlook DOM 控制器负载脚本
+ * Epic 12, Story 11: CSP 合规的 Outlook 集成重构
  *
- * 职责：
- * - 在 Outlook Web 页面监听邮件任务
- * - 自动填充 New Mail 表单
- * - 操作 DOM 元素发送邮件
+ * 重要说明：
+ * - 这段代码会被序列化为字符串，通过 GM.addElement 注入到页面主世界执行
+ * - 因此必须是完全自包含的 IIFE (Immediately Invoked Function Expression)
+ * - 不能依赖外部模块或 TypeScript 特性
+ * - 所有依赖必须内联在此文件中
  *
- * 注意：仅在 https://outlook.office.com/mail/ 页面运行
+ * 功能：
+ * - 在 Outlook 页面主世界中运行
+ * - 提供邮件自动填充功能
+ * - 通过 CustomEvent 与 OutlookAdapter 通信
  */
+/**
+ * Outlook DOM Controller Payload
+ * 这是一个自包含的 JavaScript 代码字符串，将被注入到 Outlook 页面
+ */
+const OutlookDOMControllerPayload = `
+(function() {
+  'use strict';
 
-/**
- * Outlook DOM 选择器
- * 基于 Chrome MCP DOM 分析结果
- */
-const OUTLOOK_SELECTORS = {
+  // 防止重复初始化
+  if (window.HHAOutlookController) {
+    console.log('[OutlookDOMController] Already initialized, skipping');
+    return;
+  }
+
+  console.log('[OutlookDOMController] Initializing...');
+
+  /**
+   * Outlook DOM 选择器
+   * 基于浏览器远程调试确认 (2026-01)
+   * 使用 EditorClass[id] 定位收件人字段
+   */
+  var SELECTORS = {
     // 新邮件按钮
     newMailButton: 'button[aria-label="New mail"]',
     newMailButtonAlt: '[data-testid="new-message-button"]',
-    // 邮件编辑器字段
-    toField: 'input[aria-label="To"]',
-    toFieldAlt: '[role="combobox"][aria-label="To"]',
-    ccButton: 'button[aria-label="Cc"]',
-    ccField: 'input[aria-label="Cc"]',
-    subjectField: 'input[aria-label="Add a subject"]',
-    subjectFieldAlt: '[placeholder="Add a subject"]',
-    // 邮件正文 - contenteditable div
-    bodyEditor: '[role="textbox"][aria-label="Message body"]',
-    bodyEditorAlt: 'div[aria-label="Message body, press Alt+F10 to exit"]',
+
+    // 收件人字段 - 通过父容器的 _TO, _CC 后缀定位（更可靠）
+    // 旧选择器 div.EditorClass[id="0"] 可能与其他元素冲突
+    toField: 'div[id$="_TO"] .EditorClass, div.EditorClass[id="0"]',
+    ccField: 'div[id$="_CC"] .EditorClass, div.EditorClass[id="1"]',
+
+    // 主题字段
+    subjectField: 'input[aria-label="Subject"]',
+    subjectFieldAlt: 'input[placeholder="Add a subject"]',
+
+    // 邮件正文编辑器
+    bodyEditor: 'div[aria-label="Message body"]',
+
     // 发送按钮
     sendButton: 'button[aria-label="Send"]',
     sendButtonAlt: '[data-testid="send-button"]',
-};
+
+    // 丢弃/关闭按钮 (用于关闭已打开的草稿)
+    discardButton: 'button[aria-label="Discard"]',
+    discardConfirmButton: 'button[data-testid="confirmDialogPrimaryButton"], .ms-Dialog-main button.ms-Button--primary'
+  };
+
+  /**
+   * 工具函数：等待元素出现
+   * @param {string} selector - CSS 选择器
+   * @param {number} timeout - 超时时间（毫秒）
+   * @returns {Promise<Element>}
+   */
+  function waitForElement(selector, timeout) {
+    return new Promise(function(resolve, reject) {
+      var startTime = Date.now();
+      
+      function check() {
+        var el = document.querySelector(selector);
+        if (el) {
+          resolve(el);
+        } else if (Date.now() - startTime > timeout) {
+          reject(new Error('Element ' + selector + ' not found within ' + timeout + 'ms'));
+        } else {
+          requestAnimationFrame(check);
+        }
+      }
+      
+      check();
+    });
+  }
+
+  /**
+   * 工具函数：延迟
+   * @param {number} ms - 毫秒数
+   * @returns {Promise<void>}
+   */
+  function sleep(ms) {
+    return new Promise(function(r) { setTimeout(r, ms); });
+  }
+
+  /**
+   * 关闭已存在的草稿窗口（如果有）
+   * 检测：如果存在邮件正文区域但没有新邮件按钮，则说明窗口已打开
+   * @returns {Promise<boolean>} - 是否成功关闭了现有草稿
+   */
+  async function closeExistingDraft() {
+    var bodyEditor = document.querySelector(SELECTORS.bodyEditor);
+    var newMailBtn = document.querySelector(SELECTORS.newMailButton) || 
+                     document.querySelector(SELECTORS.newMailButtonAlt);
+    
+    // 如果存在正文区域但没有新邮件按钮，说明草稿窗口已打开
+    if (bodyEditor && !newMailBtn) {
+      console.log('[OutlookDOMController] Existing draft detected, attempting to close...');
+      
+      // 尝试点击丢弃按钮
+      var discardBtn = document.querySelector(SELECTORS.discardButton);
+      if (discardBtn) {
+        discardBtn.click();
+        await sleep(500);
+        
+        // 等待确认对话框并点击确认
+        var confirmBtn = document.querySelector(SELECTORS.discardConfirmButton);
+        if (confirmBtn) {
+          confirmBtn.click();
+          console.log('[OutlookDOMController] Clicked discard confirm button');
+          await sleep(800); // 等待对话框关闭
+        }
+        
+        console.log('[OutlookDOMController] Existing draft closed');
+        return true;
+      } else {
+        console.warn('[OutlookDOMController] Discard button not found, cannot close existing draft');
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * 填充输入字段（支持 React 合成事件）
+   * @param {string|string[]} selectors - CSS 选择器或选择器数组
+   * @param {string} value - 要填充的值
+   * @returns {boolean} - 是否成功
+   */
+  function fillInputField(selectors, value) {
+    var selectorList = Array.isArray(selectors) ? selectors : [selectors];
+    
+    for (var i = 0; i < selectorList.length; i++) {
+      var selector = selectorList[i];
+      var field = document.querySelector(selector);
+      
+      if (field) {
+        // 聚焦字段
+        field.focus();
+        
+        // 使用原生 setter 设置值（兼容 React）
+        var nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          'value'
+        );
+        
+        if (nativeInputValueSetter && nativeInputValueSetter.set) {
+          nativeInputValueSetter.set.call(field, value);
+        } else {
+          field.value = value;
+        }
+        
+        // 触发事件
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+        
+        console.log('[OutlookDOMController] Filled field:', selector, '->', value.substring(0, 30) + (value.length > 30 ? '...' : ''));
+        return true;
+      }
+    }
+    
+    console.warn('[OutlookDOMController] Field not found:', selectorList.join(' | '));
+    return false;
+  }
+
+  /**
+   * 填充 EditorClass 类型的字段（To/Cc 使用这种）
+   * Outlook 的收件人字段是复杂的 div，需要模拟键入
+   * @param {string} containerSelector - EditorClass 容器选择器（可以是逗号分隔的多个选择器）
+   * @param {string} value - 要填充的值（邮箱地址）
+   * @returns {boolean} - 是否成功
+   */
+  function fillEditorClassField(containerSelector, value) {
+    // 支持逗号分隔的多个选择器（按顺序尝试）
+    var selectors = containerSelector.split(',').map(function(s) { return s.trim(); });
+    var container = null;
+    
+    for (var i = 0; i < selectors.length; i++) {
+      container = document.querySelector(selectors[i]);
+      if (container) {
+        console.log('[OutlookDOMController] Found EditorClass with selector:', selectors[i]);
+        break;
+      }
+    }
+    
+    if (!container) {
+      console.warn('[OutlookDOMController] EditorClass container not found:', containerSelector);
+      return false;
+    }
+    
+    // 聚焦容器
+    container.focus();
+    container.click();
+    
+    // 尝试找到可编辑区域
+    var editable = container.querySelector('[contenteditable="true"]') || 
+                   container.querySelector('[role="textbox"]') ||
+                   container;
+    
+    if (editable) {
+      editable.focus();
+      
+      // 使用 innerText 设置内容（比 execCommand 更可靠）
+      editable.innerText = value;
+      
+      // 触发事件让 Outlook 识别输入
+      editable.dispatchEvent(new Event('input', { bubbles: true }));
+      editable.dispatchEvent(new Event('change', { bubbles: true }));
+      editable.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      
+      console.log('[OutlookDOMController] Filled EditorClass field:', containerSelector, '->', value);
+      return true;
+    }
+    
+    console.warn('[OutlookDOMController] No editable area in container:', containerSelector);
+    return false;
+  }
+
+  /**
+   * 填充邮件正文（在开头插入内容，保留签名）
+   * 关键：不使用 selectAll + delete，而是将光标移到开头插入
+   * @param {string} htmlBody - HTML 格式的邮件正文
+   * @returns {boolean} - 是否成功
+   */
+  function fillBodyEditor(htmlBody) {
+    var editor = document.querySelector(SELECTORS.bodyEditor);
+    
+    if (!editor) {
+      console.warn('[OutlookDOMController] Body editor not found');
+      return false;
+    }
+    
+    // 聚焦编辑器
+    editor.focus();
+    
+    // 将光标移动到编辑器开头（保留签名）
+    var range = document.createRange();
+    var sel = window.getSelection();
+    range.setStart(editor, 0);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    
+    // 规范化内容：处理 HTML 和纯文本两种情况
+    // 1. 将 </p><p> 转换为双换行（段落之间保留空行）
+    // 2. 移除单独的 <p> 和 </p> 标签
+    // 3. 将纯文本 \\n 转换为 <br>
+    // 注意：不要合并连续的 <br>，因为用户可能故意留空行
+    var normalizedHtml = htmlBody
+      .replace(/<\\/p>\\s*<p>/gi, '<br><br>')  // </p><p> -> 双换行保留段落间隔
+      .replace(/<p>/gi, '')                    // 移除开始 <p>
+      .replace(/<\\/p>/gi, '')                 // 移除结束 </p>
+      .replace(/\\r?\\n/g, '<br>');             // \\n -> <br>
+    
+    console.log('[OutlookDOMController] Normalized body content, inserting...');
+    
+    // 在开头插入 HTML 内容
+    document.execCommand('insertHTML', false, normalizedHtml + '<br><br>');
+    
+    // 触发 input 事件
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    
+    console.log('[OutlookDOMController] Body filled successfully (signature preserved)');
+    return true;
+  }
+
+  /**
+   * 通知任务完成状态（通过 CustomEvent）
+   * @param {string} status - 'SUCCESS' 或 'FAILED'
+   * @param {string|null} error - 错误信息（如果有）
+   */
+  function notifyTaskComplete(status, error) {
+    document.dispatchEvent(new CustomEvent('hha-outlook-task-complete', {
+      detail: { status: status, error: error || null }
+    }));
+    console.log('[OutlookDOMController] Task complete notification sent:', status);
+  }
+
+  /**
+   * 主执行流程：执行邮件任务
+   * @param {Object} task - 邮件任务对象
+   * @param {string} task.to - 收件人
+   * @param {string} [task.cc] - 抄送
+   * @param {string} task.subject - 主题
+   * @param {string} task.body - 正文（HTML）
+   */
+  async function executeMailTask(task) {
+    console.log('[OutlookDOMController] Executing mail task:', task);
+    
+    try {
+      // 0. 先关闭已存在的草稿窗口（如果有）
+      var closedDraft = await closeExistingDraft();
+      if (closedDraft) {
+        console.log('[OutlookDOMController] Closed existing draft, waiting for UI to stabilize...');
+        await sleep(1000);
+      }
+      
+      // 1. 点击新建邮件按钮（可能需要短暂等待按钮出现）
+      var newMailBtn = null;
+      for (var attempt = 0; attempt < 5; attempt++) {
+        newMailBtn = document.querySelector(SELECTORS.newMailButton) || 
+                     document.querySelector(SELECTORS.newMailButtonAlt);
+        if (newMailBtn) break;
+        await sleep(300);
+      }
+      
+      if (!newMailBtn) {
+        throw new Error('New mail button not found');
+      }
+      
+      newMailBtn.click();
+      console.log('[OutlookDOMController] Clicked New Mail button');
+      
+      // 2. 等待编辑器加载
+      try {
+        await waitForElement(SELECTORS.subjectField, 5000);
+      } catch (e) {
+        await waitForElement(SELECTORS.subjectFieldAlt, 3000);
+      }
+      await sleep(500); // 额外等待确保 UI 稳定
+      
+      // 3. 填充 To 字段 - 直接使用 EditorClass[id="0"]
+      if (task.to) {
+        // 添加分号让 Outlook 识别为收件人
+        var toEmail = task.to.endsWith(';') ? task.to : task.to + ';';
+        fillEditorClassField(SELECTORS.toField, toEmail);
+        await sleep(300);
+        // 移开焦点以触发收件人解析
+        var subjectInput = document.querySelector(SELECTORS.subjectField);
+        if (subjectInput) subjectInput.focus();
+        await sleep(200);
+      }
+      
+      // 4. 填充 CC 字段（如果有）- 直接使用 EditorClass[id="1"]
+      if (task.cc) {
+        var ccEmail = task.cc.endsWith(';') ? task.cc : task.cc + ';';
+        fillEditorClassField(SELECTORS.ccField, ccEmail);
+        await sleep(300);
+        // 移开焦点
+        var subjectInput = document.querySelector(SELECTORS.subjectField);
+        if (subjectInput) subjectInput.focus();
+        await sleep(200);
+      }
+      
+      // 5. 填充主题
+      fillInputField([SELECTORS.subjectField, SELECTORS.subjectFieldAlt], task.subject);
+      await sleep(300);
+      
+      // 6. 填充正文
+      fillBodyEditor(task.body);
+      
+      // 7. 报告成功
+      notifyTaskComplete('SUCCESS', null);
+      
+    } catch (error) {
+      console.error('[OutlookDOMController] Error:', error);
+      notifyTaskComplete('FAILED', error.message || String(error));
+    }
+  }
+
+  // ===== 暴露到全局供 OutlookAdapter 调用 =====
+  window.HHAOutlookController = {
+    executeMailTask: executeMailTask,
+    version: '1.0.0',
+    selectors: SELECTORS
+  };
+
+  console.log('[OutlookDOMController] Loaded and ready (v1.0.0)');
+})();
+`;
+/**
+ * Payload 脚本的标识符，用于防止重复注入
+ */
+const OUTLOOK_DOM_CONTROLLER_ID = "hha-outlook-dom-controller";
+
+;// ./src/js/services/OutlookAdapter.ts
+/**
+ * OutlookAdapter - Outlook Web 自动化适配器 (CSP-Compliant)
+ * Epic 12, Story 11: CSP 合规的 Outlook 集成重构
+ *
+ * 职责：
+ * - 在 Outlook Web 页面监听邮件任务
+ * - 使用 GM.addElement 注入 DOM Controller 到主世界
+ * - 通过 CustomEvent 与注入的脚本通信
+ *
+ * 重构说明：
+ * - 原实现直接使用 DOM API 操作，被 Outlook CSP 阻止
+ * - 新实现使用 CSPBypassInjector 注入自包含的控制器脚本
+ * - 控制器在页面主世界运行，不受 CSP 限制
+ *
+ * 注意：仅在 https://outlook.office.com/* 页面运行
+ *
+ * @see docs/guides/Outlook CSP 绕过 Userscript 方案.md
+ */
+
+
+
 /**
  * OutlookAdapter 类
+ * CSP 合规的 Outlook Web 自动化适配器
  */
 class OutlookAdapter {
     /**
@@ -13046,13 +13659,41 @@ class OutlookAdapter {
             console.log("[OutlookAdapter] Not on Outlook page, skipping init");
             return;
         }
-        console.log("[OutlookAdapter] Initializing on Outlook page...");
+        console.log("[OutlookAdapter] Initializing on Outlook page (CSP-Compliant)...");
         MailService.init();
+        // 注入 DOM Controller 到主世界（使用 GM.addElement 绕过 CSP）
+        this.injectDOMController();
         // 开始监听邮件任务
         this.startListening();
-        // 创建状态 Toast
+        // 创建状态 Toast（使用 GM.addElement 绕过 CSP）
         this.createStatusToast();
         console.log("[OutlookAdapter] Initialization complete!");
+    }
+    /**
+     * 注入 DOM Controller（仅执行一次）
+     * 使用 CSPBypassInjector 将控制器脚本注入到页面主世界
+     */
+    static async injectDOMController() {
+        if (this.controllerInjected) {
+            console.log("[OutlookAdapter] DOM Controller already injected");
+            return;
+        }
+        try {
+            // 检查 GM.addElement 是否可用
+            if (!CSPBypassInjector.isAvailable()) {
+                console.error("[OutlookAdapter] GM.addElement not available. Please upgrade Tampermonkey to version 4.10 or later.");
+                this.showStatus("❌ 请升级 Tampermonkey 到 4.10 或更高版本", true);
+                return;
+            }
+            // 使用 CSPBypassInjector 注入控制器脚本
+            await CSPBypassInjector.injectPayloadScript(OutlookDOMControllerPayload, OUTLOOK_DOM_CONTROLLER_ID);
+            this.controllerInjected = true;
+            console.log("[OutlookAdapter] DOM Controller injected successfully");
+        }
+        catch (error) {
+            console.error("[OutlookAdapter] Failed to inject DOM Controller:", error);
+            this.showStatus(`❌ 注入失败: ${error.message}`, true);
+        }
     }
     /**
      * 开始监听任务
@@ -13068,38 +13709,45 @@ class OutlookAdapter {
         console.log("[OutlookAdapter] Started listening for mail tasks");
     }
     /**
-     * 处理邮件任务
+     * 处理邮件任务（调用注入的 Controller）
      */
     static async handleMailTask(task, taskId) {
         try {
             this.showStatus("📧 正在打开新邮件...");
-            // 1. 点击 New Mail 按钮
-            const clicked = await this.clickNewMail();
-            if (!clicked) {
-                throw new Error("无法点击 New Mail 按钮");
+            // 确保 Controller 已注入
+            if (!this.controllerInjected) {
+                await this.injectDOMController();
             }
-            // 等待编辑器加载
-            await this.wait(1500);
+            // 等待 Controller 就绪
+            // 注意：使用 unsafeWindow 访问页面主世界中的 Controller
+            if (!unsafeWindow.HHAOutlookController) {
+                await this.waitForController();
+            }
+            // 监听完成事件
+            const completePromise = new Promise((resolve, reject) => {
+                const timeoutId = setTimeout(() => {
+                    document.removeEventListener("hha-outlook-task-complete", handler);
+                    reject(new Error("Task execution timeout (10s)"));
+                }, 10000);
+                const handler = (e) => {
+                    clearTimeout(timeoutId);
+                    const { status, error } = e.detail;
+                    document.removeEventListener("hha-outlook-task-complete", handler);
+                    if (status === "SUCCESS") {
+                        resolve();
+                    }
+                    else {
+                        reject(new Error(error || "Unknown error"));
+                    }
+                };
+                document.addEventListener("hha-outlook-task-complete", handler);
+            });
+            // 调用注入的 Controller（使用 unsafeWindow）
             this.showStatus("📝 正在填充邮件内容...");
-            // 2. 填充 To 字段
-            if (task.to) {
-                await this.fillField("to", task.to);
-                await this.wait(300);
-            }
-            // 3. 填充 CC 字段（如果有）
-            if (task.cc) {
-                await this.expandCC();
-                await this.wait(300);
-                await this.fillField("cc", task.cc);
-                await this.wait(300);
-            }
-            // 4. 填充 Subject
-            await this.fillField("subject", task.subject);
-            await this.wait(300);
-            // 5. 填充 Body
-            await this.fillBody(task.body);
+            unsafeWindow.HHAOutlookController.executeMailTask(task);
+            // 等待完成
+            await completePromise;
             this.showStatus("✅ 邮件已准备就绪！");
-            // 报告完成
             MailService.reportComplete(taskId);
             // 3秒后隐藏状态
             setTimeout(() => this.hideStatus(), 3000);
@@ -13109,166 +13757,110 @@ class OutlookAdapter {
             console.error("[OutlookAdapter] Error handling mail task:", error);
             this.showStatus(`❌ 错误: ${errorMsg}`, true);
             MailService.reportFailed(taskId, errorMsg);
+            // 5秒后隐藏状态
             setTimeout(() => this.hideStatus(), 5000);
         }
     }
     /**
-     * 点击 New Mail 按钮
+     * 等待 Controller 加载
+     * 使用 unsafeWindow 访问页面主世界中的 Controller
      */
-    static async clickNewMail() {
-        const selectors = [
-            OUTLOOK_SELECTORS.newMailButton,
-            OUTLOOK_SELECTORS.newMailButtonAlt,
-        ];
-        for (const selector of selectors) {
-            const btn = document.querySelector(selector);
-            if (btn) {
-                btn.click();
-                console.log("[OutlookAdapter] Clicked New Mail button");
-                return true;
-            }
-        }
-        console.error("[OutlookAdapter] New Mail button not found");
-        return false;
-    }
-    /**
-     * 展开 CC 字段
-     */
-    static async expandCC() {
-        const ccButton = document.querySelector(OUTLOOK_SELECTORS.ccButton);
-        if (ccButton) {
-            ccButton.click();
-            await this.wait(300);
-        }
-    }
-    /**
-     * 填充字段
-     */
-    static async fillField(fieldType, value) {
-        let selectors;
-        switch (fieldType) {
-            case "to":
-                selectors = [OUTLOOK_SELECTORS.toField, OUTLOOK_SELECTORS.toFieldAlt];
-                break;
-            case "cc":
-                selectors = [OUTLOOK_SELECTORS.ccField];
-                break;
-            case "subject":
-                selectors = [
-                    OUTLOOK_SELECTORS.subjectField,
-                    OUTLOOK_SELECTORS.subjectFieldAlt,
-                ];
-                break;
-        }
-        for (const selector of selectors) {
-            const field = document.querySelector(selector);
-            if (field) {
-                // Focus the field
-                field.focus();
-                await this.wait(100);
-                // Set value
-                field.value = value;
-                // Trigger input event for React/Angular apps
-                field.dispatchEvent(new Event("input", { bubbles: true }));
-                field.dispatchEvent(new Event("change", { bubbles: true }));
-                console.log(`[OutlookAdapter] Filled ${fieldType}: ${value}`);
-                return;
-            }
-        }
-        console.warn(`[OutlookAdapter] ${fieldType} field not found`);
-    }
-    /**
-     * 填充邮件正文
-     */
-    static async fillBody(body) {
-        const selectors = [
-            OUTLOOK_SELECTORS.bodyEditor,
-            OUTLOOK_SELECTORS.bodyEditorAlt,
-        ];
-        for (const selector of selectors) {
-            const editor = document.querySelector(selector);
-            if (editor) {
-                // Focus editor
-                editor.focus();
-                await this.wait(100);
-                // 将换行转换为 HTML
-                const htmlBody = body.replace(/\n/g, "<br>");
-                // 使用 innerHTML 设置内容
-                editor.innerHTML = htmlBody;
-                // Trigger input event
-                editor.dispatchEvent(new Event("input", { bubbles: true }));
-                console.log("[OutlookAdapter] Filled body");
-                return;
-            }
-        }
-        console.warn("[OutlookAdapter] Body editor not found");
-    }
-    /**
-     * 点击发送按钮（可选功能）
-     */
-    static async clickSend() {
-        const selectors = [
-            OUTLOOK_SELECTORS.sendButton,
-            OUTLOOK_SELECTORS.sendButtonAlt,
-        ];
-        for (const selector of selectors) {
-            const btn = document.querySelector(selector);
-            if (btn) {
-                btn.click();
-                console.log("[OutlookAdapter] Clicked Send button");
-                return true;
-            }
-        }
-        console.error("[OutlookAdapter] Send button not found");
-        return false;
+    static waitForController(timeout = 5000) {
+        return new Promise((resolve, reject) => {
+            const startTime = Date.now();
+            const check = () => {
+                if (unsafeWindow.HHAOutlookController) {
+                    console.log("[OutlookAdapter] Controller ready, version:", unsafeWindow.HHAOutlookController.version);
+                    resolve();
+                }
+                else if (Date.now() - startTime > timeout) {
+                    reject(new Error("Controller not loaded within timeout"));
+                }
+                else {
+                    requestAnimationFrame(check);
+                }
+            };
+            check();
+        });
     }
     /**
      * 创建状态 Toast
+     * 使用 GM.addElement 绕过 CSP 的 style-src 限制
      */
     static createStatusToast() {
         if (this.statusToast)
             return;
+        // 注入 Toast 样式
+        const toastStyles = `
+      #hha-outlook-status {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #333;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        z-index: 999999;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        display: none;
+        max-width: 300px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        transition: opacity 0.3s ease;
+      }
+      #hha-outlook-status.error {
+        background: #e53935;
+      }
+      #hha-outlook-status.visible {
+        display: block;
+      }
+    `;
+        // 使用 CSPBypassInjector 注入样式
+        CSPBypassInjector.injectStyle(toastStyles, "outlook-status-toast");
+        // 创建 Toast 元素
         this.statusToast = document.createElement("div");
         this.statusToast.id = "hha-outlook-status";
-        this.statusToast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #333;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      z-index: 999999;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      display: none;
-      max-width: 300px;
-    `;
         document.body.appendChild(this.statusToast);
+        console.log("[OutlookAdapter] Status toast created");
     }
     /**
      * 显示状态
      */
     static showStatus(message, isError = false) {
-        if (!this.statusToast)
-            return;
-        this.statusToast.textContent = message;
-        this.statusToast.style.background = isError ? "#e53935" : "#333";
-        this.statusToast.style.display = "block";
+        if (!this.statusToast) {
+            this.createStatusToast();
+        }
+        if (this.statusToast) {
+            this.statusToast.textContent = message;
+            this.statusToast.className = isError ? "error visible" : "visible";
+        }
     }
     /**
      * 隐藏状态
      */
     static hideStatus() {
         if (this.statusToast) {
-            this.statusToast.style.display = "none";
+            this.statusToast.className = "";
         }
     }
     /**
-     * 等待工具函数
+     * 点击发送按钮（可选功能）
+     * 注意：此功能需要用户确认，不自动执行
      */
-    static wait(ms) {
-        return new Promise((resolve) => setTimeout(resolve, ms));
+    static async clickSend() {
+        if (!unsafeWindow.HHAOutlookController) {
+            console.error("[OutlookAdapter] Controller not available");
+            return false;
+        }
+        const sendBtn = document.querySelector('button[aria-label="Send"]') ||
+            document.querySelector('[data-testid="send-button"]');
+        if (sendBtn) {
+            sendBtn.click();
+            console.log("[OutlookAdapter] Clicked Send button");
+            return true;
+        }
+        console.error("[OutlookAdapter] Send button not found");
+        return false;
     }
     /**
      * 清理资源
@@ -13280,13 +13872,15 @@ class OutlookAdapter {
             this.statusToast.remove();
             this.statusToast = null;
         }
+        console.log("[OutlookAdapter] Cleaned up");
     }
 }
 OutlookAdapter.isListening = false;
+OutlookAdapter.controllerInjected = false;
 OutlookAdapter.statusToast = null;
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.9.4"};
+const package_namespaceObject = {"rE":"3.9.5"};
 ;// ./src/index.ts
 
 
@@ -13643,9 +14237,30 @@ function positionPanelRelativeToHandle(panel, handle) {
  * 3. Resume cleaning progress display
  */
 async function checkAndResumeCleaningTasks() {
-    // 检查是否在 visit 详情页 (NonSkilledVisitInfo_ns.aspx)
-    const isVisitDetailPage = window.location.href.includes("NonSkilledVisitInfo_ns.aspx");
-    if (isVisitDetailPage) {
+    // Wait loop to detect page type (Visit Detail OR Prebilling List)
+    // We need to wait because elements might not be immediately available on document.ready
+    const detectPageType = async (retries = 20) => {
+        // 1. Check for Visit Detail Page specific element (Dropdowns or Headers)
+        if ($(visitReasonSelector).length > 0 ||
+            window.location.href.includes("NonSkilledVisitInfo_ns.aspx")) {
+            return "DETAIL";
+        }
+        // 2. Check for Prebilling List specific element (Container or Search Button)
+        // Note: Prebilling page also has a search button, Detail page does NOT
+        if ($("#ctl00_ContentPlaceHolder1_divPrebillingReportInternalScroll").length >
+            0 ||
+            $(prebillingSearchButtonSelector).length > 0 ||
+            $("#prebillingSelector").length > 0) {
+            return "LIST";
+        }
+        if (retries <= 0)
+            return "UNKNOWN";
+        await new Promise((r) => setTimeout(r, 500));
+        return detectPageType(retries - 1);
+    };
+    const pageType = await detectPageType();
+    console.log(`[Epic 11] Page Type Detected: ${pageType}`);
+    if (pageType === "DETAIL") {
         // 获取待处理的任务队列
         const queue = CleaningController.getQueue();
         if (queue &&
@@ -13657,11 +14272,11 @@ async function checkAndResumeCleaningTasks() {
                 try {
                     // 导入并执行 POCResolver
                     const { CleaningOverlay } = await Promise.resolve(/* import() */).then(__webpack_require__.bind(__webpack_require__, "./src/js/services/CleaningOverlay.ts"));
-                    // 显示蒙版
-                    CleaningOverlay.show(queue.currentIndex + 1, queue.tasks.length, "正在处理 POC...");
+                    // 显示蒙版 (Important: Update text because previous page might have left it at 'Refreshing table...')
+                    CleaningOverlay.show(queue.currentIndex + 1, queue.tasks.length, "正在处理 POC... (已进入详情页)");
                     // 执行 POC 清理
-                    setTimeout(() => {
-                        POCResolver();
+                    setTimeout(async () => {
+                        await POCResolver();
                         // 点击保存按钮
                         setTimeout(() => {
                             // 尝试多种选择器找到保存按钮
@@ -13698,10 +14313,25 @@ async function checkAndResumeCleaningTasks() {
             return;
         }
     }
-    // 不在详情页，检查是否有待恢复的任务（在 Prebilling 或 Call Maintenance 页面）
-    const hasPendingTasks = await CleaningController.checkPendingTasks();
-    if (hasPendingTasks) {
-        console.log("[Epic 11] Cleaning tasks resumed");
+    else if (pageType === "LIST") {
+        // 不在详情页，检查是否有待恢复的任务（在 Prebilling 或 Call Maintenance 页面）
+        const hasPendingTasks = await CleaningController.checkPendingTasks();
+        if (hasPendingTasks) {
+            console.log("[Epic 11] Cleaning tasks resumed (List Page)");
+        }
+    }
+    else {
+        // UNKNOWN or Timeout
+        // Can't confirm page type, so safe to do nothing or check generic logic
+        // But we should verify if 'checkPendingTasks' is safe to run?
+        // If we run it here, it might trigger false "Refreshing table" error.
+        // Better to check queue first.
+        const queue = CleaningController.getQueue();
+        if (queue && queue.status === "IN_PROGRESS") {
+            // If we are stuck in UNKNOWN state but have tasks...
+            // Maybe just wait a bit longer?
+            console.warn("[Epic 11] Could not detect page type, but tasks are pending.");
+        }
     }
 }
 /**
@@ -13772,14 +14402,45 @@ function handleConfirmationDialog(retryCount = 0) {
         console.log("[Epic 11] Found and clicking confirmation dialog OK button...");
         okButton.click();
         // 点击后页面会刷新
+        // CRITICAL FIX: Ensure parent page reloads if the modal/dialog close action fails to trigger it
+        console.log("[Epic 11] Waiting 3s for page reload, otherwise forcing reload of top window...");
+        setTimeout(() => {
+            try {
+                if (window.top) {
+                    console.log("[Epic 11] Forcing top window reload...");
+                    window.top.location.reload();
+                }
+                else {
+                    window.location.reload();
+                }
+            }
+            catch (e) {
+                console.error("Failed to reload top window:", e);
+                window.location.reload();
+            }
+        }, 3000);
     }
     else if (retryCount < MAX_RETRIES) {
         // 对话框可能还没出现，重试
         setTimeout(() => handleConfirmationDialog(retryCount + 1), 300);
     }
     else {
-        // 可能没有确认对话框（某些情况下直接保存成功），不报错
-        console.log("[Epic 11] No confirmation dialog found after retries (may not be needed)");
+        // Possible scenario: Save successful without confirmation dialog
+        console.log("[Epic 11] No confirmation dialog found after retries. Assuming silent success and advancing task.");
+        // CRITICAL FIX: Ensure we advance the task index even if no dialog appeared
+        // This prevents the "stuck" issue where the script keeps retrying the same task
+        try {
+            const queue = CleaningController.getQueue();
+            if (queue && queue.status === "IN_PROGRESS") {
+                queue.tasks[queue.currentIndex].completed = true;
+                queue.currentIndex++;
+                GM_setValue("hha_cleaner_task_queue", queue);
+                console.log(`[Epic 11] Task index advanced (fallback) to ${queue.currentIndex}/${queue.tasks.length}`);
+            }
+        }
+        catch (e) {
+            console.error("[Epic 11] Failed to update task queue (fallback):", e);
+        }
     }
 }
 /**
