@@ -601,8 +601,7 @@ private async openPatientProfile(item: QAReportItem): Promise<void> {
 │  ┌───────────────────────────────────────────────────────────┐ │
 │  │ Quality call made to pt, confirmed pt has not been        │ │
 │  │ admitted to hospital or rehab within the last 30 days.    │ │
-│  │ Pt is satisfied with current aide and or hours OR pt is   │ │
-│  │ interested in increase                                    │ │
+│  │ Pt is satisfied with current aide and or hours            │ │
 │  └───────────────────────────────────────────────────────────┘ │
 │                                                                 │
 │  附加备注 (可选):                                              │
@@ -621,8 +620,7 @@ private async openPatientProfile(item: QAReportItem): Promise<void> {
 ```typescript
 const QA_NOTE_TEMPLATE = 
   'Quality call made to pt, confirmed pt has not been admitted to hospital or rehab ' +
-  'within the last 30 days. Pt is satisfied with current aide and or hours OR pt is ' +
-  'interested in increase';
+  'within the last 30 days. Pt is satisfied with current aide and or hours';
 ```
 
 #### 弹窗实现

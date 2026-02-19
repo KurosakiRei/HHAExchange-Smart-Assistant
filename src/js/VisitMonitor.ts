@@ -1,5 +1,26 @@
 import GM_fetch from "@trim21/gm-fetch";
 
+/**
+ * 动态检测当前 HHAExchange 租户路径前缀（如 "ENT2602010000"）
+ * 避免因服务器版本升级导致硬缀码路径失效触发强制登出
+ */
+function detectTenantBaseUrl(): string {
+  const pathMatch = window.location.pathname.match(/\/(ENT\d+)\//);
+  if (pathMatch) return `https://app.hhaexchange.com/${pathMatch[1]}`;
+
+  const scriptSrc = Array.from(document.scripts).find((s) =>
+    s.src.includes("/ENT")
+  )?.src;
+  const scriptMatch = scriptSrc?.match(/\/(ENT\d+)\//);
+  if (scriptMatch) return `https://app.hhaexchange.com/${scriptMatch[1]}`;
+
+  const hrefMatch = window.location.href.match(/\/(ENT\d+)\//);
+  if (hrefMatch) return `https://app.hhaexchange.com/${hrefMatch[1]}`;
+
+  console.warn("[VisitMonitor] Could not detect tenant prefix, using fallback");
+  return "https://app.hhaexchange.com/ENT2602010000";
+}
+
 // --- 1. TYPES & INTERFACES ---
 interface Coordinator {
   id: number;
@@ -143,6 +164,16 @@ export const visitMonitor = async () => {
 
   // --- 状态与常量 ---
   const STORAGE_KEY = "hha_coordinator_tracker_list";
+  // 动态检测当前 HHAExchange 租户路径前缀，避免因服务器版本升级导致旧路径失效触发强制登出
+  const TENANT_BASE_URL = detectTenantBaseUrl();
+  const CALL_MAINTENANCE_URL = `${TENANT_BASE_URL}/Call/CallMaintenance_ns.aspx`;
+  const CALL_REPORTS_URL = `${TENANT_BASE_URL}/Call/CallReportsXSLT_ns.aspx`;
+  // HHAWS 服务路径：与 ENT 前缀相同的版本号，但用于 .asmx Web Service
+  const HHAWS_BASE_PATH = `/HHAWS${TENANT_BASE_URL.replace(
+    "https://app.hhaexchange.com/",
+    ""
+  )}/`;
+  console.log("[VisitMonitor] Tenant URL:", TENANT_BASE_URL);
   let trackedCoordinators: Coordinator[] = [];
   let allCoordinators: Coordinator[] = [];
   let tempTrackedIds: Set<number> = new Set();
@@ -548,9 +579,9 @@ export const visitMonitor = async () => {
       if (this.params) return this.params;
 
       console.log("Fetching API parameters for the first time...");
-      const url =
-        "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
-      const r = (await GM_fetch(url, { method: "GET" })) as Response & {
+      const r = (await GM_fetch(CALL_MAINTENANCE_URL, {
+        method: "GET",
+      })) as Response & {
         rawBody: Blob;
       };
       const text = await r.rawBody.text();
@@ -812,8 +843,7 @@ export const visitMonitor = async () => {
 
   async function fetchAllCoordinators(): Promise<Coordinator[]> {
     console.log("Step 1: Fetching initial params...");
-    const initialUrl =
-      "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+    const initialUrl = CALL_MAINTENANCE_URL;
     const r = (await GM_fetch(initialUrl, { method: "GET" })) as Response & {
       rawBody: Blob;
     };
@@ -937,8 +967,7 @@ export const visitMonitor = async () => {
       );
 
       try {
-        const initialUrl =
-          "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+        const initialUrl = CALL_MAINTENANCE_URL;
         const r = (await GM_fetch(initialUrl, {
           method: "GET",
         })) as Response & {
@@ -1485,10 +1514,9 @@ export const visitMonitor = async () => {
   async function getOfficeIds(): Promise<string> {
     if (officeIdString) return officeIdString;
 
-    const r = (await GM_fetch(
-      "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx",
-      { method: "GET" }
-    )) as Response & { rawBody: Blob };
+    const r = (await GM_fetch(CALL_MAINTENANCE_URL, {
+      method: "GET",
+    })) as Response & { rawBody: Blob };
     const textResult = await r.rawBody.text();
     const getParam = (name: string) =>
       textResult.match(
@@ -1606,9 +1634,7 @@ export const visitMonitor = async () => {
     const toDate = `${yyyy}-${mm}-${dd} 23:59:00`;
     const time = Date.now();
 
-    const url = new URL(
-      "https://app.hhaexchange.com/ENT2507010000/Call/CallReportsXSLT_ns.aspx"
-    );
+    const url = new URL(CALL_REPORTS_URL);
     const params = url.searchParams;
     params.set("CallType", callType.toString());
     params.set("VendorID", "469"); // This might need to be dynamic later
@@ -1649,7 +1675,7 @@ export const visitMonitor = async () => {
   ): Promise<TrackedData> {
     const apiParams = await apiParamProvider.get();
 
-    const url = `https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx?VisitStatus=13&s=${apiParams.sessionID}&Version=${apiParams.version}&MinorVersion=${apiParams.minorVersion}&AppVersion=${apiParams.appVersion}`;
+    const url = `${CALL_MAINTENANCE_URL}?VisitStatus=13&s=${apiParams.sessionID}&Version=${apiParams.version}&MinorVersion=${apiParams.minorVersion}&AppVersion=${apiParams.appVersion}`;
 
     const today = new Date();
     // ASP.NET 页面期望 MM/dd/yyyy 格式
@@ -1730,17 +1756,14 @@ export const visitMonitor = async () => {
     );
     formData.append(
       "ctl00$ContentPlaceHolder1$hdnServicePath",
-      "/HHAWSENT2507010000/"
+      HHAWS_BASE_PATH
     );
     formData.append("ctl00$ContentPlaceHolder1$hdnAppName", apiParams.appName);
     formData.append(
       "ctl00$ContentPlaceHolder1$hdnAppSecret",
       apiParams.appSecret
     );
-    formData.append(
-      "ctl00$ContentPlaceHolder1$hdnWSURL",
-      "/HHAWSENT2507010000/"
-    );
+    formData.append("ctl00$ContentPlaceHolder1$hdnWSURL", HHAWS_BASE_PATH);
     formData.append(
       "ctl00$ContentPlaceHolder1$hdnSessionId",
       apiParams.sessionID
@@ -1782,7 +1805,7 @@ export const visitMonitor = async () => {
     officeIdList.forEach((id) => formData.append("selectItem", id));
     formData.append(
       "ctl00$ContentPlaceHolder1$divOffice$hdnWebURL",
-      "/HHAWSENT2507010000/Office.asmx"
+      `${HHAWS_BASE_PATH}Office.asmx`
     );
     formData.append(
       "ctl00$ContentPlaceHolder1$divOffice$hdnCallbackFunction",
@@ -3127,7 +3150,7 @@ export const visitMonitor = async () => {
 
   /*     try {
             let CallMaintenance_ns =
-                "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+                CALL_MAINTENANCE_URL;
             const r = (await GM_fetch(CallMaintenance_ns, {
                 method: "GET",
             })) as Response & { rawBody: Blob };

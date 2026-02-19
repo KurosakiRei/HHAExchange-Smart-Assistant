@@ -63,8 +63,31 @@ export type ParamSource = "app" | "reports" | "auto";
 // Constants
 // ============================================================================
 
-const CALL_MAINTENANCE_URL =
-  "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+/**
+ * 动态检测当前 HHAExchange 租户路径前缀（如 "ENT2602010000"）
+ * 优先从 window.location.pathname 提取，其次从页面加载的 <script> src 提取
+ * 避免因服务器版本升级导致的硬编码路径失效
+ */
+function detectTenantBaseUrl(): string {
+  const pathMatch = window.location.pathname.match(/\/(ENT\d+)\//);
+  if (pathMatch) return `https://app.hhaexchange.com/${pathMatch[1]}`;
+
+  const scriptSrc = Array.from(document.scripts).find((s) =>
+    s.src.includes("/ENT")
+  )?.src;
+  const scriptMatch = scriptSrc?.match(/\/(ENT\d+)\//);
+  if (scriptMatch) return `https://app.hhaexchange.com/${scriptMatch[1]}`;
+
+  // Fallback: try extracting from current URL (for pages where ENT is not in path)
+  const hrefMatch = window.location.href.match(/\/(ENT\d+)\//);
+  if (hrefMatch) return `https://app.hhaexchange.com/${hrefMatch[1]}`;
+
+  console.warn(
+    "[ApiParamProvider] Could not detect tenant prefix from URL, using fallback"
+  );
+  // Last resort fallback - will be updated next time URL changes
+  return "https://app.hhaexchange.com/ENT2602010000";
+}
 
 const CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes cache
 
@@ -117,6 +140,14 @@ export class ApiParamProvider {
    */
   public static resetInstance(): void {
     ApiParamProvider.instance = null as any;
+  }
+
+  /**
+   * 获取当前 HHAExchange 租户 Base URL（供其他模块复用）
+   * 例如: "https://app.hhaexchange.com/ENT2602010000"
+   */
+  public static getTenantBaseUrl(): string {
+    return detectTenantBaseUrl();
   }
 
   // ==========================================================================
@@ -269,7 +300,12 @@ export class ApiParamProvider {
    * Fetch API parameters from app.hhaexchange.com CallMaintenance page
    */
   private async fetchFromAppPage(): Promise<FullApiParams> {
-    const r = (await GM_fetch(CALL_MAINTENANCE_URL, {
+    const callMaintenanceUrl = `${detectTenantBaseUrl()}/Call/CallMaintenance_ns.aspx`;
+    console.log(
+      "[ApiParamProvider] fetchFromAppPage using URL:",
+      callMaintenanceUrl
+    );
+    const r = (await GM_fetch(callMaintenanceUrl, {
       method: "GET",
     })) as Response & {
       rawBody: Blob;

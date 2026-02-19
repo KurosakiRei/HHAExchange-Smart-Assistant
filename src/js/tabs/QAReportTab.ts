@@ -101,9 +101,10 @@ const STORAGE_KEYS = {
   LAST_COORDINATOR: "hha_qa_report_last_coordinator",
 };
 
-// Story 9.3 & 9.5: 病人搜索 API URL
+// Story 9.3 & 9.5: 病人搜索 API URL - 使用动态租户前缀
+const _TENANT_BASE_URL = ApiParamProvider.getTenantBaseUrl();
 const PATIENT_SEARCH_BY_NUMBER_URL =
-  "https://app.hhaexchange.com/ENT2507010000/Patient/PatientSearchXSLT_ns.aspx" +
+  `${_TENANT_BASE_URL}/Patient/PatientSearchXSLT_ns.aspx` +
   "?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1" +
   "&Source=-1&PatientNumber={ADMISSION_ID}&HomePhone=";
 
@@ -112,8 +113,7 @@ const PATIENT_SEARCH_PARAMS =
   "&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
 
 // Story 9.5: 病人详情页 URL
-const PATIENT_PROFILE_URL_TEMPLATE =
-  "https://app.hhaexchange.com/ENT2507010000/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}";
+const PATIENT_PROFILE_URL_TEMPLATE = `${_TENANT_BASE_URL}/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}`;
 
 const PRIORITY_COLORS: Record<QAReportItem["priority"], string> = {
   critical: "#dc3545", // 从未联系 - 深红
@@ -1659,7 +1659,7 @@ export class QAReportTab extends BaseTab {
     document.querySelector(".qa-note-modal-overlay")?.remove();
 
     // Default QA note template
-    const defaultNote = `Quality call made to pt, confirmed pt has not been admitted to hospital or rehab within the last 30 days. Pt is satisfied with current aide and or hours OR pt is interested in increase`;
+    const defaultNote = `Quality call made to pt, confirmed pt has not been admitted to hospital or rehab within the last 30 days. Pt is satisfied with current aide and or hours`;
 
     // Create modal overlay
     const overlay = document.createElement("div");

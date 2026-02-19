@@ -1,4 +1,21 @@
 import GM_fetch from "@trim21/gm-fetch";
+
+/**
+ * 动态检测当前 HHAExchange 租户路径前缀（如 "ENT2602010000"）
+ * 避免因服务器版本升级导致硬缀码路径失效
+ */
+function detectTenantBaseUrl(): string {
+  const pathMatch = window.location.pathname.match(/\/(ENT\d+)\//);
+  if (pathMatch) return `https://app.hhaexchange.com/${pathMatch[1]}`;
+  const scriptSrc = Array.from(document.scripts).find((s) =>
+    s.src.includes("/ENT")
+  )?.src;
+  const scriptMatch = scriptSrc?.match(/\/(ENT\d+)\//);
+  if (scriptMatch) return `https://app.hhaexchange.com/${scriptMatch[1]}`;
+  const hrefMatch = window.location.href.match(/\/(ENT\d+)\//);
+  if (hrefMatch) return `https://app.hhaexchange.com/${hrefMatch[1]}`;
+  return "https://app.hhaexchange.com/ENT2602010000"; // fallback
+}
 import {
   TOAST_CONTAINER_SELECTOR,
   TOAST_TOAST_SELECTOR,
@@ -53,19 +70,19 @@ const NON_ACTIVE_STATUSES: readonly PatientNonActiveStatus[] = [
 
 // ==================== 配置区域 ====================
 
-const AIDE_SEARCH_URL: string =
-  "https://app.hhaexchange.com/ENT2507010000/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=";
+const _TENANT_BASE_URL = detectTenantBaseUrl();
+
+/** Aide (护工) 搜索 URL - 使用动态租户前缀 */
+const AIDE_SEARCH_URL: string = `${_TENANT_BASE_URL}/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=`;
 const AIDE_SEARCH_PARAMS: string =
   "&LastName=&Type=-1&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=";
-const AIDE_PROFILE_URL_TEMPLATE: string =
-  "https://app.hhaexchange.com/ENT2507010000/Aide/Aide_ns.aspx?AideId={ID}";
+const AIDE_PROFILE_URL_TEMPLATE: string = `${_TENANT_BASE_URL}/Aide/Aide_ns.aspx?AideId={ID}`;
 
-const PATIENT_SEARCH_URL: string =
-  "https://app.hhaexchange.com/ENT2507010000/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=";
+/** Patient (病人) 搜索 URL - 使用动态租户前缀 */
+const PATIENT_SEARCH_URL: string = `${_TENANT_BASE_URL}/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=`;
 const PATIENT_SEARCH_PARAMS: string =
   "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-1&DisciplineID=0&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
-const PATIENT_PROFILE_URL_TEMPLATE: string =
-  "https://app.hhaexchange.com/ENT2507010000/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}";
+const PATIENT_PROFILE_URL_TEMPLATE: string = `${_TENANT_BASE_URL}/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}`;
 
 // ==================== 状态变量 ====================
 
