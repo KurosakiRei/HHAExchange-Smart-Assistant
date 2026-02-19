@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.9.5
+// @version             3.9.6
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -1549,7 +1549,7 @@ const copyAttachmentToDescrp = () => {
 
 ;// ./src/js/NewMessageHandler.ts
 
-const createNewQA = async () => await messageHandler("Quality Assurance", "Quality call made to pt, confirmed pt has not been admitted to hospital or rehab within the last 30 days. Pt is satisfied with current aide and or hours OR pt is interested in increase");
+const createNewQA = async () => await messageHandler("Quality Assurance", "Quality call made to pt, confirmed pt has not been admitted to hospital or rehab within the last 30 days. Pt is satisfied with current aide and or hours");
 const createWelcomeCall = async () => {
     await messageHandler("Welcome call", `I spoke to PT ${$(newMessagePatientNameSelecotr).val()} and introduced myself and Always Home Care. PT. speaks Mandarin/Fuzhounese, no pets, no smoking/drinking, use cane and the address/schedule was confirmed.`);
 };
@@ -2404,6 +2404,23 @@ function getScheduleTime() {
 
 ;// ./src/js/IncomingCallHandler.ts
 
+/**
+ * 动态检测当前 HHAExchange 租户路径前缀（如 "ENT2602010000"）
+ * 避免因服务器版本升级导致硬缀码路径失效
+ */
+function detectTenantBaseUrl() {
+    const pathMatch = window.location.pathname.match(/\/(ENT\d+)\//);
+    if (pathMatch)
+        return `https://app.hhaexchange.com/${pathMatch[1]}`;
+    const scriptSrc = Array.from(document.scripts).find((s) => s.src.includes("/ENT"))?.src;
+    const scriptMatch = scriptSrc?.match(/\/(ENT\d+)\//);
+    if (scriptMatch)
+        return `https://app.hhaexchange.com/${scriptMatch[1]}`;
+    const hrefMatch = window.location.href.match(/\/(ENT\d+)\//);
+    if (hrefMatch)
+        return `https://app.hhaexchange.com/${hrefMatch[1]}`;
+    return "https://app.hhaexchange.com/ENT2602010000"; // fallback
+}
 
 // ==================== 常量定义 ====================
 /** Active 状态列表 (包括 Hospitalized，因为需要同等关注) */
@@ -2418,12 +2435,15 @@ const NON_ACTIVE_STATUSES = [
     "Waiting",
 ];
 // ==================== 配置区域 ====================
-const AIDE_SEARCH_URL = "https://app.hhaexchange.com/ENT2507010000/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=";
+const _TENANT_BASE_URL = detectTenantBaseUrl();
+/** Aide (护工) 搜索 URL - 使用动态租户前缀 */
+const AIDE_SEARCH_URL = `${_TENANT_BASE_URL}/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=`;
 const AIDE_SEARCH_PARAMS = "&LastName=&Type=-1&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=";
-const AIDE_PROFILE_URL_TEMPLATE = "https://app.hhaexchange.com/ENT2507010000/Aide/Aide_ns.aspx?AideId={ID}";
-const PATIENT_SEARCH_URL = "https://app.hhaexchange.com/ENT2507010000/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=";
+const AIDE_PROFILE_URL_TEMPLATE = `${_TENANT_BASE_URL}/Aide/Aide_ns.aspx?AideId={ID}`;
+/** Patient (病人) 搜索 URL - 使用动态租户前缀 */
+const PATIENT_SEARCH_URL = `${_TENANT_BASE_URL}/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=`;
 const PATIENT_SEARCH_PARAMS = "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-1&DisciplineID=0&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
-const PATIENT_PROFILE_URL_TEMPLATE = "https://app.hhaexchange.com/ENT2507010000/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}";
+const PATIENT_PROFILE_URL_TEMPLATE = `${_TENANT_BASE_URL}/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}`;
 // ==================== 状态变量 ====================
 let lastCallWasIncoming = false;
 /** 当前搜索的电话号码（用于高亮显示） */
@@ -3627,6 +3647,24 @@ const highlight2Call = () => {
 
 ;// ./src/js/VisitMonitor.ts
 
+/**
+ * 动态检测当前 HHAExchange 租户路径前缀（如 "ENT2602010000"）
+ * 避免因服务器版本升级导致硬缀码路径失效触发强制登出
+ */
+function VisitMonitor_detectTenantBaseUrl() {
+    const pathMatch = window.location.pathname.match(/\/(ENT\d+)\//);
+    if (pathMatch)
+        return `https://app.hhaexchange.com/${pathMatch[1]}`;
+    const scriptSrc = Array.from(document.scripts).find((s) => s.src.includes("/ENT"))?.src;
+    const scriptMatch = scriptSrc?.match(/\/(ENT\d+)\//);
+    if (scriptMatch)
+        return `https://app.hhaexchange.com/${scriptMatch[1]}`;
+    const hrefMatch = window.location.href.match(/\/(ENT\d+)\//);
+    if (hrefMatch)
+        return `https://app.hhaexchange.com/${hrefMatch[1]}`;
+    console.warn("[VisitMonitor] Could not detect tenant prefix, using fallback");
+    return "https://app.hhaexchange.com/ENT2602010000";
+}
 const visitMonitor = async () => {
     // --- FIX 1: 三层防御机制，彻底杜绝脚本重复执行 ---
     // 第 1 层：检查是否在iframe中运行
@@ -3651,6 +3689,13 @@ const visitMonitor = async () => {
     window.top.visitMonitorHasRun = true;
     // --- 状态与常量 ---
     const STORAGE_KEY = "hha_coordinator_tracker_list";
+    // 动态检测当前 HHAExchange 租户路径前缀，避免因服务器版本升级导致旧路径失效触发强制登出
+    const TENANT_BASE_URL = VisitMonitor_detectTenantBaseUrl();
+    const CALL_MAINTENANCE_URL = `${TENANT_BASE_URL}/Call/CallMaintenance_ns.aspx`;
+    const CALL_REPORTS_URL = `${TENANT_BASE_URL}/Call/CallReportsXSLT_ns.aspx`;
+    // HHAWS 服务路径：与 ENT 前缀相同的版本号，但用于 .asmx Web Service
+    const HHAWS_BASE_PATH = `/HHAWS${TENANT_BASE_URL.replace("https://app.hhaexchange.com/", "")}/`;
+    console.log("[VisitMonitor] Tenant URL:", TENANT_BASE_URL);
     let trackedCoordinators = [];
     let allCoordinators = [];
     let tempTrackedIds = new Set();
@@ -3977,8 +4022,9 @@ const visitMonitor = async () => {
             if (this.params)
                 return this.params;
             console.log("Fetching API parameters for the first time...");
-            const url = "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
-            const r = (await GM_fetch(url, { method: "GET" }));
+            const r = (await GM_fetch(CALL_MAINTENANCE_URL, {
+                method: "GET",
+            }));
             const text = await r.rawBody.text();
             /**
              * 辅助函数：使用正则表达式从大段文本中精确提取指定键的值
@@ -4189,7 +4235,7 @@ const visitMonitor = async () => {
     }
     async function fetchAllCoordinators() {
         console.log("Step 1: Fetching initial params...");
-        const initialUrl = "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+        const initialUrl = CALL_MAINTENANCE_URL;
         const r = (await GM_fetch(initialUrl, { method: "GET" }));
         const textResult = await r.rawBody.text();
         const getParam = (name) => textResult.match(new RegExp(`var\\s+${name}\\s*=\\s*['"]([^'"]+)['"];`))?.[1];
@@ -4266,7 +4312,7 @@ const visitMonitor = async () => {
         if (!params.userID || !params.appSecret) {
             console.log("[VisitMonitor] getMessageApiParams: page params missing, fetching from app.hhaexchange.com...");
             try {
-                const initialUrl = "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+                const initialUrl = CALL_MAINTENANCE_URL;
                 const r = (await GM_fetch(initialUrl, {
                     method: "GET",
                 }));
@@ -4664,7 +4710,9 @@ const visitMonitor = async () => {
     async function getOfficeIds() {
         if (officeIdString)
             return officeIdString;
-        const r = (await GM_fetch("https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx", { method: "GET" }));
+        const r = (await GM_fetch(CALL_MAINTENANCE_URL, {
+            method: "GET",
+        }));
         const textResult = await r.rawBody.text();
         const getParam = (name) => textResult.match(new RegExp(`var\\s+${name}\\s*=\\s*['"]([^'"]+)['"];`))?.[1];
         const apiParams = {
@@ -4760,7 +4808,7 @@ const visitMonitor = async () => {
         const fromDate = `${yyyy}-${mm}-${dd} 00:00:00`;
         const toDate = `${yyyy}-${mm}-${dd} 23:59:00`;
         const time = Date.now();
-        const url = new URL("https://app.hhaexchange.com/ENT2507010000/Call/CallReportsXSLT_ns.aspx");
+        const url = new URL(CALL_REPORTS_URL);
         const params = url.searchParams;
         params.set("CallType", callType.toString());
         params.set("VendorID", "469"); // This might need to be dynamic later
@@ -4794,7 +4842,7 @@ const visitMonitor = async () => {
      */
     async function fetchAnomalyReport(coordinatorId) {
         const apiParams = await apiParamProvider.get();
-        const url = `https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx?VisitStatus=13&s=${apiParams.sessionID}&Version=${apiParams.version}&MinorVersion=${apiParams.minorVersion}&AppVersion=${apiParams.appVersion}`;
+        const url = `${CALL_MAINTENANCE_URL}?VisitStatus=13&s=${apiParams.sessionID}&Version=${apiParams.version}&MinorVersion=${apiParams.minorVersion}&AppVersion=${apiParams.appVersion}`;
         const today = new Date();
         // ASP.NET 页面期望 MM/dd/yyyy 格式
         const toDate = `${String(today.getMonth() + 1).padStart(2, "0")}/${String(today.getDate()).padStart(2, "0")}/${today.getFullYear()}`;
@@ -4831,10 +4879,10 @@ const visitMonitor = async () => {
         formData.append("ctl00$ContentPlaceHolder1$hdnAppVersion", apiParams.appVersion);
         formData.append("ctl00$ContentPlaceHolder1$hdnVersion", apiParams.version);
         formData.append("ctl00$ContentPlaceHolder1$hdnMinorVersion", apiParams.minorVersion);
-        formData.append("ctl00$ContentPlaceHolder1$hdnServicePath", "/HHAWSENT2507010000/");
+        formData.append("ctl00$ContentPlaceHolder1$hdnServicePath", HHAWS_BASE_PATH);
         formData.append("ctl00$ContentPlaceHolder1$hdnAppName", apiParams.appName);
         formData.append("ctl00$ContentPlaceHolder1$hdnAppSecret", apiParams.appSecret);
-        formData.append("ctl00$ContentPlaceHolder1$hdnWSURL", "/HHAWSENT2507010000/");
+        formData.append("ctl00$ContentPlaceHolder1$hdnWSURL", HHAWS_BASE_PATH);
         formData.append("ctl00$ContentPlaceHolder1$hdnSessionId", apiParams.sessionID);
         formData.append("ctl00$ContentPlaceHolder1$hdnVendorID", apiParams.vendorID);
         // 静态参数 (完全复制)
@@ -4858,7 +4906,7 @@ const visitMonitor = async () => {
         // 对于有多个同名键的情况，需要多次 append
         const officeIdList = officeIds.split(",");
         officeIdList.forEach((id) => formData.append("selectItem", id));
-        formData.append("ctl00$ContentPlaceHolder1$divOffice$hdnWebURL", "/HHAWSENT2507010000/Office.asmx");
+        formData.append("ctl00$ContentPlaceHolder1$divOffice$hdnWebURL", `${HHAWS_BASE_PATH}Office.asmx`);
         formData.append("ctl00$ContentPlaceHolder1$divOffice$hdnCallbackFunction", "UpdateOfficeData();");
         formData.append("ctl00$ContentPlaceHolder1$divOffice$hdnSingleSelect", "false");
         formData.append("ctl00$ContentPlaceHolder1$divOffice$hdnIsDisable", "false");
@@ -5895,7 +5943,7 @@ const visitMonitor = async () => {
     initialize();
     /*     try {
               let CallMaintenance_ns =
-                  "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+                  CALL_MAINTENANCE_URL;
               const r = (await GM_fetch(CallMaintenance_ns, {
                   method: "GET",
               })) as Response & { rawBody: Blob };
@@ -7344,7 +7392,27 @@ class StatusTrackingTab extends BaseTab {
 // ============================================================================
 // Constants
 // ============================================================================
-const CALL_MAINTENANCE_URL = "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+/**
+ * 动态检测当前 HHAExchange 租户路径前缀（如 "ENT2602010000"）
+ * 优先从 window.location.pathname 提取，其次从页面加载的 <script> src 提取
+ * 避免因服务器版本升级导致的硬编码路径失效
+ */
+function ApiParamProvider_detectTenantBaseUrl() {
+    const pathMatch = window.location.pathname.match(/\/(ENT\d+)\//);
+    if (pathMatch)
+        return `https://app.hhaexchange.com/${pathMatch[1]}`;
+    const scriptSrc = Array.from(document.scripts).find((s) => s.src.includes("/ENT"))?.src;
+    const scriptMatch = scriptSrc?.match(/\/(ENT\d+)\//);
+    if (scriptMatch)
+        return `https://app.hhaexchange.com/${scriptMatch[1]}`;
+    // Fallback: try extracting from current URL (for pages where ENT is not in path)
+    const hrefMatch = window.location.href.match(/\/(ENT\d+)\//);
+    if (hrefMatch)
+        return `https://app.hhaexchange.com/${hrefMatch[1]}`;
+    console.warn("[ApiParamProvider] Could not detect tenant prefix from URL, using fallback");
+    // Last resort fallback - will be updated next time URL changes
+    return "https://app.hhaexchange.com/ENT2602010000";
+}
 const CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes cache
 // ============================================================================
 // ApiParamProvider Class (Singleton)
@@ -7389,6 +7457,13 @@ class ApiParamProvider {
      */
     static resetInstance() {
         ApiParamProvider.instance = null;
+    }
+    /**
+     * 获取当前 HHAExchange 租户 Base URL（供其他模块复用）
+     * 例如: "https://app.hhaexchange.com/ENT2602010000"
+     */
+    static getTenantBaseUrl() {
+        return ApiParamProvider_detectTenantBaseUrl();
     }
     // ==========================================================================
     // Public Methods
@@ -7516,7 +7591,9 @@ class ApiParamProvider {
      * Fetch API parameters from app.hhaexchange.com CallMaintenance page
      */
     async fetchFromAppPage() {
-        const r = (await GM_fetch(CALL_MAINTENANCE_URL, {
+        const callMaintenanceUrl = `${ApiParamProvider_detectTenantBaseUrl()}/Call/CallMaintenance_ns.aspx`;
+        console.log("[ApiParamProvider] fetchFromAppPage using URL:", callMaintenanceUrl);
+        const r = (await GM_fetch(callMaintenanceUrl, {
             method: "GET",
         }));
         const text = await r.rawBody.text();
@@ -7621,14 +7698,15 @@ const QAReportTab_STORAGE_KEYS = {
     VIEW_MODE: "hha_qa_report_view_mode",
     LAST_COORDINATOR: "hha_qa_report_last_coordinator",
 };
-// Story 9.3 & 9.5: 病人搜索 API URL
-const PATIENT_SEARCH_BY_NUMBER_URL = "https://app.hhaexchange.com/ENT2507010000/Patient/PatientSearchXSLT_ns.aspx" +
+// Story 9.3 & 9.5: 病人搜索 API URL - 使用动态租户前缀
+const QAReportTab_TENANT_BASE_URL = ApiParamProvider.getTenantBaseUrl();
+const PATIENT_SEARCH_BY_NUMBER_URL = `${QAReportTab_TENANT_BASE_URL}/Patient/PatientSearchXSLT_ns.aspx` +
     "?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1" +
     "&Source=-1&PatientNumber={ADMISSION_ID}&HomePhone=";
 const QAReportTab_PATIENT_SEARCH_PARAMS = "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-1&DisciplineID=0" +
     "&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
 // Story 9.5: 病人详情页 URL
-const QAReportTab_PATIENT_PROFILE_URL_TEMPLATE = "https://app.hhaexchange.com/ENT2507010000/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}";
+const QAReportTab_PATIENT_PROFILE_URL_TEMPLATE = `${QAReportTab_TENANT_BASE_URL}/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}`;
 const PRIORITY_COLORS = {
     critical: "#dc3545", // 从未联系 - 深红
     high: "#e74c3c", // >120天 - 红
@@ -8858,7 +8936,7 @@ class QAReportTab extends BaseTab {
         // Remove existing modal if any
         document.querySelector(".qa-note-modal-overlay")?.remove();
         // Default QA note template
-        const defaultNote = `Quality call made to pt, confirmed pt has not been admitted to hospital or rehab within the last 30 days. Pt is satisfied with current aide and or hours OR pt is interested in increase`;
+        const defaultNote = `Quality call made to pt, confirmed pt has not been admitted to hospital or rehab within the last 30 days. Pt is satisfied with current aide and or hours`;
         // Create modal overlay
         const overlay = document.createElement("div");
         overlay.className = "qa-note-modal-overlay";
@@ -13880,7 +13958,7 @@ OutlookAdapter.controllerInjected = false;
 OutlookAdapter.statusToast = null;
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.9.5"};
+const package_namespaceObject = {"rE":"3.9.6"};
 ;// ./src/index.ts
 
 
