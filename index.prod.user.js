@@ -5846,7 +5846,7 @@ const visitMonitor = async () => {
         }
         // --- 4. 组装：将头部、内容和表格组装成完整的 Popover HTML ---
         popover.innerHTML = `
-        <div class="popover-header"><h4>📋 详情列表（最新10条） <span class="record-count">(${data.count} 条记录)</span></h4><button class="popover-close-btn">&times;</button></div>
+        <div class="popover-header"><h4>📋 详情列表${callType === "anomaly" ? "（最新10条）" : ""}</h4><button class="popover-close-btn">&times;</button></div>
             <div class="popover-content"><table class="popover-table">${tableHtml}</table></div>
         `;
         // --- 5. 注入与激活 ---
