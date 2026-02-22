@@ -361,8 +361,7 @@ export const visitMonitor = async () => {
         GM_setValue(this.CACHE_KEY, jsonStr);
         this.lastKnownTimestamp = cacheData.timestamp;
         console.log(
-          `[TabSyncManager] Cache updated by Tab ${
-            this.tabId
+          `[TabSyncManager] Cache updated by Tab ${this.tabId
           }, size: ${sizeKB.toFixed(1)}KB (cross-domain shared)`
         );
       } catch (e) {
@@ -548,8 +547,8 @@ export const visitMonitor = async () => {
         hasCachedData: !!this.getCachedData(),
         cachedDataAge: this.getCachedData()?.timestamp
           ? `${((Date.now() - this.getCachedData()!.timestamp) / 1000).toFixed(
-              1
-            )}s`
+            1
+          )}s`
           : "N/A",
         crossOriginPolling: !!this.pollIntervalId,
         lastKnownTimestamp: this.lastKnownTimestamp,
@@ -564,11 +563,11 @@ export const visitMonitor = async () => {
   const apiParamProvider = {
     params: null as
       | (ApiParams & {
-          sessionID: string;
-          viewState: string;
-          viewStateGenerator: string;
-          vendorID: string;
-        })
+        sessionID: string;
+        viewState: string;
+        viewStateGenerator: string;
+        vendorID: string;
+      })
       | null,
 
     /**
@@ -1150,9 +1149,9 @@ export const visitMonitor = async () => {
         await getMessageContractPayers();
       const payerIds = payers
         ? payers
-            .split(",")
-            .map(Number)
-            .filter((n) => n > 0)
+          .split(",")
+          .map(Number)
+          .filter((n) => n > 0)
         : [];
 
       console.log(
@@ -1530,9 +1529,8 @@ export const visitMonitor = async () => {
       minorVersion: getParam("gnMinorVersion")!,
       appName: getParam("gnApNm")!,
     };
-    const officeUrl = `https://app.hhaexchange.com/HHAWS${
-      apiParams.appVersion
-    }${apiParams.version.replace(".", "")}010000/Office.asmx/GetAllOffices`;
+    const officeUrl = `https://app.hhaexchange.com/HHAWS${apiParams.appVersion
+      }${apiParams.version.replace(".", "")}010000/Office.asmx/GetAllOffices`;
     const officePayload = {
       ...apiParams,
       IPAddress: "127.0.0.1",
@@ -2171,35 +2169,27 @@ export const visitMonitor = async () => {
         const messageStatus = messageCount > 0 ? "status-error" : "status-ok";
 
         // Add disabled class for zero-count status icons
-        const clockInClass = `status-icon ${clockInStatus}${
-          clockInCount === 0 ? " status-disabled" : ""
-        }`;
-        const clockOutClass = `status-icon ${clockOutStatus}${
-          clockOutCount === 0 ? " status-disabled" : ""
-        }`;
-        const anomalyClass = `status-icon ${anomalyStatus}${
-          anomalyCount === 0 ? " status-disabled" : ""
-        }`;
-        const messageClass = `status-icon ${messageStatus}${
-          messageCount === 0 ? " status-disabled" : ""
-        }`;
+        const clockInClass = `status-icon ${clockInStatus}${clockInCount === 0 ? " status-disabled" : ""
+          }`;
+        const clockOutClass = `status-icon ${clockOutStatus}${clockOutCount === 0 ? " status-disabled" : ""
+          }`;
+        const anomalyClass = `status-icon ${anomalyStatus}${anomalyCount === 0 ? " status-disabled" : ""
+          }`;
+        const messageClass = `status-icon ${messageStatus}${messageCount === 0 ? " status-disabled" : ""
+          }`;
 
         return `
                 <tr>
                     <td>${index + 1}</td>
                     <td class="col-coordinator">${coordinator.name}</td>
-                    <td><div class="${clockInClass}" data-coordinator-id="${
-          coordinator.id
-        }" data-call-type="2">${clockInCount}</div></td>
-                    <td><div class="${clockOutClass}" data-coordinator-id="${
-          coordinator.id
-        }" data-call-type="3">${clockOutCount}</div></td>
-                    <td><div class="${anomalyClass}" data-coordinator-id="${
-          coordinator.id
-        }" data-call-type="anomaly">${anomalyCount}</div></td>
-                    <td><div class="${messageClass}" data-coordinator-id="${
-          coordinator.id
-        }" data-call-type="message">${messageCount}</div></td>
+                    <td><div class="${clockInClass}" data-coordinator-id="${coordinator.id
+          }" data-call-type="2">${clockInCount}</div></td>
+                    <td><div class="${clockOutClass}" data-coordinator-id="${coordinator.id
+          }" data-call-type="3">${clockOutCount}</div></td>
+                    <td><div class="${anomalyClass}" data-coordinator-id="${coordinator.id
+          }" data-call-type="anomaly">${anomalyCount}</div></td>
+                    <td><div class="${messageClass}" data-coordinator-id="${coordinator.id
+          }" data-call-type="message">${messageCount}</div></td>
                 </tr>`;
       })
       .join("");
@@ -2213,23 +2203,22 @@ export const visitMonitor = async () => {
                 <thead><tr><th class="col-coordinator">所有可用 Coordinator</th><th>操作</th></tr></thead>
                 <tbody id="editing-table-body">
                     ${allCoordinators
-                      .map(
-                        (c) => `
+        .map(
+          (c) => `
                         <tr data-id="${c.id}">
                             <td class="col-coordinator">${c.name}</td>
                             <td class="edit-list-actions">
-                                <button class="${
-                                  tempTrackedIds.has(c.id)
-                                    ? "remove-btn"
-                                    : "add-btn"
-                                }" data-id="${c.id}" data-name="${c.name}">
+                                <button class="${tempTrackedIds.has(c.id)
+              ? "remove-btn"
+              : "add-btn"
+            }" data-id="${c.id}" data-name="${c.name}">
                                     ${tempTrackedIds.has(c.id) ? "−" : "+"}
                                 </button>
                             </td>
                         </tr>
                     `
-                      )
-                      .join("")}
+        )
+        .join("")}
                 </tbody>
             </table>`;
     editingContent.innerHTML = tableHtml;
@@ -2248,8 +2237,7 @@ export const visitMonitor = async () => {
     if (cached) {
       const decision = tabSyncManager.shouldFetchFresh(cached.timestamp);
       console.log(
-        `[Story2] Cache decision: ${decision}, age: ${
-          Date.now() - cached.timestamp
+        `[Story2] Cache decision: ${decision}, age: ${Date.now() - cached.timestamp
         }ms`
       );
 
@@ -2815,7 +2803,7 @@ export const visitMonitor = async () => {
 
     // --- 4. 组装：将头部、内容和表格组装成完整的 Popover HTML ---
     popover.innerHTML = `
-        <div class="popover-header"><h4>📋 详情列表（最新10条） <span class="record-count">(${data.count} 条记录)</span></h4><button class="popover-close-btn">&times;</button></div>
+        <div class="popover-header"><h4>📋 详情列表${callType === "anomaly" ? "（最新10条）" : ""}</h4><button class="popover-close-btn">&times;</button></div>
             <div class="popover-content"><table class="popover-table">${tableHtml}</table></div>
         `;
 
@@ -2923,20 +2911,18 @@ export const visitMonitor = async () => {
         <div style="font-weight: bold;">Reason</div>
         <div>${reason}</div>
         
-        ${
-          caregiver
-            ? `<div style="font-weight: bold;">Caregiver</div><div>${caregiver}</div>`
-            : ""
-        }
+        ${caregiver
+        ? `<div style="font-weight: bold;">Caregiver</div><div>${caregiver}</div>`
+        : ""
+      }
         
         <div style="font-weight: bold;">Priority</div>
         <div>${priority}</div>
         
-        ${
-          patient
-            ? `<div style="font-weight: bold;">Patient</div><div>${patient}</div>`
-            : ""
-        }
+        ${patient
+        ? `<div style="font-weight: bold;">Patient</div><div>${patient}</div>`
+        : ""
+      }
       </div>
       
       <div style="margin-top: 20px;">
