@@ -492,26 +492,35 @@ function positionPanelRelativeToHandle(
  * 3. Resume cleaning progress display
  */
 async function checkAndResumeCleaningTasks(): Promise<void> {
-  // Wait loop to detect page type (Visit Detail OR Prebilling List)
-  // We need to wait because elements might not be immediately available on document.ready
+  // Wait loop to detect page type
+  // Priority order: URL-based checks first (fast & reliable), DOM fallback for detail pages
   const detectPageType = async (
     retries = 20
-  ): Promise<"DETAIL" | "LIST" | "UNKNOWN"> => {
-    // 1. Check for Visit Detail Page specific element (Dropdowns or Headers)
+  ): Promise<"DETAIL" | "LIST" | "CALL_MAINTENANCE" | "UNKNOWN"> => {
+    const url = window.location.href;
+
+    // 1. Check for Call Maintenance page via URL (fast, reliable - no DOM needed)
+    //    IMPORTANT: Must check BEFORE DETAIL, as CallMaintenance URL does NOT contain
+    //    visitReasonSelector elements, so it would fall to UNKNOWN otherwise.
+    if (url.includes("CallMaintenance_ns.aspx")) {
+      return "CALL_MAINTENANCE";
+    }
+
+    // 2. Check for Visit Detail Page specific element (Dropdowns or Headers)
     if (
       $(visitReasonSelector).length > 0 ||
-      window.location.href.includes("NonSkilledVisitInfo_ns.aspx")
+      url.includes("NonSkilledVisitInfo_ns.aspx")
     ) {
       return "DETAIL";
     }
 
-    // 2. Check for Prebilling List specific element (Container or Search Button)
-    // Note: Prebilling page also has a search button, Detail page does NOT
+    // 3. Check for Prebilling List specific element (Container or Search Button)
     if (
       $("#ctl00_ContentPlaceHolder1_divPrebillingReportInternalScroll").length >
         0 ||
       $(prebillingSearchButtonSelector).length > 0 ||
-      $("#prebillingSelector").length > 0
+      $("#prebillingSelector").length > 0 ||
+      url.includes("PrebillingReportInternal_ns.aspx")
     ) {
       return "LIST";
     }
@@ -600,23 +609,20 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
 
       return;
     }
-  } else if (pageType === "LIST") {
-    // 不在详情页，检查是否有待恢复的任务（在 Prebilling 或 Call Maintenance 页面）
+  } else if (pageType === "LIST" || pageType === "CALL_MAINTENANCE") {
+    // 在 Prebilling 或 Call Maintenance 列表页，检查是否有待恢复的任务
+    // Note: Call Maintenance 页面刷新后需要从这里恢复 duplicate call 清理
     const hasPendingTasks = await CleaningController.checkPendingTasks();
 
     if (hasPendingTasks) {
-      console.log("[Epic 11] Cleaning tasks resumed (List Page)");
+      console.log(
+        `[Epic 11] Cleaning tasks resumed (${pageType === "CALL_MAINTENANCE" ? "Call Maintenance" : "List"} Page)`
+      );
     }
   } else {
     // UNKNOWN or Timeout
-    // Can't confirm page type, so safe to do nothing or check generic logic
-    // But we should verify if 'checkPendingTasks' is safe to run?
-    // If we run it here, it might trigger false "Refreshing table" error.
-    // Better to check queue first.
     const queue = CleaningController.getQueue();
     if (queue && queue.status === "IN_PROGRESS") {
-      // If we are stuck in UNKNOWN state but have tasks...
-      // Maybe just wait a bit longer?
       console.warn(
         "[Epic 11] Could not detect page type, but tasks are pending."
       );
