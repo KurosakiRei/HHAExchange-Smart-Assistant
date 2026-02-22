@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.9.6
+// @version             3.9.7
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -2462,7 +2462,7 @@ function isActiveStatus(status) {
  * HHA 风格的 CSS 样式
  * 用于在弹窗中复现 HHAeXchange 原版的表格样式
  */
-const HHA_STYLE_CSS = `
+const HHA_STYLE_CSS = (/* unused pure expression or super */ null && (`
 <style>
   /* 基础样式重置 */
   body {
@@ -2695,7 +2695,7 @@ const HHA_STYLE_CSS = `
     }
   }
 </style>
-`;
+`));
 /**
  * 在 HTML 中注入 HHA 风格的 CSS 样式
  * @param html - 原始 HTML 字符串
@@ -2715,19 +2715,41 @@ function injectHhaStyles(html) {
 }
 /**
  * 清理 HTML 中的无用元素，移除用户不需要看到的链接和表单
+ *
+ * ★ 关键：必须移除所有 <script> 标签 ★
+ * 原始 HHAExchange 页面包含大量 inline JS，这些脚本依赖：
+ * 1. jQuery ($) - blob 页中未加载 jQuery，导致 "$ is not defined"
+ * 2. parent.Hide() / parent.xxx() - 原页面运行在 iframe 中，但 blob 页是顶级窗口
+ * 这两种情况都会导致 blob 页面白屏
+ *
  * @param html - 原始 HTML 字符串
  * @returns 清理后的 HTML 字符串
  */
 function cleanupHtml(html) {
+    // ★ Step 1: 移除所有 <script> 标签（含内容）
+    // 防止 jQuery/$、parent.Hide 等在 blob 上下文报错白屏
+    html = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+    html = html.replace(/<script\b[^>]*\/>/gi, "");
+    // ★ Step 2: 移除所有 inline 事件属性 (onload, onclick, onsubmit, onfocus 等)
+    // 关键：HHAExchange 原始页面的 <body onload="parent.Hide(...)"> 会导致白屏
+    // 因为 blob 页是顶级窗口，没有 parent frame，parent.Hide 不存在
+    // 注意：要在不破坏标签内其他属性的情况下移除 on* 属性
+    // 使用两个 pass 分别处理双引号和单引号的属性值
+    html = html.replace(/(\s+on\w+\s*=\s*"[^"]*")/gi, "");
+    html = html.replace(/(\s+on\w+\s*=\s*'[^']*')/gi, "");
     // 移除 uxfrmSearchXSLT 相关的链接和表单（包含 URL 参数的那种长链接）
     // 匹配: <a ...id="uxfrmSearchXSLT"...>...</a>
     html = html.replace(/<a[^>]*id\s*=\s*["']?uxfrmSearchXSLT["']?[^>]*>[\s\S]*?<\/a>/gi, "");
     // 移除 href 中包含 uxfrmSearchXSLT 的链接
     html = html.replace(/<a[^>]*href\s*=\s*["'][^"']*uxfrmSearchXSLT[^"']*["'][^>]*>[\s\S]*?<\/a>/gi, "");
-    // 移除 uxfrmSearch 相关的表单
-    html = html.replace(/<form[^>]*id\s*=\s*["']?uxfrmSearch[^"']*["']?[^>]*>[\s\S]*?<\/form>/gi, "");
+    // ★ Step 4: "解包" uxfrmSearch 表单标签（只移除标签本身，保留内容）
+    // 关键：<form id="uxfrmSearchXSLT"> 包裹了整个搜索结果表格 (#tdSearchResults)！
+    // 如果连同内容一起删除，会把搜索结果全部丢失导致白屏
+    // 所以只移除开始标签和结束标签，保留里面的内容
+    html = html.replace(/<form[^>]*id\s*=\s*["']?uxfrmSearch[^"']*["']?[^>]*>/gi, "");
+    html = html.replace(/<\/form>/gi, "");
     // 移除那些包含完整 URL 参数的链接文本 (如 "&LastName=...&FirstName=..." 这种)
-    html = html.replace(/<a[^>]*>[^<]*(&amp;|\&)LastName=[^<]*<\/a>/gi, "");
+    html = html.replace(/<a[^>]*>[^<]*(&amp;|&)LastName=[^<]*<\/a>/gi, "");
     return html;
 }
 /**
@@ -3248,6 +3270,169 @@ function displayCombinedResults(aideResult, patientResult, phoneNumber = current
     openInPopup(combinedHtml, "HHA_Combined_Result", true);
 }
 /**
+ * 以单面板形式展示单一数据源的多结果
+ * 复用 displayCombinedResults 的 extractAndCleanContent 清理逻辑和 CSS 面板设计
+ * 替代 processHtmlForDisplay，解决"sortable column head"残留和样式不一致问题
+ *
+ * @param result - 搜索结果对象
+ * @param type - 数据源类型 'aide' 或 'patient'
+ * @param phoneNumber - 要高亮的电话号码
+ */
+function displaySingleResult(result, type, phoneNumber) {
+    const isAide = type === "aide";
+    const label = isAide ? "Caregiver (护工)" : "Patient (病人)";
+    const countLabel = !isAide && result.activeCount !== undefined
+        ? `${result.count} 条, Active: ${result.activeCount}`
+        : `${result.count} 条`;
+    // 复用 displayCombinedResults 里的 extractAndCleanContent 逻辑
+    const doc = new DOMParser().parseFromString(result.rawHtml, "text/html");
+    let table = doc.querySelector("#tdSearchResults");
+    if (!table) {
+        table = doc.querySelector("table[id*='Search']");
+    }
+    if (!table) {
+        const tables = doc.querySelectorAll("table");
+        for (const t of tables) {
+            if (t.querySelector("tbody tr")) {
+                table = t;
+                break;
+            }
+        }
+    }
+    let bodyContent;
+    if (!table) {
+        bodyContent = `<p style="color:#666;padding:20px;">未找到搜索结果</p>`;
+    }
+    else {
+        // 清理不需要的元素
+        [
+            'a[id*="uxfrmSearchXSLT"]',
+            'a[href*="uxfrmSearchXSLT"]',
+            'form[id*="uxfrmSearch"]',
+            'input[type="hidden"]',
+            "script",
+            ".show-for-sr",
+            '[class*="show-for-sr"]',
+        ].forEach((sel) => table.querySelectorAll(sel).forEach((el) => el.remove()));
+        // 清理表头文字（移除 "sortable column head" 等残留）
+        table.querySelectorAll("th, thead td").forEach((th) => {
+            const link = th.querySelector("a");
+            if (link) {
+                th.textContent = link.textContent?.trim() || "";
+            }
+            else {
+                let text = th.textContent || "";
+                text = text.replace(/sortable\s*column\s*head/gi, "");
+                text = text
+                    .replace(/[\r\n\t]+/g, " ")
+                    .replace(/\s+/g, " ")
+                    .trim();
+                th.textContent = text;
+            }
+        });
+        // Aide 特殊处理：移除空 Action 列
+        if (isAide) {
+            const headerCells = table.querySelectorAll("thead tr th, thead tr td");
+            const lastHeader = headerCells[headerCells.length - 1];
+            if (lastHeader?.textContent?.trim().toLowerCase() === "action") {
+                const rows = table.querySelectorAll("tbody tr");
+                const allEmpty = Array.from(rows).every((row) => {
+                    const cells = row.querySelectorAll("td");
+                    const lastCell = cells[cells.length - 1];
+                    return !lastCell?.textContent?.trim();
+                });
+                if (allEmpty) {
+                    lastHeader.remove();
+                    rows.forEach((row) => {
+                        const cells = row.querySelectorAll("td");
+                        cells[cells.length - 1]?.remove();
+                    });
+                }
+            }
+        }
+        bodyContent = table.outerHTML;
+    }
+    // 高亮电话号码
+    bodyContent = highlightPhoneNumber(bodyContent, phoneNumber);
+    const singleHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HHA ${label} 搜索结果</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      overflow: hidden;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+    .container { display: flex; flex-direction: column; height: 100%; }
+    .panel {
+      flex: 1; overflow: hidden;
+      display: flex; flex-direction: column; min-height: 0;
+    }
+    .panel-header {
+      margin: 0; padding: 10px 15px;
+      background-color: #0d3e61; color: #fff;
+      font-size: 16px; font-weight: 600; flex-shrink: 0;
+    }
+    .panel-content { flex: 1; overflow: auto; padding: 10px; background-color: #fff; }
+    .panel-content table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    .panel-content table th,
+    .panel-content table td { padding: 8px; border: 1px solid #dee2e6; text-align: left; }
+    .panel-content table thead tr,
+    .panel-content table tr:first-child:has(th) {
+      background-color: #0d3e61 !important; color: #fff !important;
+    }
+    .panel-content table th,
+    .panel-content table thead th,
+    .panel-content table thead td {
+      background-color: #0d3e61 !important; color: #fff !important; font-weight: 600;
+    }
+    .panel-content table th a,
+    .panel-content table thead a { color: #fff !important; }
+    .panel-content table tbody tr:nth-child(even) { background-color: #f8f9fa; }
+    .panel-content table tbody tr:hover { background-color: #e9ecef; }
+    .panel-content a { color: #0d6efd; text-decoration: none; }
+    .panel-content a:hover { text-decoration: underline; }
+    .panel-content ul {
+      list-style: none; padding: 5px 10px; margin: 10px 0;
+      display: flex; flex-wrap: wrap; gap: 8px;
+      background-color: #f5f5f5; border-radius: 4px;
+    }
+    .panel-content ul li { display: inline; }
+    .panel-content ul li::before { content: none; }
+    .panel-content ul li a {
+      padding: 4px 8px; border: 1px solid #ddd;
+      border-radius: 3px; background-color: #fff;
+    }
+    .panel-content span[style*="background-color: #ffff00"] {
+      background-color: #ffff00 !important;
+      padding: 1px 3px !important;
+      border-radius: 2px !important;
+      font-weight: bold !important;
+    }
+  </style>
+  <script>
+    function RedirectToAidePage(id) {
+      window.open('${AIDE_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
+    }
+    function RedirectToPatientPage(id) {
+      window.open('${PATIENT_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="panel">
+      <h2 class="panel-header">${label} 搜索结果 (${countLabel})</h2>
+      <div class="panel-content">${bodyContent}</div>
+    </div>
+  </div>
+</body>
+</html>`;
+    openInPopup(singleHtml, "HHA_Search_Result", true);
+}
+/**
  * 通用的后台搜索函数, 使用 GM_fetch
  * @param type - 搜索类型, 'aide' 或 'patient'
  * @param formattedNumber - 格式化后的电话号码
@@ -3311,9 +3496,8 @@ async function extractAndInitiateSearch(callInfoPanel) {
                     openInPopup(aideResult.finalUrl);
                 }
                 else {
-                    // 多个结果：处理 HTML 后显示（高亮 + 点击跳转）
-                    const processedHtml = processHtmlForDisplay(aideResult.rawHtml, "aide", formattedNumber);
-                    openInPopup(processedHtml, "HHA_Search_Result", true);
+                    // 多个结果：使用干净的单面板展示
+                    displaySingleResult(aideResult, "aide", formattedNumber);
                 }
             }
             else if (!hasAideResult && hasPatientResult) {
@@ -3323,9 +3507,8 @@ async function extractAndInitiateSearch(callInfoPanel) {
                     openInPopup(patientResult.finalUrl);
                 }
                 else {
-                    // 多个结果：处理 HTML 后显示（高亮 + 点击跳转）
-                    const processedHtml = processHtmlForDisplay(patientResult.rawHtml, "patient", formattedNumber);
-                    openInPopup(processedHtml, "HHA_Search_Result", true);
+                    // 多个结果：使用干净的单面板展示
+                    displaySingleResult(patientResult, "patient", formattedNumber);
                 }
             }
             else if (hasAideResult && hasPatientResult) {
@@ -3485,8 +3668,7 @@ async function searchHhaByPhone(phoneNumber) {
             openInPopup(aideResult.finalUrl);
         }
         else {
-            const processedHtml = processHtmlForDisplay(aideResult.rawHtml, "aide", formattedNumber);
-            openInPopup(processedHtml, "HHA_Search_Result", true);
+            displaySingleResult(aideResult, "aide", formattedNumber);
         }
     }
     else if (!hasAideResult && hasPatientResult) {
@@ -3494,8 +3676,7 @@ async function searchHhaByPhone(phoneNumber) {
             openInPopup(patientResult.finalUrl);
         }
         else {
-            const processedHtml = processHtmlForDisplay(patientResult.rawHtml, "patient", formattedNumber);
-            openInPopup(processedHtml, "HHA_Search_Result", true);
+            displaySingleResult(patientResult, "patient", formattedNumber);
         }
     }
     else if (hasAideResult && hasPatientResult) {
@@ -13958,7 +14139,7 @@ OutlookAdapter.controllerInjected = false;
 OutlookAdapter.statusToast = null;
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.9.6"};
+const package_namespaceObject = {"rE":"3.9.7"};
 ;// ./src/index.ts
 
 
@@ -14315,20 +14496,27 @@ function positionPanelRelativeToHandle(panel, handle) {
  * 3. Resume cleaning progress display
  */
 async function checkAndResumeCleaningTasks() {
-    // Wait loop to detect page type (Visit Detail OR Prebilling List)
-    // We need to wait because elements might not be immediately available on document.ready
+    // Wait loop to detect page type
+    // Priority order: URL-based checks first (fast & reliable), DOM fallback for detail pages
     const detectPageType = async (retries = 20) => {
-        // 1. Check for Visit Detail Page specific element (Dropdowns or Headers)
+        const url = window.location.href;
+        // 1. Check for Call Maintenance page via URL (fast, reliable - no DOM needed)
+        //    IMPORTANT: Must check BEFORE DETAIL, as CallMaintenance URL does NOT contain
+        //    visitReasonSelector elements, so it would fall to UNKNOWN otherwise.
+        if (url.includes("CallMaintenance_ns.aspx")) {
+            return "CALL_MAINTENANCE";
+        }
+        // 2. Check for Visit Detail Page specific element (Dropdowns or Headers)
         if ($(visitReasonSelector).length > 0 ||
-            window.location.href.includes("NonSkilledVisitInfo_ns.aspx")) {
+            url.includes("NonSkilledVisitInfo_ns.aspx")) {
             return "DETAIL";
         }
-        // 2. Check for Prebilling List specific element (Container or Search Button)
-        // Note: Prebilling page also has a search button, Detail page does NOT
+        // 3. Check for Prebilling List specific element (Container or Search Button)
         if ($("#ctl00_ContentPlaceHolder1_divPrebillingReportInternalScroll").length >
             0 ||
             $(prebillingSearchButtonSelector).length > 0 ||
-            $("#prebillingSelector").length > 0) {
+            $("#prebillingSelector").length > 0 ||
+            url.includes("PrebillingReportInternal_ns.aspx")) {
             return "LIST";
         }
         if (retries <= 0)
@@ -14391,23 +14579,18 @@ async function checkAndResumeCleaningTasks() {
             return;
         }
     }
-    else if (pageType === "LIST") {
-        // 不在详情页，检查是否有待恢复的任务（在 Prebilling 或 Call Maintenance 页面）
+    else if (pageType === "LIST" || pageType === "CALL_MAINTENANCE") {
+        // 在 Prebilling 或 Call Maintenance 列表页，检查是否有待恢复的任务
+        // Note: Call Maintenance 页面刷新后需要从这里恢复 duplicate call 清理
         const hasPendingTasks = await CleaningController.checkPendingTasks();
         if (hasPendingTasks) {
-            console.log("[Epic 11] Cleaning tasks resumed (List Page)");
+            console.log(`[Epic 11] Cleaning tasks resumed (${pageType === "CALL_MAINTENANCE" ? "Call Maintenance" : "List"} Page)`);
         }
     }
     else {
         // UNKNOWN or Timeout
-        // Can't confirm page type, so safe to do nothing or check generic logic
-        // But we should verify if 'checkPendingTasks' is safe to run?
-        // If we run it here, it might trigger false "Refreshing table" error.
-        // Better to check queue first.
         const queue = CleaningController.getQueue();
         if (queue && queue.status === "IN_PROGRESS") {
-            // If we are stuck in UNKNOWN state but have tasks...
-            // Maybe just wait a bit longer?
             console.warn("[Epic 11] Could not detect page type, but tasks are pending.");
         }
     }
