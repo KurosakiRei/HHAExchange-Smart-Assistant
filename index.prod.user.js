@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.9.7
+// @version             3.9.9
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -54,7 +54,7 @@ var ___CSS_LOADER_URL_IMPORT_0___ = new URL(/* asset import */ __webpack_require
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 var ___CSS_LOADER_URL_REPLACEMENT_0___ = _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default()(___CSS_LOADER_URL_IMPORT_0___);
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "/**\n * Main Stylesheet Entry Point\n * \n * This file imports all component stylesheets.\n * Visit Monitor (Coordinator Tracker) styles are in coordinator-tracker.less\n */\n.hha-smart-panel {\n  position: absolute;\n  top: 0;\n  width: 680px;\n  height: 460px;\n  max-height: 80vh;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n  font-size: 14px;\n  color: #333333;\n}\n.hha-smart-panel-header {\n  height: 40px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 16px;\n  border-bottom: none;\n  cursor: move;\n  user-select: none;\n}\n.hha-smart-panel-title {\n  font-size: 14px;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-panel-controls {\n  display: flex;\n  gap: 8px;\n  position: relative;\n  z-index: 100000;\n}\n.hha-smart-panel-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 2px;\n  background: rgba(255, 255, 255, 0.2);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: background 0.15s ease;\n  font-size: 14px;\n  padding: 0;\n  position: relative;\n  z-index: 100001;\n}\n.hha-smart-panel-btn:hover {\n  background: rgba(255, 255, 255, 0.3);\n}\n.hha-smart-panel-btn:active {\n  background: rgba(255, 255, 255, 0.4);\n}\n.hha-smart-panel-body {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-content-wrapper {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n  position: relative;\n  isolation: isolate;\n}\n.hha-smart-tab-bar {\n  width: 100px;\n  min-width: 40px;\n  background: #f7f8fa;\n  border-right: 1px solid #e0e0e0;\n  transition: width 0.2s ease;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  flex-shrink: 0;\n  position: relative;\n  z-index: 2;\n}\n.hha-smart-tab-bar.collapsed {\n  width: 40px;\n}\n.hha-smart-tab-list {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n}\n.hha-smart-tab-list::-webkit-scrollbar {\n  width: 4px;\n}\n.hha-smart-tab-list::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n.hha-smart-tab-item {\n  position: relative;\n  padding: 12px 8px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  white-space: nowrap;\n  border-bottom: 1px solid #f0f0f0;\n}\n.hha-smart-tab-item:hover {\n  background: #f0f2f5;\n}\n.hha-smart-tab-item.active {\n  background: #f0efff;\n  color: #667eea;\n  font-weight: 500;\n}\n.hha-smart-tab-icon {\n  flex-shrink: 0;\n  font-size: 18px;\n  line-height: 1;\n  width: 20px;\n  text-align: center;\n}\n.hha-smart-tab-text {\n  opacity: 1;\n  transition: opacity 0.2s ease;\n  font-size: 13px;\n  overflow-x: auto;\n  overflow-y: hidden;\n  white-space: nowrap;\n  flex: 1;\n  scroll-behavior: smooth;\n}\n.hha-smart-tab-text::-webkit-scrollbar {\n  height: 0;\n  display: none;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-tab-text {\n  opacity: 0;\n  width: 0;\n  overflow: hidden;\n  pointer-events: none;\n}\n.hha-smart-tab-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 4px;\n  height: 100%;\n  background: #667eea;\n  opacity: 0;\n  transition: opacity 0.2s ease;\n  z-index: 1;\n}\n.hha-smart-tab-item.active .hha-smart-tab-indicator {\n  opacity: 1;\n}\n.hha-smart-tab-collapse-btn {\n  padding: 8px;\n  text-align: center;\n  cursor: pointer;\n  border-top: 1px solid #e0e0e0;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 36px;\n  position: relative;\n  z-index: 10;\n}\n.hha-smart-tab-collapse-btn:hover {\n  background: #f0f2f5;\n}\n.hha-smart-collapse-icon {\n  display: inline-block;\n  transition: transform 0.2s ease;\n  font-size: 14px;\n  color: #666666;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-collapse-icon {\n  transform: rotate(180deg);\n}\n.hha-smart-content-area {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: #ffffff;\n  min-height: 0;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-panel-footer {\n  height: 28px;\n  background: #f7f8fa;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  padding: 0 16px;\n  font-size: 12px;\n  color: #666666;\n  flex-shrink: 0;\n}\n.footer-branding {\n  font-style: italic;\n  opacity: 0.6;\n  user-select: none;\n}\n.hha-smart-tab-content {\n  display: none !important;\n  padding: 0;\n  animation: fadeIn 0.2s ease;\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  box-sizing: border-box;\n  min-height: 0;\n  position: relative;\n  z-index: 0;\n}\n.hha-smart-tab-content.active {\n  display: flex !important;\n  flex-direction: column;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n.hha-smart-config-card {\n  background: #ffffff;\n  border-radius: 4px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: box-shadow 0.2s ease;\n}\n.hha-smart-config-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.hha-smart-config-card-title {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-config-card-body {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.hha-smart-btn {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.hha-smart-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #667eea;\n  color: white;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.hha-smart-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary:hover:not(:disabled) {\n  background: #5a6fd6;\n}\n.hha-smart-btn-primary:active:not(:disabled) {\n  background: #4c5ec2;\n}\n.hha-smart-btn-secondary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #f7f8fa;\n  color: #333333;\n  border: 1px solid #e0e0e0;\n}\n.hha-smart-btn-secondary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-secondary:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #a29bfe;\n}\n.hha-smart-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 32px;\n  text-align: center;\n  color: #666666;\n  min-height: 300px;\n}\n.hha-smart-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.hha-smart-placeholder-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.hha-smart-placeholder-text {\n  font-size: 14px;\n  color: #666666;\n}\n#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/**\n * QA Report Tab Styles\n * Epic 8: QA 报告功能\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.qa-report-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n}\n.qa-report-wrapper {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  gap: 0;\n}\n.qa-report-header {\n  display: none;\n}\n.qa-report-title {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.qa-report-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.qa-toolbar-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-left > * {\n  margin: 0;\n  vertical-align: middle;\n}\n.qa-toolbar-actions {\n  display: flex;\n  align-items: center;\n  gap: 0;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-actions .qa-load-btn {\n  border-radius: 2px 0 0 2px;\n  border-right: 1px solid rgba(255, 255, 255, 0.3);\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-actions .qa-export-btn {\n  border-radius: 0 2px 2px 0;\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-select-label {\n  font-size: 13px;\n  color: #666666;\n  font-weight: 500;\n  line-height: 28px;\n  white-space: nowrap;\n}\n.qa-coordinator-select {\n  padding: 0 28px 0 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: white;\n  background-image: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n  background-repeat: no-repeat;\n  background-position: right 8px center;\n  background-size: 12px 12px;\n  font-size: 13px;\n  min-width: 180px;\n  max-width: 300px;\n  height: 28px !important;\n  line-height: 26px;\n  vertical-align: middle;\n  cursor: pointer;\n  box-sizing: border-box;\n  appearance: none;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.qa-coordinator-select:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px #a29bfe;\n}\n.qa-coordinator-select:disabled {\n  background: #f7f8fa;\n  cursor: not-allowed;\n}\n.qa-load-btn {\n  padding: 0 14px;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-load-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.qa-export-btn {\n  padding: 0 12px;\n  font-size: 13px;\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  color: #333333;\n  cursor: pointer;\n  transition: all 0.2s;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-export-btn:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #667eea;\n}\n.qa-export-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.qa-status-text {\n  font-size: 12px;\n  color: #666666;\n  white-space: nowrap;\n}\n.qa-view-toggle {\n  display: flex;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  overflow: hidden;\n  height: 28px;\n}\n.qa-view-btn {\n  padding: 0 10px;\n  border: none;\n  background: white;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  transition: all 0.2s;\n  height: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-view-btn:first-child {\n  border-right: 1px solid #e0e0e0;\n}\n.qa-view-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-view-btn.active {\n  background: #667eea;\n  color: white;\n}\n.qa-report-content-body {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n  background: #f7f8fa;\n}\n.qa-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  text-align: center;\n  color: #666666;\n}\n.qa-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.qa-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.qa-empty-text {\n  font-size: 13px;\n}\n.qa-report-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n  background: white;\n  border-radius: 2px;\n  overflow: hidden;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.qa-report-table thead {\n  background: #f7f8fa;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n}\n.qa-report-table thead th {\n  padding: 8px 16px;\n  text-align: left;\n  font-weight: 600;\n  color: #666666;\n  border-bottom: 2px solid #e0e0e0;\n  white-space: nowrap;\n}\n.qa-report-table thead th.sortable {\n  cursor: pointer;\n  user-select: none;\n  transition: background 0.15s;\n}\n.qa-report-table thead th.sortable:hover {\n  background: #e7eaf0;\n}\n.qa-report-table thead th.sortable .sort-icon {\n  margin-left: 4px;\n  font-size: 10px;\n  opacity: 0.5;\n  display: inline-block;\n  vertical-align: middle;\n}\n.qa-report-table thead th.sortable .sort-icon.sort-asc,\n.qa-report-table thead th.sortable .sort-icon.sort-desc {\n  opacity: 1;\n  color: #667eea;\n}\n.qa-report-table tbody tr {\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s;\n}\n.qa-report-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.qa-report-table tbody tr:last-child {\n  border-bottom: none;\n}\n.qa-report-table tbody td {\n  padding: 8px 16px;\n  vertical-align: middle;\n  user-select: text;\n  cursor: text;\n}\n.qa-report-table tbody td.col-action {\n  user-select: none;\n  cursor: default;\n}\n.qa-report-table .col-id {\n  width: 110px;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  color: #667eea;\n  font-weight: 500;\n}\n.qa-report-table .col-name {\n  width: auto;\n  min-width: 150px;\n  font-weight: 500;\n}\n.qa-report-table .col-phone {\n  width: 140px;\n}\n.qa-report-table .phone-loading {\n  color: #666666;\n  font-style: italic;\n  font-size: 13px;\n}\n.qa-report-table .phone-error {\n  color: #dc3545;\n  font-size: 13px;\n}\n.qa-report-table .phone-single {\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n}\n.qa-report-table .phone-single a {\n  color: #667eea;\n  text-decoration: none;\n}\n.qa-report-table .phone-single a:hover {\n  text-decoration: underline;\n}\n.qa-report-table .phone-multiple {\n  position: relative;\n  display: inline-block;\n  cursor: pointer;\n}\n.qa-report-table .phone-multiple .phone-trigger {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  padding: 2px 6px;\n  background: rgba(102, 126, 234, 0.1);\n  border: 1px solid #667eea;\n  border-radius: 2px;\n  color: #667eea;\n  cursor: pointer;\n  font-size: 13px;\n  transition: all 0.2s;\n}\n.qa-report-table .phone-multiple .phone-trigger:hover {\n  background: #667eea;\n  color: white;\n}\n.qa-report-table .phone-multiple .phone-trigger .phone-count {\n  font-weight: 600;\n}\n.qa-report-table .phone-dropdown {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  z-index: 1000;\n  min-width: 160px;\n  padding: 4px 0;\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  margin-top: 4px;\n}\n.qa-report-table .phone-dropdown .phone-item {\n  display: block;\n  padding: 4px 8px;\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n  text-decoration: none;\n  transition: background 0.15s;\n}\n.qa-report-table .phone-dropdown .phone-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-table .col-qa {\n  width: 100px;\n  font-weight: 500;\n}\n.qa-report-table .col-action {\n  width: 50px;\n  text-align: center;\n}\n.phone-item {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.phone-item + .phone-item {\n  margin-top: 2px;\n}\n.qa-never {\n  color: #dc3545 !important;\n  font-weight: 600;\n}\n.qa-action-btn {\n  padding: 4px 8px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 16px;\n  color: #666666;\n  border-radius: 2px;\n  transition: all 0.2s;\n}\n.qa-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 8px;\n  padding: 8px;\n}\n.qa-card {\n  background: white;\n  border-radius: 2px;\n  padding: 16px;\n  border-left: 4px solid #e0e0e0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  transition: all 0.2s;\n  position: relative;\n  overflow: hidden;\n  user-select: text;\n}\n.qa-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  transform: translateY(-2px);\n}\n.card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  margin-bottom: 8px;\n}\n.card-name {\n  font-weight: 600;\n  font-size: 13px;\n  color: #333333;\n  flex: 1;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  padding-right: 8px;\n}\n.card-action-btn {\n  padding: 2px 6px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  border-radius: 2px;\n  flex-shrink: 0;\n  user-select: none;\n}\n.card-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.card-id {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #667eea;\n  margin-bottom: 8px;\n}\n.card-phones {\n  margin-bottom: 8px;\n}\n.card-phone {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.card-phone + .card-phone {\n  margin-top: 2px;\n}\n.card-qa {\n  font-weight: 600;\n  font-size: 13px;\n  margin-bottom: 8px;\n}\n.card-priority-badge {\n  position: absolute;\n  bottom: 0;\n  right: 0;\n  padding: 2px 8px;\n  font-size: 12px;\n  color: white;\n  border-radius: 2px 0 0 0;\n  font-weight: 500;\n}\n.priority-critical .col-qa {\n  color: #dc3545;\n}\n.priority-high .col-qa {\n  color: #e74c3c;\n}\n.priority-medium-high .col-qa {\n  color: #fd7e14;\n}\n.priority-medium .col-qa {\n  color: #ffc107;\n}\n.priority-low-medium .col-qa {\n  color: #a8d08d;\n}\n.priority-low .col-qa {\n  color: #28a745;\n}\n.qa-export-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 140px;\n}\n.export-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  transition: background 0.15s;\n}\n.export-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.export-menu-item + .export-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-action-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 180px;\n}\n.action-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: background 0.15s;\n}\n.action-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.action-menu-item + .action-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-toast {\n  position: fixed;\n  top: 24px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100%);\n  padding: 8px 24px;\n  border-radius: 2px;\n  font-size: 13px;\n  color: white;\n  z-index: 100001;\n  opacity: 0;\n  transition: all 0.3s ease;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n}\n.qa-toast.show {\n  transform: translateX(-50%) translateY(0);\n  opacity: 1;\n}\n.qa-toast.qa-toast-success {\n  background: #28a745;\n}\n.qa-toast.qa-toast-error {\n  background: #dc3545;\n}\n.qa-toast.qa-toast-info {\n  background: #667eea;\n}\n.qa-note-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n}\n.qa-note-modal {\n  background: white;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  width: 90%;\n  max-width: 520px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.qa-note-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.qa-note-modal-title {\n  font-size: 14px;\n  font-weight: 600;\n}\n.qa-note-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 28px;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  transition: background 0.15s;\n}\n.qa-note-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.qa-note-modal-body {\n  padding: 16px;\n  overflow-y: auto;\n  flex: 1;\n}\n.qa-note-section {\n  margin-bottom: 16px;\n}\n.qa-note-section:last-child {\n  margin-bottom: 0;\n}\n.qa-note-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #666666;\n  margin-bottom: 4px;\n}\n.qa-note-template {\n  padding: 8px 16px;\n  background: #f0f2f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  line-height: 1.5;\n  color: #333333;\n}\n.qa-note-textarea {\n  width: 100%;\n  padding: 8px 16px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  font-family: inherit;\n  resize: vertical;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.qa-note-textarea:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);\n}\n.qa-note-textarea::placeholder {\n  color: #666666;\n}\n.qa-note-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  padding: 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #f0f2f5;\n}\n.qa-note-btn {\n  padding: 4px 16px;\n  font-size: 13px;\n  border-radius: 2px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.qa-note-btn.qa-note-btn-cancel {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #666666;\n}\n.qa-note-btn.qa-note-btn-cancel:hover {\n  background: #f0f2f5;\n  border-color: #666666;\n}\n.qa-note-btn.qa-note-btn-submit {\n  background: #667eea;\n  border: 1px solid #667eea;\n  color: white;\n}\n.qa-note-btn.qa-note-btn-submit:hover {\n  background: #5a6fd6;\n  border-color: #5a6fd6;\n}\n/**\n * Status Tracking Tab Styles\n * Epic 7: Multi-Tab Panel - 状态追踪 Tab\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.status-tracking-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n  padding: 0;\n}\n#status-tracking-wrapper {\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n#status-tracking-wrapper #tracker-panel {\n  background: #ffffff;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view {\n  height: 100%;\n  overflow: hidden;\n  min-height: 0;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view.hidden {\n  display: none !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content {\n  flex: 1 1 auto;\n  min-height: 0;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-header,\n#status-tracking-wrapper #tracker-panel .tracker-footer {\n  flex-shrink: 0;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar {\n  width: 6px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb:hover {\n  background: #666666;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n/* Empty State Styles - matches QA Report empty state */\n#status-tracking-wrapper .tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 200px;\n  padding: 40px 20px;\n  text-align: center;\n  color: #666;\n  background: #f7f8fa;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.7;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-title {\n  font-size: 18px;\n  font-weight: 600;\n  color: #333;\n  margin-bottom: 8px;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-text {\n  font-size: 14px;\n  color: #888;\n}\n/**\n * Cleaner Tab Styles\n * Epic 11: POC 和 Duplicate Call 智能清理器\n */\n.cleaner-tab {\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  padding: 0;\n}\n.cleaner-wrapper {\n  flex: 1;\n  overflow-y: auto;\n  padding: 12px 16px;\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n}\n/* Header */\n.cleaner-header {\n  margin-bottom: 12px;\n}\n.cleaner-title-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cleaner-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.cleaner-page-tag {\n  font-size: 12px;\n  color: #666;\n  background: #f0f4f8;\n  padding: 3px 8px;\n  border-radius: 4px;\n  white-space: nowrap;\n}\n.cleaner-btn-refresh {\n  background: #f8f9fa;\n  border: none;\n  border-radius: 4px;\n  padding: 4px 8px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background 0.2s ease;\n  margin-left: auto;\n  outline: none;\n}\n.cleaner-btn-refresh:hover {\n  background: #e8f4fd;\n}\n.cleaner-btn-refresh:focus {\n  outline: none;\n}\n.cleaner-hint {\n  font-size: 12px;\n  color: #888;\n  margin-top: 8px;\n  font-style: italic;\n}\n/* Status */\n.cleaner-status {\n  text-align: center;\n  padding: 20px;\n  color: #666;\n}\n.cleaner-spinner {\n  animation: cleaner-spin 1s linear infinite;\n  display: inline-block;\n}\n@keyframes cleaner-spin {\n  from {\n    transform: rotate(0deg);\n  }\n  to {\n    transform: rotate(360deg);\n  }\n}\n/* Toolbar */\n.cleaner-toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 12px;\n  padding: 10px 12px;\n  background: #f8f9fa;\n  border-radius: 6px;\n}\n.cleaner-select-all {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  color: #333;\n  line-height: 1;\n}\n.cleaner-select-all input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin: 0;\n  cursor: pointer;\n  vertical-align: middle;\n}\n.cleaner-select-all span {\n  vertical-align: middle;\n}\n/* Buttons */\n.cleaner-btn-primary {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-primary:hover:not(:disabled) {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n  transform: translateY(-1px);\n}\n.cleaner-btn-primary:disabled {\n  background: #ccc;\n  cursor: not-allowed;\n  transform: none;\n}\n.cleaner-btn-secondary {\n  background: white;\n  color: #666;\n  border: 1px solid #ddd;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-secondary:hover {\n  background: #f5f5f5;\n  border-color: #ccc;\n}\n/* Records List */\n.cleaner-records-list {\n  max-height: 260px;\n  overflow-y: auto;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  overscroll-behavior: contain;\n}\n.cleaner-record-item {\n  display: flex;\n  align-items: flex-start;\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.cleaner-record-item:last-child {\n  border-bottom: none;\n}\n.cleaner-record-item:hover {\n  background: #f8f9fa;\n}\n.cleaner-record-item input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin-right: 10px;\n  margin-top: 2px;\n  cursor: pointer;\n}\n.cleaner-record-info {\n  flex: 1;\n  font-size: 13px;\n}\n.cleaner-record-info .record-main {\n  font-weight: 500;\n  color: #333;\n  margin-bottom: 4px;\n}\n.cleaner-record-info .record-detail {\n  color: #666;\n  font-size: 12px;\n}\n.cleaner-badge {\n  display: inline-block;\n  padding: 2px 8px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 500;\n  margin-right: 8px;\n}\n.cleaner-badge.badge-poc {\n  background: #e3f2fd;\n  color: #1976d2;\n}\n.cleaner-badge.badge-poc-caregiver {\n  background: #fff3e0;\n  color: #f57c00;\n}\n/* Call Summary */\n.cleaner-call-summary {\n  text-align: center;\n  padding: 16px;\n  background: #e8f4fd;\n  border-radius: 8px;\n  margin-bottom: 12px;\n}\n.cleaner-call-summary .cleaner-call-count {\n  font-size: 15px;\n  color: #1976d2;\n}\n.cleaner-call-summary .cleaner-call-count strong {\n  font-size: 20px;\n  font-weight: 600;\n}\n.cleaner-call-details {\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  margin-top: 12px;\n  max-height: 250px;\n  overflow-y: auto;\n}\n.cleaner-call-item {\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 13px;\n  color: #333;\n}\n.cleaner-call-item:last-child {\n  border-bottom: none;\n}\n.cleaner-call-item::before {\n  content: \"•\";\n  color: #1976d2;\n  margin-right: 8px;\n}\n/* Empty State */\n.cleaner-empty-state {\n  text-align: center;\n  padding: 40px 20px;\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  min-height: 300px;\n}\n.cleaner-empty-state .cleaner-empty-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n}\n.cleaner-empty-state .cleaner-hint {\n  font-size: 13px;\n  color: #666;\n}\n.cleaner-empty-state p {\n  font-size: 15px;\n  color: #4caf50;\n  font-weight: 500;\n  margin: 0;\n}\n/* No Page Detected */\n.cleaner-no-page-info {\n  text-align: left;\n  margin-top: 16px;\n  padding: 16px;\n  background: #f8f9fa;\n  border-radius: 8px;\n}\n.cleaner-no-page-info p {\n  margin: 0 0 12px 0;\n  font-size: 14px;\n  color: #333;\n}\n.cleaner-no-page-info ul {\n  margin: 0 0 12px 20px;\n  padding: 0;\n}\n.cleaner-no-page-info ul li {\n  margin-bottom: 8px;\n  font-size: 13px;\n  color: #555;\n}\n.cleaner-no-page-info .cleaner-hint {\n  color: #999;\n  font-size: 13px;\n  font-style: italic;\n  margin-bottom: 0;\n}\n/* Cleaning Overlay - 浅色半透明蒙版 */\n#hha-cleaning-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.15);\n  backdrop-filter: blur(2px);\n  z-index: 999999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  pointer-events: all;\n  /* 旋转动画 */\n}\n#hha-cleaning-overlay .cleaning-modal {\n  background: white;\n  padding: 30px 40px;\n  border-radius: 12px;\n  text-align: center;\n  min-width: 400px;\n  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);\n  /* 确认对话框按钮 */\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon {\n  font-size: 48px;\n  margin-bottom: 15px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon.success {\n  color: #4CAF50;\n}\n#hha-cleaning-overlay .cleaning-modal h3 {\n  margin: 0 0 10px;\n  font-size: 20px;\n  color: #333;\n}\n#hha-cleaning-overlay .cleaning-modal p {\n  margin: 0;\n  color: #666;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar {\n  height: 8px;\n  background: #e0e0e0;\n  border-radius: 4px;\n  overflow: hidden;\n  margin: 20px 0;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar .progress-fill {\n  height: 100%;\n  background: linear-gradient(90deg, #4CAF50, #8BC34A);\n  transition: width 0.3s ease;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-warning {\n  color: #ff9800;\n  font-size: 14px;\n  margin-top: 15px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .success-note {\n  color: #666;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .error-message {\n  color: #e53935;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n  margin-top: 20px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel {\n  padding: 10px 24px;\n  background: #f5f5f5;\n  color: #666;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel:hover {\n  background: #e0e0e0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm {\n  padding: 10px 24px;\n  background: #4caf50;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm:hover {\n  background: #43a047;\n}\n#hha-cleaning-overlay .spinning {\n  animation: cleaner-spin 1s linear infinite;\n}\n/**\n * Mail Builder Tab Styles\n * Epic 12: 智能邮件构筑助手\n */\n.mail-builder-tab {\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  padding: 0;\n}\n.mail-builder-wrapper {\n  flex: 1;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n}\n/* Header */\n.mail-builder-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: #fafbfc;\n  flex-shrink: 0;\n}\n.mail-builder-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.mail-builder-page-tag {\n  font-size: 12px;\n  color: #666;\n  background: #e8f4fd;\n  padding: 4px 10px;\n  border-radius: 12px;\n  white-space: nowrap;\n}\n/* Main Content - 35% / 65% Split */\n.mail-builder-main {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n}\n.mail-builder-main.full-width .mail-builder-template-panel {\n  width: 100%;\n  border-left: none;\n}\n/* Left Info Panel (35%) */\n.mail-builder-info-panel {\n  width: 35%;\n  min-width: 200px;\n  border-right: 1px solid #e0e0e0;\n  padding: 12px;\n  display: flex;\n  flex-direction: column;\n  overflow-y: auto;\n  background: #fff;\n}\n.mail-builder-info-list {\n  flex: 1;\n}\n.mail-builder-info-item {\n  display: flex;\n  align-items: center;\n  padding: 8px 0;\n  border-bottom: 1px solid #f0f0f0;\n  gap: 8px;\n}\n.mail-builder-info-item:last-child {\n  border-bottom: none;\n}\n.info-label {\n  font-size: 12px;\n  color: #888;\n  min-width: 40px;\n  flex-shrink: 0;\n}\n.info-value {\n  flex: 1;\n  font-size: 13px;\n  color: #333;\n  font-weight: 500;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.info-copy-btn {\n  background: #f0f4f8;\n  border: none;\n  border-radius: 4px;\n  padding: 4px 6px;\n  font-size: 11px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  flex-shrink: 0;\n}\n.info-copy-btn:hover {\n  background: #e0e8f0;\n  transform: scale(1.05);\n}\n.info-copy-btn:active {\n  transform: scale(0.95);\n}\n/* Quick Copy Buttons */\n.mail-builder-quick-copy {\n  margin-top: 12px;\n  padding-top: 12px;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.quick-copy-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  font-size: 12px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  text-align: center;\n}\n.quick-copy-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n  transform: translateY(-1px);\n}\n.quick-copy-btn:active {\n  transform: translateY(0);\n}\n/* Right Template Panel (65%) */\n.mail-builder-template-panel {\n  flex: 1;\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  background: #fafbfc;\n}\n.mail-builder-template-tabs {\n  display: flex;\n  border-bottom: 1px solid #e0e0e0;\n  background: #fff;\n  flex-shrink: 0;\n}\n.template-tab-btn {\n  flex: 1;\n  padding: 10px 16px;\n  background: transparent;\n  border: none;\n  border-bottom: 2px solid transparent;\n  font-size: 13px;\n  color: #666;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.template-tab-btn:hover {\n  color: #333;\n  background: #f5f5f5;\n}\n.template-tab-btn.active {\n  color: #1976d2;\n  border-bottom-color: #1976d2;\n  font-weight: 500;\n}\n.mail-builder-template-content {\n  flex: 1;\n  padding: 16px;\n  overflow-y: auto;\n}\n.template-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 200px;\n  color: #999;\n}\n.template-placeholder .template-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n.template-placeholder p {\n  margin: 0;\n  font-size: 14px;\n}\n.template-placeholder .template-hint {\n  margin-top: 8px;\n  font-size: 12px;\n  color: #bbb;\n}\n.mail-builder-template-actions {\n  display: flex;\n  gap: 8px;\n  padding: 12px;\n  border-top: 1px solid #e0e0e0;\n  background: #fff;\n  flex-shrink: 0;\n}\n.template-action-btn {\n  flex: 1;\n  padding: 8px 12px;\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  font-size: 12px;\n  color: #666;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.template-action-btn:hover:not(:disabled) {\n  background: #e8e8e8;\n  color: #333;\n}\n.template-action-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n/* No Data State */\n.mail-builder-no-data {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  color: #999;\n  font-size: 13px;\n}\n/* No Page Detected */\n.mail-builder-no-page-info {\n  text-align: left;\n  margin-top: 16px;\n  padding: 16px;\n  background: #f8f9fa;\n  border-radius: 8px;\n}\n.mail-builder-no-page-info p {\n  margin: 0 0 12px 0;\n  font-size: 14px;\n  color: #333;\n}\n.mail-builder-no-page-info ul {\n  margin: 0 0 12px 20px;\n  padding: 0;\n}\n.mail-builder-no-page-info ul li {\n  margin-bottom: 8px;\n  font-size: 13px;\n  color: #555;\n}\n.mail-builder-no-page-info .mail-builder-hint {\n  color: #999;\n  font-size: 13px;\n  font-style: italic;\n  margin-bottom: 0;\n}\n/* Template List */\n.template-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.template-empty {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  min-height: 200px;\n  color: #999;\n}\n.template-empty .template-empty-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n.template-empty p {\n  margin: 0;\n  font-size: 14px;\n}\n.template-empty .template-hint {\n  margin-top: 8px;\n  font-size: 12px;\n  color: #bbb;\n}\n/* Template Card */\n.template-card {\n  background: #fff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  padding: 12px;\n  transition: all 0.2s ease;\n}\n.template-card:hover {\n  border-color: #1976d2;\n  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);\n}\n.template-card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 8px;\n}\n.template-name {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333;\n}\n.template-target-badge {\n  font-size: 11px;\n  padding: 2px 8px;\n  border-radius: 12px;\n  background: #e3f2fd;\n  color: #1976d2;\n}\n.template-badges {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n}\n.template-builtin-badge {\n  font-size: 10px;\n  padding: 2px 6px;\n  border-radius: 10px;\n  background: #fff3e0;\n  color: #f57c00;\n  font-weight: 500;\n}\n.template-card-preview {\n  margin-bottom: 10px;\n}\n.template-card-preview .template-subject {\n  font-size: 12px;\n  color: #666;\n}\n.template-card-actions {\n  display: flex;\n  gap: 8px;\n  justify-content: flex-end;\n}\n.template-card-btn {\n  padding: 4px 10px;\n  border-radius: 4px;\n  font-size: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: 1px solid #e0e0e0;\n  background: #fff;\n}\n.template-card-btn.use-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n}\n.template-card-btn.use-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n}\n.template-card-btn.edit-btn,\n.template-card-btn.delete-btn {\n  background: #f5f5f5;\n}\n.template-card-btn.edit-btn:hover,\n.template-card-btn.delete-btn:hover {\n  background: #e0e0e0;\n}\n.template-card-btn.delete-btn:hover {\n  background: #ffebee;\n  border-color: #e53935;\n}\n/* Template Editor */\n.template-editor {\n  background: #fff;\n  border-radius: 8px;\n  overflow: hidden;\n}\n.editor-header {\n  padding: 12px 16px;\n  background: #f5f5f5;\n  border-bottom: 1px solid #e0e0e0;\n}\n.editor-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.editor-form {\n  padding: 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.form-group label {\n  font-size: 12px;\n  color: #666;\n  font-weight: 500;\n}\n.form-group input,\n.form-group select,\n.form-group textarea {\n  padding: 8px 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  font-size: 13px;\n  transition: border-color 0.2s ease;\n}\n.form-group input:focus,\n.form-group select:focus,\n.form-group textarea:focus {\n  outline: none;\n  border-color: #1976d2;\n}\n.form-group textarea {\n  resize: vertical;\n  min-height: 80px;\n  font-family: inherit;\n}\n.editor-actions {\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n  padding: 12px 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n}\n.editor-btn {\n  padding: 8px 20px;\n  border-radius: 6px;\n  font-size: 13px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.editor-btn.cancel-btn {\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  color: #666;\n}\n.editor-btn.cancel-btn:hover {\n  background: #e0e0e0;\n}\n.editor-btn.save-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n}\n.editor-btn.save-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n}\n/* Toast Notification */\n.mail-builder-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100px);\n  background: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-size: 14px;\n  z-index: 1000000;\n  opacity: 0;\n  transition: all 0.3s ease;\n  pointer-events: none;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.mail-builder-toast.show {\n  opacity: 1;\n  transform: translateX(-50%) translateY(0);\n}\n/* ============================================================================\n   Template Editor Modal\n   ============================================================================ */\n.template-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n  backdrop-filter: blur(2px);\n}\n.template-modal {\n  background: white;\n  border-radius: 12px;\n  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);\n  width: 90%;\n  max-width: 700px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.template-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.template-modal-title {\n  font-size: 16px;\n  font-weight: 600;\n  margin: 0;\n}\n.template-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 32px;\n  height: 32px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 6px;\n  transition: background 0.15s;\n}\n.template-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.template-modal-body {\n  padding: 20px;\n  overflow-y: auto;\n  flex: 1;\n  max-height: calc(90vh - 140px);\n}\n.template-form-group {\n  margin-bottom: 16px;\n}\n.template-form-group:last-child {\n  margin-bottom: 0;\n}\n.template-form-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #555;\n  margin-bottom: 6px;\n}\n.template-form-input,\n.template-form-select {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  font-size: 14px;\n  transition: border-color 0.2s, box-shadow 0.2s;\n  box-sizing: border-box;\n}\n.template-form-input:focus,\n.template-form-select:focus {\n  outline: none;\n  border-color: #4a90d9;\n  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);\n}\n.template-form-row {\n  display: flex;\n  gap: 12px;\n}\n.template-form-row .template-form-group {\n  flex: 1;\n}\n/* TinyMCE wrapper */\n.template-body-editor {\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  overflow: hidden;\n}\n.template-body-editor .tox-tinymce {\n  border: none !important;\n}\n.template-body-editor textarea {\n  width: 100%;\n  min-height: 150px;\n  padding: 12px;\n  border: none;\n  font-family: inherit;\n  font-size: 14px;\n  resize: vertical;\n  box-sizing: border-box;\n}\n.template-body-editor textarea:focus {\n  outline: none;\n}\n/* Custom Variables Section */\n.template-variables-section {\n  margin-top: 20px;\n  padding-top: 16px;\n  border-top: 1px solid #e0e0e0;\n}\n.template-variables-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  margin-bottom: 12px;\n}\n.template-variables-header h5 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333;\n}\n.template-add-var-btn {\n  padding: 4px 10px;\n  font-size: 12px;\n  background: #e3f2fd;\n  color: #1976d2;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.template-add-var-btn:hover {\n  background: #bbdefb;\n}\n.template-variables-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.template-variables-table th,\n.template-variables-table td {\n  padding: 8px 10px;\n  text-align: left;\n  border: 1px solid #e0e0e0;\n}\n.template-variables-table th {\n  background: #f5f5f5;\n  font-weight: 500;\n  color: #666;\n}\n.template-variables-table input {\n  width: 100%;\n  padding: 6px 8px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  font-size: 12px;\n  box-sizing: border-box;\n}\n.template-variables-table input:focus {\n  outline: none;\n  border-color: #4a90d9;\n}\n.template-variables-table .var-delete-btn {\n  padding: 4px 8px;\n  background: #ffebee;\n  color: #e53935;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  font-size: 14px;\n}\n.template-variables-table .var-delete-btn:hover {\n  background: #ffcdd2;\n}\n.template-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  padding: 16px 20px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n}\n.template-modal-btn {\n  padding: 10px 24px;\n  font-size: 14px;\n  font-weight: 500;\n  border-radius: 6px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.template-modal-btn.btn-cancel {\n  background: #f5f5f5;\n  border: 1px solid #ddd;\n  color: #666;\n}\n.template-modal-btn.btn-cancel:hover {\n  background: #e0e0e0;\n}\n.template-modal-btn.btn-save {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border: none;\n  color: white;\n}\n.template-modal-btn.btn-save:hover {\n  background: linear-gradient(135deg, #5a6fd6 0%, #6b4199 100%);\n}\n/**\n * Visit Monitor (Coordinator Tracker) Styles\n * Epic 10: UI 现代化升级\n *\n * 依赖: variables.less\n * @author HHA Smart Assistant\n * @date 2026-01-12\n */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  font-size: 24px;\n  transition: all 0.15s ease;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  height: 480px;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333333;\n  overflow: hidden;\n  transition: height 0.3s ease;\n}\n.tracker-view {\n  display: flex;\n  flex-direction: column;\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n  transition: transform 0.3s ease;\n}\n.tracker-view.hidden {\n  display: none;\n}\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n.slide-out-to-right {\n  transform: translateX(100%);\n}\n.slide-in-from-left {\n  transform: translateX(-100%);\n}\n.tracker-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.tracker-header-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.tracker-header-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n}\n#last-refresh-time {\n  font-size: 13px;\n  color: #666666;\n  line-height: 28px;\n}\n.tracker-btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border: none;\n  color: white;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  font-weight: 500;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-primary:hover:not(:disabled) {\n  filter: brightness(1.1);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.tracker-btn-primary:active:not(:disabled) {\n  transform: translateY(1px);\n}\n.tracker-btn-primary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-secondary {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #333333;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-secondary:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-btn-secondary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-icon {\n  width: 28px;\n  height: 28px;\n  padding: 0;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  font-size: 16px;\n}\n.tracker-header-btn {\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  padding: 0 14px;\n  height: 28px;\n  border-radius: 2px;\n  cursor: pointer;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-header-btn:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-header-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.back-btn {\n  font-size: 18px;\n  width: 28px;\n  height: 28px;\n  padding: 0;\n}\n.tracker-footer {\n  padding: 8px 16px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  border-top: 1px solid #e0e0e0;\n  background: #f7f8fa;\n  flex-shrink: 0;\n}\n.tracker-content {\n  flex: 1 1 auto;\n  padding: 8px 16px;\n  overflow-y: auto;\n  overflow-x: hidden;\n  overscroll-behavior: contain;\n  min-height: 0;\n}\n.tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.tracker-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 13px;\n  text-align: center;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.tracker-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.tracker-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.tracker-table tbody tr:last-child {\n  border-bottom: none;\n}\n.tracker-table th,\n.tracker-table td {\n  padding: 8px 16px;\n  text-align: center;\n  vertical-align: middle;\n  border: none;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon:hover {\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  opacity: 0.9;\n}\n.status-icon:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon.status-disabled {\n  opacity: 0.5;\n  cursor: default;\n}\n.status-icon.status-disabled:hover {\n  transform: none;\n  opacity: 0.5;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0%,\n  100% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n}\n.edit-list-actions {\n  text-align: right;\n  padding-right: 16px;\n}\n.edit-list-actions button {\n  font-size: 13px;\n  width: 28px;\n  height: 28px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 600;\n  transition: all 0.15s ease;\n}\n.edit-list-actions button:hover:not(:disabled) {\n  filter: brightness(1.15);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n  transform: scale(1.05);\n}\n.edit-list-actions button:active:not(:disabled) {\n  transform: translateY(1px) scale(1.05);\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.add-btn:hover:not(:disabled) {\n  background-color: #218838;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button.remove-btn:hover:not(:disabled) {\n  background-color: #c82333;\n}\n.edit-list-actions button:disabled {\n  background-color: #e0e0e0;\n  color: #999999;\n  cursor: not-allowed;\n  opacity: 0.6;\n}\n.edit-list-actions button:disabled:hover {\n  filter: none;\n  box-shadow: none;\n  transform: none;\n}\n.loader {\n  text-align: center;\n  padding: 32px;\n}\n.spinner {\n  border: 4px solid #f0f0f0;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333333;\n  color: white;\n  padding: 8px 16px;\n  border-radius: 4px;\n  z-index: 100000;\n  opacity: 0;\n  transition: opacity 0.3s ease, top 0.3s ease;\n  font-size: 13px;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n#details-popover {\n  position: fixed;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  min-width: 600px;\n  max-width: 90vw;\n  min-height: 400px;\n  max-height: 80vh;\n  display: flex;\n  flex-direction: column;\n  z-index: 100000;\n  overflow: hidden;\n}\n.popover-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  height: 44px;\n  box-sizing: border-box;\n  cursor: move;\n  flex-shrink: 0;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.popover-close-btn {\n  width: 28px;\n  height: 28px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: #ffffff;\n  color: #666666;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 16px;\n  transition: all 0.15s ease;\n}\n.popover-close-btn:hover {\n  border-color: #dc3545;\n  color: #dc3545;\n  background: #fff5f5;\n}\n.popover-content {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n}\n.popover-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.popover-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 12px;\n  text-align: left;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.popover-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.popover-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.popover-table tbody tr:last-child {\n  border-bottom: none;\n}\n.popover-table td {\n  padding: 8px 16px;\n  font-size: 12px;\n  color: #333333;\n  vertical-align: middle;\n}\n.note-cell {\n  max-width: 300px;\n  word-wrap: break-word;\n  white-space: pre-wrap;\n}\n.datetime-cell {\n  white-space: nowrap;\n}\n.popover-resize-handle {\n  position: absolute;\n  background: transparent;\n  z-index: 10;\n}\n.popover-resize-handle:hover {\n  background: rgba(102, 126, 234, 0.15);\n}\n.popover-resize-handle-s {\n  bottom: 0;\n  left: 16px;\n  right: 16px;\n  height: 4px;\n  cursor: s-resize;\n}\n.popover-resize-handle-w {\n  top: 16px;\n  bottom: 16px;\n  left: 0;\n  width: 8px;\n  cursor: w-resize;\n}\n.popover-resize-handle-e {\n  top: 16px;\n  bottom: 16px;\n  right: 0;\n  width: 8px;\n  cursor: e-resize;\n}\n.popover-resize-handle-se {\n  bottom: 0;\n  right: 0;\n  width: 16px;\n  height: 16px;\n  cursor: se-resize;\n  z-index: 11;\n  border-radius: 0 0 8px 0;\n}\n/* Empty State Styles - matches QA Report empty state */\n.tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 300px;\n  text-align: center;\n  color: #666666;\n  background: #f7f8fa;\n}\n.tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.tracker-empty-state .tracker-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.tracker-empty-state .tracker-empty-text {\n  font-size: 13px;\n  color: #666666;\n}\n/* \n * ==========================================================================\n * Legacy Popover Styles (Details Popover)\n * These styles are for the patient details popover that appears\n * when clicking status icons in the Visit Monitor\n * ==========================================================================\n */\n#details-popover {\n  position: fixed;\n  z-index: 100001;\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* Note Cell Styling */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* Authorization Note Table */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* Popover Resize Handle - Legacy (disabled, handled by coordinator-tracker.less) */\n/* \n.popover-resize-handle {\n    position: absolute;\n    right: 0;\n    bottom: 0;\n    width: 16px;\n    height: 16px;\n    cursor: nwse-resize;\n    background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n    border-bottom-right-radius: 8px;\n}\n\n.popover-resize-handle::before {\n    content: '';\n    position: absolute;\n    right: 4px;\n    bottom: 4px;\n    width: 4px;\n    height: 4px;\n    background: #666;\n    border-radius: 1px;\n}\n*/\n/* \n * ==========================================================================\n * Phone Tooltip Styles\n * Tooltip that appears when hovering over phone icons in patient rows\n * ==========================================================================\n */\n.phone-icon-wrapper {\n  position: relative;\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  position: absolute;\n  top: 100%;\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n}\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "/**\n * Main Stylesheet Entry Point\n * \n * This file imports all component stylesheets.\n * Visit Monitor (Coordinator Tracker) styles are in coordinator-tracker.less\n */\n.hha-smart-panel {\n  position: absolute;\n  top: 0;\n  width: 680px;\n  height: 460px;\n  max-height: 80vh;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n  font-size: 14px;\n  color: #333333;\n}\n.hha-smart-panel-header {\n  height: 40px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 16px;\n  border-bottom: none;\n  cursor: move;\n  user-select: none;\n}\n.hha-smart-panel-title {\n  font-size: 14px;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-panel-controls {\n  display: flex;\n  gap: 8px;\n  position: relative;\n  z-index: 100000;\n}\n.hha-smart-panel-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 2px;\n  background: rgba(255, 255, 255, 0.2);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: background 0.15s ease;\n  font-size: 14px;\n  padding: 0;\n  position: relative;\n  z-index: 100001;\n}\n.hha-smart-panel-btn:hover {\n  background: rgba(255, 255, 255, 0.3);\n}\n.hha-smart-panel-btn:active {\n  background: rgba(255, 255, 255, 0.4);\n}\n.hha-smart-panel-body {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-content-wrapper {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n  position: relative;\n  isolation: isolate;\n}\n.hha-smart-tab-bar {\n  width: 100px;\n  min-width: 40px;\n  background: #f7f8fa;\n  border-right: 1px solid #e0e0e0;\n  transition: width 0.2s ease;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  flex-shrink: 0;\n  position: relative;\n  z-index: 2;\n}\n.hha-smart-tab-bar.collapsed {\n  width: 40px;\n}\n.hha-smart-tab-list {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n}\n.hha-smart-tab-list::-webkit-scrollbar {\n  width: 4px;\n}\n.hha-smart-tab-list::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n.hha-smart-tab-item {\n  position: relative;\n  padding: 12px 8px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  white-space: nowrap;\n  border-bottom: 1px solid #f0f0f0;\n}\n.hha-smart-tab-item:hover {\n  background: #f0f2f5;\n}\n.hha-smart-tab-item.active {\n  background: #f0efff;\n  color: #667eea;\n  font-weight: 500;\n}\n.hha-smart-tab-icon {\n  flex-shrink: 0;\n  font-size: 18px;\n  line-height: 1;\n  width: 20px;\n  text-align: center;\n}\n.hha-smart-tab-text {\n  opacity: 1;\n  transition: opacity 0.2s ease;\n  font-size: 13px;\n  overflow-x: auto;\n  overflow-y: hidden;\n  white-space: nowrap;\n  flex: 1;\n  scroll-behavior: smooth;\n}\n.hha-smart-tab-text::-webkit-scrollbar {\n  height: 0;\n  display: none;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-tab-text {\n  opacity: 0;\n  width: 0;\n  overflow: hidden;\n  pointer-events: none;\n}\n.hha-smart-tab-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 4px;\n  height: 100%;\n  background: #667eea;\n  opacity: 0;\n  transition: opacity 0.2s ease;\n  z-index: 1;\n}\n.hha-smart-tab-item.active .hha-smart-tab-indicator {\n  opacity: 1;\n}\n.hha-smart-tab-collapse-btn {\n  padding: 8px;\n  text-align: center;\n  cursor: pointer;\n  border-top: 1px solid #e0e0e0;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 36px;\n  position: relative;\n  z-index: 10;\n}\n.hha-smart-tab-collapse-btn:hover {\n  background: #f0f2f5;\n}\n.hha-smart-collapse-icon {\n  display: inline-block;\n  transition: transform 0.2s ease;\n  font-size: 14px;\n  color: #666666;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-collapse-icon {\n  transform: rotate(180deg);\n}\n.hha-smart-content-area {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: #ffffff;\n  min-height: 0;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-panel-footer {\n  height: 28px;\n  background: #f7f8fa;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  padding: 0 16px;\n  font-size: 12px;\n  color: #666666;\n  flex-shrink: 0;\n}\n.footer-branding {\n  font-style: italic;\n  opacity: 0.6;\n  user-select: none;\n}\n.hha-smart-tab-content {\n  display: none !important;\n  padding: 0;\n  animation: fadeIn 0.2s ease;\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  box-sizing: border-box;\n  min-height: 0;\n  position: relative;\n  z-index: 0;\n}\n.hha-smart-tab-content.active {\n  display: flex !important;\n  flex-direction: column;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n.hha-smart-config-card {\n  background: #ffffff;\n  border-radius: 4px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: box-shadow 0.2s ease;\n}\n.hha-smart-config-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.hha-smart-config-card-title {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-config-card-body {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.hha-smart-btn {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.hha-smart-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #667eea;\n  color: white;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.hha-smart-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary:hover:not(:disabled) {\n  background: #5a6fd6;\n}\n.hha-smart-btn-primary:active:not(:disabled) {\n  background: #4c5ec2;\n}\n.hha-smart-btn-secondary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #f7f8fa;\n  color: #333333;\n  border: 1px solid #e0e0e0;\n}\n.hha-smart-btn-secondary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-secondary:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #a29bfe;\n}\n.hha-smart-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 32px;\n  text-align: center;\n  color: #666666;\n  min-height: 300px;\n}\n.hha-smart-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.hha-smart-placeholder-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.hha-smart-placeholder-text {\n  font-size: 14px;\n  color: #666666;\n}\n#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/**\n * QA Report Tab Styles\n * Epic 8: QA 报告功能\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.qa-report-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n}\n.qa-report-wrapper {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  gap: 0;\n}\n.qa-report-header {\n  display: none;\n}\n.qa-report-title {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.qa-report-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.qa-toolbar-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-left > * {\n  margin: 0;\n  vertical-align: middle;\n}\n.qa-toolbar-actions {\n  display: flex;\n  align-items: center;\n  gap: 0;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-actions .qa-load-btn {\n  border-radius: 2px 0 0 2px;\n  border-right: 1px solid rgba(255, 255, 255, 0.3);\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-actions .qa-export-btn {\n  border-radius: 0 2px 2px 0;\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-select-label {\n  font-size: 13px;\n  color: #666666;\n  font-weight: 500;\n  line-height: 28px;\n  white-space: nowrap;\n}\n.qa-coordinator-select {\n  padding: 0 28px 0 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: white;\n  background-image: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n  background-repeat: no-repeat;\n  background-position: right 8px center;\n  background-size: 12px 12px;\n  font-size: 13px;\n  min-width: 180px;\n  max-width: 300px;\n  height: 28px !important;\n  line-height: 26px;\n  vertical-align: middle;\n  cursor: pointer;\n  box-sizing: border-box;\n  appearance: none;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.qa-coordinator-select:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px #a29bfe;\n}\n.qa-coordinator-select:disabled {\n  background: #f7f8fa;\n  cursor: not-allowed;\n}\n.qa-load-btn {\n  padding: 0 14px;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-load-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.qa-export-btn {\n  padding: 0 12px;\n  font-size: 13px;\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  color: #333333;\n  cursor: pointer;\n  transition: all 0.2s;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-export-btn:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #667eea;\n}\n.qa-export-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.qa-status-text {\n  font-size: 12px;\n  color: #666666;\n  white-space: nowrap;\n}\n.qa-view-toggle {\n  display: flex;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  overflow: hidden;\n  height: 28px;\n}\n.qa-view-btn {\n  padding: 0 10px;\n  border: none;\n  background: white;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  transition: all 0.2s;\n  height: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-view-btn:first-child {\n  border-right: 1px solid #e0e0e0;\n}\n.qa-view-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-view-btn.active {\n  background: #667eea;\n  color: white;\n}\n.qa-report-content-body {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n  background: #f7f8fa;\n}\n.qa-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  text-align: center;\n  color: #666666;\n}\n.qa-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.qa-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.qa-empty-text {\n  font-size: 13px;\n}\n.qa-report-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n  background: white;\n  border-radius: 2px;\n  overflow: hidden;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.qa-report-table thead {\n  background: #f7f8fa;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n}\n.qa-report-table thead th {\n  padding: 8px 16px;\n  text-align: left;\n  font-weight: 600;\n  color: #666666;\n  border-bottom: 2px solid #e0e0e0;\n  white-space: nowrap;\n}\n.qa-report-table thead th.sortable {\n  cursor: pointer;\n  user-select: none;\n  transition: background 0.15s;\n}\n.qa-report-table thead th.sortable:hover {\n  background: #e7eaf0;\n}\n.qa-report-table thead th.sortable .sort-icon {\n  margin-left: 4px;\n  font-size: 10px;\n  opacity: 0.5;\n  display: inline-block;\n  vertical-align: middle;\n}\n.qa-report-table thead th.sortable .sort-icon.sort-asc,\n.qa-report-table thead th.sortable .sort-icon.sort-desc {\n  opacity: 1;\n  color: #667eea;\n}\n.qa-report-table tbody tr {\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s;\n}\n.qa-report-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.qa-report-table tbody tr:last-child {\n  border-bottom: none;\n}\n.qa-report-table tbody td {\n  padding: 8px 16px;\n  vertical-align: middle;\n  user-select: text;\n  cursor: text;\n}\n.qa-report-table tbody td.col-action {\n  user-select: none;\n  cursor: default;\n}\n.qa-report-table .col-id {\n  width: 110px;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  color: #667eea;\n  font-weight: 500;\n}\n.qa-report-table .col-name {\n  width: auto;\n  min-width: 150px;\n  font-weight: 500;\n}\n.qa-report-table .col-phone {\n  width: 140px;\n}\n.qa-report-table .phone-loading {\n  color: #666666;\n  font-style: italic;\n  font-size: 13px;\n}\n.qa-report-table .phone-error {\n  color: #dc3545;\n  font-size: 13px;\n}\n.qa-report-table .phone-single {\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n}\n.qa-report-table .phone-single a {\n  color: #667eea;\n  text-decoration: none;\n}\n.qa-report-table .phone-single a:hover {\n  text-decoration: underline;\n}\n.qa-report-table .phone-multiple {\n  position: relative;\n  display: inline-block;\n  cursor: pointer;\n}\n.qa-report-table .phone-multiple .phone-trigger {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  padding: 2px 6px;\n  background: rgba(102, 126, 234, 0.1);\n  border: 1px solid #667eea;\n  border-radius: 2px;\n  color: #667eea;\n  cursor: pointer;\n  font-size: 13px;\n  transition: all 0.2s;\n}\n.qa-report-table .phone-multiple .phone-trigger:hover {\n  background: #667eea;\n  color: white;\n}\n.qa-report-table .phone-multiple .phone-trigger .phone-count {\n  font-weight: 600;\n}\n.qa-report-table .phone-dropdown {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  z-index: 1000;\n  min-width: 160px;\n  padding: 4px 0;\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  margin-top: 4px;\n}\n.qa-report-table .phone-dropdown .phone-item {\n  display: block;\n  padding: 4px 8px;\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n  text-decoration: none;\n  transition: background 0.15s;\n}\n.qa-report-table .phone-dropdown .phone-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-table .col-qa {\n  width: 100px;\n  font-weight: 500;\n}\n.qa-report-table .col-action {\n  width: 50px;\n  text-align: center;\n}\n.phone-item {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.phone-item + .phone-item {\n  margin-top: 2px;\n}\n.qa-never {\n  color: #dc3545 !important;\n  font-weight: 600;\n}\n.qa-action-btn {\n  padding: 4px 8px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 16px;\n  color: #666666;\n  border-radius: 2px;\n  transition: all 0.2s;\n}\n.qa-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 8px;\n  padding: 8px;\n}\n.qa-card {\n  background: white;\n  border-radius: 2px;\n  padding: 16px;\n  border-left: 4px solid #e0e0e0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  transition: all 0.2s;\n  position: relative;\n  overflow: hidden;\n  user-select: text;\n}\n.qa-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  transform: translateY(-2px);\n}\n.card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  margin-bottom: 8px;\n}\n.card-name {\n  font-weight: 600;\n  font-size: 13px;\n  color: #333333;\n  flex: 1;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  padding-right: 8px;\n}\n.card-action-btn {\n  padding: 2px 6px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  border-radius: 2px;\n  flex-shrink: 0;\n  user-select: none;\n}\n.card-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.card-id {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #667eea;\n  margin-bottom: 8px;\n}\n.card-phones {\n  margin-bottom: 8px;\n}\n.card-phone {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.card-phone + .card-phone {\n  margin-top: 2px;\n}\n.card-qa {\n  font-weight: 600;\n  font-size: 13px;\n  margin-bottom: 8px;\n}\n.card-priority-badge {\n  position: absolute;\n  bottom: 0;\n  right: 0;\n  padding: 2px 8px;\n  font-size: 12px;\n  color: white;\n  border-radius: 2px 0 0 0;\n  font-weight: 500;\n}\n.priority-critical .col-qa {\n  color: #dc3545;\n}\n.priority-high .col-qa {\n  color: #e74c3c;\n}\n.priority-medium-high .col-qa {\n  color: #fd7e14;\n}\n.priority-medium .col-qa {\n  color: #ffc107;\n}\n.priority-low-medium .col-qa {\n  color: #a8d08d;\n}\n.priority-low .col-qa {\n  color: #28a745;\n}\n.qa-export-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 140px;\n}\n.export-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  transition: background 0.15s;\n}\n.export-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.export-menu-item + .export-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-action-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 180px;\n}\n.action-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: background 0.15s;\n}\n.action-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.action-menu-item + .action-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-toast {\n  position: fixed;\n  top: 24px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100%);\n  padding: 8px 24px;\n  border-radius: 2px;\n  font-size: 13px;\n  color: white;\n  z-index: 100001;\n  opacity: 0;\n  transition: all 0.3s ease;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n}\n.qa-toast.show {\n  transform: translateX(-50%) translateY(0);\n  opacity: 1;\n}\n.qa-toast.qa-toast-success {\n  background: #28a745;\n}\n.qa-toast.qa-toast-error {\n  background: #dc3545;\n}\n.qa-toast.qa-toast-info {\n  background: #667eea;\n}\n.qa-note-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n}\n.qa-note-modal {\n  background: white;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  width: 90%;\n  max-width: 520px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.qa-note-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.qa-note-modal-title {\n  font-size: 14px;\n  font-weight: 600;\n}\n.qa-note-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 28px;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  transition: background 0.15s;\n}\n.qa-note-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.qa-note-modal-body {\n  padding: 16px;\n  overflow-y: auto;\n  flex: 1;\n}\n.qa-note-section {\n  margin-bottom: 16px;\n}\n.qa-note-section:last-child {\n  margin-bottom: 0;\n}\n.qa-note-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #666666;\n  margin-bottom: 4px;\n}\n.qa-note-template {\n  padding: 8px 16px;\n  background: #f0f2f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  line-height: 1.5;\n  color: #333333;\n}\n.qa-note-textarea {\n  width: 100%;\n  padding: 8px 16px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  font-family: inherit;\n  resize: vertical;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.qa-note-textarea:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);\n}\n.qa-note-textarea::placeholder {\n  color: #666666;\n}\n.qa-note-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  padding: 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #f0f2f5;\n}\n.qa-note-btn {\n  padding: 4px 16px;\n  font-size: 13px;\n  border-radius: 2px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.qa-note-btn.qa-note-btn-cancel {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #666666;\n}\n.qa-note-btn.qa-note-btn-cancel:hover {\n  background: #f0f2f5;\n  border-color: #666666;\n}\n.qa-note-btn.qa-note-btn-submit {\n  background: #667eea;\n  border: 1px solid #667eea;\n  color: white;\n}\n.qa-note-btn.qa-note-btn-submit:hover {\n  background: #5a6fd6;\n  border-color: #5a6fd6;\n}\n/**\n * Status Tracking Tab Styles\n * Epic 7: Multi-Tab Panel - 状态追踪 Tab\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.status-tracking-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n  padding: 0;\n}\n#status-tracking-wrapper {\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n#status-tracking-wrapper #tracker-panel {\n  background: #ffffff;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view {\n  height: 100%;\n  overflow: hidden;\n  min-height: 0;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view.hidden {\n  display: none !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content {\n  flex: 1 1 auto;\n  min-height: 0;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-header,\n#status-tracking-wrapper #tracker-panel .tracker-footer {\n  flex-shrink: 0;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar {\n  width: 6px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb:hover {\n  background: #666666;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n/* Empty State Styles - matches QA Report empty state */\n#status-tracking-wrapper .tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 200px;\n  padding: 40px 20px;\n  text-align: center;\n  color: #666;\n  background: #f7f8fa;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.7;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-title {\n  font-size: 18px;\n  font-weight: 600;\n  color: #333;\n  margin-bottom: 8px;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-text {\n  font-size: 14px;\n  color: #888;\n}\n/**\n * Cleaner Tab Styles\n * Epic 11: POC 和 Duplicate Call 智能清理器\n */\n.cleaner-tab {\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  padding: 0;\n}\n.cleaner-wrapper {\n  flex: 1;\n  overflow-y: auto;\n  padding: 12px 16px;\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n}\n/* Header */\n.cleaner-header {\n  margin-bottom: 12px;\n}\n.cleaner-title-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cleaner-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.cleaner-page-tag {\n  font-size: 12px;\n  color: #666;\n  background: #f0f4f8;\n  padding: 3px 8px;\n  border-radius: 4px;\n  white-space: nowrap;\n}\n.cleaner-btn-refresh {\n  background: #f8f9fa;\n  border: none;\n  border-radius: 4px;\n  padding: 4px 8px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background 0.2s ease;\n  margin-left: auto;\n  outline: none;\n}\n.cleaner-btn-refresh:hover {\n  background: #e8f4fd;\n}\n.cleaner-btn-refresh:focus {\n  outline: none;\n}\n.cleaner-hint {\n  font-size: 12px;\n  color: #888;\n  margin-top: 8px;\n  font-style: italic;\n}\n/* Status */\n.cleaner-status {\n  text-align: center;\n  padding: 20px;\n  color: #666;\n}\n.cleaner-spinner {\n  animation: cleaner-spin 1s linear infinite;\n  display: inline-block;\n}\n@keyframes cleaner-spin {\n  from {\n    transform: rotate(0deg);\n  }\n  to {\n    transform: rotate(360deg);\n  }\n}\n/* Toolbar */\n.cleaner-toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 12px;\n  padding: 10px 12px;\n  background: #f8f9fa;\n  border-radius: 6px;\n}\n.cleaner-select-all {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  color: #333;\n  line-height: 1;\n}\n.cleaner-select-all input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin: 0;\n  cursor: pointer;\n  vertical-align: middle;\n}\n.cleaner-select-all span {\n  vertical-align: middle;\n}\n/* Buttons */\n.cleaner-btn-primary {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-primary:hover:not(:disabled) {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n  transform: translateY(-1px);\n}\n.cleaner-btn-primary:disabled {\n  background: #ccc;\n  cursor: not-allowed;\n  transform: none;\n}\n.cleaner-btn-secondary {\n  background: white;\n  color: #666;\n  border: 1px solid #ddd;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-secondary:hover {\n  background: #f5f5f5;\n  border-color: #ccc;\n}\n/* Records List */\n.cleaner-records-list {\n  max-height: 260px;\n  overflow-y: auto;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  overscroll-behavior: contain;\n}\n.cleaner-record-item {\n  display: flex;\n  align-items: flex-start;\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.cleaner-record-item:last-child {\n  border-bottom: none;\n}\n.cleaner-record-item:hover {\n  background: #f8f9fa;\n}\n.cleaner-record-item input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin-right: 10px;\n  margin-top: 2px;\n  cursor: pointer;\n}\n.cleaner-record-info {\n  flex: 1;\n  font-size: 13px;\n}\n.cleaner-record-info .record-main {\n  font-weight: 500;\n  color: #333;\n  margin-bottom: 4px;\n}\n.cleaner-record-info .record-detail {\n  color: #666;\n  font-size: 12px;\n}\n.cleaner-badge {\n  display: inline-block;\n  padding: 2px 8px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 500;\n  margin-right: 8px;\n}\n.cleaner-badge.badge-poc {\n  background: #e3f2fd;\n  color: #1976d2;\n}\n.cleaner-badge.badge-poc-caregiver {\n  background: #fff3e0;\n  color: #f57c00;\n}\n/* Call Summary */\n.cleaner-call-summary {\n  text-align: center;\n  padding: 16px;\n  background: #e8f4fd;\n  border-radius: 8px;\n  margin-bottom: 12px;\n}\n.cleaner-call-summary .cleaner-call-count {\n  font-size: 15px;\n  color: #1976d2;\n}\n.cleaner-call-summary .cleaner-call-count strong {\n  font-size: 20px;\n  font-weight: 600;\n}\n.cleaner-call-details {\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  margin-top: 12px;\n  max-height: 250px;\n  overflow-y: auto;\n}\n.cleaner-call-item {\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 13px;\n  color: #333;\n}\n.cleaner-call-item:last-child {\n  border-bottom: none;\n}\n.cleaner-call-item::before {\n  content: \"•\";\n  color: #1976d2;\n  margin-right: 8px;\n}\n/* Empty State */\n.cleaner-empty-state {\n  text-align: center;\n  padding: 40px 20px;\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  min-height: 300px;\n}\n.cleaner-empty-state .cleaner-empty-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n}\n.cleaner-empty-state .cleaner-hint {\n  font-size: 13px;\n  color: #666;\n}\n.cleaner-empty-state p {\n  font-size: 15px;\n  color: #4caf50;\n  font-weight: 500;\n  margin: 0;\n}\n/* No Page Detected */\n.cleaner-no-page-info {\n  text-align: left;\n  margin-top: 16px;\n  padding: 16px;\n  background: #f8f9fa;\n  border-radius: 8px;\n}\n.cleaner-no-page-info p {\n  margin: 0 0 12px 0;\n  font-size: 14px;\n  color: #333;\n}\n.cleaner-no-page-info ul {\n  margin: 0 0 12px 20px;\n  padding: 0;\n}\n.cleaner-no-page-info ul li {\n  margin-bottom: 8px;\n  font-size: 13px;\n  color: #555;\n}\n.cleaner-no-page-info .cleaner-hint {\n  color: #999;\n  font-size: 13px;\n  font-style: italic;\n  margin-bottom: 0;\n}\n/* Cleaning Overlay - 浅色半透明蒙版 */\n#hha-cleaning-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.15);\n  backdrop-filter: blur(2px);\n  z-index: 999999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  pointer-events: all;\n  /* 旋转动画 */\n}\n#hha-cleaning-overlay .cleaning-modal {\n  background: white;\n  padding: 30px 40px;\n  border-radius: 12px;\n  text-align: center;\n  min-width: 400px;\n  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);\n  /* 确认对话框按钮 */\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon {\n  font-size: 48px;\n  margin-bottom: 15px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon.success {\n  color: #4CAF50;\n}\n#hha-cleaning-overlay .cleaning-modal h3 {\n  margin: 0 0 10px;\n  font-size: 20px;\n  color: #333;\n}\n#hha-cleaning-overlay .cleaning-modal p {\n  margin: 0;\n  color: #666;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar {\n  height: 8px;\n  background: #e0e0e0;\n  border-radius: 4px;\n  overflow: hidden;\n  margin: 20px 0;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar .progress-fill {\n  height: 100%;\n  background: linear-gradient(90deg, #4CAF50, #8BC34A);\n  transition: width 0.3s ease;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-warning {\n  color: #ff9800;\n  font-size: 14px;\n  margin-top: 15px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .success-note {\n  color: #666;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .error-message {\n  color: #e53935;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n  margin-top: 20px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel {\n  padding: 10px 24px;\n  background: #f5f5f5;\n  color: #666;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel:hover {\n  background: #e0e0e0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm {\n  padding: 10px 24px;\n  background: #4caf50;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm:hover {\n  background: #43a047;\n}\n#hha-cleaning-overlay .spinning {\n  animation: cleaner-spin 1s linear infinite;\n}\n/**\n * Mail Builder Tab Styles\n * Epic 12: 智能邮件构筑助手\n */\n.mail-builder-tab {\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  padding: 0;\n}\n.mail-builder-wrapper {\n  flex: 1;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n}\n/* Header */\n.mail-builder-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: #fafbfc;\n  flex-shrink: 0;\n}\n.mail-builder-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.mail-builder-page-tag {\n  font-size: 12px;\n  color: #666;\n  background: #e8f4fd;\n  padding: 4px 10px;\n  border-radius: 12px;\n  white-space: nowrap;\n}\n/* Main Content - 35% / 65% Split */\n.mail-builder-main {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n}\n.mail-builder-main.full-width .mail-builder-template-panel {\n  width: 100%;\n  border-left: none;\n}\n/* Left Info Panel (35%) */\n.mail-builder-info-panel {\n  width: 35%;\n  min-width: 200px;\n  border-right: 1px solid #e0e0e0;\n  padding: 12px;\n  display: flex;\n  flex-direction: column;\n  overflow-y: auto;\n  background: #fff;\n}\n.mail-builder-info-list {\n  flex: 1;\n}\n.mail-builder-info-item {\n  display: flex;\n  align-items: center;\n  padding: 8px 0;\n  border-bottom: 1px solid #f0f0f0;\n  gap: 8px;\n}\n.mail-builder-info-item:last-child {\n  border-bottom: none;\n}\n.info-label {\n  font-size: 12px;\n  color: #888;\n  min-width: 40px;\n  flex-shrink: 0;\n}\n.info-value {\n  flex: 1;\n  font-size: 13px;\n  color: #333;\n  font-weight: 500;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.info-copy-btn {\n  background: #f0f4f8;\n  border: none;\n  border-radius: 4px;\n  padding: 4px 6px;\n  font-size: 11px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  flex-shrink: 0;\n}\n.info-copy-btn:hover {\n  background: #e0e8f0;\n  transform: scale(1.05);\n}\n.info-copy-btn:active {\n  transform: scale(0.95);\n}\n/* Quick Copy Buttons */\n.mail-builder-quick-copy {\n  margin-top: 12px;\n  padding-top: 12px;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.quick-copy-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  font-size: 12px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  text-align: center;\n}\n.quick-copy-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n  transform: translateY(-1px);\n}\n.quick-copy-btn:active {\n  transform: translateY(0);\n}\n/* Right Template Panel (65%) */\n.mail-builder-template-panel {\n  flex: 1;\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  background: #fafbfc;\n}\n.mail-builder-template-tabs {\n  display: flex;\n  border-bottom: 1px solid #e0e0e0;\n  background: #fff;\n  flex-shrink: 0;\n}\n.template-tab-btn {\n  flex: 1;\n  padding: 10px 16px;\n  background: transparent;\n  border: none;\n  border-bottom: 2px solid transparent;\n  font-size: 13px;\n  color: #666;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.template-tab-btn:hover {\n  color: #333;\n  background: #f5f5f5;\n}\n.template-tab-btn.active {\n  color: #1976d2;\n  border-bottom-color: #1976d2;\n  font-weight: 500;\n}\n.mail-builder-template-content {\n  flex: 1;\n  padding: 16px;\n  overflow-y: auto;\n}\n.template-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 200px;\n  color: #999;\n}\n.template-placeholder .template-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n.template-placeholder p {\n  margin: 0;\n  font-size: 14px;\n}\n.template-placeholder .template-hint {\n  margin-top: 8px;\n  font-size: 12px;\n  color: #bbb;\n}\n.mail-builder-template-actions {\n  display: flex;\n  gap: 8px;\n  padding: 12px;\n  border-top: 1px solid #e0e0e0;\n  background: #fff;\n  flex-shrink: 0;\n}\n.template-action-btn {\n  flex: 1;\n  padding: 8px 12px;\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  font-size: 12px;\n  color: #666;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.template-action-btn:hover:not(:disabled) {\n  background: #e8e8e8;\n  color: #333;\n}\n.template-action-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n/* No Data State */\n.mail-builder-no-data {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  color: #999;\n  font-size: 13px;\n}\n/* No Page Detected */\n.mail-builder-no-page-info {\n  text-align: left;\n  margin-top: 16px;\n  padding: 16px;\n  background: #f8f9fa;\n  border-radius: 8px;\n}\n.mail-builder-no-page-info p {\n  margin: 0 0 12px 0;\n  font-size: 14px;\n  color: #333;\n}\n.mail-builder-no-page-info ul {\n  margin: 0 0 12px 20px;\n  padding: 0;\n}\n.mail-builder-no-page-info ul li {\n  margin-bottom: 8px;\n  font-size: 13px;\n  color: #555;\n}\n.mail-builder-no-page-info .mail-builder-hint {\n  color: #999;\n  font-size: 13px;\n  font-style: italic;\n  margin-bottom: 0;\n}\n/* Template List */\n.template-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.template-empty {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  min-height: 200px;\n  color: #999;\n}\n.template-empty .template-empty-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n.template-empty p {\n  margin: 0;\n  font-size: 14px;\n}\n.template-empty .template-hint {\n  margin-top: 8px;\n  font-size: 12px;\n  color: #bbb;\n}\n/* Template Card */\n.template-card {\n  background: #fff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  padding: 12px;\n  transition: all 0.2s ease;\n}\n.template-card:hover {\n  border-color: #1976d2;\n  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);\n}\n.template-card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 8px;\n}\n.template-name {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333;\n}\n.template-target-badge {\n  font-size: 11px;\n  padding: 2px 8px;\n  border-radius: 12px;\n  background: #e3f2fd;\n  color: #1976d2;\n}\n.template-badges {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n}\n.template-builtin-badge {\n  font-size: 10px;\n  padding: 2px 6px;\n  border-radius: 10px;\n  background: #fff3e0;\n  color: #f57c00;\n  font-weight: 500;\n}\n.template-card-preview {\n  margin-bottom: 10px;\n}\n.template-card-preview .template-subject {\n  font-size: 12px;\n  color: #666;\n}\n.template-card-actions {\n  display: flex;\n  gap: 8px;\n  justify-content: flex-end;\n}\n.template-card-btn {\n  padding: 4px 10px;\n  border-radius: 4px;\n  font-size: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: 1px solid #e0e0e0;\n  background: #fff;\n}\n.template-card-btn.use-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n}\n.template-card-btn.use-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n}\n.template-card-btn.edit-btn,\n.template-card-btn.delete-btn {\n  background: #f5f5f5;\n}\n.template-card-btn.edit-btn:hover,\n.template-card-btn.delete-btn:hover {\n  background: #e0e0e0;\n}\n.template-card-btn.delete-btn:hover {\n  background: #ffebee;\n  border-color: #e53935;\n}\n/* Template Editor */\n.template-editor {\n  background: #fff;\n  border-radius: 8px;\n  overflow: hidden;\n}\n.editor-header {\n  padding: 12px 16px;\n  background: #f5f5f5;\n  border-bottom: 1px solid #e0e0e0;\n}\n.editor-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.editor-form {\n  padding: 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.form-group label {\n  font-size: 12px;\n  color: #666;\n  font-weight: 500;\n}\n.form-group input,\n.form-group select,\n.form-group textarea {\n  padding: 8px 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  font-size: 13px;\n  transition: border-color 0.2s ease;\n}\n.form-group input:focus,\n.form-group select:focus,\n.form-group textarea:focus {\n  outline: none;\n  border-color: #1976d2;\n}\n.form-group textarea {\n  resize: vertical;\n  min-height: 80px;\n  font-family: inherit;\n}\n.editor-actions {\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n  padding: 12px 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n}\n.editor-btn {\n  padding: 8px 20px;\n  border-radius: 6px;\n  font-size: 13px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.editor-btn.cancel-btn {\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  color: #666;\n}\n.editor-btn.cancel-btn:hover {\n  background: #e0e0e0;\n}\n.editor-btn.save-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n}\n.editor-btn.save-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n}\n/* Toast Notification */\n.mail-builder-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100px);\n  background: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-size: 14px;\n  z-index: 1000000;\n  opacity: 0;\n  transition: all 0.3s ease;\n  pointer-events: none;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.mail-builder-toast.show {\n  opacity: 1;\n  transform: translateX(-50%) translateY(0);\n}\n/* ============================================================================\n   Template Editor Modal\n   ============================================================================ */\n.template-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n  backdrop-filter: blur(2px);\n}\n.template-modal {\n  background: white;\n  border-radius: 12px;\n  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);\n  width: 90%;\n  max-width: 700px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.template-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.template-modal-title {\n  font-size: 16px;\n  font-weight: 600;\n  margin: 0;\n}\n.template-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 32px;\n  height: 32px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 6px;\n  transition: background 0.15s;\n}\n.template-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.template-modal-body {\n  padding: 20px;\n  overflow-y: auto;\n  flex: 1;\n  max-height: calc(90vh - 140px);\n}\n.template-form-group {\n  margin-bottom: 16px;\n}\n.template-form-group:last-child {\n  margin-bottom: 0;\n}\n.template-form-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #555;\n  margin-bottom: 6px;\n}\n.template-form-input,\n.template-form-select {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  font-size: 14px;\n  transition: border-color 0.2s, box-shadow 0.2s;\n  box-sizing: border-box;\n}\n.template-form-input:focus,\n.template-form-select:focus {\n  outline: none;\n  border-color: #4a90d9;\n  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);\n}\n.template-form-row {\n  display: flex;\n  gap: 12px;\n}\n.template-form-row .template-form-group {\n  flex: 1;\n}\n/* TinyMCE wrapper */\n.template-body-editor {\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  overflow: hidden;\n}\n.template-body-editor .tox-tinymce {\n  border: none !important;\n}\n.template-body-editor textarea {\n  width: 100%;\n  min-height: 150px;\n  padding: 12px;\n  border: none;\n  font-family: inherit;\n  font-size: 14px;\n  resize: vertical;\n  box-sizing: border-box;\n}\n.template-body-editor textarea:focus {\n  outline: none;\n}\n/* Custom Variables Section */\n.template-variables-section {\n  margin-top: 20px;\n  padding-top: 16px;\n  border-top: 1px solid #e0e0e0;\n}\n.template-variables-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  margin-bottom: 12px;\n}\n.template-variables-header h5 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333;\n}\n.template-add-var-btn {\n  padding: 4px 10px;\n  font-size: 12px;\n  background: #e3f2fd;\n  color: #1976d2;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.template-add-var-btn:hover {\n  background: #bbdefb;\n}\n.template-variables-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.template-variables-table th,\n.template-variables-table td {\n  padding: 8px 10px;\n  text-align: left;\n  border: 1px solid #e0e0e0;\n}\n.template-variables-table th {\n  background: #f5f5f5;\n  font-weight: 500;\n  color: #666;\n}\n.template-variables-table input {\n  width: 100%;\n  padding: 6px 8px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  font-size: 12px;\n  box-sizing: border-box;\n}\n.template-variables-table input:focus {\n  outline: none;\n  border-color: #4a90d9;\n}\n.template-variables-table .var-delete-btn {\n  padding: 4px 8px;\n  background: #ffebee;\n  color: #e53935;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  font-size: 14px;\n}\n.template-variables-table .var-delete-btn:hover {\n  background: #ffcdd2;\n}\n.template-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  padding: 16px 20px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n}\n.template-modal-btn {\n  padding: 10px 24px;\n  font-size: 14px;\n  font-weight: 500;\n  border-radius: 6px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.template-modal-btn.btn-cancel {\n  background: #f5f5f5;\n  border: 1px solid #ddd;\n  color: #666;\n}\n.template-modal-btn.btn-cancel:hover {\n  background: #e0e0e0;\n}\n.template-modal-btn.btn-save {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border: none;\n  color: white;\n}\n.template-modal-btn.btn-save:hover {\n  background: linear-gradient(135deg, #5a6fd6 0%, #6b4199 100%);\n}\n/**\n * Visit Monitor (Coordinator Tracker) Styles\n * Epic 10: UI 现代化升级\n *\n * 依赖: variables.less\n * @author HHA Smart Assistant\n * @date 2026-01-12\n */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  font-size: 24px;\n  transition: all 0.15s ease;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  height: 480px;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333333;\n  overflow: hidden;\n  transition: height 0.3s ease;\n}\n.tracker-view {\n  display: flex;\n  flex-direction: column;\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n  transition: transform 0.3s ease;\n}\n.tracker-view.hidden {\n  display: none;\n}\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n.slide-out-to-right {\n  transform: translateX(100%);\n}\n.slide-in-from-left {\n  transform: translateX(-100%);\n}\n.tracker-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.tracker-header-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.tracker-header-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n}\n#last-refresh-time {\n  font-size: 13px;\n  color: #666666;\n  line-height: 28px;\n}\n.tracker-btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border: none;\n  color: white;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  font-weight: 500;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-primary:hover:not(:disabled) {\n  filter: brightness(1.1);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.tracker-btn-primary:active:not(:disabled) {\n  transform: translateY(1px);\n}\n.tracker-btn-primary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-secondary {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #333333;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-secondary:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-btn-secondary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-icon {\n  width: 28px;\n  height: 28px;\n  padding: 0;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  font-size: 16px;\n}\n.tracker-header-btn {\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  padding: 0 14px;\n  height: 28px;\n  border-radius: 2px;\n  cursor: pointer;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-header-btn:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-header-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.back-btn {\n  font-size: 18px;\n  width: 28px;\n  height: 28px;\n  padding: 0;\n}\n.tracker-footer {\n  padding: 8px 16px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  border-top: 1px solid #e0e0e0;\n  background: #f7f8fa;\n  flex-shrink: 0;\n}\n.tracker-content {\n  flex: 1 1 auto;\n  padding: 8px 16px;\n  overflow-y: auto;\n  overflow-x: hidden;\n  overscroll-behavior: contain;\n  min-height: 0;\n}\n.tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.tracker-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 13px;\n  text-align: center;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.th-filter-btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  width: 16px;\n  height: 16px;\n  margin-left: 2px;\n  font-size: 10px;\n  color: #666666;\n  cursor: pointer;\n  border-radius: 2px;\n  transition: all 0.15s ease;\n  vertical-align: middle;\n  user-select: none;\n}\n.th-filter-btn:hover {\n  color: #667eea;\n  background: rgba(102, 126, 234, 0.1);\n}\n.th-filter-btn.active {\n  color: #667eea;\n  transform: rotate(180deg);\n}\n.th-filter-btn.warning {\n  color: #e67e22;\n}\n.tracker-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.tracker-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.tracker-table tbody tr:last-child {\n  border-bottom: none;\n}\n.tracker-table th,\n.tracker-table td {\n  padding: 8px 16px;\n  text-align: center;\n  vertical-align: middle;\n  border: none;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon:hover {\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  opacity: 0.9;\n}\n.status-icon:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon.status-disabled {\n  opacity: 0.5;\n  cursor: default;\n}\n.status-icon.status-disabled:hover {\n  transform: none;\n  opacity: 0.5;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0%,\n  100% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n}\n.edit-list-actions {\n  text-align: right;\n  padding-right: 16px;\n}\n.edit-list-actions button {\n  font-size: 13px;\n  width: 28px;\n  height: 28px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 600;\n  transition: all 0.15s ease;\n}\n.edit-list-actions button:hover:not(:disabled) {\n  filter: brightness(1.15);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n  transform: scale(1.05);\n}\n.edit-list-actions button:active:not(:disabled) {\n  transform: translateY(1px) scale(1.05);\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.add-btn:hover:not(:disabled) {\n  background-color: #218838;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button.remove-btn:hover:not(:disabled) {\n  background-color: #c82333;\n}\n.edit-list-actions button:disabled {\n  background-color: #e0e0e0;\n  color: #999999;\n  cursor: not-allowed;\n  opacity: 0.6;\n}\n.edit-list-actions button:disabled:hover {\n  filter: none;\n  box-shadow: none;\n  transform: none;\n}\n.loader {\n  text-align: center;\n  padding: 32px;\n}\n.spinner {\n  border: 4px solid #f0f0f0;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333333;\n  color: white;\n  padding: 8px 16px;\n  border-radius: 4px;\n  z-index: 100000;\n  opacity: 0;\n  transition: opacity 0.3s ease, top 0.3s ease;\n  font-size: 13px;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n#details-popover {\n  position: fixed;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  min-width: 600px;\n  max-width: 90vw;\n  min-height: 400px;\n  max-height: 80vh;\n  display: flex;\n  flex-direction: column;\n  z-index: 100000;\n  overflow: hidden;\n}\n.popover-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  height: 44px;\n  box-sizing: border-box;\n  cursor: move;\n  flex-shrink: 0;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.popover-close-btn {\n  width: 28px;\n  height: 28px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: #ffffff;\n  color: #666666;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 16px;\n  transition: all 0.15s ease;\n}\n.popover-close-btn:hover {\n  border-color: #dc3545;\n  color: #dc3545;\n  background: #fff5f5;\n}\n.popover-content {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n}\n.popover-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.popover-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 12px;\n  text-align: left;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.popover-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.popover-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.popover-table tbody tr:last-child {\n  border-bottom: none;\n}\n.popover-table td {\n  padding: 8px 16px;\n  font-size: 12px;\n  color: #333333;\n  vertical-align: middle;\n}\n.note-cell {\n  max-width: 300px;\n  word-wrap: break-word;\n  white-space: pre-wrap;\n}\n.datetime-cell {\n  white-space: nowrap;\n}\n.popover-resize-handle {\n  position: absolute;\n  background: transparent;\n  z-index: 10;\n}\n.popover-resize-handle:hover {\n  background: rgba(102, 126, 234, 0.15);\n}\n.popover-resize-handle-s {\n  bottom: 0;\n  left: 16px;\n  right: 16px;\n  height: 4px;\n  cursor: s-resize;\n}\n.popover-resize-handle-w {\n  top: 16px;\n  bottom: 16px;\n  left: 0;\n  width: 8px;\n  cursor: w-resize;\n}\n.popover-resize-handle-e {\n  top: 16px;\n  bottom: 16px;\n  right: 0;\n  width: 8px;\n  cursor: e-resize;\n}\n.popover-resize-handle-se {\n  bottom: 0;\n  right: 0;\n  width: 16px;\n  height: 16px;\n  cursor: se-resize;\n  z-index: 11;\n  border-radius: 0 0 8px 0;\n}\n/* Empty State Styles - matches QA Report empty state */\n.tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 300px;\n  text-align: center;\n  color: #666666;\n  background: #f7f8fa;\n}\n.tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.tracker-empty-state .tracker-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.tracker-empty-state .tracker-empty-text {\n  font-size: 13px;\n  color: #666666;\n}\n.column-filter-popover {\n  position: absolute;\n  z-index: 100003;\n  min-width: 220px;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 4px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  padding: 0;\n  font-size: 13px;\n}\n.column-filter-popover .filter-header {\n  padding: 8px 16px;\n}\n.column-filter-popover .filter-select-all {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  cursor: pointer;\n  font-weight: 600;\n  color: #333333;\n  user-select: none;\n}\n.column-filter-popover .filter-select-all input[type=\"checkbox\"] {\n  margin: 0;\n  cursor: pointer;\n}\n.column-filter-popover .filter-divider {\n  height: 1px;\n  background: #f0f0f0;\n  margin: 0;\n}\n.column-filter-popover .filter-list {\n  max-height: 300px;\n  overflow-y: auto;\n  padding: 4px 0;\n}\n.column-filter-popover .filter-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  padding: 4px 16px;\n  cursor: pointer;\n  user-select: none;\n  transition: background 0.15s ease;\n}\n.column-filter-popover .filter-item:hover {\n  background: #f0f2f5;\n}\n.column-filter-popover .filter-item input[type=\"checkbox\"] {\n  margin: 0;\n  cursor: pointer;\n  flex-shrink: 0;\n}\n.column-filter-popover .filter-name {\n  flex: 1;\n  color: #333333;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.column-filter-popover .filter-count {\n  margin-left: auto;\n  color: #666666;\n  font-size: 12px;\n  flex-shrink: 0;\n}\n.column-filter-popover .filter-stats {\n  padding: 4px 16px;\n  font-size: 12px;\n  color: #666666;\n  text-align: center;\n}\n.column-filter-popover .filter-stats strong {\n  color: #667eea;\n  font-weight: 600;\n}\n.column-filter-popover .filter-actions {\n  display: flex;\n  justify-content: flex-end;\n  gap: 4px;\n  padding: 8px 16px;\n}\n.tracking-disabled {\n  color: #666666;\n  font-size: 13px;\n  cursor: default;\n  user-select: none;\n}\n/* \n * ==========================================================================\n * Legacy Popover Styles (Details Popover)\n * These styles are for the patient details popover that appears\n * when clicking status icons in the Visit Monitor\n * ==========================================================================\n */\n#details-popover {\n  position: fixed;\n  z-index: 100001;\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* Note Cell Styling */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* Authorization Note Table */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* Popover Resize Handle - Legacy (disabled, handled by coordinator-tracker.less) */\n/* \n.popover-resize-handle {\n    position: absolute;\n    right: 0;\n    bottom: 0;\n    width: 16px;\n    height: 16px;\n    cursor: nwse-resize;\n    background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n    border-bottom-right-radius: 8px;\n}\n\n.popover-resize-handle::before {\n    content: '';\n    position: absolute;\n    right: 4px;\n    bottom: 4px;\n    width: 4px;\n    height: 4px;\n    background: #666;\n    border-radius: 1px;\n}\n*/\n/* \n * ==========================================================================\n * Phone Tooltip Styles\n * Tooltip that appears when hovering over phone icons in patient rows\n * ==========================================================================\n */\n.phone-icon-wrapper {\n  position: relative;\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  position: absolute;\n  top: 100%;\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n}\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -502,269 +502,6 @@ function styleTagTransform(css, styleElement) {
 }
 
 module.exports = styleTagTransform;
-
-/***/ }),
-
-/***/ "./src/js/services/CleaningOverlay.ts":
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CleaningOverlay: () => (/* binding */ CleaningOverlay)
-/* harmony export */ });
-/**
- * CleaningOverlay Service
- * Epic 11, Story 4: 清理蒙版和进度显示
- *
- * 功能：
- * - 确认对话框（清理前确认）
- * - 半透明蒙版（rgba(0,0,0,0.15) + blur）
- * - 进度条和当前任务信息
- * - 成功/错误状态显示
- *
- * 注意：使用内联样式确保在任何DOM上下文下都能正确显示
- */
-// 内联样式常量
-const OVERLAY_STYLES = `
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(2px);
-  z-index: 999999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: all;
-`;
-const MODAL_STYLES = `
-  background: white;
-  padding: 30px 40px;
-  border-radius: 12px;
-  text-align: center;
-  min-width: 400px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-`;
-const ICON_STYLES = `
-  font-size: 48px;
-  margin-bottom: 15px;
-`;
-const TITLE_STYLES = `
-  margin: 0 0 10px;
-  font-size: 20px;
-  color: #333;
-`;
-const TEXT_STYLES = `
-  margin: 0;
-  color: #666;
-  font-size: 14px;
-`;
-const WARNING_STYLES = `
-  color: #ff9800;
-  font-size: 14px;
-  margin-top: 15px;
-  font-weight: 500;
-`;
-const PROGRESS_BAR_STYLES = `
-  height: 8px;
-  background: #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
-  margin: 20px 0;
-`;
-const PROGRESS_FILL_STYLES = `
-  height: 100%;
-  background: linear-gradient(90deg, #4CAF50, #8BC34A);
-  transition: width 0.3s ease;
-`;
-const BTN_PRIMARY_STYLES = `
-  margin-top: 20px;
-  padding: 10px 30px;
-  background: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-`;
-const BTN_CANCEL_STYLES = `
-  padding: 10px 24px;
-  background: #f5f5f5;
-  color: #666;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-`;
-const BTN_CONFIRM_STYLES = `
-  padding: 10px 24px;
-  background: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-`;
-const DIALOG_BUTTONS_STYLES = `
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 20px;
-`;
-class CleaningOverlay {
-    /**
-     * 显示确认对话框
-     * @returns Promise<boolean> - 用户是否确认
-     */
-    static showConfirmDialog(taskCount, pageType) {
-        return new Promise((resolve) => {
-            // 移除可能存在的旧蒙版
-            this.hide();
-            const overlay = document.createElement("div");
-            overlay.id = this.overlayId;
-            overlay.style.cssText = OVERLAY_STYLES;
-            const typeLabel = pageType === "PREBILLING" ? "POC Compliance" : "Duplicate Call";
-            overlay.innerHTML = `
-        <div style="${MODAL_STYLES}">
-          <div style="${ICON_STYLES}">⚠️</div>
-          <h3 style="${TITLE_STYLES}">确认清理</h3>
-          <p style="${TEXT_STYLES}">即将清理 <strong>${taskCount}</strong> 个 ${typeLabel} 问题</p>
-          <p style="${WARNING_STYLES}">清理过程中请勿操作页面</p>
-          <div style="${DIALOG_BUTTONS_STYLES}">
-            <button id="hha-overlay-btn-cancel" style="${BTN_CANCEL_STYLES}">取消</button>
-            <button id="hha-overlay-btn-confirm" style="${BTN_CONFIRM_STYLES}">确认清理</button>
-          </div>
-        </div>
-      `;
-            document.body.appendChild(overlay);
-            console.log("[CleaningOverlay] Confirmation dialog appended to body");
-            // 事件处理
-            document
-                .getElementById("hha-overlay-btn-cancel")
-                ?.addEventListener("click", () => {
-                overlay.remove();
-                resolve(false);
-            });
-            document
-                .getElementById("hha-overlay-btn-confirm")
-                ?.addEventListener("click", () => {
-                overlay.remove();
-                resolve(true);
-            });
-        });
-    }
-    /**
-     * 显示清理进度蒙版
-     */
-    static show(current, total, taskInfo) {
-        // 如果已存在，先移除
-        this.hide();
-        const overlay = document.createElement("div");
-        overlay.id = this.overlayId;
-        overlay.style.cssText = OVERLAY_STYLES;
-        const percentage = Math.round((current / total) * 100);
-        overlay.innerHTML = `
-      <div style="${MODAL_STYLES}" id="hha-cleaning-modal">
-        <div style="${ICON_STYLES} animation: spin 1s linear infinite;">⏳</div>
-        <h3 id="cleaning-status" style="${TITLE_STYLES}">正在执行清理中 (${current}/${total})</h3>
-        <p id="cleaning-current-task" style="${TEXT_STYLES}">正在处理: ${taskInfo}</p>
-        <div style="${PROGRESS_BAR_STYLES}">
-          <div id="hha-progress-fill" style="${PROGRESS_FILL_STYLES} width: ${percentage}%;"></div>
-        </div>
-        <p style="${WARNING_STYLES}">⚠️ 请勿操作页面，清理完成后将自动关闭</p>
-      </div>
-      <style>
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      </style>
-    `;
-        document.body.appendChild(overlay);
-        console.log("[CleaningOverlay] Progress overlay shown");
-    }
-    /**
-     * 更新进度
-     */
-    static update(current, total, taskInfo) {
-        const statusEl = document.getElementById("cleaning-status");
-        const taskEl = document.getElementById("cleaning-current-task");
-        const progressEl = document.getElementById("hha-progress-fill");
-        if (statusEl) {
-            statusEl.textContent = `正在执行清理中 (${current}/${total})`;
-        }
-        if (taskEl) {
-            taskEl.textContent = `正在处理: ${taskInfo}`;
-        }
-        if (progressEl) {
-            const percentage = Math.round((current / total) * 100);
-            progressEl.style.width = `${percentage}%`;
-        }
-    }
-    /**
-     * 显示完成状态
-     */
-    static showComplete(pageType) {
-        const overlay = document.getElementById(this.overlayId);
-        if (!overlay) {
-            // 如果不存在，创建一个
-            this.show(1, 1, "");
-        }
-        const modal = document.getElementById("hha-cleaning-modal");
-        if (!modal)
-            return;
-        const message = pageType === "PREBILLING"
-            ? "🎉 恭喜，当前页面已清空 POC 问题！"
-            : "🎉 恭喜，当前页面已清空 Duplicate Call 问题！";
-        modal.innerHTML = `
-      <div style="${ICON_STYLES} color: #4CAF50;">✅</div>
-      <h3 style="${TITLE_STYLES}">${message}</h3>
-      <p style="${TEXT_STYLES} margin-top: 10px;">所有符合条件的问题已处理完成</p>
-      <button id="btn-close-overlay" style="${BTN_PRIMARY_STYLES}">关闭</button>
-    `;
-        document
-            .getElementById("btn-close-overlay")
-            ?.addEventListener("click", () => {
-            this.hide();
-        });
-    }
-    /**
-     * 显示错误状态
-     */
-    static showError(message) {
-        const modal = document.getElementById("hha-cleaning-modal");
-        if (!modal)
-            return;
-        modal.innerHTML = `
-      <div style="${ICON_STYLES} color: #e53935;">❌</div>
-      <h3 style="${TITLE_STYLES}">清理过程中出错</h3>
-      <p style="${TEXT_STYLES} color: #e53935; margin-top: 10px;">${message}</p>
-      <button id="btn-close-overlay" style="${BTN_PRIMARY_STYLES}">关闭</button>
-    `;
-        document
-            .getElementById("btn-close-overlay")
-            ?.addEventListener("click", () => {
-            this.hide();
-        });
-    }
-    /**
-     * 隐藏蒙版
-     */
-    static hide() {
-        document.getElementById(this.overlayId)?.remove();
-    }
-    /**
-     * 检查蒙版是否存在
-     */
-    static isVisible() {
-        return document.getElementById(this.overlayId) !== null;
-    }
-}
-CleaningOverlay.overlayId = "hha-cleaning-overlay";
-
 
 /***/ }),
 
@@ -3870,6 +3607,14 @@ const visitMonitor = async () => {
     window.top.visitMonitorHasRun = true;
     // --- 状态与常量 ---
     const STORAGE_KEY = "hha_coordinator_tracker_list";
+    // Epic 11: 按列追踪过滤器存储键
+    const FILTER_STORAGE_KEY = "hha_column_tracking_filter";
+    const ALL_COLUMNS = [
+        "clockIn",
+        "clockOut",
+        "anomaly",
+        "message",
+    ];
     // 动态检测当前 HHAExchange 租户路径前缀，避免因服务器版本升级导致旧路径失效触发强制登出
     const TENANT_BASE_URL = VisitMonitor_detectTenantBaseUrl();
     const CALL_MAINTENANCE_URL = `${TENANT_BASE_URL}/Call/CallMaintenance_ns.aspx`;
@@ -3883,6 +3628,8 @@ const visitMonitor = async () => {
     // 新增：用于缓存追踪结果和 Office IDs
     const statusDataCache = new Map();
     let officeIdString = null;
+    // Epic 11: 按列追踪过滤配置（运行时）
+    let columnFilterConfig = new Map();
     // --- TAB SYNC MANAGER (升级版：支持跨域名多 Tab 同步) ---
     /**
      * TabSyncManager - 管理多 Tab 之间的数据同步（支持跨域名）
@@ -4288,13 +4035,13 @@ const visitMonitor = async () => {
                 <button id="edit-list-btn" class="tracker-btn-secondary">📝 选择要追踪的辅导员</button>
               </div>
             </div>
-            <div class="tracker-content"><table class="tracker-table"><thead><tr>
+            <div class="tracker-content"><table id="tracking-table" class="tracker-table"><thead><tr>
                     <th style="width:40px;">编号</th>
                     <th class="col-coordinator">辅导员 (Ext.)</th>
-                    <th style="width:80px;">上班钟</th>
-                    <th style="width:80px;">下班钟</th>
-                    <th style="width:80px;">异常打钟</th>
-                    <th style="width:80px;">消息</th>
+                    <th style="width:80px;"><span class="th-label">上班钟</span><span class="th-filter-btn" data-column="clockIn">▾</span></th>
+                    <th style="width:80px;"><span class="th-label">下班钟</span><span class="th-filter-btn" data-column="clockOut">▾</span></th>
+                    <th style="width:80px;"><span class="th-label">异常打钟</span><span class="th-filter-btn" data-column="anomaly">▾</span></th>
+                    <th style="width:80px;"><span class="th-label">消息</span><span class="th-filter-btn" data-column="message">▾</span></th>
                 </tr></thead><tbody id="tracking-table-body"></tbody></table></div>
         </div>
         <div id="editing-view" class="tracker-view hidden">
@@ -4413,6 +4160,336 @@ const visitMonitor = async () => {
             console.error("Failed to save tracked coordinators to GM_setValue:", error);
             showToast("保存失败", "error");
         }
+    }
+    // --- Epic 11: 按列追踪过滤器持久化函数 ---
+    /**
+     * 从 GM_getValue 加载按列过滤配置
+     * 首次使用 / 数据为空时，所有人所有列默认启用（不写入空配置）
+     */
+    function loadColumnFilter() {
+        try {
+            const raw = GM_getValue(FILTER_STORAGE_KEY, "");
+            if (!raw) {
+                columnFilterConfig = new Map();
+                return;
+            }
+            const parsed = JSON.parse(raw);
+            columnFilterConfig = new Map();
+            for (const [idStr, cols] of Object.entries(parsed.filters)) {
+                columnFilterConfig.set(Number(idStr), new Set(cols));
+            }
+        }
+        catch (error) {
+            console.error("[Epic11] Failed to load column filter config:", error);
+            columnFilterConfig = new Map();
+        }
+    }
+    /**
+     * 将按列过滤配置保存到 GM_setValue
+     */
+    function saveColumnFilter() {
+        try {
+            const data = {
+                filters: {},
+                timestamp: Date.now(),
+            };
+            columnFilterConfig.forEach((columns, coordinatorId) => {
+                data.filters[coordinatorId] = Array.from(columns);
+            });
+            GM_setValue(FILTER_STORAGE_KEY, JSON.stringify(data));
+        }
+        catch (error) {
+            console.error("[Epic11] Failed to save column filter config:", error);
+        }
+    }
+    /**
+     * 获取指定辅导员的启用列集合
+     * 如果该辅导员不在配置中（新人 / 首次使用），默认全部启用
+     */
+    function getEnabledColumns(coordinatorId) {
+        return columnFilterConfig.get(coordinatorId) || new Set(ALL_COLUMNS);
+    }
+    /**
+     * 判断指定辅导员的指定列是否启用
+     */
+    function isColumnEnabled(coordinatorId, column) {
+        return getEnabledColumns(coordinatorId).has(column);
+    }
+    /**
+     * 计算当前过滤配置下的实际请求总数
+     */
+    function getTotalRequestCount() {
+        let count = 0;
+        for (const coordinator of trackedCoordinators) {
+            count += getEnabledColumns(coordinator.id).size;
+        }
+        return count;
+    }
+    /**
+     * 计算最大请求总数（全追踪，无过滤）
+     */
+    function getMaxRequestCount() {
+        return trackedCoordinators.length * ALL_COLUMNS.length;
+    }
+    /**
+     * 清理已删除辅导员的过滤配置
+     * 在保存追踪列表后调用，防止残留数据
+     */
+    function cleanupColumnFilter() {
+        const activeIds = new Set(trackedCoordinators.map((c) => c.id));
+        let changed = false;
+        for (const id of columnFilterConfig.keys()) {
+            if (!activeIds.has(id)) {
+                columnFilterConfig.delete(id);
+                changed = true;
+            }
+        }
+        if (changed) {
+            saveColumnFilter();
+        }
+    }
+    // --- Epic 11 Story 11.3: 过滤浮窗逻辑 ---
+    /** 当前打开的过滤浮窗元素引用 */
+    let activeFilterPopover = null;
+    /** 当前打开的浮窗对应的箭头按钮 */
+    let activeFilterBtn = null;
+    /**
+     * 关闭当前打开的过滤浮窗
+     */
+    function closeFilterPopover() {
+        if (activeFilterPopover) {
+            activeFilterPopover.remove();
+            activeFilterPopover = null;
+        }
+        if (activeFilterBtn) {
+            activeFilterBtn.classList.remove("active");
+            activeFilterBtn = null;
+        }
+    }
+    /**
+     * 打开某列的过滤浮窗
+     * @param column 列类型
+     * @param btnElement 触发的箭头按钮元素
+     */
+    function showFilterPopover(column, btnElement) {
+        // 如果点击的是已打开的同一箭头，则关闭
+        if (activeFilterBtn === btnElement) {
+            closeFilterPopover();
+            return;
+        }
+        // 先关闭旧的
+        closeFilterPopover();
+        if (trackedCoordinators.length === 0)
+            return;
+        // 创建临时状态（只在确认时应用）
+        const tempState = new Map();
+        for (const c of trackedCoordinators) {
+            tempState.set(c.id, isColumnEnabled(c.id, column));
+        }
+        // 映射列类型到缓存键后缀
+        const cacheKeySuffix = {
+            clockIn: "2",
+            clockOut: "3",
+            anomaly: "anomaly",
+            message: "message",
+        };
+        // 生成人员列表 HTML
+        const listHtml = trackedCoordinators
+            .map((c) => {
+            const checked = tempState.get(c.id) ? "checked" : "";
+            const cacheKey = `${c.id}-${cacheKeySuffix[column]}`;
+            const data = statusDataCache.get(cacheKey);
+            const countDisplay = tempState.get(c.id)
+                ? `(${data?.count ?? 0})`
+                : "(—)";
+            return `<label class="filter-item">
+          <input type="checkbox" data-coordinator-id="${c.id}" ${checked} />
+          <span class="filter-name">${c.name}</span>
+          <span class="filter-count">${countDisplay}</span>
+        </label>`;
+        })
+            .join("");
+        // 计算全选状态
+        const allChecked = trackedCoordinators.every((c) => tempState.get(c.id));
+        const noneChecked = trackedCoordinators.every((c) => !tempState.get(c.id));
+        const selectAllChecked = allChecked ? "checked" : "";
+        const currentTotal = getTotalRequestCount();
+        const maxTotal = getMaxRequestCount();
+        const popover = document.createElement("div");
+        popover.className = "column-filter-popover";
+        popover.dataset.column = column;
+        popover.innerHTML = `
+      <div class="filter-header">
+        <label class="filter-select-all">
+          <input type="checkbox" class="filter-checkbox-all" ${selectAllChecked} />
+          <span>全选</span>
+        </label>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-list">${listHtml}</div>
+      <div class="filter-divider"></div>
+      <div class="filter-stats">
+        当前追踪: <strong class="filter-current-count">${currentTotal}</strong>/<strong>${maxTotal}</strong> 请求/轮
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-actions">
+        <button class="tracker-btn-secondary filter-cancel-btn">取消</button>
+        <button class="tracker-btn-primary filter-confirm-btn">✓ 确认</button>
+      </div>
+    `;
+        // 定位浮窗
+        document.body.appendChild(popover);
+        const btnRect = btnElement.getBoundingClientRect();
+        let popLeft = btnRect.left + btnRect.width / 2 - popover.offsetWidth / 2;
+        let popTop = btnRect.bottom + 4;
+        // 边界检测
+        if (popLeft < 4)
+            popLeft = 4;
+        if (popLeft + popover.offsetWidth > window.innerWidth - 4) {
+            popLeft = window.innerWidth - popover.offsetWidth - 4;
+        }
+        if (popTop + popover.offsetHeight > window.innerHeight - 4) {
+            popTop = btnRect.top - popover.offsetHeight - 4;
+        }
+        popover.style.left = `${popLeft}px`;
+        popover.style.top = `${popTop}px`;
+        activeFilterPopover = popover;
+        activeFilterBtn = btnElement;
+        btnElement.classList.add("active");
+        // --- 浮窗事件 ---
+        /** 重新计算并更新括号里的请求计数 */
+        const updateStats = () => {
+            // 临时计算：当前全局请求数减去本列被取消的，再加上本列被勾选的
+            let tempTotal = 0;
+            for (const c of trackedCoordinators) {
+                const cols = getEnabledColumns(c.id);
+                // 对每个人，除了当前列以外的启用数
+                let enabledCount = 0;
+                for (const col of ALL_COLUMNS) {
+                    if (col === column) {
+                        enabledCount += tempState.get(c.id) ? 1 : 0;
+                    }
+                    else {
+                        enabledCount += cols.has(col) ? 1 : 0;
+                    }
+                }
+                tempTotal += enabledCount;
+            }
+            const countEl = popover.querySelector(".filter-current-count");
+            if (countEl)
+                countEl.textContent = String(tempTotal);
+        };
+        /** 更新全选 checkbox 状态 */
+        const updateSelectAll = () => {
+            const checkAll = popover.querySelector(".filter-checkbox-all");
+            const allOn = trackedCoordinators.every((c) => tempState.get(c.id));
+            const allOff = trackedCoordinators.every((c) => !tempState.get(c.id));
+            checkAll.checked = allOn;
+            checkAll.indeterminate = !allOn && !allOff;
+        };
+        // 全选 checkbox
+        const checkAllEl = popover.querySelector(".filter-checkbox-all");
+        if (!allChecked && !noneChecked) {
+            checkAllEl.indeterminate = true;
+        }
+        checkAllEl.addEventListener("change", () => {
+            const checked = checkAllEl.checked;
+            trackedCoordinators.forEach((c) => tempState.set(c.id, checked));
+            popover
+                .querySelectorAll(".filter-item input[type=checkbox]")
+                .forEach((cb) => (cb.checked = checked));
+            // 更新 count 显示
+            popover.querySelectorAll(".filter-item").forEach((item) => {
+                const cb = item.querySelector("input");
+                const countSpan = item.querySelector(".filter-count");
+                const coordId = Number(cb.dataset.coordinatorId);
+                const cacheKey = `${coordId}-${cacheKeySuffix[column]}`;
+                const data = statusDataCache.get(cacheKey);
+                countSpan.textContent = checked ? `(${data?.count ?? 0})` : "(—)";
+            });
+            updateStats();
+        });
+        // 单个 checkbox
+        popover
+            .querySelectorAll(".filter-item input[type=checkbox]")
+            .forEach((cb) => {
+            cb.addEventListener("change", () => {
+                const input = cb;
+                const coordId = Number(input.dataset.coordinatorId);
+                tempState.set(coordId, input.checked);
+                // 更新 count 显示
+                const countSpan = cb
+                    .closest(".filter-item")
+                    ?.querySelector(".filter-count");
+                if (countSpan) {
+                    const cacheKey = `${coordId}-${cacheKeySuffix[column]}`;
+                    const data = statusDataCache.get(cacheKey);
+                    countSpan.textContent = input.checked
+                        ? `(${data?.count ?? 0})`
+                        : "(—)";
+                }
+                updateSelectAll();
+                updateStats();
+            });
+        });
+        // 取消按钮
+        popover
+            .querySelector(".filter-cancel-btn")
+            .addEventListener("click", () => {
+            closeFilterPopover();
+        });
+        // 确认按钮
+        popover
+            .querySelector(".filter-confirm-btn")
+            .addEventListener("click", () => {
+            // 应用 tempState 到实际配置
+            for (const [coordId, enabled] of tempState) {
+                let cols = columnFilterConfig.get(coordId);
+                if (!cols) {
+                    cols = new Set(ALL_COLUMNS);
+                    columnFilterConfig.set(coordId, cols);
+                }
+                if (enabled) {
+                    cols.add(column);
+                }
+                else {
+                    cols.delete(column);
+                    // 同时清除对应缓存
+                    statusDataCache.delete(`${coordId}-${cacheKeySuffix[column]}`);
+                }
+            }
+            saveColumnFilter();
+            closeFilterPopover();
+            renderTrackingView();
+            // 立即触发一次追踪更新，使新配置生效
+            runTrackingUpdate();
+        });
+        // 点击浮窗外部关闭
+        setTimeout(() => {
+            const outsideClickHandler = (e) => {
+                if (activeFilterPopover &&
+                    !activeFilterPopover.contains(e.target) &&
+                    e.target !== btnElement) {
+                    closeFilterPopover();
+                    document.removeEventListener("mousedown", outsideClickHandler);
+                }
+            };
+            document.addEventListener("mousedown", outsideClickHandler);
+        }, 0);
+    }
+    /**
+     * 更新所有过滤箭头的警告状态
+     * 如果某列有任何辅导员被禁用，箭头显示橙色警告色
+     */
+    function updateFilterBtnWarnings() {
+        const filterBtns = document.querySelectorAll(".th-filter-btn");
+        filterBtns.forEach((btn) => {
+            const col = btn.dataset.column;
+            if (!col)
+                return;
+            const hasDisabled = trackedCoordinators.some((c) => !isColumnEnabled(c.id, col));
+            btn.classList.toggle("warning", hasDisabled);
+        });
     }
     async function fetchAllCoordinators() {
         console.log("Step 1: Fetching initial params...");
@@ -5300,6 +5377,8 @@ const visitMonitor = async () => {
             emptyState.style.display = "none";
         const rowsHtml = trackedCoordinators
             .map((coordinator, index) => {
+            // Epic 11: 获取该辅导员的启用列
+            const enabledCols = getEnabledColumns(coordinator.id);
             const clockInData = statusDataCache.get(`${coordinator.id}-2`);
             const clockOutData = statusDataCache.get(`${coordinator.id}-3`);
             const anomalyData = statusDataCache.get(`${coordinator.id}-anomaly`);
@@ -5317,18 +5396,33 @@ const visitMonitor = async () => {
             const clockOutClass = `status-icon ${clockOutStatus}${clockOutCount === 0 ? " status-disabled" : ""}`;
             const anomalyClass = `status-icon ${anomalyStatus}${anomalyCount === 0 ? " status-disabled" : ""}`;
             const messageClass = `status-icon ${messageStatus}${messageCount === 0 ? " status-disabled" : ""}`;
+            // Epic 11: 根据过滤配置决定单元格内容
+            const clockInCell = enabledCols.has("clockIn")
+                ? `<div class="${clockInClass}" data-coordinator-id="${coordinator.id}" data-call-type="2">${clockInCount}</div>`
+                : `<span class="tracking-disabled">—</span>`;
+            const clockOutCell = enabledCols.has("clockOut")
+                ? `<div class="${clockOutClass}" data-coordinator-id="${coordinator.id}" data-call-type="3">${clockOutCount}</div>`
+                : `<span class="tracking-disabled">—</span>`;
+            const anomalyCell = enabledCols.has("anomaly")
+                ? `<div class="${anomalyClass}" data-coordinator-id="${coordinator.id}" data-call-type="anomaly">${anomalyCount}</div>`
+                : `<span class="tracking-disabled">—</span>`;
+            const messageCell = enabledCols.has("message")
+                ? `<div class="${messageClass}" data-coordinator-id="${coordinator.id}" data-call-type="message">${messageCount}</div>`
+                : `<span class="tracking-disabled">—</span>`;
             return `
                 <tr>
                     <td>${index + 1}</td>
                     <td class="col-coordinator">${coordinator.name}</td>
-                    <td><div class="${clockInClass}" data-coordinator-id="${coordinator.id}" data-call-type="2">${clockInCount}</div></td>
-                    <td><div class="${clockOutClass}" data-coordinator-id="${coordinator.id}" data-call-type="3">${clockOutCount}</div></td>
-                    <td><div class="${anomalyClass}" data-coordinator-id="${coordinator.id}" data-call-type="anomaly">${anomalyCount}</div></td>
-                    <td><div class="${messageClass}" data-coordinator-id="${coordinator.id}" data-call-type="message">${messageCount}</div></td>
+                    <td>${clockInCell}</td>
+                    <td>${clockOutCell}</td>
+                    <td>${anomalyCell}</td>
+                    <td>${messageCell}</td>
                 </tr>`;
         })
             .join("");
         trackingTableBody.innerHTML = rowsHtml;
+        // Epic 11: 渲染后更新箭头警告状态
+        updateFilterBtnWarnings();
     }
     // FIX 2: 移除函数参数，使其直接使用上层作用域的 allCoordinators 状态变量
     function renderEditingView() {
@@ -5382,36 +5476,59 @@ const visitMonitor = async () => {
             }
             // decision === 'REFRESH': 缓存过期，直接执行 API 调用
         }
-        // --- 原有的 API 调用逻辑 ---
+        // --- 原有的 API 调用逻辑 (Epic 11: 按过滤配置决定请求) ---
         try {
             const officeIds = await getOfficeIds();
             const promises = [];
             for (const coordinator of trackedCoordinators) {
+                // Epic 11: 获取该辅导员的启用列
+                const enabledCols = getEnabledColumns(coordinator.id);
                 // 上班钟 (CallType=2)
-                promises.push(fetchStatusReport(coordinator.id, 2, officeIds)
-                    .then((data) => {
-                    statusDataCache.set(`${coordinator.id}-2`, data);
-                })
-                    .catch((err) => console.error(err)));
+                if (enabledCols.has("clockIn")) {
+                    promises.push(fetchStatusReport(coordinator.id, 2, officeIds)
+                        .then((data) => {
+                        statusDataCache.set(`${coordinator.id}-2`, data);
+                    })
+                        .catch((err) => console.error(err)));
+                }
+                else {
+                    statusDataCache.delete(`${coordinator.id}-2`);
+                }
                 // 下班钟 (CallType=3)
-                promises.push(fetchStatusReport(coordinator.id, 3, officeIds)
-                    .then((data) => {
-                    statusDataCache.set(`${coordinator.id}-3`, data);
-                })
-                    .catch((err) => console.error(err)));
+                if (enabledCols.has("clockOut")) {
+                    promises.push(fetchStatusReport(coordinator.id, 3, officeIds)
+                        .then((data) => {
+                        statusDataCache.set(`${coordinator.id}-3`, data);
+                    })
+                        .catch((err) => console.error(err)));
+                }
+                else {
+                    statusDataCache.delete(`${coordinator.id}-3`);
+                }
                 // 异常打钟
-                promises.push(fetchAnomalyReport(coordinator.id)
-                    .then((data) => {
-                    statusDataCache.set(`${coordinator.id}-anomaly`, data);
-                })
-                    .catch((err) => console.error(err)));
+                if (enabledCols.has("anomaly")) {
+                    promises.push(fetchAnomalyReport(coordinator.id)
+                        .then((data) => {
+                        statusDataCache.set(`${coordinator.id}-anomaly`, data);
+                    })
+                        .catch((err) => console.error(err)));
+                }
+                else {
+                    statusDataCache.delete(`${coordinator.id}-anomaly`);
+                }
                 // 消息监控
-                promises.push(fetchMessageReport(coordinator.id)
-                    .then((data) => {
-                    statusDataCache.set(`${coordinator.id}-message`, data);
-                })
-                    .catch((err) => console.error(err)));
+                if (enabledCols.has("message")) {
+                    promises.push(fetchMessageReport(coordinator.id)
+                        .then((data) => {
+                        statusDataCache.set(`${coordinator.id}-message`, data);
+                    })
+                        .catch((err) => console.error(err)));
+                }
+                else {
+                    statusDataCache.delete(`${coordinator.id}-message`);
+                }
             }
+            console.log(`[Epic11] Sending ${promises.length}/${getMaxRequestCount()} requests`);
             await Promise.allSettled(promises);
             renderTrackingView();
             // --- Story 2 & 3: API 完成后保存缓存、广播并更新时间 ---
@@ -6067,6 +6184,8 @@ const visitMonitor = async () => {
         saveBtn.addEventListener("click", () => {
             trackedCoordinators = allCoordinators.filter((c) => tempTrackedIds.has(c.id));
             saveTrackedCoordinators();
+            // Epic 11: 清理已删除辅导员的过滤配置
+            cleanupColumnFilter();
             renderTrackingView();
             showToast("保存成功", "success");
             handleGoBack();
@@ -6093,10 +6212,25 @@ const visitMonitor = async () => {
                 }
             }
         });
+        // --- Epic 11: 过滤箭头点击事件委托 ---
+        const trackingTable = document.getElementById("tracking-table");
+        trackingTable.addEventListener("click", (e) => {
+            const target = e.target;
+            if (target.classList.contains("th-filter-btn")) {
+                e.stopPropagation();
+                const column = target.dataset.column;
+                if (column && ALL_COLUMNS.includes(column)) {
+                    showFilterPopover(column, target);
+                }
+            }
+        });
+        // --- Epic 11: 更新箭头警告状态 ---
+        updateFilterBtnWarnings();
     }
     // --- 初始化 (Story 3: 添加跨 Tab 消息监听) ---
     function initialize() {
         loadTrackedCoordinators();
+        loadColumnFilter(); // Epic 11: 加载按列过滤配置
         renderTrackingView();
         attachAllEventListeners();
         // --- Story 3: 注册 BroadcastChannel 消息监听 ---
@@ -6113,6 +6247,13 @@ const visitMonitor = async () => {
                     updateLastRefreshTime(cached.timestamp);
                     console.log(`[Story3] UI updated from broadcast, timestamp: ${new Date(cached.timestamp).toLocaleTimeString()}`);
                 }
+            }
+            else if (msg.type === "FILTER_UPDATED" &&
+                msg.sourceTabId !== tabSyncManager.tabId) {
+                // Epic 11 Story 11.6: 其它 Tab 更新了过滤配置，重新加载
+                console.log(`[Epic11] Tab ${tabSyncManager.tabId} received FILTER_UPDATED from Tab ${msg.sourceTabId}`);
+                loadColumnFilter();
+                renderTrackingView();
             }
             else if (msg.type === "TAB_CLOSING") {
                 console.log(`[Story3] Tab ${msg.sourceTabId} is closing`);
@@ -10280,8 +10421,261 @@ class CallMaintenanceTableParser {
     }
 }
 
-// EXTERNAL MODULE: ./src/js/services/CleaningOverlay.ts
-var CleaningOverlay = __webpack_require__("./src/js/services/CleaningOverlay.ts");
+;// ./src/js/services/CleaningOverlay.ts
+/**
+ * CleaningOverlay Service
+ * Epic 11, Story 4: 清理蒙版和进度显示
+ *
+ * 功能：
+ * - 确认对话框（清理前确认）
+ * - 半透明蒙版（rgba(0,0,0,0.15) + blur）
+ * - 进度条和当前任务信息
+ * - 成功/错误状态显示
+ *
+ * 注意：使用内联样式确保在任何DOM上下文下都能正确显示
+ */
+// 内联样式常量
+const OVERLAY_STYLES = `
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(2px);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+`;
+const MODAL_STYLES = `
+  background: white;
+  padding: 30px 40px;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 400px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+`;
+const ICON_STYLES = `
+  font-size: 48px;
+  margin-bottom: 15px;
+`;
+const TITLE_STYLES = `
+  margin: 0 0 10px;
+  font-size: 20px;
+  color: #333;
+`;
+const TEXT_STYLES = `
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+`;
+const WARNING_STYLES = `
+  color: #ff9800;
+  font-size: 14px;
+  margin-top: 15px;
+  font-weight: 500;
+`;
+const PROGRESS_BAR_STYLES = `
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 20px 0;
+`;
+const PROGRESS_FILL_STYLES = `
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  transition: width 0.3s ease;
+`;
+const BTN_PRIMARY_STYLES = `
+  margin-top: 20px;
+  padding: 10px 30px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+`;
+const BTN_CANCEL_STYLES = `
+  padding: 10px 24px;
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+`;
+const BTN_CONFIRM_STYLES = `
+  padding: 10px 24px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+`;
+const DIALOG_BUTTONS_STYLES = `
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+`;
+class CleaningOverlay {
+    /**
+     * 显示确认对话框
+     * @returns Promise<boolean> - 用户是否确认
+     */
+    static showConfirmDialog(taskCount, pageType) {
+        return new Promise((resolve) => {
+            // 移除可能存在的旧蒙版
+            this.hide();
+            const overlay = document.createElement("div");
+            overlay.id = this.overlayId;
+            overlay.style.cssText = OVERLAY_STYLES;
+            const typeLabel = pageType === "PREBILLING" ? "POC Compliance" : "Duplicate Call";
+            overlay.innerHTML = `
+        <div style="${MODAL_STYLES}">
+          <div style="${ICON_STYLES}">⚠️</div>
+          <h3 style="${TITLE_STYLES}">确认清理</h3>
+          <p style="${TEXT_STYLES}">即将清理 <strong>${taskCount}</strong> 个 ${typeLabel} 问题</p>
+          <p style="${WARNING_STYLES}">清理过程中请勿操作页面</p>
+          <div style="${DIALOG_BUTTONS_STYLES}">
+            <button id="hha-overlay-btn-cancel" style="${BTN_CANCEL_STYLES}">取消</button>
+            <button id="hha-overlay-btn-confirm" style="${BTN_CONFIRM_STYLES}">确认清理</button>
+          </div>
+        </div>
+      `;
+            document.body.appendChild(overlay);
+            console.log("[CleaningOverlay] Confirmation dialog appended to body");
+            // 事件处理
+            document
+                .getElementById("hha-overlay-btn-cancel")
+                ?.addEventListener("click", () => {
+                overlay.remove();
+                resolve(false);
+            });
+            document
+                .getElementById("hha-overlay-btn-confirm")
+                ?.addEventListener("click", () => {
+                overlay.remove();
+                resolve(true);
+            });
+        });
+    }
+    /**
+     * 显示清理进度蒙版
+     */
+    static show(current, total, taskInfo) {
+        // 如果已存在，先移除
+        this.hide();
+        const overlay = document.createElement("div");
+        overlay.id = this.overlayId;
+        overlay.style.cssText = OVERLAY_STYLES;
+        const percentage = Math.round((current / total) * 100);
+        overlay.innerHTML = `
+      <div style="${MODAL_STYLES}" id="hha-cleaning-modal">
+        <div style="${ICON_STYLES} animation: spin 1s linear infinite;">⏳</div>
+        <h3 id="cleaning-status" style="${TITLE_STYLES}">正在执行清理中 (${current}/${total})</h3>
+        <p id="cleaning-current-task" style="${TEXT_STYLES}">正在处理: ${taskInfo}</p>
+        <div style="${PROGRESS_BAR_STYLES}">
+          <div id="hha-progress-fill" style="${PROGRESS_FILL_STYLES} width: ${percentage}%;"></div>
+        </div>
+        <p style="${WARNING_STYLES}">⚠️ 请勿操作页面，清理完成后将自动关闭</p>
+      </div>
+      <style>
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    `;
+        document.body.appendChild(overlay);
+        console.log("[CleaningOverlay] Progress overlay shown");
+    }
+    /**
+     * 更新进度
+     */
+    static update(current, total, taskInfo) {
+        const statusEl = document.getElementById("cleaning-status");
+        const taskEl = document.getElementById("cleaning-current-task");
+        const progressEl = document.getElementById("hha-progress-fill");
+        if (statusEl) {
+            statusEl.textContent = `正在执行清理中 (${current}/${total})`;
+        }
+        if (taskEl) {
+            taskEl.textContent = `正在处理: ${taskInfo}`;
+        }
+        if (progressEl) {
+            const percentage = Math.round((current / total) * 100);
+            progressEl.style.width = `${percentage}%`;
+        }
+    }
+    /**
+     * 显示完成状态
+     */
+    static showComplete(pageType) {
+        const overlay = document.getElementById(this.overlayId);
+        if (!overlay) {
+            // 如果不存在，创建一个
+            this.show(1, 1, "");
+        }
+        const modal = document.getElementById("hha-cleaning-modal");
+        if (!modal)
+            return;
+        const message = pageType === "PREBILLING"
+            ? "🎉 恭喜，当前页面已清空 POC 问题！"
+            : "🎉 恭喜，当前页面已清空 Duplicate Call 问题！";
+        modal.innerHTML = `
+      <div style="${ICON_STYLES} color: #4CAF50;">✅</div>
+      <h3 style="${TITLE_STYLES}">${message}</h3>
+      <p style="${TEXT_STYLES} margin-top: 10px;">所有符合条件的问题已处理完成</p>
+      <button id="btn-close-overlay" style="${BTN_PRIMARY_STYLES}">关闭</button>
+    `;
+        document
+            .getElementById("btn-close-overlay")
+            ?.addEventListener("click", () => {
+            this.hide();
+        });
+    }
+    /**
+     * 显示错误状态
+     */
+    static showError(message) {
+        const modal = document.getElementById("hha-cleaning-modal");
+        if (!modal)
+            return;
+        modal.innerHTML = `
+      <div style="${ICON_STYLES} color: #e53935;">❌</div>
+      <h3 style="${TITLE_STYLES}">清理过程中出错</h3>
+      <p style="${TEXT_STYLES} color: #e53935; margin-top: 10px;">${message}</p>
+      <button id="btn-close-overlay" style="${BTN_PRIMARY_STYLES}">关闭</button>
+    `;
+        document
+            .getElementById("btn-close-overlay")
+            ?.addEventListener("click", () => {
+            this.hide();
+        });
+    }
+    /**
+     * 隐藏蒙版
+     */
+    static hide() {
+        document.getElementById(this.overlayId)?.remove();
+    }
+    /**
+     * 检查蒙版是否存在
+     */
+    static isVisible() {
+        return document.getElementById(this.overlayId) !== null;
+    }
+}
+CleaningOverlay.overlayId = "hha-cleaning-overlay";
+
 ;// ./src/js/services/CleaningController.ts
 /**
  * CleaningController Service
@@ -10298,6 +10692,36 @@ var CleaningOverlay = __webpack_require__("./src/js/services/CleaningOverlay.ts"
 const CLEANING_QUEUE_KEY = "hha_cleaner_task_queue";
 class CleaningController {
     /**
+     * Start an interval to monitor the GM storage for queue progression.
+     * This is required because task completion in the iframe modal DOES NOT trigger
+     * a parent page reload, and ASP.NET AJAX UpdatePanel events are too messy to hook into.
+     */
+    static startQueuePolling() {
+        if (this.pollingTimer)
+            return;
+        console.log("[CleaningController] Starting queue state polling...");
+        this.pollingTimer = window.setInterval(() => {
+            const queue = GM_getValue(CLEANING_QUEUE_KEY, null);
+            // Only monitor if a queue is currently active
+            if (queue && queue.status === "IN_PROGRESS") {
+                // If the queue advanced to the next task while we were waiting
+                if (queue.currentIndex > this.lastStartedIndex) {
+                    console.log(`[CleaningController] Polling detected queue advancement (${this.lastStartedIndex} -> ${queue.currentIndex}). Triggering next task...`);
+                    // Note: Wait a brief moment to ensure any associated DOM updates (like ASP.NET UpdatePanel) finish settling.
+                    setTimeout(() => {
+                        this.checkPendingTasks();
+                    }, 1500);
+                }
+            }
+            else if (queue && queue.status === "COMPLETED" && this.pollingTimer) {
+                // Stop polling when everything is done
+                window.clearInterval(this.pollingTimer);
+                this.pollingTimer = 0;
+                console.log("[CleaningController] Queue completed. Stopped polling.");
+            }
+        }, 1000); // Check every second
+    }
+    /**
      * 检查是否有待处理的清理任务
      * 在页面加载时调用
      */
@@ -10306,27 +10730,41 @@ class CleaningController {
         if (!queue || queue.status !== "IN_PROGRESS") {
             return false;
         }
+        if (this.lastStartedIndex === queue.currentIndex) {
+            console.log(`[CleaningController] Task ${queue.currentIndex} already started in this session. Yielding to active task.`);
+            return false;
+        }
+        this.lastStartedIndex = queue.currentIndex;
         console.log("[CleaningController] Found pending tasks, resuming...", queue);
         // 检查是否全部完成
         if (queue.currentIndex >= queue.tasks.length) {
+            console.log(`[CleaningController] checkPendingTasks: All tasks complete (${queue.currentIndex}/${queue.tasks.length}). Finalizing queue.`);
             queue.status = "COMPLETED";
             GM_setValue(CLEANING_QUEUE_KEY, queue);
-            CleaningOverlay.CleaningOverlay.showComplete(queue.pageType);
+            CleaningOverlay.showComplete(queue.pageType);
+            if (this.pollingTimer) {
+                window.clearInterval(this.pollingTimer);
+                this.pollingTimer = 0;
+                console.log("[CleaningController] Polling stopped on completion.");
+            }
             return true;
         }
         // 显示蒙版并继续
         const currentTask = queue.tasks[queue.currentIndex];
-        CleaningOverlay.CleaningOverlay.show(queue.currentIndex + 1, queue.tasks.length, this.getTaskInfo(currentTask, queue.pageType));
+        CleaningOverlay.show(queue.currentIndex + 1, queue.tasks.length, this.getTaskInfo(currentTask, queue.pageType));
         // 更新蒙版状态提示
-        CleaningOverlay.CleaningOverlay.update(queue.currentIndex + 1, queue.tasks.length, `${this.getTaskInfo(currentTask, queue.pageType)} (等待页面加载...)`);
-        // 智能等待表格加载，最长等待 15 秒
-        this.waitForTable(queue.pageType, 15000)
+        CleaningOverlay.update(queue.currentIndex + 1, queue.tasks.length, `${this.getTaskInfo(currentTask, queue.pageType)} (等待页面加载...)`);
+        // 智能等待表格加载，最长等待 5 分钟 (300000ms) 以防 Session Timeout 弹窗阻塞
+        this.waitForTable(queue.pageType, 300000)
             .then(() => {
             // 表格加载完成，执行任务
             console.log("[CleaningController] Table loaded, executing task...");
             // 再次更新蒙版状态
-            CleaningOverlay.CleaningOverlay.update(queue.currentIndex + 1, queue.tasks.length, this.getTaskInfo(currentTask, queue.pageType));
-            this.executeCurrentTask(queue);
+            CleaningOverlay.update(queue.currentIndex + 1, queue.tasks.length, this.getTaskInfo(currentTask, queue.pageType));
+            // ★★★ 给 ASP.NET UpdatePanel 一点反应时间，防止点击太快事件未绑定导致卡住
+            setTimeout(() => {
+                this.executeCurrentTask(queue);
+            }, 2000);
         })
             .catch((error) => {
             console.warn("[CleaningController] Initial wait table failed, trying recovery options...", error);
@@ -10343,11 +10781,11 @@ class CleaningController {
                     const isCustomBtn = searchBtn.id === "prebillingSelector";
                     searchBtn.click();
                     // Retry waiting for table
-                    CleaningOverlay.CleaningOverlay.update(queue.currentIndex + 1, queue.tasks.length, `${this.getTaskInfo(currentTask, queue.pageType)} (正在刷新表格...)`);
+                    CleaningOverlay.update(queue.currentIndex + 1, queue.tasks.length, `${this.getTaskInfo(currentTask, queue.pageType)} (正在刷新表格...)`);
                     // Important: Add delay if using custom button to allow event propagation and async loading start
                     const delayMs = isCustomBtn ? 1500 : 500;
                     setTimeout(() => {
-                        this.waitForTable(queue.pageType, 15000)
+                        this.waitForTable(queue.pageType, 300000)
                             .then(() => {
                             console.log("[CleaningController] Table loaded after auto-search, executing task...");
                             this.executeCurrentTask(queue);
@@ -10356,7 +10794,7 @@ class CleaningController {
                             console.error("[CleaningController] Retry failed:", retryError);
                             queue.status = "FAILED";
                             GM_setValue(CLEANING_QUEUE_KEY, queue);
-                            CleaningOverlay.CleaningOverlay.showError(`无法加载表格。尝试自动搜索失败。\n请手动点击搜索按钮，脚本将尝试恢复。`);
+                            CleaningOverlay.showError(`无法加载表格。尝试自动搜索失败。\n请手动点击搜索按钮，脚本将尝试恢复。`);
                         });
                     }, delayMs);
                     return;
@@ -10365,7 +10803,7 @@ class CleaningController {
             console.error("[CleaningController] Timeout waiting for table:", error);
             queue.status = "FAILED";
             GM_setValue(CLEANING_QUEUE_KEY, queue);
-            CleaningOverlay.CleaningOverlay.showError(`页面加载超时，无法找到表格。\n请手动刷新页面，脚本将尝试恢复。`);
+            CleaningOverlay.showError(`页面加载超时，无法找到表格。\n请手动刷新页面，脚本将尝试恢复。`);
         });
         return true;
     }
@@ -10414,7 +10852,7 @@ class CleaningController {
         GM_setValue(CLEANING_QUEUE_KEY, queue);
         console.log("[CleaningController] Started cleaning with", tasks.length, "tasks");
         // 显示蒙版
-        CleaningOverlay.CleaningOverlay.show(1, tasks.length, this.getTaskInfo(tasks[0], pageType));
+        CleaningOverlay.show(1, tasks.length, this.getTaskInfo(tasks[0], pageType));
         // 执行第一个任务
         await this.executeCurrentTask(queue);
     }
@@ -10439,10 +10877,35 @@ class CleaningController {
         catch (error) {
             console.error("[CleaningController] Task execution error:", error);
             task.error = error instanceof Error ? error.message : String(error);
-            queue.status = "FAILED";
-            GM_setValue(CLEANING_QUEUE_KEY, queue);
-            CleaningOverlay.CleaningOverlay.showError(task.error);
+            // CRITICAL FIX: If a single row is not found (meaning it was probably cleaned manually or disappeared),
+            // we shouldn't fail the ENTIRE batch. Just mark this one as failed/skipped and move to the next.
+            if (task.error.includes("Row not found")) {
+                console.warn(`[CleaningController] Skipping task ${queue.currentIndex + 1}/${queue.tasks.length} because row was missing.`);
+                queue.currentIndex++; // Skip and advance
+                GM_setValue(CLEANING_QUEUE_KEY, queue);
+                if (queue.currentIndex >= queue.tasks.length) {
+                    queue.status = "COMPLETED";
+                    GM_setValue(CLEANING_QUEUE_KEY, queue);
+                    CleaningOverlay.showComplete(queue.pageType);
+                }
+                else {
+                    // Continue to next task immediately
+                    CleaningController.OpeningNextTaskDelay(queue);
+                }
+            }
+            else {
+                // Other critical errors fail the queue
+                queue.status = "FAILED";
+                GM_setValue(CLEANING_QUEUE_KEY, queue);
+                CleaningOverlay.showError(task.error);
+            }
         }
+    }
+    // helper function to encapsulate the setTimeout call since we use it repeatedly
+    static OpeningNextTaskDelay(queue) {
+        setTimeout(() => {
+            this.executeCurrentTask(queue);
+        }, 1000);
     }
     /**
      * 执行 POC 清理
@@ -10484,16 +10947,26 @@ class CleaningController {
         // Fallback to rowIndex ONLY if match failed and rowIndex seems plausible (but risky)
         if (!foundByMatch && task.rowIndex !== undefined && rows[task.rowIndex]) {
             console.warn(`[CleaningController] Could not find by match, falling back to rowIndex ${task.rowIndex} for ${task.patientName}`);
-            // Check if the row actually matches?
-            const fallbackRow = rows[task.rowIndex];
-            const cells = fallbackRow.querySelectorAll("td");
-            const admissionId = cells[1]?.textContent?.trim();
-            if (admissionId === task.admissionId) {
-                targetRow = fallbackRow;
-            }
-            else {
-                console.error(`[CleaningController] RowIndex ${task.rowIndex} mismatch! Expected ${task.admissionId}, found ${admissionId}`);
-                // Do not use it if it mismatches
+            targetRow = rows[task.rowIndex]; // Tentatively set targetRow to the one at rowIndex
+            // Verify admission ID matches the row
+            let admissionIdStr = targetRow.cells[1]?.textContent?.trim() || "";
+            if (!admissionIdStr.includes(task.admissionId)) {
+                // 备用机制：由于记录被清理，有些行可能会消失导致 rowIndex 变化
+                // 在整个表格中搜索包含匹配 admissionId 的行
+                console.warn(`[CleaningController] RowIndex ${task.rowIndex} mismatch. Searching by admission ID ${task.admissionId}...`);
+                const fallbackRow = Array.from(rows).find((r) => {
+                    const idStr = r.cells[1]?.textContent?.trim() || "";
+                    return idStr.includes(task.admissionId);
+                });
+                if (fallbackRow) {
+                    console.log("[CleaningController] Found correct row by admission ID");
+                    targetRow = fallbackRow;
+                }
+                else {
+                    console.error(`[CleaningController] RowIndex ${task.rowIndex} mismatch! Expected ${task.admissionId}, found ${admissionIdStr}`);
+                    // CRITICAL FIX: nullify targetRow so it doesn't click the wrong patient
+                    targetRow = null;
+                }
             }
         }
         // Confirm found
@@ -10508,8 +10981,10 @@ class CleaningController {
         // Update overlay to indicate navigation
         const queue = GM_getValue(CLEANING_QUEUE_KEY, null);
         if (queue) {
-            CleaningOverlay.CleaningOverlay.update(queue.currentIndex + 1, queue.tasks.length, `${this.getTaskInfo(task, queue.pageType)} (正在打开详情页...)`);
+            CleaningOverlay.update(queue.currentIndex + 1, queue.tasks.length, `${this.getTaskInfo(task, queue.pageType)} (正在打开详情页...)`);
         }
+        // 设置时间戳，用于防误触 (防止用户手动打开导致自动POC被触发)
+        GM_setValue("hha_cleaner_poc_click_time", Date.now());
         // 点击 Edit 按钮，页面会导航到详情页
         editButton.click();
         // 页面会重新加载，在详情页会检测到待处理任务并执行 POCResolver
@@ -10641,7 +11116,7 @@ class CleaningController {
             queue.status = "FAILED";
             GM_setValue(CLEANING_QUEUE_KEY, queue);
         }
-        CleaningOverlay.CleaningOverlay.hide();
+        CleaningOverlay.hide();
     }
     /**
      * 等待表格元素加载完成
@@ -10691,6 +11166,8 @@ class CleaningController {
         });
     }
 }
+CleaningController.lastStartedIndex = -1;
+CleaningController.pollingTimer = 0;
 
 ;// ./src/js/tabs/CleanerTab.ts
 
@@ -11042,7 +11519,7 @@ class CleanerTab extends BaseTab {
         }
         console.log("[CleanerTab] Selected records for cleaning:", selectedRecords);
         // 显示确认对话框
-        const confirmed = await CleaningOverlay.CleaningOverlay.showConfirmDialog(selectedRecords.length, "PREBILLING");
+        const confirmed = await CleaningOverlay.showConfirmDialog(selectedRecords.length, "PREBILLING");
         if (!confirmed) {
             console.log("[CleanerTab] User cancelled cleaning");
             return;
@@ -11168,7 +11645,7 @@ class CleanerTab extends BaseTab {
         if (this.callRecords.length === 0)
             return;
         // 显示确认对话框
-        const confirmed = await CleaningOverlay.CleaningOverlay.showConfirmDialog(this.callRecords.length, "CALL_MAINTENANCE");
+        const confirmed = await CleaningOverlay.showConfirmDialog(this.callRecords.length, "CALL_MAINTENANCE");
         if (!confirmed) {
             console.log("[CleanerTab] User cancelled Call cleaning");
             return;
@@ -12034,8 +12511,9 @@ class MailService {
                         console.error("[MailService] Status callback error:", e);
                     }
                 });
-                // 检查是否有待处理的任务（Outlook 端）
-                if (payload.status === "PENDING" &&
+                // 检查是否有待处理的任务（仅 Outlook 端可以处理任务）
+                if (this.isOutlookPage() &&
+                    payload.status === "PENDING" &&
                     payload.id !== this.lastProcessedTaskId) {
                     this.lastProcessedTaskId = payload.id;
                     // 标记为处理中
@@ -12160,67 +12638,35 @@ function isBuiltinTemplate(templateId) {
 }
 
 ;// ./src/js/services/CSPBypassInjector.ts
-/**
- * CSPBypassInjector - CSP 绕过注入器
- * Epic 12, Story 11: CSP 合规的 Outlook 集成重构
- *
- * 职责：
- * - 使用 GM.addElement 将 JavaScript 注入到页面主世界
- * - 绕过 Outlook 的 script-src CSP 限制
- * - 提供样式注入功能
- *
- * 原理：
- * - Tampermonkey 作为浏览器扩展拥有特权上下文
- * - 通过 GM.addElement 发起的 DOM 注入被浏览器视为"扩展操作"
- * - 豁免于页面的 CSP 检查（CSP Level 3 规范推荐行为）
- *
- * @see https://www.tampermonkey.net/documentation.php#api:GM.addElement
- */
-/**
- * CSPBypassInjector 类
- * 封装 Tampermonkey 的 GM.addElement API 用于 CSP 绕过
- */
 class CSPBypassInjector {
     /**
-     * 检查 GM.addElement API 是否可用
-     * @returns true 如果 API 可用
+     * Check if GM.addElement API is available
      */
     static isAvailable() {
-        return typeof GM !== "undefined" && typeof GM.addElement === "function";
+        // @ts-ignore
+        const GM = window.GM || unsafeWindow?.GM;
+        return !!GM?.addElement;
     }
     /**
-     * 注入 Payload 脚本到页面主世界
-     * 使用 GM.addElement 绕过 CSP 的 script-src 限制
-     *
-     * @param payload - 要注入的 JavaScript 代码字符串
-     * @param id - 可选的脚本标识符，用于防止重复注入
-     * @returns Promise<void> - 注入完成后 resolve
-     * @throws Error - 如果 GM.addElement 不可用
+     * Inject Payload Script into the main world using GM.addElement
      */
     static injectPayloadScript(payload, id) {
         return new Promise((resolve, reject) => {
             try {
-                // 检查是否已注入过（防止重复注入）
-                if (id && this.injectedScripts.has(id)) {
-                    console.log(`[CSPBypassInjector] Script "${id}" already injected, skipping`);
-                    resolve();
-                    return;
+                // @ts-ignore
+                const GM = window.GM || unsafeWindow?.GM;
+                if (!GM?.addElement) {
+                    throw new Error("GM.addElement not available. Please ensure your Tampermonkey version supports it.");
                 }
-                // 检查 GM.addElement API 是否可用
-                if (!this.isAvailable()) {
-                    throw new Error("GM.addElement not available. Please upgrade Tampermonkey to version 4.10 or later.");
-                }
-                // 使用特权 API 注入脚本
-                // GM.addElement 创建的元素被视为扩展注入，绕过页面 CSP
-                GM.addElement(document.body, "script", {
+                const options = {
                     textContent: payload,
                     type: "text/javascript",
-                });
-                // 记录已注入的脚本
-                if (id) {
-                    this.injectedScripts.add(id);
-                }
-                console.log(`[CSPBypassInjector] Script${id ? ` "${id}"` : ""} injected successfully`);
+                };
+                if (id)
+                    options.id = id;
+                // Use the privileged API to inject the script
+                GM.addElement(document.body, "script", options);
+                console.log("[CSPBypassInjector] Script injected successfully");
                 resolve();
             }
             catch (error) {
@@ -12230,60 +12676,19 @@ class CSPBypassInjector {
         });
     }
     /**
-     * 注入样式到页面
-     * 使用 GM.addElement 绕过 CSP 的 style-src 限制
-     *
-     * @param css - CSS 样式字符串
-     * @param id - 可选的样式标识符，用于防止重复注入
+     * Inject Styles into the main world using GM.addElement
      */
     static injectStyle(css, id) {
-        try {
-            // 检查是否已注入过
-            if (id && this.injectedScripts.has(`style_${id}`)) {
-                console.log(`[CSPBypassInjector] Style "${id}" already injected, skipping`);
-                return;
-            }
-            if (!this.isAvailable()) {
-                // 回退到 GM_addStyle（如果可用）
-                if (typeof GM_addStyle === "function") {
-                    GM_addStyle(css);
-                    console.log(`[CSPBypassInjector] Style${id ? ` "${id}"` : ""} injected via GM_addStyle fallback`);
-                    return;
-                }
-                console.warn("[CSPBypassInjector] GM.addElement not available for style injection");
-                return;
-            }
-            // 使用 GM.addElement 注入样式
-            GM.addElement(document.head, "style", {
-                textContent: css,
-            });
-            // 记录已注入的样式
-            if (id) {
-                this.injectedScripts.add(`style_${id}`);
-            }
-            console.log(`[CSPBypassInjector] Style${id ? ` "${id}"` : ""} injected successfully`);
+        // @ts-ignore
+        const GM = window.GM || unsafeWindow?.GM;
+        if (GM?.addElement) {
+            const options = { textContent: css };
+            if (id)
+                options.id = id;
+            GM.addElement(document.head, "style", options);
         }
-        catch (error) {
-            console.error("[CSPBypassInjector] Style injection failed:", error);
-        }
-    }
-    /**
-     * 检查脚本是否已注入
-     * @param id - 脚本标识符
-     * @returns true 如果已注入
-     */
-    static isInjected(id) {
-        return this.injectedScripts.has(id);
-    }
-    /**
-     * 清除注入记录（用于测试或重新注入）
-     */
-    static clearInjectionRecord() {
-        this.injectedScripts.clear();
-        console.log("[CSPBypassInjector] Injection records cleared");
     }
 }
-CSPBypassInjector.injectedScripts = new Set();
 
 ;// ./src/js/services/TinyMCEBundler.ts
 /**
@@ -13490,391 +13895,188 @@ class MailBuilderTab extends BaseTab {
 }
 
 ;// ./src/js/services/OutlookDOMControllerPayload.ts
-/**
- * OutlookDOMControllerPayload - Outlook DOM 控制器负载脚本
- * Epic 12, Story 11: CSP 合规的 Outlook 集成重构
- *
- * 重要说明：
- * - 这段代码会被序列化为字符串，通过 GM.addElement 注入到页面主世界执行
- * - 因此必须是完全自包含的 IIFE (Immediately Invoked Function Expression)
- * - 不能依赖外部模块或 TypeScript 特性
- * - 所有依赖必须内联在此文件中
- *
- * 功能：
- * - 在 Outlook 页面主世界中运行
- * - 提供邮件自动填充功能
- * - 通过 CustomEvent 与 OutlookAdapter 通信
- */
-/**
- * Outlook DOM Controller Payload
- * 这是一个自包含的 JavaScript 代码字符串，将被注入到 Outlook 页面
- */
+const OUTLOOK_DOM_CONTROLLER_ID = "hha-outlook-dom-controller";
 const OutlookDOMControllerPayload = `
 (function() {
   'use strict';
-
-  // 防止重复初始化
-  if (window.HHAOutlookController) {
-    console.log('[OutlookDOMController] Already initialized, skipping');
-    return;
-  }
-
-  console.log('[OutlookDOMController] Initializing...');
-
-  /**
-   * Outlook DOM 选择器
-   * 基于浏览器远程调试确认 (2026-01)
-   * 使用 EditorClass[id] 定位收件人字段
-   */
-  var SELECTORS = {
-    // 新邮件按钮
+  
+  const SELECTORS = {
     newMailButton: 'button[aria-label="New mail"]',
-    newMailButtonAlt: '[data-testid="new-message-button"]',
-
-    // 收件人字段 - 通过父容器的 _TO, _CC 后缀定位（更可靠）
-    // 旧选择器 div.EditorClass[id="0"] 可能与其他元素冲突
-    toField: 'div[id$="_TO"] .EditorClass, div.EditorClass[id="0"]',
-    ccField: 'div[id$="_CC"] .EditorClass, div.EditorClass[id="1"]',
-
-    // 主题字段
-    subjectField: 'input[aria-label="Subject"]',
-    subjectFieldAlt: 'input[placeholder="Add a subject"]',
-
-    // 邮件正文编辑器
-    bodyEditor: 'div[aria-label="Message body"]',
-
-    // 发送按钮
+    toField: 'div[aria-label="To"]',
+    toFieldAlt: '[role="combobox"][aria-label="To"], input[aria-label="To"]',
+    ccButton: 'button[aria-label="Cc"]',
+    ccField: 'div[aria-label="Cc"]',
+    subjectField: 'input[placeholder="Add a subject"], input[aria-label="Add a subject"], input[id$="_SUBJECT"]',
+    bodyEditor: 'div[aria-label="Message body"], [role="textbox"][aria-label="Message body"], .ck-content',
     sendButton: 'button[aria-label="Send"]',
-    sendButtonAlt: '[data-testid="send-button"]',
-
-    // 丢弃/关闭按钮 (用于关闭已打开的草稿)
-    discardButton: 'button[aria-label="Discard"]',
-    discardConfirmButton: 'button[data-testid="confirmDialogPrimaryButton"], .ms-Dialog-main button.ms-Button--primary'
   };
-
-  /**
-   * 工具函数：等待元素出现
-   * @param {string} selector - CSS 选择器
-   * @param {number} timeout - 超时时间（毫秒）
-   * @returns {Promise<Element>}
-   */
-  function waitForElement(selector, timeout) {
-    return new Promise(function(resolve, reject) {
-      var startTime = Date.now();
-      
-      function check() {
-        var el = document.querySelector(selector);
-        if (el) {
-          resolve(el);
-        } else if (Date.now() - startTime > timeout) {
-          reject(new Error('Element ' + selector + ' not found within ' + timeout + 'ms'));
-        } else {
-          requestAnimationFrame(check);
-        }
-      }
-      
-      check();
-    });
-  }
-
-  /**
-   * 工具函数：延迟
-   * @param {number} ms - 毫秒数
-   * @returns {Promise<void>}
-   */
-  function sleep(ms) {
-    return new Promise(function(r) { setTimeout(r, ms); });
-  }
-
-  /**
-   * 关闭已存在的草稿窗口（如果有）
-   * 检测：如果存在邮件正文区域但没有新邮件按钮，则说明窗口已打开
-   * @returns {Promise<boolean>} - 是否成功关闭了现有草稿
-   */
-  async function closeExistingDraft() {
-    var bodyEditor = document.querySelector(SELECTORS.bodyEditor);
-    var newMailBtn = document.querySelector(SELECTORS.newMailButton) || 
-                     document.querySelector(SELECTORS.newMailButtonAlt);
-    
-    // 如果存在正文区域但没有新邮件按钮，说明草稿窗口已打开
-    if (bodyEditor && !newMailBtn) {
-      console.log('[OutlookDOMController] Existing draft detected, attempting to close...');
-      
-      // 尝试点击丢弃按钮
-      var discardBtn = document.querySelector(SELECTORS.discardButton);
-      if (discardBtn) {
-        discardBtn.click();
-        await sleep(500);
-        
-        // 等待确认对话框并点击确认
-        var confirmBtn = document.querySelector(SELECTORS.discardConfirmButton);
-        if (confirmBtn) {
-          confirmBtn.click();
-          console.log('[OutlookDOMController] Clicked discard confirm button');
-          await sleep(800); // 等待对话框关闭
-        }
-        
-        console.log('[OutlookDOMController] Existing draft closed');
-        return true;
-      } else {
-        console.warn('[OutlookDOMController] Discard button not found, cannot close existing draft');
-      }
-    }
-    
-    return false;
-  }
-
-  /**
-   * 填充输入字段（支持 React 合成事件）
-   * @param {string|string[]} selectors - CSS 选择器或选择器数组
-   * @param {string} value - 要填充的值
-   * @returns {boolean} - 是否成功
-   */
-  function fillInputField(selectors, value) {
-    var selectorList = Array.isArray(selectors) ? selectors : [selectors];
-    
-    for (var i = 0; i < selectorList.length; i++) {
-      var selector = selectorList[i];
-      var field = document.querySelector(selector);
-      
-      if (field) {
-        // 聚焦字段
-        field.focus();
-        
-        // 使用原生 setter 设置值（兼容 React）
-        var nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype,
-          'value'
-        );
-        
-        if (nativeInputValueSetter && nativeInputValueSetter.set) {
-          nativeInputValueSetter.set.call(field, value);
-        } else {
-          field.value = value;
-        }
-        
-        // 触发事件
-        field.dispatchEvent(new Event('input', { bubbles: true }));
-        field.dispatchEvent(new Event('change', { bubbles: true }));
-        
-        console.log('[OutlookDOMController] Filled field:', selector, '->', value.substring(0, 30) + (value.length > 30 ? '...' : ''));
-        return true;
-      }
-    }
-    
-    console.warn('[OutlookDOMController] Field not found:', selectorList.join(' | '));
-    return false;
-  }
-
-  /**
-   * 填充 EditorClass 类型的字段（To/Cc 使用这种）
-   * Outlook 的收件人字段是复杂的 div，需要模拟键入
-   * @param {string} containerSelector - EditorClass 容器选择器（可以是逗号分隔的多个选择器）
-   * @param {string} value - 要填充的值（邮箱地址）
-   * @returns {boolean} - 是否成功
-   */
-  function fillEditorClassField(containerSelector, value) {
-    // 支持逗号分隔的多个选择器（按顺序尝试）
-    var selectors = containerSelector.split(',').map(function(s) { return s.trim(); });
-    var container = null;
-    
-    for (var i = 0; i < selectors.length; i++) {
-      container = document.querySelector(selectors[i]);
-      if (container) {
-        console.log('[OutlookDOMController] Found EditorClass with selector:', selectors[i]);
-        break;
-      }
-    }
-    
-    if (!container) {
-      console.warn('[OutlookDOMController] EditorClass container not found:', containerSelector);
+  
+  function fillRecipientField(selector, email) {
+    const field = document.querySelector(selector);
+    if (!field) {
+      console.warn('[OutlookDOMController] Field not found:', selector);
       return false;
     }
+    field.focus();
     
-    // 聚焦容器
-    container.focus();
-    container.click();
-    
-    // 尝试找到可编辑区域
-    var editable = container.querySelector('[contenteditable="true"]') || 
-                   container.querySelector('[role="textbox"]') ||
-                   container;
-    
-    if (editable) {
-      editable.focus();
-      
-      // 使用 innerText 设置内容（比 execCommand 更可靠）
-      editable.innerText = value;
-      
-      // 触发事件让 Outlook 识别输入
-      editable.dispatchEvent(new Event('input', { bubbles: true }));
-      editable.dispatchEvent(new Event('change', { bubbles: true }));
-      editable.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-      
-      console.log('[OutlookDOMController] Filled EditorClass field:', containerSelector, '->', value);
-      return true;
+    if (field.tagName === 'INPUT') {
+      field.value = email;
+      // React synthetic event workaround
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        'value'
+      ).set;
+      if (nativeInputValueSetter) {
+          nativeInputValueSetter.call(field, email);
+      }
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+    } else if (field.isContentEditable) {
+      // Modern Outlook uses contenteditable divs for addressing
+      document.execCommand('insertText', false, email);
+      field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true }));
+    } else {
+      field.textContent = email;
     }
     
-    console.warn('[OutlookDOMController] No editable area in container:', containerSelector);
-    return false;
+    console.log('[OutlookDOMController] Filled field:', selector, email);
+    return true;
   }
-
-  /**
-   * 填充邮件正文（在开头插入内容，保留签名）
-   * 关键：不使用 selectAll + delete，而是将光标移到开头插入
-   * @param {string} htmlBody - HTML 格式的邮件正文
-   * @returns {boolean} - 是否成功
-   */
+  
   function fillBodyEditor(htmlBody) {
-    var editor = document.querySelector(SELECTORS.bodyEditor);
-    
+    const editor = document.querySelector(SELECTORS.bodyEditor);
     if (!editor) {
       console.warn('[OutlookDOMController] Body editor not found');
       return false;
     }
-    
-    // 聚焦编辑器
     editor.focus();
     
-    // 将光标移动到编辑器开头（保留签名）
-    var range = document.createRange();
-    var sel = window.getSelection();
-    range.setStart(editor, 0);
-    range.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(range);
+    // Put cursor at the very beginning of the editor
+    const selection = window.getSelection();
+    if (selection) {
+      const range = document.createRange();
+      
+      // Attempt to wrap content in a paragraph and insert before the signature
+      if (editor.firstChild) {
+        range.setStartBefore(editor.firstChild);
+        range.collapse(true);
+      } else {
+        range.selectNodeContents(editor);
+        range.collapse(true);
+      }
+      
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
     
-    // 规范化内容：处理 HTML 和纯文本两种情况
-    // 1. 将 </p><p> 转换为双换行（段落之间保留空行）
-    // 2. 移除单独的 <p> 和 </p> 标签
-    // 3. 将纯文本 \\n 转换为 <br>
-    // 注意：不要合并连续的 <br>，因为用户可能故意留空行
-    var normalizedHtml = htmlBody
-      .replace(/<\\/p>\\s*<p>/gi, '<br><br>')  // </p><p> -> 双换行保留段落间隔
-      .replace(/<p>/gi, '')                    // 移除开始 <p>
-      .replace(/<\\/p>/gi, '')                 // 移除结束 </p>
-      .replace(/\\r?\\n/g, '<br>');             // \\n -> <br>
-    
-    console.log('[OutlookDOMController] Normalized body content, inserting...');
-    
-    // 在开头插入 HTML 内容
-    document.execCommand('insertHTML', false, normalizedHtml + '<br><br>');
-    
-    // 触发 input 事件
+    // Insert without wiping existing text
+    document.execCommand('insertHTML', false, htmlBody + '<br><br>');
     editor.dispatchEvent(new Event('input', { bubbles: true }));
-    
-    console.log('[OutlookDOMController] Body filled successfully (signature preserved)');
+    console.log('[OutlookDOMController] Filled body (prepended)');
     return true;
   }
-
-  /**
-   * 通知任务完成状态（通过 CustomEvent）
-   * @param {string} status - 'SUCCESS' 或 'FAILED'
-   * @param {string|null} error - 错误信息（如果有）
-   */
-  function notifyTaskComplete(status, error) {
-    document.dispatchEvent(new CustomEvent('hha-outlook-task-complete', {
-      detail: { status: status, error: error || null }
-    }));
-    console.log('[OutlookDOMController] Task complete notification sent:', status);
-  }
-
-  /**
-   * 主执行流程：执行邮件任务
-   * @param {Object} task - 邮件任务对象
-   * @param {string} task.to - 收件人
-   * @param {string} [task.cc] - 抄送
-   * @param {string} task.subject - 主题
-   * @param {string} task.body - 正文（HTML）
-   */
+  
   async function executeMailTask(task) {
-    console.log('[OutlookDOMController] Executing mail task:', task);
-    
     try {
-      // 0. 先关闭已存在的草稿窗口（如果有）
-      var closedDraft = await closeExistingDraft();
-      if (closedDraft) {
-        console.log('[OutlookDOMController] Closed existing draft, waiting for UI to stabilize...');
-        await sleep(1000);
+      let subjectInput = document.querySelector(SELECTORS.subjectField);
+      let toInput = document.querySelector(SELECTORS.toField) || document.querySelector(SELECTORS.toFieldAlt);
+      
+      let isDraftEmpty = false;
+      if (subjectInput && toInput) {
+        const subjStr = subjectInput.value || '';
+        const toStr = toInput.textContent ? toInput.textContent.trim() : (toInput.value || '');
+        if (subjStr === '' && toStr === '') {
+          isDraftEmpty = true;
+          console.log('[OutlookDOMController] Found empty draft, reusing...');
+        }
       }
-      
-      // 1. 点击新建邮件按钮（可能需要短暂等待按钮出现）
-      var newMailBtn = null;
-      for (var attempt = 0; attempt < 5; attempt++) {
-        newMailBtn = document.querySelector(SELECTORS.newMailButton) || 
-                     document.querySelector(SELECTORS.newMailButtonAlt);
-        if (newMailBtn) break;
-        await sleep(300);
-      }
-      
-      if (!newMailBtn) {
-        throw new Error('New mail button not found');
-      }
-      
-      newMailBtn.click();
-      console.log('[OutlookDOMController] Clicked New Mail button');
-      
-      // 2. 等待编辑器加载
-      try {
+
+      if (!isDraftEmpty) {
+        let newMailBtn = document.querySelector(SELECTORS.newMailButton);
+        if (!newMailBtn) {
+          console.log('[OutlookDOMController] New mail button not found, trying Home tab...');
+          const homeTabs = Array.from(document.querySelectorAll('button[role="tab"]')).filter(el => el.textContent === 'Home');
+          if (homeTabs.length > 0) {
+            homeTabs[0].click();
+            await sleep(500);
+            newMailBtn = document.querySelector(SELECTORS.newMailButton);
+          }
+        }
+        
+        if (!newMailBtn) {
+           throw new Error('New mail button not found even after tab switch');
+        }
+        
+        newMailBtn.click();
         await waitForElement(SELECTORS.subjectField, 5000);
-      } catch (e) {
-        await waitForElement(SELECTORS.subjectFieldAlt, 3000);
       }
-      await sleep(500); // 额外等待确保 UI 稳定
       
-      // 3. 填充 To 字段 - 直接使用 EditorClass[id="0"]
       if (task.to) {
-        // 添加分号让 Outlook 识别为收件人
-        var toEmail = task.to.endsWith(';') ? task.to : task.to + ';';
-        fillEditorClassField(SELECTORS.toField, toEmail);
+        const selectors = [SELECTORS.toField, SELECTORS.toFieldAlt];
+        for (const sel of selectors) {
+          if (fillRecipientField(sel, task.to)) break;
+        }
         await sleep(300);
-        // 移开焦点以触发收件人解析
-        var subjectInput = document.querySelector(SELECTORS.subjectField);
-        if (subjectInput) subjectInput.focus();
-        await sleep(200);
       }
       
-      // 4. 填充 CC 字段（如果有）- 直接使用 EditorClass[id="1"]
       if (task.cc) {
-        var ccEmail = task.cc.endsWith(';') ? task.cc : task.cc + ';';
-        fillEditorClassField(SELECTORS.ccField, ccEmail);
+        const ccBtn = document.querySelector(SELECTORS.ccButton);
+        if (ccBtn) ccBtn.click();
         await sleep(300);
-        // 移开焦点
-        var subjectInput = document.querySelector(SELECTORS.subjectField);
-        if (subjectInput) subjectInput.focus();
-        await sleep(200);
+        fillRecipientField(SELECTORS.ccField, task.cc);
+        await sleep(300);
       }
       
-      // 5. 填充主题
-      fillInputField([SELECTORS.subjectField, SELECTORS.subjectFieldAlt], task.subject);
-      await sleep(300);
+      if (task.subject) {
+        fillRecipientField(SELECTORS.subjectField, task.subject);
+        await sleep(300);
+      }
       
-      // 6. 填充正文
-      fillBodyEditor(task.body);
+      if (task.body) {
+        fillBodyEditor(task.body);
+      }
       
-      // 7. 报告成功
-      notifyTaskComplete('SUCCESS', null);
-      
+      notifyTaskComplete('SUCCESS');
     } catch (error) {
       console.error('[OutlookDOMController] Error:', error);
-      notifyTaskComplete('FAILED', error.message || String(error));
+      notifyTaskComplete('FAILED', error.message);
     }
   }
-
-  // ===== 暴露到全局供 OutlookAdapter 调用 =====
+  
+  function waitForElement(selector, timeout) {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      const check = () => {
+        const el = document.querySelector(selector);
+        if (el) {
+          resolve(el);
+        } else if (Date.now() - startTime > timeout) {
+          reject(new Error("Element " + selector + " not found within " + timeout + "ms"));
+        } else {
+          requestAnimationFrame(check);
+        }
+      };
+      check();
+    });
+  }
+  
+  function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  }
+  
+  function notifyTaskComplete(status, error = null) {
+    document.dispatchEvent(new CustomEvent('hha-outlook-task-complete', {
+      detail: { status, error }
+    }));
+  }
+  
   window.HHAOutlookController = {
-    executeMailTask: executeMailTask,
-    version: '1.0.0',
-    selectors: SELECTORS
+    executeMailTask
   };
-
-  console.log('[OutlookDOMController] Loaded and ready (v1.0.0)');
+  
+  console.log('[OutlookDOMController] Loaded and ready');
 })();
 `;
-/**
- * Payload 脚本的标识符，用于防止重复注入
- */
-const OUTLOOK_DOM_CONTROLLER_ID = "hha-outlook-dom-controller";
 
 ;// ./src/js/services/OutlookAdapter.ts
 /**
@@ -14139,8 +14341,9 @@ OutlookAdapter.controllerInjected = false;
 OutlookAdapter.statusToast = null;
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.9.7"};
+const package_namespaceObject = {"rE":"3.9.9"};
 ;// ./src/index.ts
+
 
 
 
@@ -14293,6 +14496,9 @@ async function src_main() {
     // Epic 11: Check for pending cleaning tasks on page load
     // This enables automatic resume of cleaning after page refresh
     checkAndResumeCleaningTasks();
+    // Start polling the shared Tampermonkey storage to detect when child iframes complete tasks
+    // This is required because HHAExchange modals (iframes) closing do not trigger a full parent page reload.
+    CleaningController.startQueuePolling();
 }
 /**
  * Initialize Multi-Tab Panel System
@@ -14499,24 +14705,27 @@ async function checkAndResumeCleaningTasks() {
     // Wait loop to detect page type
     // Priority order: URL-based checks first (fast & reliable), DOM fallback for detail pages
     const detectPageType = async (retries = 20) => {
-        const url = window.location.href;
+        const url = window.location.href.toLowerCase();
         // 1. Check for Call Maintenance page via URL (fast, reliable - no DOM needed)
         //    IMPORTANT: Must check BEFORE DETAIL, as CallMaintenance URL does NOT contain
         //    visitReasonSelector elements, so it would fall to UNKNOWN otherwise.
-        if (url.includes("CallMaintenance_ns.aspx")) {
+        if (url.includes("callmaintenance_ns.aspx")) {
             return "CALL_MAINTENANCE";
         }
         // 2. Check for Visit Detail Page specific element (Dropdowns or Headers)
-        if ($(visitReasonSelector).length > 0 ||
-            url.includes("NonSkilledVisitInfo_ns.aspx")) {
+        // CRITICAL: We strictly rely on the specific URLs of the Visit Edit pages
+        // because $(visitReasonSelector).length > 0 is too broad and triggers on
+        // pages like InternalPatientInfo_ns.aspx (which causes the stuck issue)
+        if (url.includes("nonskilledvisitinfo_ns.aspx") ||
+            url.includes("skilledvisitinfo_ns.aspx") ||
+            url.includes("nonskilledvisitinfopayer_ns.aspx") ||
+            url.includes("skilledvisitinfopayer_ns.aspx") ||
+            url.includes("calendarvisitdetailchharightsiframe_ns.aspx")) {
             return "DETAIL";
         }
         // 3. Check for Prebilling List specific element (Container or Search Button)
-        if ($("#ctl00_ContentPlaceHolder1_divPrebillingReportInternalScroll").length >
-            0 ||
-            $(prebillingSearchButtonSelector).length > 0 ||
-            $("#prebillingSelector").length > 0 ||
-            url.includes("PrebillingReportInternal_ns.aspx")) {
+        // Make sure it doesn't accidentally trigger on non-list pages
+        if (url.includes("prebillingreportinternal_ns.aspx")) {
             return "LIST";
         }
         if (retries <= 0)
@@ -14529,15 +14738,20 @@ async function checkAndResumeCleaningTasks() {
     if (pageType === "DETAIL") {
         // 获取待处理的任务队列
         const queue = CleaningController.getQueue();
+        console.warn("[Epic 11 DEBUG] Page is DETAIL. Queue object:", queue, "Stringified:", JSON.stringify(queue));
         if (queue &&
             queue.status === "IN_PROGRESS" &&
             queue.pageType === "PREBILLING") {
+            // ★ 防误触判断：检查这个详情页是否由脚本刚刚点击打开（300秒内有效）
+            const clickTime = GM_getValue("hha_cleaner_poc_click_time", 0);
+            if (Date.now() - clickTime > 300000) {
+                console.warn(`[Epic 11 DEBUG] Visit detail page opened manually (or timestamp expired). clickTime: ${clickTime}, Date.now: ${Date.now()}, diff: ${Date.now() - clickTime}`);
+                return;
+            }
             console.log("[Epic 11] Visit detail page detected with pending POC task");
             // 延迟执行，确保页面完全加载
             setTimeout(async () => {
                 try {
-                    // 导入并执行 POCResolver
-                    const { CleaningOverlay } = await Promise.resolve(/* import() */).then(__webpack_require__.bind(__webpack_require__, "./src/js/services/CleaningOverlay.ts"));
                     // 显示蒙版 (Important: Update text because previous page might have left it at 'Refreshing table...')
                     CleaningOverlay.show(queue.currentIndex + 1, queue.tasks.length, "正在处理 POC... (已进入详情页)");
                     // 执行 POC 清理
@@ -14557,6 +14771,23 @@ async function checkAndResumeCleaningTasks() {
                             }
                             if (saveButton) {
                                 console.log("[Epic 11] Clicking save button...", saveButton.id);
+                                // ★★★ 关键修复：在点击 Save 之前，提前增加任务索引 ★★★
+                                // 因为保存后 iframe 可能会被销毁（成功时不显示确认框），如果等确认框出现再增加索引，就会丢失更新
+                                try {
+                                    const currentQueue = CleaningController.getQueue();
+                                    if (currentQueue &&
+                                        currentQueue.status === "IN_PROGRESS" &&
+                                        currentQueue.pageType === "PREBILLING") {
+                                        currentQueue.tasks[currentQueue.currentIndex].completed =
+                                            true;
+                                        currentQueue.currentIndex++;
+                                        GM_setValue("hha_cleaner_task_queue", currentQueue);
+                                        console.log(`[Epic 11] POC task index advanced to ${currentQueue.currentIndex}/${currentQueue.tasks.length} before Save`);
+                                    }
+                                }
+                                catch (e) {
+                                    console.error("[Epic 11] Failed to advance task queue before save:", e);
+                                }
                                 saveButton.click();
                                 // 处理保存后可能弹出的确认对话框
                                 // HHAeXchange 会弹出 "HHAeXchange - Confirm" 对话框，需要点击 OK
@@ -14577,6 +14808,9 @@ async function checkAndResumeCleaningTasks() {
                 }
             }, 1500);
             return;
+        }
+        else {
+            console.warn(`[Epic 11 DEBUG] Skipping DETAIL page logic. queue exists: ${!!queue}, status: ${queue?.status}, pageType: ${queue?.pageType}`);
         }
     }
     else if (pageType === "LIST" || pageType === "CALL_MAINTENANCE") {
@@ -14643,23 +14877,6 @@ function handleConfirmationDialog(retryCount = 0) {
         okButton = findOkButtonInAllFrames(window, selectors);
     }
     if (okButton) {
-        // ★★★ 关键修复：在点击 OK 之前，增加任务索引 ★★★
-        // 这样页面刷新后，checkPendingTasks 会处理下一个任务
-        try {
-            const queue = CleaningController.getQueue();
-            if (queue && queue.status === "IN_PROGRESS") {
-                // 标记当前任务完成
-                queue.tasks[queue.currentIndex].completed = true;
-                // 增加索引
-                queue.currentIndex++;
-                // 保存更新的队列
-                GM_setValue("hha_cleaner_task_queue", queue);
-                console.log(`[Epic 11] Task index advanced to ${queue.currentIndex}/${queue.tasks.length}`);
-            }
-        }
-        catch (e) {
-            console.error("[Epic 11] Failed to update task queue:", e);
-        }
         console.log("[Epic 11] Found and clicking confirmation dialog OK button...");
         okButton.click();
         // 点击后页面会刷新
@@ -14687,21 +14904,7 @@ function handleConfirmationDialog(retryCount = 0) {
     }
     else {
         // Possible scenario: Save successful without confirmation dialog
-        console.log("[Epic 11] No confirmation dialog found after retries. Assuming silent success and advancing task.");
-        // CRITICAL FIX: Ensure we advance the task index even if no dialog appeared
-        // This prevents the "stuck" issue where the script keeps retrying the same task
-        try {
-            const queue = CleaningController.getQueue();
-            if (queue && queue.status === "IN_PROGRESS") {
-                queue.tasks[queue.currentIndex].completed = true;
-                queue.currentIndex++;
-                GM_setValue("hha_cleaner_task_queue", queue);
-                console.log(`[Epic 11] Task index advanced (fallback) to ${queue.currentIndex}/${queue.tasks.length}`);
-            }
-        }
-        catch (e) {
-            console.error("[Epic 11] Failed to update task queue (fallback):", e);
-        }
+        console.log("[Epic 11] No confirmation dialog found after retries. Assuming silent success.");
     }
 }
 /**
