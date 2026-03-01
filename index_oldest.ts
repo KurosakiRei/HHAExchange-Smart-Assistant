@@ -5,7 +5,6 @@ import {
   newMessageButtonSelector,
   prebillingSearchButtonSelector,
   homePageSearchButtonSelector,
-  visitReasonSelector,
 } from "./utils/templates&const";
 import GM_fetch from "@trim21/gm-fetch";
 import { assignIntervalTimer } from "./utils/util";
@@ -26,32 +25,10 @@ import { MultiTabPanel } from "./js/MultiTabPanel";
 import { StatusTrackingTab } from "./js/tabs/StatusTrackingTab";
 import { QAReportTab } from "./js/tabs/QAReportTab";
 import { CleanerTab } from "./js/tabs/CleanerTab";
-import { MailBuilderTab } from "./js/tabs/MailBuilderTab";
 import { CleaningController } from "./js/services/CleaningController";
-import { CleaningOverlay } from "./js/services/CleaningOverlay";
-import { OutlookAdapter } from "./js/services/OutlookAdapter";
-import { TinyMCEBundler } from "./js/services/TinyMCEBundler";
-import { version } from "../package.json";
 
 async function main() {
-  console.log("HHA Exchange Smart Assistant " + version + " : script start");
-
-  // Set a global flag to indicate script is running (for debugging)
-  (window as any).HHA_SMART_ASSISTANT_STARTED = true;
-  (window as any).HHA_SMART_ASSISTANT_VERSION = version;
-
-  // Initialize OutlookAdapter if on Outlook page
-  OutlookAdapter.init();
-
-  // Preload TinyMCE in the background (fire and forget)
-  // This gives it time to load before user opens the mail template editor
-  TinyMCEBundler.load().catch((err) => {
-    console.warn(
-      "[main] TinyMCE preload failed (will retry on modal open):",
-      err
-    );
-  });
-
+  console.log("HHA Exchange Smart Assistant: script start");
   incomingCallHandler();
 
   async function FetchTester() {
@@ -247,10 +224,6 @@ async function main() {
   // Epic 11: Check for pending cleaning tasks on page load
   // This enables automatic resume of cleaning after page refresh
   checkAndResumeCleaningTasks();
-
-  // Start polling the shared Tampermonkey storage to detect when child iframes complete tasks
-  // This is required because HHAExchange modals (iframes) closing do not trigger a full parent page reload.
-  CleaningController.startQueuePolling();
 }
 
 /**
@@ -337,7 +310,6 @@ function embedMultiTabPanel(
   panel.registerTab(new StatusTrackingTab());
   panel.registerTab(new QAReportTab());
   panel.registerTab(new CleanerTab());
-  panel.registerTab(new MailBuilderTab());
 
   // Initialize panel
   panel
@@ -497,90 +469,40 @@ function positionPanelRelativeToHandle(
  * 3. Resume cleaning progress display
  */
 async function checkAndResumeCleaningTasks(): Promise<void> {
-  // Wait loop to detect page type
-  // Priority order: URL-based checks first (fast & reliable), DOM fallback for detail pages
-  const detectPageType = async (
-    retries = 20
-  ): Promise<"DETAIL" | "LIST" | "CALL_MAINTENANCE" | "UNKNOWN"> => {
-    const url = window.location.href.toLowerCase();
+  // 检查是否在 visit 详情页 (NonSkilledVisitInfo_ns.aspx)
+  const isVisitDetailPage = window.location.href.includes(
+    "NonSkilledVisitInfo_ns.aspx"
+  );
 
-    // 1. Check for Call Maintenance page via URL (fast, reliable - no DOM needed)
-    //    IMPORTANT: Must check BEFORE DETAIL, as CallMaintenance URL does NOT contain
-    //    visitReasonSelector elements, so it would fall to UNKNOWN otherwise.
-    if (url.includes("callmaintenance_ns.aspx")) {
-      return "CALL_MAINTENANCE";
-    }
-
-    // 2. Check for Visit Detail Page specific element (Dropdowns or Headers)
-    // CRITICAL: We strictly rely on the specific URLs of the Visit Edit pages
-    // because $(visitReasonSelector).length > 0 is too broad and triggers on
-    // pages like InternalPatientInfo_ns.aspx (which causes the stuck issue)
-    if (
-      url.includes("nonskilledvisitinfo_ns.aspx") ||
-      url.includes("skilledvisitinfo_ns.aspx") ||
-      url.includes("nonskilledvisitinfopayer_ns.aspx") ||
-      url.includes("skilledvisitinfopayer_ns.aspx") ||
-      url.includes("calendarvisitdetailchharightsiframe_ns.aspx")
-    ) {
-      return "DETAIL";
-    }
-
-    // 3. Check for Prebilling List specific element (Container or Search Button)
-    // Make sure it doesn't accidentally trigger on non-list pages
-    if (url.includes("prebillingreportinternal_ns.aspx")) {
-      return "LIST";
-    }
-
-    if (retries <= 0) return "UNKNOWN";
-
-    await new Promise((r) => setTimeout(r, 500));
-    return detectPageType(retries - 1);
-  };
-
-  const pageType = await detectPageType();
-  console.log(`[Epic 11] Page Type Detected: ${pageType}`);
-
-  if (pageType === "DETAIL") {
+  if (isVisitDetailPage) {
     // 获取待处理的任务队列
     const queue = CleaningController.getQueue();
-    console.warn(
-      "[Epic 11 DEBUG] Page is DETAIL. Queue object:",
-      queue,
-      "Stringified:",
-      JSON.stringify(queue)
-    );
 
     if (
       queue &&
       queue.status === "IN_PROGRESS" &&
       queue.pageType === "PREBILLING"
     ) {
-      // ★ 防误触判断：检查这个详情页是否由脚本刚刚点击打开（300秒内有效）
-      const clickTime = GM_getValue<number>("hha_cleaner_poc_click_time", 0);
-      if (Date.now() - clickTime > 300000) {
-        console.warn(
-          `[Epic 11 DEBUG] Visit detail page opened manually (or timestamp expired). clickTime: ${clickTime}, Date.now: ${Date.now()}, diff: ${
-            Date.now() - clickTime
-          }`
-        );
-        return;
-      }
-
       console.log("[Epic 11] Visit detail page detected with pending POC task");
 
       // 延迟执行，确保页面完全加载
       setTimeout(async () => {
         try {
-          // 显示蒙版 (Important: Update text because previous page might have left it at 'Refreshing table...')
+          // 导入并执行 POCResolver
+          const { CleaningOverlay } = await import(
+            "./js/services/CleaningOverlay"
+          );
+
+          // 显示蒙版
           CleaningOverlay.show(
             queue.currentIndex + 1,
             queue.tasks.length,
-            "正在处理 POC... (已进入详情页)"
+            "正在处理 POC..."
           );
 
           // 执行 POC 清理
-          setTimeout(async () => {
-            await POCResolver();
+          setTimeout(() => {
+            POCResolver();
 
             // 点击保存按钮
             setTimeout(() => {
@@ -603,31 +525,6 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
 
               if (saveButton) {
                 console.log("[Epic 11] Clicking save button...", saveButton.id);
-
-                // ★★★ 关键修复：在点击 Save 之前，提前增加任务索引 ★★★
-                // 因为保存后 iframe 可能会被销毁（成功时不显示确认框），如果等确认框出现再增加索引，就会丢失更新
-                try {
-                  const currentQueue = CleaningController.getQueue();
-                  if (
-                    currentQueue &&
-                    currentQueue.status === "IN_PROGRESS" &&
-                    currentQueue.pageType === "PREBILLING"
-                  ) {
-                    currentQueue.tasks[currentQueue.currentIndex].completed =
-                      true;
-                    currentQueue.currentIndex++;
-                    GM_setValue("hha_cleaner_task_queue", currentQueue);
-                    console.log(
-                      `[Epic 11] POC task index advanced to ${currentQueue.currentIndex}/${currentQueue.tasks.length} before Save`
-                    );
-                  }
-                } catch (e) {
-                  console.error(
-                    "[Epic 11] Failed to advance task queue before save:",
-                    e
-                  );
-                }
-
                 saveButton.click();
 
                 // 处理保存后可能弹出的确认对话框
@@ -651,33 +548,14 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
       }, 1500);
 
       return;
-    } else {
-      console.warn(
-        `[Epic 11 DEBUG] Skipping DETAIL page logic. queue exists: ${!!queue}, status: ${
-          queue?.status
-        }, pageType: ${queue?.pageType}`
-      );
     }
-  } else if (pageType === "LIST" || pageType === "CALL_MAINTENANCE") {
-    // 在 Prebilling 或 Call Maintenance 列表页，检查是否有待恢复的任务
-    // Note: Call Maintenance 页面刷新后需要从这里恢复 duplicate call 清理
-    const hasPendingTasks = await CleaningController.checkPendingTasks();
+  }
 
-    if (hasPendingTasks) {
-      console.log(
-        `[Epic 11] Cleaning tasks resumed (${
-          pageType === "CALL_MAINTENANCE" ? "Call Maintenance" : "List"
-        } Page)`
-      );
-    }
-  } else {
-    // UNKNOWN or Timeout
-    const queue = CleaningController.getQueue();
-    if (queue && queue.status === "IN_PROGRESS") {
-      console.warn(
-        "[Epic 11] Could not detect page type, but tasks are pending."
-      );
-    }
+  // 不在详情页，检查是否有待恢复的任务（在 Prebilling 或 Call Maintenance 页面）
+  const hasPendingTasks = await CleaningController.checkPendingTasks();
+
+  if (hasPendingTasks) {
+    console.log("[Epic 11] Cleaning tasks resumed");
   }
 }
 
@@ -739,36 +617,37 @@ function handleConfirmationDialog(retryCount = 0): void {
   }
 
   if (okButton) {
+    // ★★★ 关键修复：在点击 OK 之前，增加任务索引 ★★★
+    // 这样页面刷新后，checkPendingTasks 会处理下一个任务
+    try {
+      const queue = CleaningController.getQueue();
+      if (queue && queue.status === "IN_PROGRESS") {
+        // 标记当前任务完成
+        queue.tasks[queue.currentIndex].completed = true;
+        // 增加索引
+        queue.currentIndex++;
+        // 保存更新的队列
+        GM_setValue("hha_cleaner_task_queue", queue);
+        console.log(
+          `[Epic 11] Task index advanced to ${queue.currentIndex}/${queue.tasks.length}`
+        );
+      }
+    } catch (e) {
+      console.error("[Epic 11] Failed to update task queue:", e);
+    }
+
     console.log(
       "[Epic 11] Found and clicking confirmation dialog OK button..."
     );
     okButton.click();
     // 点击后页面会刷新
-
-    // CRITICAL FIX: Ensure parent page reloads if the modal/dialog close action fails to trigger it
-    console.log(
-      "[Epic 11] Waiting 3s for page reload, otherwise forcing reload of top window..."
-    );
-    setTimeout(() => {
-      try {
-        if (window.top) {
-          console.log("[Epic 11] Forcing top window reload...");
-          window.top.location.reload();
-        } else {
-          window.location.reload();
-        }
-      } catch (e) {
-        console.error("Failed to reload top window:", e);
-        window.location.reload();
-      }
-    }, 3000);
   } else if (retryCount < MAX_RETRIES) {
     // 对话框可能还没出现，重试
     setTimeout(() => handleConfirmationDialog(retryCount + 1), 300);
   } else {
-    // Possible scenario: Save successful without confirmation dialog
+    // 可能没有确认对话框（某些情况下直接保存成功），不报错
     console.log(
-      "[Epic 11] No confirmation dialog found after retries. Assuming silent success."
+      "[Epic 11] No confirmation dialog found after retries (may not be needed)"
     );
   }
 }

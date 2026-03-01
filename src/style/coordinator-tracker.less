@@ -323,6 +323,37 @@
     white-space: nowrap;
 }
 
+// Epic 11: 表头过滤箭头按钮
+.th-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin-left: 2px;
+    font-size: 10px;
+    color: @text-secondary;
+    cursor: pointer;
+    border-radius: @radius-sm;
+    transition: all @transition-fast;
+    vertical-align: middle;
+    user-select: none;
+
+    &:hover {
+        color: @primary-color;
+        background: fade(@primary-color, 10%);
+    }
+
+    &.active {
+        color: @primary-color;
+        transform: rotate(180deg);
+    }
+
+    &.warning {
+        color: #e67e22;
+    }
+}
+
 // 表格行样式
 .tracker-table tbody tr {
     border: none;
@@ -753,4 +784,110 @@
         font-size: 13px;
         color: #666666;
     }
+}
+
+// ===== Epic 11: 过滤浮窗样式 =====
+.column-filter-popover {
+    position: absolute;
+    z-index: 100003;
+    min-width: 220px;
+    background: @background-white;
+    border: 1px solid @border-color;
+    border-radius: @radius-md;
+    box-shadow: @shadow-panel;
+    padding: 0;
+    font-size: @font-size-sm;
+
+    .filter-header {
+        padding: @spacing-sm @spacing-md;
+    }
+
+    .filter-select-all {
+        display: flex;
+        align-items: center;
+        gap: @spacing-xs;
+        cursor: pointer;
+        font-weight: @font-weight-semibold;
+        color: @text-primary;
+        user-select: none;
+
+        input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+        }
+    }
+
+    .filter-divider {
+        height: 1px;
+        background: @border-color-light;
+        margin: 0;
+    }
+
+    .filter-list {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: @spacing-xs 0;
+    }
+
+    .filter-item {
+        display: flex;
+        align-items: center;
+        gap: @spacing-xs;
+        padding: @spacing-xs @spacing-md;
+        cursor: pointer;
+        user-select: none;
+        transition: background @transition-fast;
+
+        &:hover {
+            background: @background-hover;
+        }
+
+        input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+    }
+
+    .filter-name {
+        flex: 1;
+        color: @text-primary;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .filter-count {
+        margin-left: auto;
+        color: @text-secondary;
+        font-size: @font-size-xs;
+        flex-shrink: 0;
+    }
+
+    .filter-stats {
+        padding: @spacing-xs @spacing-md;
+        font-size: @font-size-xs;
+        color: @text-secondary;
+        text-align: center;
+
+        strong {
+            color: @primary-color;
+            font-weight: @font-weight-semibold;
+        }
+    }
+
+    .filter-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: @spacing-xs;
+        padding: @spacing-sm @spacing-md;
+    }
+}
+
+// Epic 11: 未追踪列的破折号样式
+.tracking-disabled {
+    color: @text-secondary;
+    font-size: @font-size-sm;
+    cursor: default;
+    user-select: none;
 }

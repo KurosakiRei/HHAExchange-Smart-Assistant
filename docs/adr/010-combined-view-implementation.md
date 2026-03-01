@@ -1,4 +1,4 @@
-# ADR-005: Combined View 实现方案 - Aide & Patient 搜索结果合并显示
+# ADR-010: Combined View 实现方案 - Aide & Patient 搜索结果合并显示
 
 ## 状态
 已实施 (2025-12-20)
@@ -260,14 +260,14 @@ const extractAndCleanContent = (html: string, type: "aide" | "patient"): string 
 
 ## 技术决策总结
 
-| 方案 | 评估 | 结果 |
-|------|------|------|
-| iframe + nested blob URL | Chrome 安全策略阻止 | ❌ 失败 |
-| iframe + srcdoc (escaped) | HTML 被过度转义破坏 | ❌ 失败 |
-| iframe + srcdoc (quote-escaped) | 仍然显示空白 | ❌ 失败 |
-| div + Regex extraction | 内容提取不完整 | ❌ 失败 |
-| div + String cleanup + DOMParser | DOM 结构被破坏 | ❌ 失败 |
-| **div + DOMParser + DOM cleanup** | **完美工作** | ✅ 成功 |
+| 方案                              | 评估                | 结果   |
+| --------------------------------- | ------------------- | ------ |
+| iframe + nested blob URL          | Chrome 安全策略阻止 | ❌ 失败 |
+| iframe + srcdoc (escaped)         | HTML 被过度转义破坏 | ❌ 失败 |
+| iframe + srcdoc (quote-escaped)   | 仍然显示空白        | ❌ 失败 |
+| div + Regex extraction            | 内容提取不完整      | ❌ 失败 |
+| div + String cleanup + DOMParser  | DOM 结构被破坏      | ❌ 失败 |
+| **div + DOMParser + DOM cleanup** | **完美工作**        | ✅ 成功 |
 
 ## 经验教训
 

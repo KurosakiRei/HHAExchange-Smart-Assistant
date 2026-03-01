@@ -6,5 +6,10 @@ dist
 .bmad-core/
 .bmad-*/
 
+_bmad
+.github/prompts/*
+.github/agents/*
+.github/copilot-instructions.md
+
 Untitled-1.html
 Untitled-2.html

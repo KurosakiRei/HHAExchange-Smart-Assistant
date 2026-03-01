@@ -80,6 +80,18 @@ interface TrackedData {
 // 定义追踪任务类型
 type CallType = 2 | 3 | "anomaly" | "message";
 
+// --- Epic 11: 按列追踪过滤器类型 ---
+/** 可过滤的列类型 */
+type ColumnType = "clockIn" | "clockOut" | "anomaly" | "message";
+
+/** 持久化格式（JSON 序列化友好） */
+interface PersistedFilterConfig {
+  /** coordinatorId -> 启用的列名数组 */
+  filters: Record<number, ColumnType[]>;
+  /** 最后修改时间戳 */
+  timestamp: number;
+}
+
 // --- TAB SYNC TYPES (Story 1: Plan D 多 Tab 同步) ---
 /**
  * 存储在 localStorage 中的缓存数据结构
@@ -98,7 +110,7 @@ interface SyncCacheData {
  */
 interface SyncMessage {
   /** 消息类型 */
-  type: "DATA_UPDATED" | "REQUEST_REFRESH" | "TAB_CLOSING";
+  type: "DATA_UPDATED" | "REQUEST_REFRESH" | "TAB_CLOSING" | "FILTER_UPDATED";
   /** 发送消息的 Tab ID */
   sourceTabId: string;
   /** 消息时间戳 */
@@ -164,6 +176,14 @@ export const visitMonitor = async () => {
 
   // --- 状态与常量 ---
   const STORAGE_KEY = "hha_coordinator_tracker_list";
+  // Epic 11: 按列追踪过滤器存储键
+  const FILTER_STORAGE_KEY = "hha_column_tracking_filter";
+  const ALL_COLUMNS: ColumnType[] = [
+    "clockIn",
+    "clockOut",
+    "anomaly",
+    "message",
+  ];
   // 动态检测当前 HHAExchange 租户路径前缀，避免因服务器版本升级导致旧路径失效触发强制登出
   const TENANT_BASE_URL = detectTenantBaseUrl();
   const CALL_MAINTENANCE_URL = `${TENANT_BASE_URL}/Call/CallMaintenance_ns.aspx`;
@@ -180,6 +200,8 @@ export const visitMonitor = async () => {
   // 新增：用于缓存追踪结果和 Office IDs
   const statusDataCache = new Map<string, TrackedData>();
   let officeIdString: string | null = null;
+  // Epic 11: 按列追踪过滤配置（运行时）
+  let columnFilterConfig: Map<number, Set<ColumnType>> = new Map();
 
   // --- TAB SYNC MANAGER (升级版：支持跨域名多 Tab 同步) ---
   /**
@@ -361,7 +383,8 @@ export const visitMonitor = async () => {
         GM_setValue(this.CACHE_KEY, jsonStr);
         this.lastKnownTimestamp = cacheData.timestamp;
         console.log(
-          `[TabSyncManager] Cache updated by Tab ${this.tabId
+          `[TabSyncManager] Cache updated by Tab ${
+            this.tabId
           }, size: ${sizeKB.toFixed(1)}KB (cross-domain shared)`
         );
       } catch (e) {
@@ -547,8 +570,8 @@ export const visitMonitor = async () => {
         hasCachedData: !!this.getCachedData(),
         cachedDataAge: this.getCachedData()?.timestamp
           ? `${((Date.now() - this.getCachedData()!.timestamp) / 1000).toFixed(
-            1
-          )}s`
+              1
+            )}s`
           : "N/A",
         crossOriginPolling: !!this.pollIntervalId,
         lastKnownTimestamp: this.lastKnownTimestamp,
@@ -563,11 +586,11 @@ export const visitMonitor = async () => {
   const apiParamProvider = {
     params: null as
       | (ApiParams & {
-        sessionID: string;
-        viewState: string;
-        viewStateGenerator: string;
-        vendorID: string;
-      })
+          sessionID: string;
+          viewState: string;
+          viewStateGenerator: string;
+          vendorID: string;
+        })
       | null,
 
     /**
@@ -688,13 +711,13 @@ export const visitMonitor = async () => {
                 <button id="edit-list-btn" class="tracker-btn-secondary">📝 选择要追踪的辅导员</button>
               </div>
             </div>
-            <div class="tracker-content"><table class="tracker-table"><thead><tr>
+            <div class="tracker-content"><table id="tracking-table" class="tracker-table"><thead><tr>
                     <th style="width:40px;">编号</th>
                     <th class="col-coordinator">辅导员 (Ext.)</th>
-                    <th style="width:80px;">上班钟</th>
-                    <th style="width:80px;">下班钟</th>
-                    <th style="width:80px;">异常打钟</th>
-                    <th style="width:80px;">消息</th>
+                    <th style="width:80px;"><span class="th-label">上班钟</span><span class="th-filter-btn" data-column="clockIn">▾</span></th>
+                    <th style="width:80px;"><span class="th-label">下班钟</span><span class="th-filter-btn" data-column="clockOut">▾</span></th>
+                    <th style="width:80px;"><span class="th-label">异常打钟</span><span class="th-filter-btn" data-column="anomaly">▾</span></th>
+                    <th style="width:80px;"><span class="th-label">消息</span><span class="th-filter-btn" data-column="message">▾</span></th>
                 </tr></thead><tbody id="tracking-table-body"></tbody></table></div>
         </div>
         <div id="editing-view" class="tracker-view hidden">
@@ -838,6 +861,369 @@ export const visitMonitor = async () => {
       );
       showToast("保存失败", "error");
     }
+  }
+
+  // --- Epic 11: 按列追踪过滤器持久化函数 ---
+
+  /**
+   * 从 GM_getValue 加载按列过滤配置
+   * 首次使用 / 数据为空时，所有人所有列默认启用（不写入空配置）
+   */
+  function loadColumnFilter(): void {
+    try {
+      const raw = GM_getValue<string>(FILTER_STORAGE_KEY, "");
+      if (!raw) {
+        columnFilterConfig = new Map();
+        return;
+      }
+      const parsed: PersistedFilterConfig = JSON.parse(raw);
+      columnFilterConfig = new Map();
+      for (const [idStr, cols] of Object.entries(parsed.filters)) {
+        columnFilterConfig.set(Number(idStr), new Set(cols));
+      }
+    } catch (error) {
+      console.error("[Epic11] Failed to load column filter config:", error);
+      columnFilterConfig = new Map();
+    }
+  }
+
+  /**
+   * 将按列过滤配置保存到 GM_setValue
+   */
+  function saveColumnFilter(): void {
+    try {
+      const data: PersistedFilterConfig = {
+        filters: {},
+        timestamp: Date.now(),
+      };
+      columnFilterConfig.forEach((columns, coordinatorId) => {
+        data.filters[coordinatorId] = Array.from(columns);
+      });
+      GM_setValue(FILTER_STORAGE_KEY, JSON.stringify(data));
+    } catch (error) {
+      console.error("[Epic11] Failed to save column filter config:", error);
+    }
+  }
+
+  /**
+   * 获取指定辅导员的启用列集合
+   * 如果该辅导员不在配置中（新人 / 首次使用），默认全部启用
+   */
+  function getEnabledColumns(coordinatorId: number): Set<ColumnType> {
+    return columnFilterConfig.get(coordinatorId) || new Set(ALL_COLUMNS);
+  }
+
+  /**
+   * 判断指定辅导员的指定列是否启用
+   */
+  function isColumnEnabled(coordinatorId: number, column: ColumnType): boolean {
+    return getEnabledColumns(coordinatorId).has(column);
+  }
+
+  /**
+   * 计算当前过滤配置下的实际请求总数
+   */
+  function getTotalRequestCount(): number {
+    let count = 0;
+    for (const coordinator of trackedCoordinators) {
+      count += getEnabledColumns(coordinator.id).size;
+    }
+    return count;
+  }
+
+  /**
+   * 计算最大请求总数（全追踪，无过滤）
+   */
+  function getMaxRequestCount(): number {
+    return trackedCoordinators.length * ALL_COLUMNS.length;
+  }
+
+  /**
+   * 清理已删除辅导员的过滤配置
+   * 在保存追踪列表后调用，防止残留数据
+   */
+  function cleanupColumnFilter(): void {
+    const activeIds = new Set(trackedCoordinators.map((c) => c.id));
+    let changed = false;
+    for (const id of columnFilterConfig.keys()) {
+      if (!activeIds.has(id)) {
+        columnFilterConfig.delete(id);
+        changed = true;
+      }
+    }
+    if (changed) {
+      saveColumnFilter();
+    }
+  }
+
+  // --- Epic 11 Story 11.3: 过滤浮窗逻辑 ---
+
+  /** 当前打开的过滤浮窗元素引用 */
+  let activeFilterPopover: HTMLElement | null = null;
+  /** 当前打开的浮窗对应的箭头按钮 */
+  let activeFilterBtn: HTMLElement | null = null;
+
+  /**
+   * 关闭当前打开的过滤浮窗
+   */
+  function closeFilterPopover(): void {
+    if (activeFilterPopover) {
+      activeFilterPopover.remove();
+      activeFilterPopover = null;
+    }
+    if (activeFilterBtn) {
+      activeFilterBtn.classList.remove("active");
+      activeFilterBtn = null;
+    }
+  }
+
+  /**
+   * 打开某列的过滤浮窗
+   * @param column 列类型
+   * @param btnElement 触发的箭头按钮元素
+   */
+  function showFilterPopover(
+    column: ColumnType,
+    btnElement: HTMLElement
+  ): void {
+    // 如果点击的是已打开的同一箭头，则关闭
+    if (activeFilterBtn === btnElement) {
+      closeFilterPopover();
+      return;
+    }
+    // 先关闭旧的
+    closeFilterPopover();
+
+    if (trackedCoordinators.length === 0) return;
+
+    // 创建临时状态（只在确认时应用）
+    const tempState = new Map<number, boolean>();
+    for (const c of trackedCoordinators) {
+      tempState.set(c.id, isColumnEnabled(c.id, column));
+    }
+
+    // 映射列类型到缓存键后缀
+    const cacheKeySuffix: Record<ColumnType, string> = {
+      clockIn: "2",
+      clockOut: "3",
+      anomaly: "anomaly",
+      message: "message",
+    };
+
+    // 生成人员列表 HTML
+    const listHtml = trackedCoordinators
+      .map((c) => {
+        const checked = tempState.get(c.id) ? "checked" : "";
+        const cacheKey = `${c.id}-${cacheKeySuffix[column]}`;
+        const data = statusDataCache.get(cacheKey);
+        const countDisplay = tempState.get(c.id)
+          ? `(${data?.count ?? 0})`
+          : "(—)";
+        return `<label class="filter-item">
+          <input type="checkbox" data-coordinator-id="${c.id}" ${checked} />
+          <span class="filter-name">${c.name}</span>
+          <span class="filter-count">${countDisplay}</span>
+        </label>`;
+      })
+      .join("");
+
+    // 计算全选状态
+    const allChecked = trackedCoordinators.every((c) => tempState.get(c.id));
+    const noneChecked = trackedCoordinators.every((c) => !tempState.get(c.id));
+    const selectAllChecked = allChecked ? "checked" : "";
+
+    const currentTotal = getTotalRequestCount();
+    const maxTotal = getMaxRequestCount();
+
+    const popover = document.createElement("div");
+    popover.className = "column-filter-popover";
+    popover.dataset.column = column;
+    popover.innerHTML = `
+      <div class="filter-header">
+        <label class="filter-select-all">
+          <input type="checkbox" class="filter-checkbox-all" ${selectAllChecked} />
+          <span>全选</span>
+        </label>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-list">${listHtml}</div>
+      <div class="filter-divider"></div>
+      <div class="filter-stats">
+        当前追踪: <strong class="filter-current-count">${currentTotal}</strong>/<strong>${maxTotal}</strong> 请求/轮
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-actions">
+        <button class="tracker-btn-secondary filter-cancel-btn">取消</button>
+        <button class="tracker-btn-primary filter-confirm-btn">✓ 确认</button>
+      </div>
+    `;
+
+    // 定位浮窗
+    document.body.appendChild(popover);
+    const btnRect = btnElement.getBoundingClientRect();
+    let popLeft = btnRect.left + btnRect.width / 2 - popover.offsetWidth / 2;
+    let popTop = btnRect.bottom + 4;
+    // 边界检测
+    if (popLeft < 4) popLeft = 4;
+    if (popLeft + popover.offsetWidth > window.innerWidth - 4) {
+      popLeft = window.innerWidth - popover.offsetWidth - 4;
+    }
+    if (popTop + popover.offsetHeight > window.innerHeight - 4) {
+      popTop = btnRect.top - popover.offsetHeight - 4;
+    }
+    popover.style.left = `${popLeft}px`;
+    popover.style.top = `${popTop}px`;
+
+    activeFilterPopover = popover;
+    activeFilterBtn = btnElement;
+    btnElement.classList.add("active");
+
+    // --- 浮窗事件 ---
+
+    /** 重新计算并更新括号里的请求计数 */
+    const updateStats = () => {
+      // 临时计算：当前全局请求数减去本列被取消的，再加上本列被勾选的
+      let tempTotal = 0;
+      for (const c of trackedCoordinators) {
+        const cols = getEnabledColumns(c.id);
+        // 对每个人，除了当前列以外的启用数
+        let enabledCount = 0;
+        for (const col of ALL_COLUMNS) {
+          if (col === column) {
+            enabledCount += tempState.get(c.id) ? 1 : 0;
+          } else {
+            enabledCount += cols.has(col) ? 1 : 0;
+          }
+        }
+        tempTotal += enabledCount;
+      }
+      const countEl = popover.querySelector(".filter-current-count");
+      if (countEl) countEl.textContent = String(tempTotal);
+    };
+
+    /** 更新全选 checkbox 状态 */
+    const updateSelectAll = () => {
+      const checkAll = popover.querySelector(
+        ".filter-checkbox-all"
+      ) as HTMLInputElement;
+      const allOn = trackedCoordinators.every((c) => tempState.get(c.id));
+      const allOff = trackedCoordinators.every((c) => !tempState.get(c.id));
+      checkAll.checked = allOn;
+      checkAll.indeterminate = !allOn && !allOff;
+    };
+
+    // 全选 checkbox
+    const checkAllEl = popover.querySelector(
+      ".filter-checkbox-all"
+    ) as HTMLInputElement;
+    if (!allChecked && !noneChecked) {
+      checkAllEl.indeterminate = true;
+    }
+    checkAllEl.addEventListener("change", () => {
+      const checked = checkAllEl.checked;
+      trackedCoordinators.forEach((c) => tempState.set(c.id, checked));
+      popover
+        .querySelectorAll(".filter-item input[type=checkbox]")
+        .forEach((cb) => ((cb as HTMLInputElement).checked = checked));
+      // 更新 count 显示
+      popover.querySelectorAll(".filter-item").forEach((item) => {
+        const cb = item.querySelector("input") as HTMLInputElement;
+        const countSpan = item.querySelector(".filter-count") as HTMLElement;
+        const coordId = Number(cb.dataset.coordinatorId);
+        const cacheKey = `${coordId}-${cacheKeySuffix[column]}`;
+        const data = statusDataCache.get(cacheKey);
+        countSpan.textContent = checked ? `(${data?.count ?? 0})` : "(—)";
+      });
+      updateStats();
+    });
+
+    // 单个 checkbox
+    popover
+      .querySelectorAll(".filter-item input[type=checkbox]")
+      .forEach((cb) => {
+        cb.addEventListener("change", () => {
+          const input = cb as HTMLInputElement;
+          const coordId = Number(input.dataset.coordinatorId);
+          tempState.set(coordId, input.checked);
+          // 更新 count 显示
+          const countSpan = (cb as HTMLElement)
+            .closest(".filter-item")
+            ?.querySelector(".filter-count") as HTMLElement;
+          if (countSpan) {
+            const cacheKey = `${coordId}-${cacheKeySuffix[column]}`;
+            const data = statusDataCache.get(cacheKey);
+            countSpan.textContent = input.checked
+              ? `(${data?.count ?? 0})`
+              : "(—)";
+          }
+          updateSelectAll();
+          updateStats();
+        });
+      });
+
+    // 取消按钮
+    popover
+      .querySelector(".filter-cancel-btn")!
+      .addEventListener("click", () => {
+        closeFilterPopover();
+      });
+
+    // 确认按钮
+    popover
+      .querySelector(".filter-confirm-btn")!
+      .addEventListener("click", () => {
+        // 应用 tempState 到实际配置
+        for (const [coordId, enabled] of tempState) {
+          let cols = columnFilterConfig.get(coordId);
+          if (!cols) {
+            cols = new Set(ALL_COLUMNS);
+            columnFilterConfig.set(coordId, cols);
+          }
+          if (enabled) {
+            cols.add(column);
+          } else {
+            cols.delete(column);
+            // 同时清除对应缓存
+            statusDataCache.delete(`${coordId}-${cacheKeySuffix[column]}`);
+          }
+        }
+        saveColumnFilter();
+        closeFilterPopover();
+        renderTrackingView();
+        // 立即触发一次追踪更新，使新配置生效
+        runTrackingUpdate();
+      });
+
+    // 点击浮窗外部关闭
+    setTimeout(() => {
+      const outsideClickHandler = (e: MouseEvent) => {
+        if (
+          activeFilterPopover &&
+          !activeFilterPopover.contains(e.target as Node) &&
+          e.target !== btnElement
+        ) {
+          closeFilterPopover();
+          document.removeEventListener("mousedown", outsideClickHandler);
+        }
+      };
+      document.addEventListener("mousedown", outsideClickHandler);
+    }, 0);
+  }
+
+  /**
+   * 更新所有过滤箭头的警告状态
+   * 如果某列有任何辅导员被禁用，箭头显示橙色警告色
+   */
+  function updateFilterBtnWarnings(): void {
+    const filterBtns = document.querySelectorAll(".th-filter-btn");
+    filterBtns.forEach((btn) => {
+      const col = (btn as HTMLElement).dataset.column as ColumnType;
+      if (!col) return;
+      const hasDisabled = trackedCoordinators.some(
+        (c) => !isColumnEnabled(c.id, col)
+      );
+      btn.classList.toggle("warning", hasDisabled);
+    });
   }
 
   async function fetchAllCoordinators(): Promise<Coordinator[]> {
@@ -1149,9 +1535,9 @@ export const visitMonitor = async () => {
         await getMessageContractPayers();
       const payerIds = payers
         ? payers
-          .split(",")
-          .map(Number)
-          .filter((n) => n > 0)
+            .split(",")
+            .map(Number)
+            .filter((n) => n > 0)
         : [];
 
       console.log(
@@ -1529,8 +1915,9 @@ export const visitMonitor = async () => {
       minorVersion: getParam("gnMinorVersion")!,
       appName: getParam("gnApNm")!,
     };
-    const officeUrl = `https://app.hhaexchange.com/HHAWS${apiParams.appVersion
-      }${apiParams.version.replace(".", "")}010000/Office.asmx/GetAllOffices`;
+    const officeUrl = `https://app.hhaexchange.com/HHAWS${
+      apiParams.appVersion
+    }${apiParams.version.replace(".", "")}010000/Office.asmx/GetAllOffices`;
     const officePayload = {
       ...apiParams,
       IPAddress: "127.0.0.1",
@@ -2155,6 +2542,8 @@ export const visitMonitor = async () => {
     if (emptyState) emptyState.style.display = "none";
     const rowsHtml = trackedCoordinators
       .map((coordinator, index) => {
+        // Epic 11: 获取该辅导员的启用列
+        const enabledCols = getEnabledColumns(coordinator.id);
         const clockInData = statusDataCache.get(`${coordinator.id}-2`);
         const clockOutData = statusDataCache.get(`${coordinator.id}-3`);
         const anomalyData = statusDataCache.get(`${coordinator.id}-anomaly`);
@@ -2169,31 +2558,47 @@ export const visitMonitor = async () => {
         const messageStatus = messageCount > 0 ? "status-error" : "status-ok";
 
         // Add disabled class for zero-count status icons
-        const clockInClass = `status-icon ${clockInStatus}${clockInCount === 0 ? " status-disabled" : ""
-          }`;
-        const clockOutClass = `status-icon ${clockOutStatus}${clockOutCount === 0 ? " status-disabled" : ""
-          }`;
-        const anomalyClass = `status-icon ${anomalyStatus}${anomalyCount === 0 ? " status-disabled" : ""
-          }`;
-        const messageClass = `status-icon ${messageStatus}${messageCount === 0 ? " status-disabled" : ""
-          }`;
+        const clockInClass = `status-icon ${clockInStatus}${
+          clockInCount === 0 ? " status-disabled" : ""
+        }`;
+        const clockOutClass = `status-icon ${clockOutStatus}${
+          clockOutCount === 0 ? " status-disabled" : ""
+        }`;
+        const anomalyClass = `status-icon ${anomalyStatus}${
+          anomalyCount === 0 ? " status-disabled" : ""
+        }`;
+        const messageClass = `status-icon ${messageStatus}${
+          messageCount === 0 ? " status-disabled" : ""
+        }`;
+
+        // Epic 11: 根据过滤配置决定单元格内容
+        const clockInCell = enabledCols.has("clockIn")
+          ? `<div class="${clockInClass}" data-coordinator-id="${coordinator.id}" data-call-type="2">${clockInCount}</div>`
+          : `<span class="tracking-disabled">—</span>`;
+        const clockOutCell = enabledCols.has("clockOut")
+          ? `<div class="${clockOutClass}" data-coordinator-id="${coordinator.id}" data-call-type="3">${clockOutCount}</div>`
+          : `<span class="tracking-disabled">—</span>`;
+        const anomalyCell = enabledCols.has("anomaly")
+          ? `<div class="${anomalyClass}" data-coordinator-id="${coordinator.id}" data-call-type="anomaly">${anomalyCount}</div>`
+          : `<span class="tracking-disabled">—</span>`;
+        const messageCell = enabledCols.has("message")
+          ? `<div class="${messageClass}" data-coordinator-id="${coordinator.id}" data-call-type="message">${messageCount}</div>`
+          : `<span class="tracking-disabled">—</span>`;
 
         return `
                 <tr>
                     <td>${index + 1}</td>
                     <td class="col-coordinator">${coordinator.name}</td>
-                    <td><div class="${clockInClass}" data-coordinator-id="${coordinator.id
-          }" data-call-type="2">${clockInCount}</div></td>
-                    <td><div class="${clockOutClass}" data-coordinator-id="${coordinator.id
-          }" data-call-type="3">${clockOutCount}</div></td>
-                    <td><div class="${anomalyClass}" data-coordinator-id="${coordinator.id
-          }" data-call-type="anomaly">${anomalyCount}</div></td>
-                    <td><div class="${messageClass}" data-coordinator-id="${coordinator.id
-          }" data-call-type="message">${messageCount}</div></td>
+                    <td>${clockInCell}</td>
+                    <td>${clockOutCell}</td>
+                    <td>${anomalyCell}</td>
+                    <td>${messageCell}</td>
                 </tr>`;
       })
       .join("");
     trackingTableBody.innerHTML = rowsHtml;
+    // Epic 11: 渲染后更新箭头警告状态
+    updateFilterBtnWarnings();
   }
 
   // FIX 2: 移除函数参数，使其直接使用上层作用域的 allCoordinators 状态变量
@@ -2203,22 +2608,23 @@ export const visitMonitor = async () => {
                 <thead><tr><th class="col-coordinator">所有可用 Coordinator</th><th>操作</th></tr></thead>
                 <tbody id="editing-table-body">
                     ${allCoordinators
-        .map(
-          (c) => `
+                      .map(
+                        (c) => `
                         <tr data-id="${c.id}">
                             <td class="col-coordinator">${c.name}</td>
                             <td class="edit-list-actions">
-                                <button class="${tempTrackedIds.has(c.id)
-              ? "remove-btn"
-              : "add-btn"
-            }" data-id="${c.id}" data-name="${c.name}">
+                                <button class="${
+                                  tempTrackedIds.has(c.id)
+                                    ? "remove-btn"
+                                    : "add-btn"
+                                }" data-id="${c.id}" data-name="${c.name}">
                                     ${tempTrackedIds.has(c.id) ? "−" : "+"}
                                 </button>
                             </td>
                         </tr>
                     `
-        )
-        .join("")}
+                      )
+                      .join("")}
                 </tbody>
             </table>`;
     editingContent.innerHTML = tableHtml;
@@ -2237,7 +2643,8 @@ export const visitMonitor = async () => {
     if (cached) {
       const decision = tabSyncManager.shouldFetchFresh(cached.timestamp);
       console.log(
-        `[Story2] Cache decision: ${decision}, age: ${Date.now() - cached.timestamp
+        `[Story2] Cache decision: ${decision}, age: ${
+          Date.now() - cached.timestamp
         }ms`
       );
 
@@ -2261,44 +2668,66 @@ export const visitMonitor = async () => {
       // decision === 'REFRESH': 缓存过期，直接执行 API 调用
     }
 
-    // --- 原有的 API 调用逻辑 ---
+    // --- 原有的 API 调用逻辑 (Epic 11: 按过滤配置决定请求) ---
     try {
       const officeIds = await getOfficeIds();
       const promises: Promise<void>[] = [];
       for (const coordinator of trackedCoordinators) {
+        // Epic 11: 获取该辅导员的启用列
+        const enabledCols = getEnabledColumns(coordinator.id);
+
         // 上班钟 (CallType=2)
-        promises.push(
-          fetchStatusReport(coordinator.id, 2, officeIds)
-            .then((data) => {
-              statusDataCache.set(`${coordinator.id}-2`, data);
-            })
-            .catch((err) => console.error(err))
-        );
+        if (enabledCols.has("clockIn")) {
+          promises.push(
+            fetchStatusReport(coordinator.id, 2, officeIds)
+              .then((data) => {
+                statusDataCache.set(`${coordinator.id}-2`, data);
+              })
+              .catch((err) => console.error(err))
+          );
+        } else {
+          statusDataCache.delete(`${coordinator.id}-2`);
+        }
         // 下班钟 (CallType=3)
-        promises.push(
-          fetchStatusReport(coordinator.id, 3, officeIds)
-            .then((data) => {
-              statusDataCache.set(`${coordinator.id}-3`, data);
-            })
-            .catch((err) => console.error(err))
-        );
+        if (enabledCols.has("clockOut")) {
+          promises.push(
+            fetchStatusReport(coordinator.id, 3, officeIds)
+              .then((data) => {
+                statusDataCache.set(`${coordinator.id}-3`, data);
+              })
+              .catch((err) => console.error(err))
+          );
+        } else {
+          statusDataCache.delete(`${coordinator.id}-3`);
+        }
         // 异常打钟
-        promises.push(
-          fetchAnomalyReport(coordinator.id)
-            .then((data) => {
-              statusDataCache.set(`${coordinator.id}-anomaly`, data);
-            })
-            .catch((err) => console.error(err))
-        );
+        if (enabledCols.has("anomaly")) {
+          promises.push(
+            fetchAnomalyReport(coordinator.id)
+              .then((data) => {
+                statusDataCache.set(`${coordinator.id}-anomaly`, data);
+              })
+              .catch((err) => console.error(err))
+          );
+        } else {
+          statusDataCache.delete(`${coordinator.id}-anomaly`);
+        }
         // 消息监控
-        promises.push(
-          fetchMessageReport(coordinator.id)
-            .then((data) => {
-              statusDataCache.set(`${coordinator.id}-message`, data);
-            })
-            .catch((err) => console.error(err))
-        );
+        if (enabledCols.has("message")) {
+          promises.push(
+            fetchMessageReport(coordinator.id)
+              .then((data) => {
+                statusDataCache.set(`${coordinator.id}-message`, data);
+              })
+              .catch((err) => console.error(err))
+          );
+        } else {
+          statusDataCache.delete(`${coordinator.id}-message`);
+        }
       }
+      console.log(
+        `[Epic11] Sending ${promises.length}/${getMaxRequestCount()} requests`
+      );
       await Promise.allSettled(promises);
       renderTrackingView();
 
@@ -2803,7 +3232,9 @@ export const visitMonitor = async () => {
 
     // --- 4. 组装：将头部、内容和表格组装成完整的 Popover HTML ---
     popover.innerHTML = `
-        <div class="popover-header"><h4>📋 详情列表${callType === "anomaly" ? "（最新10条）" : ""}</h4><button class="popover-close-btn">&times;</button></div>
+        <div class="popover-header"><h4>📋 详情列表${
+          callType === "anomaly" ? "（最新10条）" : ""
+        }</h4><button class="popover-close-btn">&times;</button></div>
             <div class="popover-content"><table class="popover-table">${tableHtml}</table></div>
         `;
 
@@ -2911,18 +3342,20 @@ export const visitMonitor = async () => {
         <div style="font-weight: bold;">Reason</div>
         <div>${reason}</div>
         
-        ${caregiver
-        ? `<div style="font-weight: bold;">Caregiver</div><div>${caregiver}</div>`
-        : ""
-      }
+        ${
+          caregiver
+            ? `<div style="font-weight: bold;">Caregiver</div><div>${caregiver}</div>`
+            : ""
+        }
         
         <div style="font-weight: bold;">Priority</div>
         <div>${priority}</div>
         
-        ${patient
-        ? `<div style="font-weight: bold;">Patient</div><div>${patient}</div>`
-        : ""
-      }
+        ${
+          patient
+            ? `<div style="font-weight: bold;">Patient</div><div>${patient}</div>`
+            : ""
+        }
       </div>
       
       <div style="margin-top: 20px;">
@@ -3065,6 +3498,8 @@ export const visitMonitor = async () => {
         tempTrackedIds.has(c.id)
       );
       saveTrackedCoordinators();
+      // Epic 11: 清理已删除辅导员的过滤配置
+      cleanupColumnFilter();
       renderTrackingView();
       showToast("保存成功", "success");
       handleGoBack();
@@ -3092,11 +3527,30 @@ export const visitMonitor = async () => {
         }
       }
     });
+
+    // --- Epic 11: 过滤箭头点击事件委托 ---
+    const trackingTable = document.getElementById(
+      "tracking-table"
+    ) as HTMLTableElement;
+    trackingTable.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("th-filter-btn")) {
+        e.stopPropagation();
+        const column = target.dataset.column as ColumnType;
+        if (column && ALL_COLUMNS.includes(column)) {
+          showFilterPopover(column, target);
+        }
+      }
+    });
+
+    // --- Epic 11: 更新箭头警告状态 ---
+    updateFilterBtnWarnings();
   }
 
   // --- 初始化 (Story 3: 添加跨 Tab 消息监听) ---
   function initialize() {
     loadTrackedCoordinators();
+    loadColumnFilter(); // Epic 11: 加载按列过滤配置
     renderTrackingView();
     attachAllEventListeners();
 
@@ -3123,6 +3577,16 @@ export const visitMonitor = async () => {
             ).toLocaleTimeString()}`
           );
         }
+      } else if (
+        msg.type === "FILTER_UPDATED" &&
+        msg.sourceTabId !== tabSyncManager.tabId
+      ) {
+        // Epic 11 Story 11.6: 其它 Tab 更新了过滤配置，重新加载
+        console.log(
+          `[Epic11] Tab ${tabSyncManager.tabId} received FILTER_UPDATED from Tab ${msg.sourceTabId}`
+        );
+        loadColumnFilter();
+        renderTrackingView();
       } else if (msg.type === "TAB_CLOSING") {
         console.log(`[Story3] Tab ${msg.sourceTabId} is closing`);
       }

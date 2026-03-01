@@ -1,0 +1,633 @@
+commit d8970f23ceb6881b97e8c3c271eb0bbb72071191
+Author: KurosakiRei <KurosakiRei@users.noreply.github.com>
+Date:   Sun Feb 22 14:32:32 2026 -0500
+
+    fix: 修复两个关键Bug (v3.9.7)
+
+diff --git a/src/index.ts b/src/index.ts
+index 96df027..6078e55 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -492,26 +492,35 @@ function positionPanelRelativeToHandle(
+  * 3. Resume cleaning progress display
+  */
+ async function checkAndResumeCleaningTasks(): Promise<void> {
+-  // Wait loop to detect page type (Visit Detail OR Prebilling List)
+-  // We need to wait because elements might not be immediately available on document.ready
++  // Wait loop to detect page type
++  // Priority order: URL-based checks first (fast & reliable), DOM fallback for detail pages
+   const detectPageType = async (
+     retries = 20
+-  ): Promise<"DETAIL" | "LIST" | "UNKNOWN"> => {
+-    // 1. Check for Visit Detail Page specific element (Dropdowns or Headers)
++  ): Promise<"DETAIL" | "LIST" | "CALL_MAINTENANCE" | "UNKNOWN"> => {
++    const url = window.location.href;
++
++    // 1. Check for Call Maintenance page via URL (fast, reliable - no DOM needed)
++    //    IMPORTANT: Must check BEFORE DETAIL, as CallMaintenance URL does NOT contain
++    //    visitReasonSelector elements, so it would fall to UNKNOWN otherwise.
++    if (url.includes("CallMaintenance_ns.aspx")) {
++      return "CALL_MAINTENANCE";
++    }
++
++    // 2. Check for Visit Detail Page specific element (Dropdowns or Headers)
+     if (
+       $(visitReasonSelector).length > 0 ||
+-      window.location.href.includes("NonSkilledVisitInfo_ns.aspx")
++      url.includes("NonSkilledVisitInfo_ns.aspx")
+     ) {
+       return "DETAIL";
+     }
+ 
+-    // 2. Check for Prebilling List specific element (Container or Search Button)
+-    // Note: Prebilling page also has a search button, Detail page does NOT
++    // 3. Check for Prebilling List specific element (Container or Search Button)
+     if (
+       $("#ctl00_ContentPlaceHolder1_divPrebillingReportInternalScroll").length >
+         0 ||
+       $(prebillingSearchButtonSelector).length > 0 ||
+-      $("#prebillingSelector").length > 0
++      $("#prebillingSelector").length > 0 ||
++      url.includes("PrebillingReportInternal_ns.aspx")
+     ) {
+       return "LIST";
+     }
+@@ -600,23 +609,20 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
+ 
+       return;
+     }
+-  } else if (pageType === "LIST") {
+-    // 不在详情页，检查是否有待恢复的任务（在 Prebilling 或 Call Maintenance 页面）
++  } else if (pageType === "LIST" || pageType === "CALL_MAINTENANCE") {
++    // 在 Prebilling 或 Call Maintenance 列表页，检查是否有待恢复的任务
++    // Note: Call Maintenance 页面刷新后需要从这里恢复 duplicate call 清理
+     const hasPendingTasks = await CleaningController.checkPendingTasks();
+ 
+     if (hasPendingTasks) {
+-      console.log("[Epic 11] Cleaning tasks resumed (List Page)");
++      console.log(
++        `[Epic 11] Cleaning tasks resumed (${pageType === "CALL_MAINTENANCE" ? "Call Maintenance" : "List"} Page)`
++      );
+     }
+   } else {
+     // UNKNOWN or Timeout
+-    // Can't confirm page type, so safe to do nothing or check generic logic
+-    // But we should verify if 'checkPendingTasks' is safe to run?
+-    // If we run it here, it might trigger false "Refreshing table" error.
+-    // Better to check queue first.
+     const queue = CleaningController.getQueue();
+     if (queue && queue.status === "IN_PROGRESS") {
+-      // If we are stuck in UNKNOWN state but have tasks...
+-      // Maybe just wait a bit longer?
+       console.warn(
+         "[Epic 11] Could not detect page type, but tasks are pending."
+       );
+
+commit a4bfaa79138536715e08b4c809250054b0355e80
+Author: KurosakiRei <KurosakiRei@users.noreply.github.com>
+Date:   Thu Jan 22 01:37:36 2026 -0500
+
+    修复 Outlook 集成和模板编辑器的多个关键问题
+    
+    - 修复行换行处理：将段落标签转为双换行以保留空行
+    - 修复 TinyMCE 加载：使用 CSPBypassInjector 绕过 CSP 限制
+    - 修复模板缓存：编辑/保存/查找时刷新模板避免过期数据
+    - 修复 unsafeWindow 不一致：TinyMCE 访问统一使用 unsafeWindow
+    - 修复 To/Cc 字段填充：使用更可靠的选择器和 innerText 方法
+    - UX 改进：增加编辑器高度至 350px，添加占位符提示
+
+diff --git a/src/index.ts b/src/index.ts
+index 59f4b2c..96df027 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -5,6 +5,7 @@ import {
+   newMessageButtonSelector,
+   prebillingSearchButtonSelector,
+   homePageSearchButtonSelector,
++  visitReasonSelector,
+ } from "./utils/templates&const";
+ import GM_fetch from "@trim21/gm-fetch";
+ import { assignIntervalTimer } from "./utils/util";
+@@ -491,12 +492,40 @@ function positionPanelRelativeToHandle(
+  * 3. Resume cleaning progress display
+  */
+ async function checkAndResumeCleaningTasks(): Promise<void> {
+-  // 检查是否在 visit 详情页 (NonSkilledVisitInfo_ns.aspx)
+-  const isVisitDetailPage = window.location.href.includes(
+-    "NonSkilledVisitInfo_ns.aspx"
+-  );
++  // Wait loop to detect page type (Visit Detail OR Prebilling List)
++  // We need to wait because elements might not be immediately available on document.ready
++  const detectPageType = async (
++    retries = 20
++  ): Promise<"DETAIL" | "LIST" | "UNKNOWN"> => {
++    // 1. Check for Visit Detail Page specific element (Dropdowns or Headers)
++    if (
++      $(visitReasonSelector).length > 0 ||
++      window.location.href.includes("NonSkilledVisitInfo_ns.aspx")
++    ) {
++      return "DETAIL";
++    }
++
++    // 2. Check for Prebilling List specific element (Container or Search Button)
++    // Note: Prebilling page also has a search button, Detail page does NOT
++    if (
++      $("#ctl00_ContentPlaceHolder1_divPrebillingReportInternalScroll").length >
++        0 ||
++      $(prebillingSearchButtonSelector).length > 0 ||
++      $("#prebillingSelector").length > 0
++    ) {
++      return "LIST";
++    }
+ 
+-  if (isVisitDetailPage) {
++    if (retries <= 0) return "UNKNOWN";
++
++    await new Promise((r) => setTimeout(r, 500));
++    return detectPageType(retries - 1);
++  };
++
++  const pageType = await detectPageType();
++  console.log(`[Epic 11] Page Type Detected: ${pageType}`);
++
++  if (pageType === "DETAIL") {
+     // 获取待处理的任务队列
+     const queue = CleaningController.getQueue();
+ 
+@@ -515,16 +544,16 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
+             "./js/services/CleaningOverlay"
+           );
+ 
+-          // 显示蒙版
++          // 显示蒙版 (Important: Update text because previous page might have left it at 'Refreshing table...')
+           CleaningOverlay.show(
+             queue.currentIndex + 1,
+             queue.tasks.length,
+-            "正在处理 POC..."
++            "正在处理 POC... (已进入详情页)"
+           );
+ 
+           // 执行 POC 清理
+-          setTimeout(() => {
+-            POCResolver();
++          setTimeout(async () => {
++            await POCResolver();
+ 
+             // 点击保存按钮
+             setTimeout(() => {
+@@ -571,13 +600,27 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
+ 
+       return;
+     }
+-  }
++  } else if (pageType === "LIST") {
++    // 不在详情页，检查是否有待恢复的任务（在 Prebilling 或 Call Maintenance 页面）
++    const hasPendingTasks = await CleaningController.checkPendingTasks();
+ 
+-  // 不在详情页，检查是否有待恢复的任务（在 Prebilling 或 Call Maintenance 页面）
+-  const hasPendingTasks = await CleaningController.checkPendingTasks();
+-
+-  if (hasPendingTasks) {
+-    console.log("[Epic 11] Cleaning tasks resumed");
++    if (hasPendingTasks) {
++      console.log("[Epic 11] Cleaning tasks resumed (List Page)");
++    }
++  } else {
++    // UNKNOWN or Timeout
++    // Can't confirm page type, so safe to do nothing or check generic logic
++    // But we should verify if 'checkPendingTasks' is safe to run?
++    // If we run it here, it might trigger false "Refreshing table" error.
++    // Better to check queue first.
++    const queue = CleaningController.getQueue();
++    if (queue && queue.status === "IN_PROGRESS") {
++      // If we are stuck in UNKNOWN state but have tasks...
++      // Maybe just wait a bit longer?
++      console.warn(
++        "[Epic 11] Could not detect page type, but tasks are pending."
++      );
++    }
+   }
+ }
+ 
+@@ -663,14 +706,48 @@ function handleConfirmationDialog(retryCount = 0): void {
+     );
+     okButton.click();
+     // 点击后页面会刷新
++
++    // CRITICAL FIX: Ensure parent page reloads if the modal/dialog close action fails to trigger it
++    console.log(
++      "[Epic 11] Waiting 3s for page reload, otherwise forcing reload of top window..."
++    );
++    setTimeout(() => {
++      try {
++        if (window.top) {
++          console.log("[Epic 11] Forcing top window reload...");
++          window.top.location.reload();
++        } else {
++          window.location.reload();
++        }
++      } catch (e) {
++        console.error("Failed to reload top window:", e);
++        window.location.reload();
++      }
++    }, 3000);
+   } else if (retryCount < MAX_RETRIES) {
+     // 对话框可能还没出现，重试
+     setTimeout(() => handleConfirmationDialog(retryCount + 1), 300);
+   } else {
+-    // 可能没有确认对话框（某些情况下直接保存成功），不报错
++    // Possible scenario: Save successful without confirmation dialog
+     console.log(
+-      "[Epic 11] No confirmation dialog found after retries (may not be needed)"
++      "[Epic 11] No confirmation dialog found after retries. Assuming silent success and advancing task."
+     );
++
++    // CRITICAL FIX: Ensure we advance the task index even if no dialog appeared
++    // This prevents the "stuck" issue where the script keeps retrying the same task
++    try {
++      const queue = CleaningController.getQueue();
++      if (queue && queue.status === "IN_PROGRESS") {
++        queue.tasks[queue.currentIndex].completed = true;
++        queue.currentIndex++;
++        GM_setValue("hha_cleaner_task_queue", queue);
++        console.log(
++          `[Epic 11] Task index advanced (fallback) to ${queue.currentIndex}/${queue.tasks.length}`
++        );
++      }
++    } catch (e) {
++      console.error("[Epic 11] Failed to update task queue (fallback):", e);
++    }
+   }
+ }
+ 
+
+commit 6a1d85dc91d3f3ac256eede85027904764662ed3
+Author: KurosakiRei <KurosakiRei@users.noreply.github.com>
+Date:   Mon Jan 19 11:30:49 2026 -0500
+
+    feat: 实现邮件构建器及TinyMCE集成
+    
+    完成邮件构建器(Mail Builder)的核心功能开发，包括：TinyMCE 编辑器的集成与 Outlook 适配、邮件模板管理服务、邮件数据提取与处理、相关 UI 样式与 Tab 组件实现、更新项目配置与文档
+
+diff --git a/src/index.ts b/src/index.ts
+index 259ed3e..59f4b2c 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -25,11 +25,31 @@ import { MultiTabPanel } from "./js/MultiTabPanel";
+ import { StatusTrackingTab } from "./js/tabs/StatusTrackingTab";
+ import { QAReportTab } from "./js/tabs/QAReportTab";
+ import { CleanerTab } from "./js/tabs/CleanerTab";
++import { MailBuilderTab } from "./js/tabs/MailBuilderTab";
+ import { CleaningController } from "./js/services/CleaningController";
++import { OutlookAdapter } from "./js/services/OutlookAdapter";
++import { TinyMCEBundler } from "./js/services/TinyMCEBundler";
+ import { version } from "../package.json";
+ 
+ async function main() {
+   console.log("HHA Exchange Smart Assistant " + version + " : script start");
++
++  // Set a global flag to indicate script is running (for debugging)
++  (window as any).HHA_SMART_ASSISTANT_STARTED = true;
++  (window as any).HHA_SMART_ASSISTANT_VERSION = version;
++
++  // Initialize OutlookAdapter if on Outlook page
++  OutlookAdapter.init();
++
++  // Preload TinyMCE in the background (fire and forget)
++  // This gives it time to load before user opens the mail template editor
++  TinyMCEBundler.load().catch((err) => {
++    console.warn(
++      "[main] TinyMCE preload failed (will retry on modal open):",
++      err
++    );
++  });
++
+   incomingCallHandler();
+ 
+   async function FetchTester() {
+@@ -311,6 +331,7 @@ function embedMultiTabPanel(
+   panel.registerTab(new StatusTrackingTab());
+   panel.registerTab(new QAReportTab());
+   panel.registerTab(new CleanerTab());
++  panel.registerTab(new MailBuilderTab());
+ 
+   // Initialize panel
+   panel
+
+commit a908ae4b7f4ed0c03a79af66c098c2f959687320
+Author: KurosakiRei <KurosakiRei@users.noreply.github.com>
+Date:   Thu Jan 15 11:21:02 2026 -0500
+
+    fix: 淇 POC Compliance 杩囨护鍣ㄩ€昏緫锛屼弗鏍煎尮閰嶉棶棰樼被鍨?(v3.9.3)
+
+diff --git a/src/index.ts b/src/index.ts
+index 08853f9..259ed3e 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -26,9 +26,10 @@ import { StatusTrackingTab } from "./js/tabs/StatusTrackingTab";
+ import { QAReportTab } from "./js/tabs/QAReportTab";
+ import { CleanerTab } from "./js/tabs/CleanerTab";
+ import { CleaningController } from "./js/services/CleaningController";
++import { version } from "../package.json";
+ 
+ async function main() {
+-  console.log("HHA Exchange Smart Assistant: script start");
++  console.log("HHA Exchange Smart Assistant " + version + " : script start");
+   incomingCallHandler();
+ 
+   async function FetchTester() {
+
+commit 75564a80de033c73cdc1ad91a52cf7ccb4659584
+Author: KurosakiRei <KurosakiRei@users.noreply.github.com>
+Date:   Wed Jan 14 19:14:56 2026 -0500
+
+    feat(epic-11): 完成 Cleaner Tab 智能清理器 v3.9.0
+
+diff --git a/src/index.ts b/src/index.ts
+index ae75d27..08853f9 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -462,7 +462,7 @@ function positionPanelRelativeToHandle(
+ 
+ /**
+  * Epic 11: Check and Resume Cleaning Tasks
+- * 
++ *
+  * Called on every page load to:
+  * 1. Check for pending cleaning tasks in GM_getValue
+  * 2. If on visit detail page with pending task, auto-execute POCResolver
+@@ -470,20 +470,28 @@ function positionPanelRelativeToHandle(
+  */
+ async function checkAndResumeCleaningTasks(): Promise<void> {
+   // 检查是否在 visit 详情页 (NonSkilledVisitInfo_ns.aspx)
+-  const isVisitDetailPage = window.location.href.includes("NonSkilledVisitInfo_ns.aspx");
++  const isVisitDetailPage = window.location.href.includes(
++    "NonSkilledVisitInfo_ns.aspx"
++  );
+ 
+   if (isVisitDetailPage) {
+     // 获取待处理的任务队列
+     const queue = CleaningController.getQueue();
+ 
+-    if (queue && queue.status === "IN_PROGRESS" && queue.pageType === "PREBILLING") {
++    if (
++      queue &&
++      queue.status === "IN_PROGRESS" &&
++      queue.pageType === "PREBILLING"
++    ) {
+       console.log("[Epic 11] Visit detail page detected with pending POC task");
+ 
+       // 延迟执行，确保页面完全加载
+       setTimeout(async () => {
+         try {
+           // 导入并执行 POCResolver
+-          const { CleaningOverlay } = await import("./js/services/CleaningOverlay");
++          const { CleaningOverlay } = await import(
++            "./js/services/CleaningOverlay"
++          );
+ 
+           // 显示蒙版
+           CleaningOverlay.show(
+@@ -499,14 +507,20 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
+             // 点击保存按钮
+             setTimeout(() => {
+               // 尝试多种选择器找到保存按钮
+-              let saveButton = document.getElementById("uxBtnSaveVisit") as HTMLButtonElement;
++              let saveButton = document.getElementById(
++                "uxBtnSaveVisit"
++              ) as HTMLButtonElement;
+               if (!saveButton) {
+                 // 回退到完整 ID 选择器
+-                saveButton = document.getElementById("ctl00_ContentPlaceHolder1_uxBtnSaveVisit") as HTMLButtonElement;
++                saveButton = document.getElementById(
++                  "ctl00_ContentPlaceHolder1_uxBtnSaveVisit"
++                ) as HTMLButtonElement;
+               }
+               if (!saveButton) {
+                 // 使用 querySelector 查找任何匹配的保存按钮
+-                saveButton = document.querySelector('[id$="uxBtnSaveVisit"]') as HTMLButtonElement;
++                saveButton = document.querySelector(
++                  '[id$="uxBtnSaveVisit"]'
++                ) as HTMLButtonElement;
+               }
+ 
+               if (saveButton) {
+@@ -521,7 +535,9 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
+ 
+                 // 页面会刷新回 Prebilling Report，在那里会继续下一个任务
+               } else {
+-                console.error("[Epic 11] Save button not found with any selector");
++                console.error(
++                  "[Epic 11] Save button not found with any selector"
++                );
+                 CleaningOverlay.showError("Save button not found");
+               }
+             }, 1000);
+@@ -545,68 +561,84 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
+ 
+ /**
+  * Handle HHAeXchange confirmation dialogs that appear after Save
+- * The dialog has title "HHAeXchange - Confirm" and an OK button
+- * 
+- * Tries multiple selectors to find and click the OK button
++ *
++ * 基于用户提供的 HTML，对话框结构如下：
++ * - 对话框容器: #confirmation.reveal.hhax-modal
++ * - OK 按钮: button.button.primary.yes
++ *
++ * 关键发现：对话框在 window.top（主文档）中，但脚本运行在 iframe 内
++ * 必须使用 window.top.document 来访问对话框
+  */
+ function handleConfirmationDialog(retryCount = 0): void {
+-  const MAX_RETRIES = 10; // 最多重试 10 次，每次间隔 300ms，共 3 秒
++  const MAX_RETRIES = 15; // 最多重试 15 次，每次间隔 300ms，共 4.5 秒
+ 
+-  // 尝试多种选择器查找 OK 按钮
+-  // 基于截图，对话框标题是 "HHAeXchange - Confirm"
++  console.log(
++    `[Epic 11] Looking for confirmation dialog (attempt ${
++      retryCount + 1
++    }/${MAX_RETRIES})...`
++  );
++
++  // 基于用户提供的 HTML 的精确选择器
+   const selectors = [
+-    // 常见的确认按钮选择器
+-    '.ui-dialog-buttonset button:contains("OK")',
+-    '.ui-dialog-buttonpane button:contains("OK")',
+-    'button.ui-button:contains("OK")',
+-    '.modal-footer button.btn-primary',
+-    '.modal-footer button:contains("OK")',
+-    'button[data-bb-handler="confirm"]',
+-    '.bootbox-accept',
+-    // ASP.NET 风格的按钮
+-    'input[type="button"][value="OK"]',
+-    'input[type="submit"][value="OK"]',
+-    // 通用选择器
+-    'button:contains("OK")',
+-    'input[value="OK"]',
++    // 用户提供的准确选择器
++    "#confirmation button.button.primary.yes",
++    "#confirmation .footer button.button.primary",
++    "#confirmation button.primary",
++    ".hhax-modal button.button.primary.yes",
++    ".reveal button.button.primary.yes",
++    // 回退选择器
++    "button.button.primary.yes",
++    ".footer button.primary",
+   ];
+ 
+   let okButton: HTMLElement | null = null;
+ 
+-  // jQuery 选择器
+-  for (const selector of selectors) {
+-    try {
+-      const $btn = $(selector);
+-      if ($btn.length > 0 && $btn.is(':visible')) {
+-        okButton = $btn[0] as HTMLElement;
+-        console.log("[Epic 11] Found OK button with selector:", selector);
+-        break;
++  // ★★★ 关键修复：首先在 window.top（主文档）中搜索 ★★★
++  // 因为脚本运行在 iframe 内，但确认对话框在主文档中
++  try {
++    if (window.top && window.top.document) {
++      okButton = findOkButtonInDocument(window.top.document, selectors);
++      if (okButton) {
++        console.log("[Epic 11] Found OK button in window.top.document");
+       }
+-    } catch (e) {
+-      // jQuery :contains 可能在某些情况下失败，静默忽略
+     }
++  } catch (e) {
++    console.log("[Epic 11] Cannot access window.top.document:", e);
+   }
+ 
+-  // 如果 jQuery 选择器没找到，尝试原生 DOM 查找
++  // 如果没找到，在当前文档中搜索（可能脚本在主文档运行）
+   if (!okButton) {
+-    // 查找所有按钮，找包含 "OK" 文本的
+-    const allButtons = document.querySelectorAll('button, input[type="button"], input[type="submit"]');
+-    for (const btn of allButtons) {
+-      const text = btn.textContent?.trim() || (btn as HTMLInputElement).value?.trim() || '';
+-      if (text.toUpperCase() === 'OK') {
+-        // 检查是否可见
+-        const style = window.getComputedStyle(btn);
+-        if (style.display !== 'none' && style.visibility !== 'hidden') {
+-          okButton = btn as HTMLElement;
+-          console.log("[Epic 11] Found OK button via DOM search:", btn);
+-          break;
+-        }
+-      }
+-    }
++    okButton = findOkButtonInDocument(document, selectors);
++  }
++
++  // 如果还没找到，在所有 iframe 中搜索
++  if (!okButton) {
++    okButton = findOkButtonInAllFrames(window, selectors);
+   }
+ 
+   if (okButton) {
+-    console.log("[Epic 11] Clicking confirmation dialog OK button...");
++    // ★★★ 关键修复：在点击 OK 之前，增加任务索引 ★★★
++    // 这样页面刷新后，checkPendingTasks 会处理下一个任务
++    try {
++      const queue = CleaningController.getQueue();
++      if (queue && queue.status === "IN_PROGRESS") {
++        // 标记当前任务完成
++        queue.tasks[queue.currentIndex].completed = true;
++        // 增加索引
++        queue.currentIndex++;
++        // 保存更新的队列
++        GM_setValue("hha_cleaner_task_queue", queue);
++        console.log(
++          `[Epic 11] Task index advanced to ${queue.currentIndex}/${queue.tasks.length}`
++        );
++      }
++    } catch (e) {
++      console.error("[Epic 11] Failed to update task queue:", e);
++    }
++
++    console.log(
++      "[Epic 11] Found and clicking confirmation dialog OK button..."
++    );
+     okButton.click();
+     // 点击后页面会刷新
+   } else if (retryCount < MAX_RETRIES) {
+@@ -614,8 +646,75 @@ function handleConfirmationDialog(retryCount = 0): void {
+     setTimeout(() => handleConfirmationDialog(retryCount + 1), 300);
+   } else {
+     // 可能没有确认对话框（某些情况下直接保存成功），不报错
+-    console.log("[Epic 11] No confirmation dialog found after retries (may not be needed)");
++    console.log(
++      "[Epic 11] No confirmation dialog found after retries (may not be needed)"
++    );
++  }
++}
++
++/**
++ * 在指定文档中查找 OK 按钮
++ */
++function findOkButtonInDocument(
++  doc: Document,
++  selectors: string[]
++): HTMLElement | null {
++  for (const selector of selectors) {
++    try {
++      const btn = doc.querySelector(selector) as HTMLElement;
++      if (btn) {
++        // 检查是否可见
++        const style = doc.defaultView?.getComputedStyle(btn);
++        if (
++          style &&
++          style.display !== "none" &&
++          style.visibility !== "hidden"
++        ) {
++          console.log("[Epic 11] Found OK button with selector:", selector);
++          return btn;
++        }
++      }
++    } catch (e) {
++      // 选择器可能无效，静默忽略
++    }
+   }
++  return null;
++}
++
++/**
++ * 在所有 iframe 中递归查找 OK 按钮
++ */
++function findOkButtonInAllFrames(
++  win: Window,
++  selectors: string[]
++): HTMLElement | null {
++  // 遍历所有 frames
++  try {
++    for (let i = 0; i < win.frames.length; i++) {
++      try {
++        const frame = win.frames[i];
++        if (frame && frame.document) {
++          // 在这个 frame 的文档中查找
++          const btn = findOkButtonInDocument(frame.document, selectors);
++          if (btn) {
++            return btn;
++          }
++
++          // 递归搜索嵌套的 iframes
++          const nestedBtn = findOkButtonInAllFrames(frame, selectors);
++          if (nestedBtn) {
++            return nestedBtn;
++          }
++        }
++      } catch (e) {
++        // 跨域 iframe 无法访问，静默忽略
++      }
++    }
++  } catch (e) {
++    // 无法访问 frames，静默忽略
++  }
++
++  return null;
+ }
+ 
+ main().catch((e) => {

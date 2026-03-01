@@ -207,8 +207,9 @@ export class MailService {
           }
         });
 
-        // 检查是否有待处理的任务（Outlook 端）
+        // 检查是否有待处理的任务（仅 Outlook 端可以处理任务）
         if (
+          this.isOutlookPage() &&
           payload.status === "PENDING" &&
           payload.id !== this.lastProcessedTaskId
         ) {

@@ -240,6 +240,32 @@
   z-index: 10;
   white-space: nowrap;
 }
+.th-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 2px;
+  font-size: 10px;
+  color: #666666;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+  vertical-align: middle;
+  user-select: none;
+}
+.th-filter-btn:hover {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+}
+.th-filter-btn.active {
+  color: #667eea;
+  transform: rotate(180deg);
+}
+.th-filter-btn.warning {
+  color: #e67e22;
+}
 .tracker-table tbody tr {
   border: none;
   border-bottom: 1px solid #f0f0f0;
@@ -577,4 +603,93 @@
 .tracker-empty-state .tracker-empty-text {
   font-size: 13px;
   color: #666666;
+}
+.column-filter-popover {
+  position: absolute;
+  z-index: 100003;
+  min-width: 220px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  padding: 0;
+  font-size: 13px;
+}
+.column-filter-popover .filter-header {
+  padding: 8px 16px;
+}
+.column-filter-popover .filter-select-all {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #333333;
+  user-select: none;
+}
+.column-filter-popover .filter-select-all input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+.column-filter-popover .filter-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 0;
+}
+.column-filter-popover .filter-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.column-filter-popover .filter-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+.column-filter-popover .filter-item:hover {
+  background: #f0f2f5;
+}
+.column-filter-popover .filter-item input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.column-filter-popover .filter-name {
+  flex: 1;
+  color: #333333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.column-filter-popover .filter-count {
+  margin-left: auto;
+  color: #666666;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.column-filter-popover .filter-stats {
+  padding: 4px 16px;
+  font-size: 12px;
+  color: #666666;
+  text-align: center;
+}
+.column-filter-popover .filter-stats strong {
+  color: #667eea;
+  font-weight: 600;
+}
+.column-filter-popover .filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 8px 16px;
+}
+.tracking-disabled {
+  color: #666666;
+  font-size: 13px;
+  cursor: default;
+  user-select: none;
 }

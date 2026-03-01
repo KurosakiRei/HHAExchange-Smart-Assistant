@@ -67,46 +67,6 @@ declare function GM_setValue(key: string, value: unknown): void;
 declare function GM_getValue<T>(key: string, defaultValue: T): T;
 
 export class CleaningController {
-  private static lastStartedIndex = -1;
-
-  private static pollingTimer = 0;
-
-  /**
-   * Start an interval to monitor the GM storage for queue progression.
-   * This is required because task completion in the iframe modal DOES NOT trigger
-   * a parent page reload, and ASP.NET AJAX UpdatePanel events are too messy to hook into.
-   */
-  static startQueuePolling(): void {
-    if (this.pollingTimer) return;
-
-    console.log("[CleaningController] Starting queue state polling...");
-    this.pollingTimer = window.setInterval(() => {
-      const queue = GM_getValue<CleaningTaskQueue | null>(
-        CLEANING_QUEUE_KEY,
-        null
-      );
-
-      // Only monitor if a queue is currently active
-      if (queue && queue.status === "IN_PROGRESS") {
-        // If the queue advanced to the next task while we were waiting
-        if (queue.currentIndex > this.lastStartedIndex) {
-          console.log(
-            `[CleaningController] Polling detected queue advancement (${this.lastStartedIndex} -> ${queue.currentIndex}). Triggering next task...`
-          );
-          // Note: Wait a brief moment to ensure any associated DOM updates (like ASP.NET UpdatePanel) finish settling.
-          setTimeout(() => {
-            this.checkPendingTasks();
-          }, 1500);
-        }
-      } else if (queue && queue.status === "COMPLETED" && this.pollingTimer) {
-        // Stop polling when everything is done
-        window.clearInterval(this.pollingTimer);
-        this.pollingTimer = 0;
-        console.log("[CleaningController] Queue completed. Stopped polling.");
-      }
-    }, 1000); // Check every second
-  }
-
   /**
    * 检查是否有待处理的清理任务
    * 在页面加载时调用
@@ -121,31 +81,13 @@ export class CleaningController {
       return false;
     }
 
-    if (this.lastStartedIndex === queue.currentIndex) {
-      console.log(
-        `[CleaningController] Task ${queue.currentIndex} already started in this session. Yielding to active task.`
-      );
-      return false;
-    }
-
-    this.lastStartedIndex = queue.currentIndex;
-
     console.log("[CleaningController] Found pending tasks, resuming...", queue);
 
     // 检查是否全部完成
     if (queue.currentIndex >= queue.tasks.length) {
-      console.log(
-        `[CleaningController] checkPendingTasks: All tasks complete (${queue.currentIndex}/${queue.tasks.length}). Finalizing queue.`
-      );
       queue.status = "COMPLETED";
       GM_setValue(CLEANING_QUEUE_KEY, queue);
       CleaningOverlay.showComplete(queue.pageType);
-
-      if (this.pollingTimer) {
-        window.clearInterval(this.pollingTimer);
-        this.pollingTimer = 0;
-        console.log("[CleaningController] Polling stopped on completion.");
-      }
       return true;
     }
 
@@ -164,8 +106,8 @@ export class CleaningController {
       `${this.getTaskInfo(currentTask, queue.pageType)} (等待页面加载...)`
     );
 
-    // 智能等待表格加载，最长等待 5 分钟 (300000ms) 以防 Session Timeout 弹窗阻塞
-    this.waitForTable(queue.pageType, 300000)
+    // 智能等待表格加载，最长等待 15 秒
+    this.waitForTable(queue.pageType, 15000)
       .then(() => {
         // 表格加载完成，执行任务
         console.log("[CleaningController] Table loaded, executing task...");
@@ -175,11 +117,7 @@ export class CleaningController {
           queue.tasks.length,
           this.getTaskInfo(currentTask, queue.pageType)
         );
-
-        // ★★★ 给 ASP.NET UpdatePanel 一点反应时间，防止点击太快事件未绑定导致卡住
-        setTimeout(() => {
-          this.executeCurrentTask(queue);
-        }, 2000);
+        this.executeCurrentTask(queue);
       })
       .catch((error) => {
         console.warn(
@@ -220,7 +158,7 @@ export class CleaningController {
             // Important: Add delay if using custom button to allow event propagation and async loading start
             const delayMs = isCustomBtn ? 1500 : 500;
             setTimeout(() => {
-              this.waitForTable(queue.pageType, 300000)
+              this.waitForTable(queue.pageType, 15000)
                 .then(() => {
                   console.log(
                     "[CleaningController] Table loaded after auto-search, executing task..."
@@ -341,40 +279,10 @@ export class CleaningController {
     } catch (error) {
       console.error("[CleaningController] Task execution error:", error);
       task.error = error instanceof Error ? error.message : String(error);
-
-      // CRITICAL FIX: If a single row is not found (meaning it was probably cleaned manually or disappeared),
-      // we shouldn't fail the ENTIRE batch. Just mark this one as failed/skipped and move to the next.
-      if (task.error.includes("Row not found")) {
-        console.warn(
-          `[CleaningController] Skipping task ${queue.currentIndex + 1}/${
-            queue.tasks.length
-          } because row was missing.`
-        );
-        queue.currentIndex++; // Skip and advance
-        GM_setValue(CLEANING_QUEUE_KEY, queue);
-
-        if (queue.currentIndex >= queue.tasks.length) {
-          queue.status = "COMPLETED";
-          GM_setValue(CLEANING_QUEUE_KEY, queue);
-          CleaningOverlay.showComplete(queue.pageType);
-        } else {
-          // Continue to next task immediately
-          CleaningController.OpeningNextTaskDelay(queue);
-        }
-      } else {
-        // Other critical errors fail the queue
-        queue.status = "FAILED";
-        GM_setValue(CLEANING_QUEUE_KEY, queue);
-        CleaningOverlay.showError(task.error);
-      }
+      queue.status = "FAILED";
+      GM_setValue(CLEANING_QUEUE_KEY, queue);
+      CleaningOverlay.showError(task.error);
     }
-  }
-
-  // helper function to encapsulate the setTimeout call since we use it repeatedly
-  private static OpeningNextTaskDelay(queue: CleaningTaskQueue) {
-    setTimeout(() => {
-      this.executeCurrentTask(queue);
-    }, 1000);
   }
 
   /**
@@ -434,34 +342,17 @@ export class CleaningController {
       console.warn(
         `[CleaningController] Could not find by match, falling back to rowIndex ${task.rowIndex} for ${task.patientName}`
       );
-      targetRow = rows[task.rowIndex]; // Tentatively set targetRow to the one at rowIndex
-
-      // Verify admission ID matches the row
-      let admissionIdStr =
-        (targetRow as HTMLTableRowElement).cells[1]?.textContent?.trim() || "";
-
-      if (!admissionIdStr.includes(task.admissionId)) {
-        // 备用机制：由于记录被清理，有些行可能会消失导致 rowIndex 变化
-        // 在整个表格中搜索包含匹配 admissionId 的行
-        console.warn(
-          `[CleaningController] RowIndex ${task.rowIndex} mismatch. Searching by admission ID ${task.admissionId}...`
+      // Check if the row actually matches?
+      const fallbackRow = rows[task.rowIndex];
+      const cells = fallbackRow.querySelectorAll("td");
+      const admissionId = cells[1]?.textContent?.trim();
+      if (admissionId === task.admissionId) {
+        targetRow = fallbackRow;
+      } else {
+        console.error(
+          `[CleaningController] RowIndex ${task.rowIndex} mismatch! Expected ${task.admissionId}, found ${admissionId}`
         );
-        const fallbackRow = Array.from(rows).find((r) => {
-          const idStr =
-            (r as HTMLTableRowElement).cells[1]?.textContent?.trim() || "";
-          return idStr.includes(task.admissionId);
-        }) as HTMLTableRowElement | undefined;
-
-        if (fallbackRow) {
-          console.log("[CleaningController] Found correct row by admission ID");
-          targetRow = fallbackRow;
-        } else {
-          console.error(
-            `[CleaningController] RowIndex ${task.rowIndex} mismatch! Expected ${task.admissionId}, found ${admissionIdStr}`
-          );
-          // CRITICAL FIX: nullify targetRow so it doesn't click the wrong patient
-          targetRow = null as any;
-        }
+        // Do not use it if it mismatches
       }
     }
 
@@ -493,9 +384,6 @@ export class CleaningController {
         `${this.getTaskInfo(task, queue.pageType)} (正在打开详情页...)`
       );
     }
-
-    // 设置时间戳，用于防误触 (防止用户手动打开导致自动POC被触发)
-    GM_setValue("hha_cleaner_poc_click_time", Date.now());
 
     // 点击 Edit 按钮，页面会导航到详情页
     editButton.click();
