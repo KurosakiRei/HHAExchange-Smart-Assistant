@@ -79,6 +79,12 @@ export class CleaningController {
   static startQueuePolling(): void {
     if (this.pollingTimer) return;
 
+    // IMPORTANT: Top window orchestrates the queue polling to prevent duplicate task execution.
+    if (window.self !== window.top) {
+      console.log("[CleaningController] Skipping queue polling in iframe.");
+      return;
+    }
+
     console.log("[CleaningController] Starting queue state polling...");
     this.pollingTimer = window.setInterval(() => {
       const queue = GM_getValue<CleaningTaskQueue | null>(
@@ -86,25 +92,34 @@ export class CleaningController {
         null
       );
 
-      // Only monitor if a queue is currently active
       if (queue && queue.status === "IN_PROGRESS") {
-        // If the queue advanced to the next task while we were waiting
+        // Prevent launching the next task if the modal iframe is still open
+        const isModalOpen = Array.from(
+          document.querySelectorAll(
+            '.reveal-overlay, [id*="PopWin"], .hhax-modal'
+          )
+        ).some(
+          (el) => window.getComputedStyle(el as HTMLElement).display !== "none"
+        );
+        if (isModalOpen) {
+          return; // Wait for the iframe modal to close
+        }
+
         if (queue.currentIndex > this.lastStartedIndex) {
           console.log(
             `[CleaningController] Polling detected queue advancement (${this.lastStartedIndex} -> ${queue.currentIndex}). Triggering next task...`
           );
-          // Note: Wait a brief moment to ensure any associated DOM updates (like ASP.NET UpdatePanel) finish settling.
+          // Note: Wait a brief moment to ensure any associated DOM updates finish settling.
           setTimeout(() => {
             this.checkPendingTasks();
           }, 1500);
         }
       } else if (queue && queue.status === "COMPLETED" && this.pollingTimer) {
-        // Stop polling when everything is done
         window.clearInterval(this.pollingTimer);
         this.pollingTimer = 0;
         console.log("[CleaningController] Queue completed. Stopped polling.");
       }
-    }, 1000); // Check every second
+    }, 1000);
   }
 
   /**
@@ -149,6 +164,9 @@ export class CleaningController {
       return true;
     }
 
+    // Capture expected index for closure checks
+    const expectedIndex = queue.currentIndex;
+
     // 显示蒙版并继续
     const currentTask = queue.tasks[queue.currentIndex];
     CleaningOverlay.show(
@@ -167,19 +185,64 @@ export class CleaningController {
     // 智能等待表格加载，最长等待 5 分钟 (300000ms) 以防 Session Timeout 弹窗阻塞
     this.waitForTable(queue.pageType, 300000)
       .then(() => {
+        // ★ CRITICAL FIX: Re-fetch the queue! Iframe might have finished the task while we were waiting!
+        const latestQueue = GM_getValue<CleaningTaskQueue | null>(
+          CLEANING_QUEUE_KEY,
+          null
+        );
+        if (
+          !latestQueue ||
+          latestQueue.status !== "IN_PROGRESS" ||
+          latestQueue.currentIndex !== expectedIndex
+        ) {
+          console.warn(
+            "[CleaningController] Queue state changed during waitForTable. Aborting stale execution."
+          );
+          return;
+        }
+
         // 表格加载完成，执行任务
         console.log("[CleaningController] Table loaded, executing task...");
         // 再次更新蒙版状态
         CleaningOverlay.update(
-          queue.currentIndex + 1,
-          queue.tasks.length,
-          this.getTaskInfo(currentTask, queue.pageType)
+          latestQueue.currentIndex + 1,
+          latestQueue.tasks.length,
+          this.getTaskInfo(currentTask, latestQueue.pageType)
         );
 
         // ★★★ 给 ASP.NET UpdatePanel 一点反应时间，防止点击太快事件未绑定导致卡住
         setTimeout(() => {
-          this.executeCurrentTask(queue);
-        }, 2000);
+          // Double check again if queue state moved
+          const doubleCheckQueue = GM_getValue<CleaningTaskQueue | null>(
+            CLEANING_QUEUE_KEY,
+            null
+          );
+          if (
+            !doubleCheckQueue ||
+            doubleCheckQueue.status !== "IN_PROGRESS" ||
+            doubleCheckQueue.currentIndex !== expectedIndex
+          ) {
+            console.warn(
+              "[CleaningController] Queue advanced during UpdatePanel settlement timeout. Aborting."
+            );
+            return;
+          }
+
+          // Double check if table is still attached to document
+          const tableInDoc =
+            document.querySelector("#tblDetails") ||
+            document.querySelector("#ctl00_ContentPlaceHolder1_uxGvSearch");
+          if (tableInDoc && !document.body.contains(tableInDoc)) {
+            console.warn(
+              "[CleaningController] Table became detached, waiting again..."
+            );
+            setTimeout(() => {
+              this.checkPendingTasks();
+            }, 3000);
+            return;
+          }
+          this.executeCurrentTask(doubleCheckQueue);
+        }, 3000);
       })
       .catch((error) => {
         console.warn(
@@ -209,7 +272,7 @@ export class CleaningController {
 
             // Retry waiting for table
             CleaningOverlay.update(
-              queue.currentIndex + 1,
+              expectedIndex + 1,
               queue.tasks.length,
               `${this.getTaskInfo(
                 currentTask,
@@ -222,18 +285,37 @@ export class CleaningController {
             setTimeout(() => {
               this.waitForTable(queue.pageType, 300000)
                 .then(() => {
+                  const retryQueue = GM_getValue<CleaningTaskQueue | null>(
+                    CLEANING_QUEUE_KEY,
+                    null
+                  );
+                  if (
+                    !retryQueue ||
+                    retryQueue.status !== "IN_PROGRESS" ||
+                    retryQueue.currentIndex !== expectedIndex
+                  ) {
+                    console.warn(
+                      "[CleaningController] Queue state changed during retry. Aborting."
+                    );
+                    return;
+                  }
                   console.log(
                     "[CleaningController] Table loaded after auto-search, executing task..."
                   );
-                  this.executeCurrentTask(queue);
+                  this.executeCurrentTask(retryQueue);
                 })
                 .catch((retryError) => {
                   console.error(
                     "[CleaningController] Retry failed:",
                     retryError
                   );
-                  queue.status = "FAILED";
-                  GM_setValue(CLEANING_QUEUE_KEY, queue);
+                  const failQueue =
+                    GM_getValue<CleaningTaskQueue | null>(
+                      CLEANING_QUEUE_KEY,
+                      null
+                    ) || queue;
+                  failQueue.status = "FAILED";
+                  GM_setValue(CLEANING_QUEUE_KEY, failQueue);
                   CleaningOverlay.showError(
                     `无法加载表格。尝试自动搜索失败。\n请手动点击搜索按钮，脚本将尝试恢复。`
                   );
@@ -312,6 +394,10 @@ export class CleaningController {
 
     // 显示蒙版
     CleaningOverlay.show(1, tasks.length, this.getTaskInfo(tasks[0], pageType));
+
+    // 确保监控轮询正在运行 (如果用户在不刷新页面的情况下进行第二次清理，轮询可能已关闭)
+    this.lastStartedIndex = -1;
+    this.startQueuePolling();
 
     // 执行第一个任务
     await this.executeCurrentTask(queue);
@@ -650,6 +736,7 @@ export class CleaningController {
    */
   static clearQueue(): void {
     GM_setValue(CLEANING_QUEUE_KEY, null);
+    this.lastStartedIndex = -1;
     console.log("[CleaningController] Queue cleared");
   }
 
