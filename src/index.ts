@@ -31,6 +31,7 @@ import { CleaningController } from "./js/services/CleaningController";
 import { CleaningOverlay } from "./js/services/CleaningOverlay";
 import { OutlookAdapter } from "./js/services/OutlookAdapter";
 import { TinyMCEBundler } from "./js/services/TinyMCEBundler";
+import { initDocumentDropzone } from "./js/services/DocumentDropzone";
 import { version } from "../package.json";
 
 async function main() {
@@ -251,6 +252,9 @@ async function main() {
   // Start polling the shared Tampermonkey storage to detect when child iframes complete tasks
   // This is required because HHAExchange modals (iframes) closing do not trigger a full parent page reload.
   CleaningController.startQueuePolling();
+
+  // Epic 14: Init DocumentDropzone
+  initDocumentDropzone();
 }
 
 /**
@@ -566,6 +570,30 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
         return;
       }
 
+      const currentTask = queue.tasks[queue.currentIndex];
+
+      // ★ Verify we are on the CORRECT patient's detail page!
+      // If ASP.NET validation failed, the iframe might reload on the old patient while queue advanced!
+      const pageText = document.body.innerText || "";
+      if (
+        currentTask.admissionId &&
+        !pageText.includes(currentTask.admissionId)
+      ) {
+        console.warn(
+          `[Epic 11] Patient mismatch! Expected ${currentTask.admissionId} but not found in page. This usually means the previous save failed with a validation error. Reloading top window to recover...`
+        );
+        // We MUST close this iframe or reload the parent so the parent can try the next task properly.
+        setTimeout(() => {
+          try {
+            if (window.top) window.top.location.reload();
+            else window.location.reload();
+          } catch (e) {
+            window.location.reload();
+          }
+        }, 1000);
+        return;
+      }
+
       console.log("[Epic 11] Visit detail page detected with pending POC task");
 
       // 延迟执行，确保页面完全加载
@@ -768,8 +796,14 @@ function handleConfirmationDialog(retryCount = 0): void {
   } else {
     // Possible scenario: Save successful without confirmation dialog
     console.log(
-      "[Epic 11] No confirmation dialog found after retries. Assuming silent success."
+      "[Epic 11] No confirmation dialog found after retries. Assuming silent success. Forcing top window reload..."
     );
+    try {
+      if (window.top) window.top.location.reload();
+      else window.location.reload();
+    } catch (e) {
+      window.location.reload();
+    }
   }
 }
 
