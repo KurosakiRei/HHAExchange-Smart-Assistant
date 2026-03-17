@@ -63,18 +63,22 @@ const templateForReason = {
     }. I spoke to the aide, who stated they forgot to clock in and out. The aide was reminded to clock in and out for every shift, and a counseling note was placed on their profile. A timesheet will be submitted for this.`,
 };
 
-export const missedCallResolver = async (reason: ReasonType) => {
-  let aideName = getAideName(),
-    patientName = $(visitPatientNameSelector).text();
+export const missedCallResolver = async (
+  reason: ReasonType,
+  iframeDoc?: Document
+) => {
+  const ctx: Document = iframeDoc || document;
+  let aideName = getAideName(ctx),
+    patientName = $(visitPatientNameSelector, ctx).text();
 
-  missedCallTimeInputer(reason);
-  await missedCalledReasonChooser(reason);
-  $(visitNotesSelector).val(
-    templateForReason[reason](patientName, aideName, getScheduleTime())
+  missedCallTimeInputer(reason, ctx);
+  await missedCalledReasonChooser(reason, ctx);
+  $(visitNotesSelector, ctx).val(
+    templateForReason[reason](patientName, aideName, getScheduleTime(ctx))
   );
-  $(visitNotesSelector)[0].dispatchEvent(new Event("change"));
-  if ($(visitVerifyStarSelector).length > 0)
-    $(visitAuditPatientSelector).click();
+  $(visitNotesSelector, ctx)[0].dispatchEvent(new Event("change"));
+  if ($(visitVerifyStarSelector, ctx).length > 0)
+    $(visitAuditPatientSelector, ctx).click();
 };
 
 /* export const missedOutResolver = async() => {
@@ -97,7 +101,7 @@ export const missedInOutResolver = async() => {
     if ($(visitVerifyStarSelector).length > 0) $(visitAuditPatientSelector).click()
 } */
 
-function getAideName(): string {
+function getAideName(ctx: Document = document): string {
   let aideName: string,
     flag = false;
   // 2 Windows: 0-topWindow, 1-popupWindow
@@ -108,7 +112,9 @@ function getAideName(): string {
     let aideLinks = topWidow[0].document.querySelectorAll("#aidelink");
     for (const aideLink of aideLinks) {
       if (
-        aideLink.getAttribute("onClick").includes($(visitDateSelector).text())
+        aideLink
+          .getAttribute("onClick")
+          .includes($(visitDateSelector, ctx).text())
       ) {
         aideName = aideLink.innerHTML.trim();
         flag = true;
@@ -135,7 +141,9 @@ function getAideName(): string {
     // console.log(hhaxLinks)
     for (const hhaxLink of hhaxLinks) {
       if (
-        hhaxLink.getAttribute("onClick").includes($(visitDateSelector).text())
+        hhaxLink
+          .getAttribute("onClick")
+          .includes($(visitDateSelector, ctx).text())
       ) {
         // aideName = hhaxLink.innerHTML.trim();
         // console.log(hhaxLink)
@@ -184,11 +192,11 @@ function getAideName(): string {
 
       if (
         (date as HTMLElement)?.innerText ==
-          $(prebillingVisitDateSelector).text() &&
+          $(prebillingVisitDateSelector, ctx).text() &&
         (id as HTMLElement).innerText ==
-          $(prebillingVisitAdmissionIdSelector).text() &&
+          $(prebillingVisitAdmissionIdSelector, ctx).text() &&
         (time as HTMLElement).innerText ==
-          $(prebillingVisitScheduledTimeSelector).text()
+          $(prebillingVisitScheduledTimeSelector, ctx).text()
       ) {
         aideName = (
           visit.querySelector("td:nth-child(6) > a") as HTMLElement
@@ -246,37 +254,40 @@ function searchElementInAllFrames(
   return result;
 }
 
-function missedCallTimeInputer(reason: ReasonType) {
+function missedCallTimeInputer(reason: ReasonType, ctx: Document = document) {
   if (reason == "Attendant failed to call in") {
-    $(visitStartTimeInputSelector).val(
-      $(visitScheduleTimeSelector).text().split("-")[0]
+    $(visitStartTimeInputSelector, ctx).val(
+      $(visitScheduleTimeSelector, ctx).text().split("-")[0]
     );
-    $(visitStartTimeInputSelector)[0].dispatchEvent(new Event("change"));
+    $(visitStartTimeInputSelector, ctx)[0].dispatchEvent(new Event("change"));
   } else if (reason == "Attendant failed to call out") {
-    $(visitEndTimeInputSelector).val(
-      $(visitScheduleTimeSelector).text().split("-")[1]
+    $(visitEndTimeInputSelector, ctx).val(
+      $(visitScheduleTimeSelector, ctx).text().split("-")[1]
     );
-    $(visitEndTimeInputSelector)[0].dispatchEvent(new Event("change"));
+    $(visitEndTimeInputSelector, ctx)[0].dispatchEvent(new Event("change"));
   } else if (reason == "Attendant failed to call in and out") {
-    $(visitStartTimeInputSelector).val(
-      $(visitScheduleTimeSelector).text().split("-")[0]
+    $(visitStartTimeInputSelector, ctx).val(
+      $(visitScheduleTimeSelector, ctx).text().split("-")[0]
     );
-    $(visitStartTimeInputSelector)[0].dispatchEvent(new Event("change"));
-    $(visitEndTimeInputSelector).val(
-      $(visitScheduleTimeSelector).text().split("-")[1]
+    $(visitStartTimeInputSelector, ctx)[0].dispatchEvent(new Event("change"));
+    $(visitEndTimeInputSelector, ctx).val(
+      $(visitScheduleTimeSelector, ctx).text().split("-")[1]
     );
-    $(visitEndTimeInputSelector)[0].dispatchEvent(new Event("change"));
+    $(visitEndTimeInputSelector, ctx)[0].dispatchEvent(new Event("change"));
   } else {
     console.log("Something went error");
   }
 }
 
-async function missedCalledReasonChooser(reason: ReasonType) {
+async function missedCalledReasonChooser(
+  reason: ReasonType,
+  ctx: Document = document
+) {
   let expectedReason = reason,
     expectedAction =
       "Confirmed visit with the client or the client's family member/representative and documented";
-  let select1 = $(visitReasonSelector);
-  for (const reason of $(visitReasonOptionSelector)) {
+  let select1 = $(visitReasonSelector, ctx);
+  for (const reason of $(visitReasonOptionSelector, ctx)) {
     if (expectedReason == reason.innerText) {
       select1.val((reason as HTMLOptionElement).value);
       select1[0].dispatchEvent(new Event("change"));
@@ -286,8 +297,8 @@ async function missedCalledReasonChooser(reason: ReasonType) {
 
   await sleep(500);
 
-  let select2 = $(visitActionSelector);
-  for (const action of $(visitActionOptionSelector)) {
+  let select2 = $(visitActionSelector, ctx);
+  for (const action of $(visitActionOptionSelector, ctx)) {
     if (expectedAction == action.innerText) {
       select2.val((action as HTMLOptionElement).value);
       select2[0].dispatchEvent(new Event("change"));
@@ -296,16 +307,16 @@ async function missedCalledReasonChooser(reason: ReasonType) {
   }
 }
 
-function getScheduleTime(): {
+function getScheduleTime(ctx: Document = document): {
   startTime: string;
   endTime: string;
 } {
   return {
     startTime: convertMilitaryTime(
-      $(visitScheduleTimeSelector).text().split("-")[0]
+      $(visitScheduleTimeSelector, ctx).text().split("-")[0]
     ),
     endTime: convertMilitaryTime(
-      $(visitScheduleTimeSelector).text().split("-")[1]
+      $(visitScheduleTimeSelector, ctx).text().split("-")[1]
     ),
   };
 }

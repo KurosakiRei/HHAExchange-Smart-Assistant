@@ -32,6 +32,7 @@ import { CleaningOverlay } from "./js/services/CleaningOverlay";
 import { OutlookAdapter } from "./js/services/OutlookAdapter";
 import { TinyMCEBundler } from "./js/services/TinyMCEBundler";
 import { initDocumentDropzone } from "./js/services/DocumentDropzone";
+import { initScheduledVisitsConfigCardUI } from "./js/ScheduledVisitsFilter";
 import { version } from "../package.json";
 
 async function main() {
@@ -62,13 +63,13 @@ async function main() {
 
       // console.log('正在搜索:', searchUrl);
       let SearchCGphone =
-        "https://app.hhaexchange.com/ENT2507010000/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=347-265-3886&LastName=&Type=2&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=&_=1755108928644";
+        "https://app.hhaexchange.com/ENT2602010000/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=347-265-3886&LastName=&Type=2&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=&_=1755108928644";
 
       let missIn =
-        "https://app.hhaexchange.com/ENT2507010000/Call/CallReportsXSLT_ns.aspx?CallType=2&VendorID=469&CoordinatorID=69419&PatientNumber=&PatientName=&AideName=&AssignmentID=&sort=VisitDate&ord=DESC&Source=-1&CaregiverTeamID=-1&SkillType=-1&HideVisitWithTimeSheetRequired=false&FromDate=2025-08-13%2000:00:00&ToDate=2025-08-13%2023:59:00&TimesheetRequired=-1&PatientTeamID=-1&PatientLocationID=-1&PatientBranchID=-1&CaregiverLocationID=-1&CaregiverBranchID=-1&time=1755113664818&OfficeId=469,5137,5139,6475,14849&DisciplineIDs=0";
+        "https://app.hhaexchange.com/ENT2602010000/Call/CallReportsXSLT_ns.aspx?CallType=2&VendorID=469&CoordinatorID=69419&PatientNumber=&PatientName=&AideName=&AssignmentID=&sort=VisitDate&ord=DESC&Source=-1&CaregiverTeamID=-1&SkillType=-1&HideVisitWithTimeSheetRequired=false&FromDate=2025-08-13%2000:00:00&ToDate=2025-08-13%2023:59:00&TimesheetRequired=-1&PatientTeamID=-1&PatientLocationID=-1&PatientBranchID=-1&CaregiverLocationID=-1&CaregiverBranchID=-1&time=1755113664818&OfficeId=469,5137,5139,6475,14849&DisciplineIDs=0";
 
       let CallMaintenance_ns =
-        "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+        "https://app.hhaexchange.com/ENT2602010000/Call/CallMaintenance_ns.aspx";
 
       const r = (await GM_fetch(CallMaintenance_ns, {
         method: "GET",
@@ -207,11 +208,24 @@ async function main() {
 
   assignIntervalTimer(saveButtonSelector, $POCBtn, "#uxBtnPOC", POCResolver);
 
+  /**
+   * TD-003 fix: resolve mypopup iframe document at click time so that all
+   * jQuery selectors inside missedCallResolver target the correct document.
+   * Fallback to `document` handles the case where the script itself is already
+   * running inside the mypopup iframe (unlikely, but safe).
+   */
+  const getMypopupDoc = (): Document => {
+    const mypopup = document.getElementById(
+      "mypopup"
+    ) as HTMLIFrameElement | null;
+    return mypopup?.contentDocument ?? document;
+  };
+
   assignIntervalTimer(
     saveButtonSelector,
     $missedInOutBtn,
     "#missedInOutBtn",
-    missedCallResolver,
+    (reason: string) => missedCallResolver(reason as any, getMypopupDoc()),
     ["Attendant failed to call in and out"]
   );
 
@@ -219,7 +233,7 @@ async function main() {
     saveButtonSelector,
     $missedOutBtn,
     "#missedOutBtn",
-    missedCallResolver,
+    (reason: string) => missedCallResolver(reason as any, getMypopupDoc()),
     ["Attendant failed to call out"]
   );
 
@@ -227,7 +241,7 @@ async function main() {
     saveButtonSelector,
     $missedInBtn,
     "#missedInBtn",
-    missedCallResolver,
+    (reason: string) => missedCallResolver(reason as any, getMypopupDoc()),
     ["Attendant failed to call in"]
   );
 
@@ -255,6 +269,9 @@ async function main() {
 
   // Epic 14: Init DocumentDropzone
   initDocumentDropzone();
+
+  // Epic 15: Init Scheduled Visits Coordinator Filter
+  initScheduledVisitsConfigCardUI();
 }
 
 /**

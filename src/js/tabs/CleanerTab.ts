@@ -46,6 +46,8 @@ export class CleanerTab extends BaseTab {
   private showCallDetails: boolean = false;
   /** Call 清理器：事件处理器是否已设置（防止重复添加监听器） */
   private callEventHandlersSet: boolean = false;
+  /** POC 清理器：事件处理器是否已设置 */
+  private prebillingEventHandlersSet: boolean = false;
 
   async init(): Promise<void> {
     this.initialized = true;
@@ -149,6 +151,9 @@ export class CleanerTab extends BaseTab {
       console.log("[CleanerTab] Manual refresh triggered");
       this.analyzePrebillingTable(); // 重新分析表格
     });
+
+    // 重置事件处理器标志
+    this.prebillingEventHandlersSet = false;
 
     // 启动自动轮询
     this.startPolling();
@@ -262,9 +267,25 @@ export class CleanerTab extends BaseTab {
     const emptyState = document.getElementById("cleaner-empty-state");
 
     try {
+      // 记住当前的选中状态 (保存特征: admissionId + visitDate + scheduledTime)
+      const selectedFeatures = new Set(
+        Array.from(this.selectedIndices).map((i) => {
+          const r = this.visitRecords[i];
+          return `${r.admissionId}|${r.visitDate}|${r.scheduledTime}`;
+        })
+      );
+
       // 调用真实的解析器
       this.visitRecords = await PrebillingTableParser.parseTable();
       this.selectedIndices.clear();
+
+      // 恢复选中状态
+      this.visitRecords.forEach((record, index) => {
+        const feature = `${record.admissionId}|${record.visitDate}|${record.scheduledTime}`;
+        if (selectedFeatures.has(feature)) {
+          this.selectedIndices.add(index);
+        }
+      });
 
       if (statusEl) statusEl.style.display = "none";
 
@@ -277,7 +298,13 @@ export class CleanerTab extends BaseTab {
         if (emptyState) emptyState.style.display = "none";
         if (recordsContainer) recordsContainer.style.display = "block";
         this.renderPrebillingRecordsList();
-        this.setupPrebillingEventHandlers();
+
+        if (!this.prebillingEventHandlersSet) {
+          this.setupPrebillingEventHandlers();
+          this.prebillingEventHandlersSet = true;
+        } else {
+          this.setupDynamicCheckboxes();
+        }
       }
     } catch (error) {
       console.error("[CleanerTab] Error analyzing Prebilling table:", error);
@@ -295,10 +322,11 @@ export class CleanerTab extends BaseTab {
     if (!listEl) return;
 
     listEl.innerHTML = this.visitRecords
-      .map(
-        (record, index) => `
+      .map((record, index) => {
+        const isChecked = this.selectedIndices.has(index) ? "checked" : "";
+        return `
       <div class="cleaner-record-item" data-index="${index}">
-        <input type="checkbox" class="cleaner-record-checkbox" data-index="${index}">
+        <input type="checkbox" class="cleaner-record-checkbox" data-index="${index}" ${isChecked}>
         <div class="cleaner-record-info">
           <div class="record-main">
             <span class="cleaner-badge ${
@@ -315,11 +343,21 @@ export class CleanerTab extends BaseTab {
           </div>
         </div>
       </div>
-    `
-      )
+    `;
+      })
       .join("");
 
     this.updateCleanButtonState();
+
+    // 更新全选框状态
+    const selectAllCheckbox = document.getElementById(
+      "cleaner-select-all-checkbox"
+    ) as HTMLInputElement;
+    if (selectAllCheckbox) {
+      selectAllCheckbox.checked =
+        this.visitRecords.length > 0 &&
+        this.selectedIndices.size === this.visitRecords.length;
+    }
   }
 
   /**
@@ -349,6 +387,22 @@ export class CleanerTab extends BaseTab {
     });
 
     // 单个复选框
+    this.setupDynamicCheckboxes();
+
+    // 清理按钮（Story 4-6 实现真实清理逻辑）
+    cleanBtn?.addEventListener("click", () => {
+      this.handleCleanSelectedVisits();
+    });
+  }
+
+  /**
+   * 绑定动态列表项的复选框事件
+   */
+  private setupDynamicCheckboxes(): void {
+    const selectAllCheckbox = document.getElementById(
+      "cleaner-select-all-checkbox"
+    ) as HTMLInputElement;
+
     document
       .querySelectorAll(".cleaner-record-checkbox")
       .forEach((checkbox) => {
@@ -365,17 +419,13 @@ export class CleanerTab extends BaseTab {
           // 更新全选状态
           if (selectAllCheckbox) {
             selectAllCheckbox.checked =
+              this.visitRecords.length > 0 &&
               this.selectedIndices.size === this.visitRecords.length;
           }
 
           this.updateCleanButtonState();
         });
       });
-
-    // 清理按钮（Story 4-6 实现真实清理逻辑）
-    cleanBtn?.addEventListener("click", () => {
-      this.handleCleanSelectedVisits();
-    });
   }
 
   /**

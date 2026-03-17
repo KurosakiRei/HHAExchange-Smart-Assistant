@@ -1,0 +1,138 @@
+.document-dropzone-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(232, 244, 253, 0.85);
+  /* 浅蓝色半透明背景 */
+  border: 3px dashed #2196F3;
+  /* 虚线边框 */
+  border-radius: 4px;
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  /* 默认不拦截鼠标事件 */
+  transition: opacity 0.2s ease-in-out, background-color 0.2s;
+  backdrop-filter: blur(2px);
+}
+.document-dropzone-overlay.active {
+  opacity: 1;
+  background-color: rgba(200, 230, 201, 0.9);
+  /* 拖入时变为浅绿色提示可释放 */
+  border-color: #4CAF50;
+  pointer-events: auto;
+  /* 激活时拦截事件以便 drop */
+}
+.document-dropzone-overlay .dropzone-content {
+  text-align: center;
+  pointer-events: none;
+  /* 防止内部元素干扰 leave 事件计算 */
+  animation: pulse 2s infinite;
+}
+.document-dropzone-overlay .dropzone-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+  color: #1976D2;
+}
+.document-dropzone-overlay .dropzone-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #0D47A1;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+/* 
+ * ==========================================================================
+ * Rename Modal Styles
+ * ==========================================================================
+ */
+.document-rename-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100005;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(3px);
+}
+.document-rename-modal {
+  background: #fff;
+  width: 400px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: slideDownFade 0.2s ease-out forwards;
+}
+.document-rename-modal .rename-header {
+  background: #0d3e61;
+  color: #fff;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.document-rename-modal .rename-body {
+  padding: 24px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.document-rename-modal .rename-body label {
+  white-space: nowrap;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+.document-rename-modal .rename-body input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #2196F3;
+  border-radius: 4px;
+  font-size: 15px;
+  outline: none;
+  box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);
+}
+.document-rename-modal .rename-body input:focus {
+  border-color: #0D47A1;
+  box-shadow: 0 0 5px rgba(13, 71, 161, 0.5);
+}
+.document-rename-modal .rename-ext {
+  color: #777;
+  font-size: 15px;
+  font-weight: 500;
+}
+.document-rename-modal .rename-footer {
+  padding: 12px 20px;
+  background: #f5f5f5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e0e0e0;
+}
+@keyframes slideDownFade {
+  0% {
+    transform: translateY(-20px) scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}

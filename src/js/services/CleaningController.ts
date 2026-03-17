@@ -93,6 +93,21 @@ export class CleaningController {
       );
 
       if (queue && queue.status === "IN_PROGRESS") {
+        // ★ PAGE GUARD: Only act when we are actually on the page that matches
+        // the queue's pageType. Without this, the polling would trigger
+        // checkPendingTasks() (and show the overlay) on any page — including
+        // unrelated ones like CallReportsBeta.ns.aspx — as long as a stale
+        // IN_PROGRESS queue exists in GM storage.
+        const url = window.location.href.toLowerCase();
+        const isOnExpectedPage =
+          queue.pageType === "PREBILLING"
+            ? url.includes("prebillingreportinternal_ns.aspx")
+            : url.includes("callmaintenance_ns.aspx");
+
+        if (!isOnExpectedPage) {
+          return; // Wrong page — skip this polling tick entirely
+        }
+
         // Prevent launching the next task if the modal iframe is still open
         const isModalOpen = Array.from(
           document.querySelectorAll(
@@ -496,15 +511,19 @@ export class CleaningController {
       if (cells.length < 10) continue;
 
       // Normalize spaces to match PrebillingTableParser logic
+      const visitDate = cells[0]?.textContent?.trim().replace(/\s+/g, " ");
       const admissionId = cells[1]?.textContent?.trim().replace(/\s+/g, " ");
       const patientName = cells[2]?.textContent?.trim().replace(/\s+/g, " ");
+      const scheduledTime = cells[8]?.textContent?.trim().replace(/\s+/g, " ");
 
       if (
         admissionId === task.admissionId &&
-        patientName?.includes(task.patientName || "")
+        patientName?.includes(task.patientName || "") &&
+        visitDate === task.visitDate &&
+        scheduledTime === task.scheduledTime
       ) {
         console.log(
-          `[CleaningController] Searching Row: Matched ${task.patientName} (${task.admissionId})`
+          `[CleaningController] Searching Row: Matched ${task.patientName} (${task.admissionId}) on ${task.visitDate} at ${task.scheduledTime}`
         );
         targetRow = row;
         foundByMatch = true;
