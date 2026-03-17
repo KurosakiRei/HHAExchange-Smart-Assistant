@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.11.1
+// @version             3.11.2
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -10997,11 +10997,15 @@ class CleaningController {
             if (cells.length < 10)
                 continue;
             // Normalize spaces to match PrebillingTableParser logic
+            const visitDate = cells[0]?.textContent?.trim().replace(/\s+/g, " ");
             const admissionId = cells[1]?.textContent?.trim().replace(/\s+/g, " ");
             const patientName = cells[2]?.textContent?.trim().replace(/\s+/g, " ");
+            const scheduledTime = cells[8]?.textContent?.trim().replace(/\s+/g, " ");
             if (admissionId === task.admissionId &&
-                patientName?.includes(task.patientName || "")) {
-                console.log(`[CleaningController] Searching Row: Matched ${task.patientName} (${task.admissionId})`);
+                patientName?.includes(task.patientName || "") &&
+                visitDate === task.visitDate &&
+                scheduledTime === task.scheduledTime) {
+                console.log(`[CleaningController] Searching Row: Matched ${task.patientName} (${task.admissionId}) on ${task.visitDate} at ${task.scheduledTime}`);
                 targetRow = row;
                 foundByMatch = true;
                 console.log(`[CleaningController] Found row by match for ${task.patientName} (${task.admissionId})`);
@@ -11273,6 +11277,8 @@ class CleanerTab extends BaseTab {
         this.showCallDetails = false;
         /** Call 清理器：事件处理器是否已设置（防止重复添加监听器） */
         this.callEventHandlersSet = false;
+        /** POC 清理器：事件处理器是否已设置 */
+        this.prebillingEventHandlersSet = false;
     }
     async init() {
         this.initialized = true;
@@ -11364,6 +11370,8 @@ class CleanerTab extends BaseTab {
             console.log("[CleanerTab] Manual refresh triggered");
             this.analyzePrebillingTable(); // 重新分析表格
         });
+        // 重置事件处理器标志
+        this.prebillingEventHandlersSet = false;
         // 启动自动轮询
         this.startPolling();
         // 调用 PrebillingTableParser 分析表格
@@ -11459,9 +11467,21 @@ class CleanerTab extends BaseTab {
         const recordsContainer = document.getElementById("cleaner-records-container");
         const emptyState = document.getElementById("cleaner-empty-state");
         try {
+            // 记住当前的选中状态 (保存特征: admissionId + visitDate + scheduledTime)
+            const selectedFeatures = new Set(Array.from(this.selectedIndices).map((i) => {
+                const r = this.visitRecords[i];
+                return `${r.admissionId}|${r.visitDate}|${r.scheduledTime}`;
+            }));
             // 调用真实的解析器
             this.visitRecords = await PrebillingTableParser.parseTable();
             this.selectedIndices.clear();
+            // 恢复选中状态
+            this.visitRecords.forEach((record, index) => {
+                const feature = `${record.admissionId}|${record.visitDate}|${record.scheduledTime}`;
+                if (selectedFeatures.has(feature)) {
+                    this.selectedIndices.add(index);
+                }
+            });
             if (statusEl)
                 statusEl.style.display = "none";
             if (this.visitRecords.length === 0) {
@@ -11478,7 +11498,13 @@ class CleanerTab extends BaseTab {
                 if (recordsContainer)
                     recordsContainer.style.display = "block";
                 this.renderPrebillingRecordsList();
-                this.setupPrebillingEventHandlers();
+                if (!this.prebillingEventHandlersSet) {
+                    this.setupPrebillingEventHandlers();
+                    this.prebillingEventHandlersSet = true;
+                }
+                else {
+                    this.setupDynamicCheckboxes();
+                }
             }
         }
         catch (error) {
@@ -11496,14 +11522,16 @@ class CleanerTab extends BaseTab {
         if (!listEl)
             return;
         listEl.innerHTML = this.visitRecords
-            .map((record, index) => `
+            .map((record, index) => {
+            const isChecked = this.selectedIndices.has(index) ? "checked" : "";
+            return `
       <div class="cleaner-record-item" data-index="${index}">
-        <input type="checkbox" class="cleaner-record-checkbox" data-index="${index}">
+        <input type="checkbox" class="cleaner-record-checkbox" data-index="${index}" ${isChecked}>
         <div class="cleaner-record-info">
           <div class="record-main">
             <span class="cleaner-badge ${record.matchType === "POC_ONLY"
-            ? "badge-poc"
-            : "badge-poc-caregiver"}">
+                ? "badge-poc"
+                : "badge-poc-caregiver"}">
               ${record.matchType === "POC_ONLY" ? "POC" : "POC+CG"}
             </span>
             ${record.patientName} | ${record.admissionId}
@@ -11513,9 +11541,17 @@ class CleanerTab extends BaseTab {
           </div>
         </div>
       </div>
-    `)
+    `;
+        })
             .join("");
         this.updateCleanButtonState();
+        // 更新全选框状态
+        const selectAllCheckbox = document.getElementById("cleaner-select-all-checkbox");
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked =
+                this.visitRecords.length > 0 &&
+                    this.selectedIndices.size === this.visitRecords.length;
+        }
     }
     /**
      * 设置 Prebilling 清理器的事件处理器
@@ -11537,6 +11573,17 @@ class CleanerTab extends BaseTab {
             this.updateCleanButtonState();
         });
         // 单个复选框
+        this.setupDynamicCheckboxes();
+        // 清理按钮（Story 4-6 实现真实清理逻辑）
+        cleanBtn?.addEventListener("click", () => {
+            this.handleCleanSelectedVisits();
+        });
+    }
+    /**
+     * 绑定动态列表项的复选框事件
+     */
+    setupDynamicCheckboxes() {
+        const selectAllCheckbox = document.getElementById("cleaner-select-all-checkbox");
         document
             .querySelectorAll(".cleaner-record-checkbox")
             .forEach((checkbox) => {
@@ -11552,14 +11599,11 @@ class CleanerTab extends BaseTab {
                 // 更新全选状态
                 if (selectAllCheckbox) {
                     selectAllCheckbox.checked =
-                        this.selectedIndices.size === this.visitRecords.length;
+                        this.visitRecords.length > 0 &&
+                            this.selectedIndices.size === this.visitRecords.length;
                 }
                 this.updateCleanButtonState();
             });
-        });
-        // 清理按钮（Story 4-6 实现真实清理逻辑）
-        cleanBtn?.addEventListener("click", () => {
-            this.handleCleanSelectedVisits();
         });
     }
     /**
@@ -15030,7 +15074,7 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.11.1"};
+const package_namespaceObject = {"rE":"3.11.2"};
 ;// ./src/index.ts
 
 
