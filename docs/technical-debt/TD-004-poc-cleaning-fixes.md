@@ -1,7 +1,7 @@
 ---
 id: TD-004
 title: POC Cleaning 状态不同步与任务匹配不准问题
-status: Fixed
+status: "Fixed (v2 - 2026-03-17)"
 created: 2026-03-17
 fixed: 2026-03-17
 severity: High
@@ -12,30 +12,80 @@ components:
 
 ## 摘要
 
-Prebilling Report / POC Cleaning（POC 自动清理功能）在自动执行过程中遇到了两个导致无响应和功能严重失效的独立问题。
-1. **选择状态不同步（全选 Bug）：** 在定期轮询 Prebilling Report 表格数据时，任何发现的新行都会导致 UI 的完全重新渲染。由于 `selectedIndices` 在未保存用户选择指纹的情况下被完全清空，所有单独的列表勾选框都会变成 `未选中`，而独立的 `Select All` 全选框在视觉上仍然保持 `选中`。这导致点击“清理选定项”的任务循环因为实际上 0 个有效选中目标而执行失败。
-2. **目标匹配不精准：** 在 `CleaningController.ts` 中，当遍历 DOM 行来精确定位目标并点击 "Edit" 按钮时，原来的匹配逻辑仅仅校验了 `Admission ID` 和 `Patient Name`。如果同一个病人有**多个**任务记录且这些记录仅凭日期和时间来区分（比如早班和晚班访问），脚本就会盲目地匹配到页面上出现的**绝对第一个**符合条件的行，导致执行了错误的访问记录的清理。
+Prebilling Report / POC Cleaning（POC 自动清理功能）在自动执行过程中遇到了两个导致无响应和功能严重失效的独立问题：
 
-## 根本原因
+1. **选择状态不同步（全选 Bug）：** Prebilling 页面每 5 秒轮询一次表格。由于并发保护缺失与非原子性状态清空，用户手动勾选的行在每轮重新分析后会被静默丢弃，视觉上全选框仍显示选中，实际提交时却无有效目标，导致清理任务无法启动。
+2. **目标行跨日期误匹配（高危）：** 在执行清理时，`CleaningController.ts` 的回退路径仅以 `admissionId` 定位目标行，完全缺失 `visitDate` 约束，造成同一病人不同日期的访问记录被错误清理。在真实事故中，本应清理 3/15 的记录，结果操作了 3/14 的记录。
 
-这两个问题均源于对动态变化的 DOM 元素的状态保存机制不够健壮：
-- `CleanerTab.ts` 在触发 DOM 替换/重新渲染前，没有主动缓存已勾选记录的“指纹特征”。
-- `CleaningController.ts` 在解析表格寻找元素时，没有详尽地应用被选中任务对象（`Task`）上的所有可用特征参数。
+## 根本原因分析
 
-## 修复方案
+### Bug 1：选择状态丢失（`CleanerTab.ts`）
 
-1. **保留选中记录的状态 (`CleanerTab.ts`)：** 
-   - 在执行 `this.visitRecords = await PrebillingTableParser.parseTable();` 覆盖数据之前，脚本现在会把当前所有已选记录的指纹（使用 `admissionId`、`visitDate` 和 `scheduledTime` 组合）缓存到一个 `Set<string>` 中。
-   - 在新数据获取完毕且 `selectedIndices` 被清空后，脚本会遍历**新**获取的 `visitRecords`，并通过比对缓存的指纹 Set 来重新恢复选中状态。
-   - 重构了 DOM 事件绑定：把独立的匿名闭包提取到了 `setupDynamicCheckboxes()` 方法统一管理，配合一次性初始化标识旗标 `prebillingEventHandlersSet`，成功杜绝了重复绑定导致的状态混乱和性能 Bug。
+**根本原因共三处：**
 
-2. **精准执行目标行探测 (`CleaningController.ts`)：**
-   - 增强了提取器的映射输出（优化 `parseColumns` 结构）。
-   - 扩充了 `executePOCClean` 的 DOM 搜寻机制，主动且精确地提取、处理并比对 `visitDate` 和 `scheduledTime`。
-   - 当前逻辑下，只有满足严格的全要素匹配才会判断为找到目标行：`admissionId === task.admissionId && visitDate === task.visitDate && scheduledTime === task.scheduledTime`。
+1. **`lastTableRowCount` 初始值为 `0`**：页面实际行数恒不为 0，因此首次 5 秒轮询必然触发一次多余的"行数变更"重新分析，将用户刚刚做出的选择完全抹除。
 
-## 影响与消除的技术债务
+2. **无并发调用保护**：`analyzePrebillingTable()` 内部调用 `PrebillingTableParser.parseTable()`，后者使用 `requestIdleCallback`，异步窗口长达 1-3 秒。在此期间若定时器再次触发分析，两次执行会交叉操作同一 `selectedIndices`，导致状态损坏。
 
-- 消解了“游离”的 DOM 元素事件绑定，防止了在 HHAExchange 页面长会话生命周期内缓慢产生的内存泄漏。
-- 确保执行点击交互具有严格的约束范围，避免了因误匹配而篡改其他来访排期造成的严重行政与账单计费后果。
-- 使用标准的 `Set` 集合实现基于指纹的快速检索，保障了即便轮询非常频繁（例如每 1.5 秒），依然能保持极高的运行性能。
+3. **`selectedIndices.clear()` 为非原子操作**：先 `clear()`、再逐条恢复的两步操作之间存在可观测的空窗期。若第二次并发调用在空窗期读取该 Set，将看到空集合，所有选中状态随之消失。
+
+### Bug 2：目标行跨日期误匹配（`CleaningController.ts`）
+
+**根本原因共两处：**
+
+1. **行过滤阈值不一致**：`executePOCClean` 中过滤异常行的判断为 `cells.length < 10`，而 `parseTable()` 使用的是 `< 14`（表格共 14 列，列 13 为 ACTIONS）。阈值不一致导致表头/摘要行可能逃过过滤进入匹配流程。
+
+2. **回退路径缺失 `visitDate` 约束**：原始回退逻辑为：
+   ```typescript
+   Array.from(rows).find(r => r.cells[1].textContent.includes(admissionId))
+   ```
+   该调用仅检查 `admissionId`，不含任何日期约束。对于同一病人的多条访问记录，DOM 中排在最前面的行会被无条件命中——即使其 `visitDate` 与任务完全不符。这在真实场景中导致了 3/14 的记录被误操作。
+
+## 修复方案（v2）
+
+### Bug 1 修复：`CleanerTab.ts`
+
+1. **新增并发锁**：添加 `private _prebillingAnalyzing: boolean = false` 字段；函数入口检测到锁已占用时立即返回，确保同一时刻只有一个分析实例在运行。
+
+2. **原子性状态替换**：废弃"先 `clear()` 再逐条恢复"的模式，改为构建完整的新 `Set<number>` 后一次性赋值：
+   ```typescript
+   const newSelectedIndices = new Set<number>();
+   this.visitRecords.forEach((record, index) => { ... });
+   this.selectedIndices = newSelectedIndices; // 原子赋值
+   ```
+
+3. **`finally` 块兜底更新**：无论分析是否成功，`finally` 块始终执行以下两步，保证状态一致：
+   ```typescript
+   } finally {
+     this._prebillingAnalyzing = false;
+     this.lastTableRowCount = PrebillingTableParser.getTotalRowCount();
+   }
+   ```
+   `lastTableRowCount` 在真实行数处初始化，消除了首次必然触发的多余重分析。
+
+4. **空记录保护**：在构建指纹时对 `visitRecords[i]` 添加 `null` 守卫，避免索引越界引发 TypeError。
+
+### Bug 2 修复：`CleaningController.ts`
+
+将原有的单一匹配路径升级为 **4 级递进式匹配**，从严到宽，每一级均内含 `visitDate` 约束：
+
+| 匹配级别 | 匹配字段 | 说明 |
+|---|---|---|
+| Match-1（精确） | admissionId + patientName + visitDate + scheduledTime | 四字段全匹配 |
+| Match-2（宽松） | admissionId + patientName + visitDate | 忽略时间格式差异时命中 |
+| Match-3（最简） | admissionId + visitDate | 处理特殊字符导致 patientName 无法比对时命中 |
+| Match-4（行号） | rowIndex + admissionId + visitDate 验证 + 深度扫描 | 以行号定位后进行双重验证 |
+
+所有匹配路径均包含 `visitDate === task.visitDate` 判断，使跨日期误匹配在代码层面成为物理不可能。
+
+同时将所有循环中的行过滤阈值统一修正为 `cells.length < 14`，与 `parseTable()` 保持一致。
+
+## 现实影响与消除的风险
+
+- **消除高危跨日期误操作**：3/14 vs 3/15 类型的账单误清理事故在当前代码下完全不可能复现。
+- **解决状态丢失问题**：并发锁 + 原子替换确保高频轮询（5s 间隔）场景下选中状态始终可靠保留。
+- **行过滤一致性**：阈值统一为 `< 14`，防止表头/摘要行污染匹配流程。
+
+## 残留边缘情况（已知、低风险）
+
+同一病人、同一日期、不同时间段存在两次访问，且 `scheduledTime` 在页面重载后格式发生变化时，Match-2 会取同日第一行。此问题与本次高危 Bug 性质不同（需两个条件同时满足），风险极低，后续可通过规范化时间格式字符串后再比对来彻底消除。
