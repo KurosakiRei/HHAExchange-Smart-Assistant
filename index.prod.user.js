@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.10.0
+// @version             3.11.1
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -11,6 +11,7 @@
 // @downloadURL         https://raw.githubusercontent.com/KurosakiRei/HHAExchange-Smart-Assistant/dist/index.prod.user.js
 // @match               *://app.hhaexchange.com/
 // @match               *://app.hhaexchange.com/*
+// @match               *://reports.hhaexchange.com/*
 // @match               *://mt3.1voicetech.com/webapp/*
 // @match               *://outlook.office.com/*
 // @match               *://outlook.office.com/mail/*
@@ -1945,14 +1946,15 @@ const templateForReason = {
     "Attendant failed to call out": (patientName, aideName, schedule) => `I spoke to patient ${patientName} on ${getTodayMMDD()}. The patient confirmed that aide ${aideName} left at ${schedule.endTime}. I contacted the aide, who stated they forgot to clock out. The aide was reminded to clock in and out for every shift, and a counseling note was placed on their profile. A timesheet will be submitted for this.`,
     "Attendant failed to call in and out": (patientName, aideName, schedule) => `I spoke to patient ${patientName} and aide ${aideName} on ${getTodayMMDD()}. The patient confirmed that ${aideName} arrived at ${schedule.startTime} and left at ${schedule.endTime}. I spoke to the aide, who stated they forgot to clock in and out. The aide was reminded to clock in and out for every shift, and a counseling note was placed on their profile. A timesheet will be submitted for this.`,
 };
-const missedCallResolver = async (reason) => {
-    let aideName = getAideName(), patientName = $(visitPatientNameSelector).text();
-    missedCallTimeInputer(reason);
-    await missedCalledReasonChooser(reason);
-    $(visitNotesSelector).val(templateForReason[reason](patientName, aideName, getScheduleTime()));
-    $(visitNotesSelector)[0].dispatchEvent(new Event("change"));
-    if ($(visitVerifyStarSelector).length > 0)
-        $(visitAuditPatientSelector).click();
+const missedCallResolver = async (reason, iframeDoc) => {
+    const ctx = iframeDoc || document;
+    let aideName = getAideName(ctx), patientName = $(visitPatientNameSelector, ctx).text();
+    missedCallTimeInputer(reason, ctx);
+    await missedCalledReasonChooser(reason, ctx);
+    $(visitNotesSelector, ctx).val(templateForReason[reason](patientName, aideName, getScheduleTime(ctx)));
+    $(visitNotesSelector, ctx)[0].dispatchEvent(new Event("change"));
+    if ($(visitVerifyStarSelector, ctx).length > 0)
+        $(visitAuditPatientSelector, ctx).click();
 };
 /* export const missedOutResolver = async() => {
     let aideName = getAideName(),
@@ -1973,7 +1975,7 @@ export const missedInOutResolver = async() => {
     $(visitNotesSelector)[0].dispatchEvent(new Event("change"))
     if ($(visitVerifyStarSelector).length > 0) $(visitAuditPatientSelector).click()
 } */
-function getAideName() {
+function getAideName(ctx = document) {
     let aideName, flag = false;
     // 2 Windows: 0-topWindow, 1-popupWindow
     let topWidow = window.parent;
@@ -1981,7 +1983,9 @@ function getAideName() {
     if (!flag) {
         let aideLinks = topWidow[0].document.querySelectorAll("#aidelink");
         for (const aideLink of aideLinks) {
-            if (aideLink.getAttribute("onClick").includes($(visitDateSelector).text())) {
+            if (aideLink
+                .getAttribute("onClick")
+                .includes($(visitDateSelector, ctx).text())) {
                 aideName = aideLink.innerHTML.trim();
                 flag = true;
                 break;
@@ -2002,7 +2006,9 @@ function getAideName() {
         // let hhaxLinks = searchElementInAllFrames(window.top,".hhax-link");
         // console.log(hhaxLinks)
         for (const hhaxLink of hhaxLinks) {
-            if (hhaxLink.getAttribute("onClick").includes($(visitDateSelector).text())) {
+            if (hhaxLink
+                .getAttribute("onClick")
+                .includes($(visitDateSelector, ctx).text())) {
                 // aideName = hhaxLink.innerHTML.trim();
                 // console.log(hhaxLink)
                 // console.log($(hhaxLink).parent())
@@ -2043,11 +2049,11 @@ function getAideName() {
             // console.log($("#ucVisitHeader_lblVisitDate").text())
             // console.log($("#lblScheduledTime").text())
             if (date?.innerText ==
-                $(prebillingVisitDateSelector).text() &&
+                $(prebillingVisitDateSelector, ctx).text() &&
                 id.innerText ==
-                    $(prebillingVisitAdmissionIdSelector).text() &&
+                    $(prebillingVisitAdmissionIdSelector, ctx).text() &&
                 time.innerText ==
-                    $(prebillingVisitScheduledTimeSelector).text()) {
+                    $(prebillingVisitScheduledTimeSelector, ctx).text()) {
                 aideName = visit.querySelector("td:nth-child(6) > a").innerText
                     .split("\n")[0]
                     .trim();
@@ -2093,29 +2099,29 @@ function MissedCall_searchElementInAllFrames(win, selector) {
     searchWindow(win);
     return result;
 }
-function missedCallTimeInputer(reason) {
+function missedCallTimeInputer(reason, ctx = document) {
     if (reason == "Attendant failed to call in") {
-        $(visitStartTimeInputSelector).val($(visitScheduleTimeSelector).text().split("-")[0]);
-        $(visitStartTimeInputSelector)[0].dispatchEvent(new Event("change"));
+        $(visitStartTimeInputSelector, ctx).val($(visitScheduleTimeSelector, ctx).text().split("-")[0]);
+        $(visitStartTimeInputSelector, ctx)[0].dispatchEvent(new Event("change"));
     }
     else if (reason == "Attendant failed to call out") {
-        $(visitEndTimeInputSelector).val($(visitScheduleTimeSelector).text().split("-")[1]);
-        $(visitEndTimeInputSelector)[0].dispatchEvent(new Event("change"));
+        $(visitEndTimeInputSelector, ctx).val($(visitScheduleTimeSelector, ctx).text().split("-")[1]);
+        $(visitEndTimeInputSelector, ctx)[0].dispatchEvent(new Event("change"));
     }
     else if (reason == "Attendant failed to call in and out") {
-        $(visitStartTimeInputSelector).val($(visitScheduleTimeSelector).text().split("-")[0]);
-        $(visitStartTimeInputSelector)[0].dispatchEvent(new Event("change"));
-        $(visitEndTimeInputSelector).val($(visitScheduleTimeSelector).text().split("-")[1]);
-        $(visitEndTimeInputSelector)[0].dispatchEvent(new Event("change"));
+        $(visitStartTimeInputSelector, ctx).val($(visitScheduleTimeSelector, ctx).text().split("-")[0]);
+        $(visitStartTimeInputSelector, ctx)[0].dispatchEvent(new Event("change"));
+        $(visitEndTimeInputSelector, ctx).val($(visitScheduleTimeSelector, ctx).text().split("-")[1]);
+        $(visitEndTimeInputSelector, ctx)[0].dispatchEvent(new Event("change"));
     }
     else {
         console.log("Something went error");
     }
 }
-async function missedCalledReasonChooser(reason) {
+async function missedCalledReasonChooser(reason, ctx = document) {
     let expectedReason = reason, expectedAction = "Confirmed visit with the client or the client's family member/representative and documented";
-    let select1 = $(visitReasonSelector);
-    for (const reason of $(visitReasonOptionSelector)) {
+    let select1 = $(visitReasonSelector, ctx);
+    for (const reason of $(visitReasonOptionSelector, ctx)) {
         if (expectedReason == reason.innerText) {
             select1.val(reason.value);
             select1[0].dispatchEvent(new Event("change"));
@@ -2123,8 +2129,8 @@ async function missedCalledReasonChooser(reason) {
         }
     }
     await sleep(500);
-    let select2 = $(visitActionSelector);
-    for (const action of $(visitActionOptionSelector)) {
+    let select2 = $(visitActionSelector, ctx);
+    for (const action of $(visitActionOptionSelector, ctx)) {
         if (expectedAction == action.innerText) {
             select2.val(action.value);
             select2[0].dispatchEvent(new Event("change"));
@@ -2132,10 +2138,10 @@ async function missedCalledReasonChooser(reason) {
         }
     }
 }
-function getScheduleTime() {
+function getScheduleTime(ctx = document) {
     return {
-        startTime: convertMilitaryTime($(visitScheduleTimeSelector).text().split("-")[0]),
-        endTime: convertMilitaryTime($(visitScheduleTimeSelector).text().split("-")[1]),
+        startTime: convertMilitaryTime($(visitScheduleTimeSelector, ctx).text().split("-")[0]),
+        endTime: convertMilitaryTime($(visitScheduleTimeSelector, ctx).text().split("-")[1]),
     };
 }
 
@@ -10708,6 +10714,18 @@ class CleaningController {
         this.pollingTimer = window.setInterval(() => {
             const queue = GM_getValue(CLEANING_QUEUE_KEY, null);
             if (queue && queue.status === "IN_PROGRESS") {
+                // ★ PAGE GUARD: Only act when we are actually on the page that matches
+                // the queue's pageType. Without this, the polling would trigger
+                // checkPendingTasks() (and show the overlay) on any page — including
+                // unrelated ones like CallReportsBeta.ns.aspx — as long as a stale
+                // IN_PROGRESS queue exists in GM storage.
+                const url = window.location.href.toLowerCase();
+                const isOnExpectedPage = queue.pageType === "PREBILLING"
+                    ? url.includes("prebillingreportinternal_ns.aspx")
+                    : url.includes("callmaintenance_ns.aspx");
+                if (!isOnExpectedPage) {
+                    return; // Wrong page — skip this polling tick entirely
+                }
                 // Prevent launching the next task if the modal iframe is still open
                 const isModalOpen = Array.from(document.querySelectorAll('.reveal-overlay, [id*="PopWin"], .hhax-modal')).some((el) => window.getComputedStyle(el).display !== "none");
                 if (isModalOpen) {
@@ -14645,9 +14663,376 @@ function initDocumentDropzone() {
     return instance;
 }
 
+;// ./src/js/ScheduledVisitsFilter.ts
+const CONFIG_KEY = "hha_scheduled_visits_config";
+let isCardVisible = false;
+// Default configuration fallback
+const ScheduledVisitsFilter_DEFAULT_CONFIG = {
+    coordinatorID: "-1",
+    coordinatorText: "All",
+};
+/**
+ * 获取业务工作日（跳过周末）
+ * 如果今天是周五，加 3 天；如果是周六，加 2 天；平时加 1 天。
+ */
+function getNextBusinessDay(date) {
+    const result = new Date(date);
+    const dayOfWeek = result.getDay();
+    if (dayOfWeek === 5) {
+        // Friday -> Monday
+        result.setDate(result.getDate() + 3);
+    }
+    else if (dayOfWeek === 6) {
+        // Saturday -> Monday
+        result.setDate(result.getDate() + 2);
+    }
+    else {
+        // Other days -> Next day
+        result.setDate(result.getDate() + 1);
+    }
+    return result;
+}
+/**
+ * 格式化日期为 MM/DD/YYYY 以适配 ASP.NET 控件
+ */
+function formatDate(date) {
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+}
+/**
+ * 检查当前页面是否为目标页面
+ */
+function isScheduledVisitsPage() {
+    const url = window.location.href.toLowerCase();
+    return (url.includes("scheduledvisitswithtempaide.aspx") ||
+        url.includes("reportname=scheduledvisitswithtempaide"));
+}
+function getStoredConfig() {
+    if (typeof GM_getValue === "function") {
+        try {
+            const stored = GM_getValue(CONFIG_KEY);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+        }
+        catch (e) {
+            console.error("[ScheduledVisits] Failed to parse config:", e);
+        }
+    }
+    return ScheduledVisitsFilter_DEFAULT_CONFIG;
+}
+function saveConfig(config) {
+    if (typeof GM_setValue === "function") {
+        try {
+            GM_setValue(CONFIG_KEY, JSON.stringify(config));
+        }
+        catch (e) {
+            console.error("[ScheduledVisits] Failed to save config:", e);
+        }
+    }
+}
+function getCoordinatorsFromDOM() {
+    // 直接从页面的 DOM 中提取 options
+    const select = document.getElementById("ctl00_ContentPlaceHolder1_uxddlCordinator");
+    if (!select)
+        return [];
+    const options = [];
+    for (let i = 0; i < select.options.length; i++) {
+        const opt = select.options[i];
+        // 可选：跳过无效节点，根据实际报表表现。
+        options.push({
+            CoordinatorID: opt.value,
+            CoordinatorName: opt.text,
+        });
+    }
+    return options;
+}
+/**
+ * 渲染选项列表
+ */
+function ScheduledVisitsFilter_renderCoordinatorList(options, selectedId) {
+    const container = document.getElementById("sv-coordinator-options");
+    if (!container)
+        return;
+    container.innerHTML = "";
+    if (options.length === 0) {
+        container.innerHTML =
+            '<div class="no-results">⚠️ No coordinators found on page</div>';
+        return;
+    }
+    options.forEach((opt) => {
+        const checked = String(opt.CoordinatorID) === String(selectedId) ? "checked" : "";
+        const div = document.createElement("div");
+        div.className = "coordinator-option";
+        div.setAttribute("data-coordinator-id", opt.CoordinatorID);
+        div.setAttribute("data-coordinator-name", opt.CoordinatorName);
+        div.innerHTML = `
+      <input type="radio" 
+             name="sv-coordinator" 
+             id="sv-coord-${opt.CoordinatorID}" 
+             value="${opt.CoordinatorID}"
+             aria-label="${opt.CoordinatorName}"
+             ${checked}>
+      <label class="coordinator-label" for="sv-coord-${opt.CoordinatorID}">
+        ${opt.CoordinatorName}
+      </label>
+    `;
+        container.appendChild(div);
+    });
+}
+/**
+ * 绑定搜索过滤功能
+ */
+function ScheduledVisitsFilter_initCoordinatorSearch() {
+    const searchInput = document.getElementById("sv-coordinator-search");
+    if (!searchInput)
+        return;
+    searchInput.addEventListener("input", () => {
+        const query = searchInput.value.toLowerCase().trim();
+        const options = document.querySelectorAll("#sv-coordinator-options .coordinator-option");
+        let visibleCount = 0;
+        options.forEach((option) => {
+            const name = option.getAttribute("data-coordinator-name") || "";
+            if (name.toLowerCase().includes(query)) {
+                option.classList.remove("hidden");
+                visibleCount++;
+            }
+            else {
+                option.classList.add("hidden");
+            }
+        });
+        const container = document.getElementById("sv-coordinator-options");
+        if (container) {
+            const noResults = container.querySelector(".no-results");
+            if (visibleCount === 0 && !noResults) {
+                const div = document.createElement("div");
+                div.className = "no-results";
+                div.textContent = "🔍 No coordinators found";
+                container.appendChild(div);
+            }
+            else if (visibleCount > 0 && noResults) {
+                noResults.remove();
+            }
+        }
+    });
+}
+function ScheduledVisitsFilter_updateButtonText(btn, text) {
+    const words = text.split(/\s+/);
+    const shortName = words.slice(0, 2).join(" ");
+    btn.value = `Search: ${shortName}`;
+}
+function ScheduledVisitsFilter_hideConfigCard() {
+    const card = document.getElementById("homepage-config-card");
+    if (card) {
+        card.classList.remove("show");
+        setTimeout(() => {
+            card.style.display = "none";
+        }, 200);
+    }
+    isCardVisible = false;
+}
+function ScheduledVisitsFilter_showConfigCard() {
+    const card = document.getElementById("homepage-config-card");
+    if (!card)
+        return;
+    const config = getStoredConfig();
+    const options = getCoordinatorsFromDOM();
+    ScheduledVisitsFilter_renderCoordinatorList(options, config.coordinatorID);
+    card.style.display = "block";
+    // Trigger reflow for transition
+    void card.offsetWidth;
+    card.classList.add("show");
+    const searchInput = document.getElementById("sv-coordinator-search");
+    if (searchInput) {
+        searchInput.focus();
+    }
+    isCardVisible = true;
+}
+function ScheduledVisitsFilter_handleSaveConfiguration() {
+    const selectedRadio = document.querySelector('input[name="sv-coordinator"]:checked');
+    if (!selectedRadio) {
+        alert("⚠️ Please select a coordinator before saving.");
+        return;
+    }
+    const coordinatorID = selectedRadio.value;
+    const optionDiv = selectedRadio.closest(".coordinator-option");
+    const coordinatorText = optionDiv?.getAttribute("data-coordinator-name") || "Unknown";
+    saveConfig({ coordinatorID, coordinatorText });
+    const mainBtn = document.getElementById("scheduledVisitsSelectorBtn");
+    if (mainBtn)
+        ScheduledVisitsFilter_updateButtonText(mainBtn, coordinatorText);
+    ScheduledVisitsFilter_hideConfigCard();
+}
+/**
+ * 核心自动填表及提交逻辑
+ */
+function executeSearchLogic() {
+    const config = getStoredConfig();
+    const coordinatorID = config.coordinatorID;
+    if (coordinatorID === "-1" || !coordinatorID) {
+        alert("⚠️ Please configure a coordinator first (hover over the button and save).");
+        return;
+    }
+    // 1. 设置 Coordinator
+    const coordinatorSelect = document.getElementById("ctl00_ContentPlaceHolder1_uxddlCordinator");
+    if (coordinatorSelect) {
+        coordinatorSelect.value = coordinatorID;
+        // jQuery change (if bound) or native change
+        coordinatorSelect.dispatchEvent(new Event("change"));
+    }
+    // 2. 设置 Dates
+    const today = new Date();
+    const nextBizDay = getNextBusinessDay(today);
+    const fromDateInput = document.getElementById("ctl00_ContentPlaceHolder1_uxDtFromDate");
+    const toDateInput = document.getElementById("ctl00_ContentPlaceHolder1_uxDtToDate");
+    if (fromDateInput)
+        fromDateInput.value = formatDate(today);
+    if (toDateInput)
+        toDateInput.value = formatDate(nextBizDay);
+    // 3. 点击 View Report
+    const viewReportBtn = document.getElementById("ctl00_ContentPlaceHolder1_btnViewReport");
+    if (viewReportBtn) {
+        setTimeout(() => {
+            viewReportBtn.click();
+        }, 100);
+    }
+    else {
+        console.error("[ScheduledVisits] Native 'View Report' button not found!");
+    }
+}
+/**
+ * 初始化 DOM 和样式结构
+ */
+function initScheduledVisitsConfigCardUI() {
+    // 设定一个轮询以应对 ASP.NET UpdatePanel 的 Partial Postback 擦除 DOM
+    setInterval(() => {
+        if (!isScheduledVisitsPage())
+            return;
+        if (document.getElementById("sv-config-wrapper"))
+            return;
+        const viewReportBtn = document.getElementById("ctl00_ContentPlaceHolder1_btnViewReport");
+        if (!viewReportBtn || !viewReportBtn.parentNode)
+            return;
+        const config = getStoredConfig();
+        // 1. 生成卡片 HTML (完全复用 HomePage CSS 的 ID和结构)
+        // CRITICAL: 必须添加 type="button"，否则 ASP.NET 会当成默认的 form submit 刷新整个页面
+        const cardHtml = `
+            <div id="homepage-config-card" role="dialog" aria-label="Coordinator Selection" style="display: none;">
+              <div class="config-card-header">
+                <h3>🔍 Search by Coordinator 配置</h3>
+                <button type="button" class="config-close-btn" id="sv-config-close" aria-label="Close configuration">×</button>
+              </div>
+              <div class="config-card-body">
+                <label for="sv-coordinator-search">选择 Coordinator:</label>
+                <input type="text" 
+                       id="sv-coordinator-search" 
+                       class="config-search-input" 
+                       placeholder="搜索 Coordinator..."
+                       aria-label="Search coordinators">
+                <div id="sv-coordinator-options" 
+                     class="coordinator-list" 
+                     role="radiogroup" 
+                     aria-label="Coordinator options">
+                  <!-- 动态加载选项 -->
+                </div>
+              </div>
+              <div class="config-card-footer">
+                <button type="button" id="sv-config-save" class="btn-primary" aria-label="Save configuration">💾 保存配置</button>
+                <button type="button" id="sv-config-cancel" class="btn-secondary" aria-label="Cancel">❌ 取消</button>
+              </div>
+            </div>
+        `;
+        // 2. Wrap the button and the card in a relative positioned container
+        const wrapperHtml = `
+            <div id="sv-config-wrapper" style="position: relative; display: inline-block; margin-right: 15px; vertical-align: middle;">
+                <input type="button" 
+                   id="scheduledVisitsSelectorBtn" 
+                   name="scheduledVisitsSelectorBtn" 
+                   class="button hollow homepage-selector-btn" 
+                   value="Search by Coordinator">
+                ${cardHtml}
+            </div>
+        `;
+        // 找到 View Report 按钮并插入到其前面
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = wrapperHtml.trim();
+        const wrapperNode = tempDiv.firstChild;
+        viewReportBtn.parentNode.insertBefore(wrapperNode, viewReportBtn);
+        const mainBtn = document.getElementById("scheduledVisitsSelectorBtn");
+        if (mainBtn)
+            ScheduledVisitsFilter_updateButtonText(mainBtn, config.coordinatorText);
+        // Event Listeners
+        const wrapper = document.getElementById("sv-config-wrapper");
+        let hoverTimer = null;
+        let hideTimer = null;
+        let isCardHovered = false;
+        mainBtn?.addEventListener("mouseenter", () => {
+            if (hideTimer) {
+                clearTimeout(hideTimer);
+                hideTimer = null;
+            }
+            hoverTimer = window.setTimeout(() => {
+                if (!isCardVisible)
+                    ScheduledVisitsFilter_showConfigCard();
+            }, 300);
+        });
+        mainBtn?.addEventListener("mouseleave", () => {
+            if (hoverTimer) {
+                clearTimeout(hoverTimer);
+                hoverTimer = null;
+            }
+            if (!isCardHovered) {
+                hideTimer = window.setTimeout(() => ScheduledVisitsFilter_hideConfigCard(), 200);
+            }
+        });
+        const card = document.getElementById("homepage-config-card");
+        card?.addEventListener("mouseenter", () => {
+            isCardHovered = true;
+            if (hideTimer) {
+                clearTimeout(hideTimer);
+                hideTimer = null;
+            }
+        });
+        card?.addEventListener("mouseleave", () => {
+            isCardHovered = false;
+            hideTimer = window.setTimeout(() => ScheduledVisitsFilter_hideConfigCard(), 200);
+        });
+        const closeBtn = document.getElementById("sv-config-close");
+        const cancelBtn = document.getElementById("sv-config-cancel");
+        const saveBtn = document.getElementById("sv-config-save");
+        closeBtn?.addEventListener("click", ScheduledVisitsFilter_hideConfigCard);
+        cancelBtn?.addEventListener("click", ScheduledVisitsFilter_hideConfigCard);
+        saveBtn?.addEventListener("click", ScheduledVisitsFilter_handleSaveConfiguration);
+        mainBtn?.addEventListener("click", (e) => {
+            // Prevent clicking the button from doing anything if they meant to hover
+            e.preventDefault();
+            executeSearchLogic();
+        });
+        // Keyboard Support
+        document.addEventListener("keydown", (e) => {
+            const currentCard = document.getElementById("homepage-config-card");
+            if (e.key === "Escape" && currentCard?.classList.contains("show")) {
+                ScheduledVisitsFilter_hideConfigCard();
+            }
+        });
+        card?.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" &&
+                e.target instanceof HTMLInputElement &&
+                e.target.type === "radio") {
+                ScheduledVisitsFilter_handleSaveConfiguration();
+            }
+        });
+        // Initialize Search input
+        ScheduledVisitsFilter_initCoordinatorSearch();
+    }, 1000);
+}
+
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.10.0"};
+const package_namespaceObject = {"rE":"3.11.1"};
 ;// ./src/index.ts
+
 
 
 
@@ -14690,9 +15075,9 @@ async function src_main() {
             // 构造目标网站的搜索URL
             // const searchUrl = `https://your-search-site.com/search?q=${number}`; // <--- [!] 修改为实际的搜索URL格式
             // console.log('正在搜索:', searchUrl);
-            let SearchCGphone = "https://app.hhaexchange.com/ENT2507010000/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=347-265-3886&LastName=&Type=2&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=&_=1755108928644";
-            let missIn = "https://app.hhaexchange.com/ENT2507010000/Call/CallReportsXSLT_ns.aspx?CallType=2&VendorID=469&CoordinatorID=69419&PatientNumber=&PatientName=&AideName=&AssignmentID=&sort=VisitDate&ord=DESC&Source=-1&CaregiverTeamID=-1&SkillType=-1&HideVisitWithTimeSheetRequired=false&FromDate=2025-08-13%2000:00:00&ToDate=2025-08-13%2023:59:00&TimesheetRequired=-1&PatientTeamID=-1&PatientLocationID=-1&PatientBranchID=-1&CaregiverLocationID=-1&CaregiverBranchID=-1&time=1755113664818&OfficeId=469,5137,5139,6475,14849&DisciplineIDs=0";
-            let CallMaintenance_ns = "https://app.hhaexchange.com/ENT2507010000/Call/CallMaintenance_ns.aspx";
+            let SearchCGphone = "https://app.hhaexchange.com/ENT2602010000/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=347-265-3886&LastName=&Type=2&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=&_=1755108928644";
+            let missIn = "https://app.hhaexchange.com/ENT2602010000/Call/CallReportsXSLT_ns.aspx?CallType=2&VendorID=469&CoordinatorID=69419&PatientNumber=&PatientName=&AideName=&AssignmentID=&sort=VisitDate&ord=DESC&Source=-1&CaregiverTeamID=-1&SkillType=-1&HideVisitWithTimeSheetRequired=false&FromDate=2025-08-13%2000:00:00&ToDate=2025-08-13%2023:59:00&TimesheetRequired=-1&PatientTeamID=-1&PatientLocationID=-1&PatientBranchID=-1&CaregiverLocationID=-1&CaregiverBranchID=-1&time=1755113664818&OfficeId=469,5137,5139,6475,14849&DisciplineIDs=0";
+            let CallMaintenance_ns = "https://app.hhaexchange.com/ENT2602010000/Call/CallMaintenance_ns.aspx";
             const r = (await GM_fetch(CallMaintenance_ns, {
                 method: "GET",
             }));
@@ -14790,9 +15175,19 @@ async function src_main() {
     assignIntervalTimer(newMessageButtonSelector, $newQABtn, "#newQABtn", createNewQA);
     assignIntervalTimer(newMessageButtonSelector, $newWelcomeCall, "#newWelcomecallBtn", createWelcomeCall);
     assignIntervalTimer(saveButtonSelector, $POCBtn, "#uxBtnPOC", POCResolver);
-    assignIntervalTimer(saveButtonSelector, $missedInOutBtn, "#missedInOutBtn", missedCallResolver, ["Attendant failed to call in and out"]);
-    assignIntervalTimer(saveButtonSelector, $missedOutBtn, "#missedOutBtn", missedCallResolver, ["Attendant failed to call out"]);
-    assignIntervalTimer(saveButtonSelector, $missedInBtn, "#missedInBtn", missedCallResolver, ["Attendant failed to call in"]);
+    /**
+     * TD-003 fix: resolve mypopup iframe document at click time so that all
+     * jQuery selectors inside missedCallResolver target the correct document.
+     * Fallback to `document` handles the case where the script itself is already
+     * running inside the mypopup iframe (unlikely, but safe).
+     */
+    const getMypopupDoc = () => {
+        const mypopup = document.getElementById("mypopup");
+        return mypopup?.contentDocument ?? document;
+    };
+    assignIntervalTimer(saveButtonSelector, $missedInOutBtn, "#missedInOutBtn", (reason) => missedCallResolver(reason, getMypopupDoc()), ["Attendant failed to call in and out"]);
+    assignIntervalTimer(saveButtonSelector, $missedOutBtn, "#missedOutBtn", (reason) => missedCallResolver(reason, getMypopupDoc()), ["Attendant failed to call out"]);
+    assignIntervalTimer(saveButtonSelector, $missedInBtn, "#missedInBtn", (reason) => missedCallResolver(reason, getMypopupDoc()), ["Attendant failed to call in"]);
     assignIntervalTimer(documentManagementSaveButtonSelector, $copyDescrpBtn, "#uxBtnCopyToDescrp", copyAttachmentToDescrp);
     visitMonitor(); // Create floating button and background tracking
     highlight2Call();
@@ -14807,6 +15202,8 @@ async function src_main() {
     CleaningController.startQueuePolling();
     // Epic 14: Init DocumentDropzone
     initDocumentDropzone();
+    // Epic 15: Init Scheduled Visits Coordinator Filter
+    initScheduledVisitsConfigCardUI();
 }
 /**
  * Initialize Multi-Tab Panel System
