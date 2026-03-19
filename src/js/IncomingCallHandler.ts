@@ -1,20 +1,52 @@
 import GM_fetch from "@trim21/gm-fetch";
 
 /**
- * 动态检测当前 HHAExchange 租户路径前缀（如 "ENT2602010000"）
- * 避免因服务器版本升级导致硬缀码路径失效
+ * 动态检测当前 HHAExchange 租户路径前缀
+ * 支持所有已知 URL 格式：ENT / HHANotification / ENTP
+ * 并在同源 iframe 中尝试从父窗口推导，避免版本升级触发强制登出
  */
 function detectTenantBaseUrl(): string {
-  const pathMatch = window.location.pathname.match(/\/(ENT\d+)\//);
-  if (pathMatch) return `https://app.hhaexchange.com/${pathMatch[1]}`;
-  const scriptSrc = Array.from(document.scripts).find((s) =>
-    s.src.includes("/ENT")
-  )?.src;
-  const scriptMatch = scriptSrc?.match(/\/(ENT\d+)\//);
-  if (scriptMatch) return `https://app.hhaexchange.com/${scriptMatch[1]}`;
-  const hrefMatch = window.location.href.match(/\/(ENT\d+)\//);
-  if (hrefMatch) return `https://app.hhaexchange.com/${hrefMatch[1]}`;
-  return "https://app.hhaexchange.com/ENT2602010000"; // fallback
+  // 从 URL 字符串中提取版本号（纯数字部分），支持多种前缀格式
+  function extractVersion(url: string): string | null {
+    // /ENT2603010000/ 直接匹配
+    const m1 = url.match(/\/ENT(\d+)\//);
+    if (m1) return m1[1];
+    // /HHANotification2603010000/ 或 /ENTP2603010000/ → 推导相同版本号
+    const m2 = url.match(/\/(?:HHANotification|ENTP)(\d+)\//);
+    if (m2) return m2[1];
+    return null;
+  }
+
+  // 方法1：当前页面路径（含 HHANotification/ENTP 子应用路径）
+  const r1 = extractVersion(window.location.pathname);
+  if (r1) return `https://app.hhaexchange.com/ENT${r1}`;
+
+  // 方法2：页面已加载的 <script> src 属性
+  for (const script of Array.from(document.scripts)) {
+    if (script.src) {
+      const r2 = extractVersion(script.src);
+      if (r2) return `https://app.hhaexchange.com/ENT${r2}`;
+    }
+  }
+
+  // 方法3：完整页面 URL（含 hash）
+  const r3 = extractVersion(window.location.href);
+  if (r3) return `https://app.hhaexchange.com/ENT${r3}`;
+
+  // 方法4：父窗口 URL（适用于 HHANotification/ENTP 等同源 iframe）
+  try {
+    if (window.parent !== window) {
+      const r4 = extractVersion(window.parent.location.href);
+      if (r4) return `https://app.hhaexchange.com/ENT${r4}`;
+    }
+  } catch (_) {
+    /* 跨域父窗口，跳过 */
+  }
+
+  console.warn(
+    "[IncomingCallHandler] Could not detect tenant prefix from URL, using fallback"
+  );
+  return "https://app.hhaexchange.com/ENT2603010000"; // fallback
 }
 import {
   TOAST_CONTAINER_SELECTOR,
