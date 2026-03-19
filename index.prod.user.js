@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.11.3
+// @version             3.11.4
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -2148,21 +2148,52 @@ function getScheduleTime(ctx = document) {
 ;// ./src/js/IncomingCallHandler.ts
 
 /**
- * 动态检测当前 HHAExchange 租户路径前缀（如 "ENT2602010000"）
- * 避免因服务器版本升级导致硬缀码路径失效
+ * 动态检测当前 HHAExchange 租户路径前缀
+ * 支持所有已知 URL 格式：ENT / HHANotification / ENTP
+ * 并在同源 iframe 中尝试从父窗口推导，避免版本升级触发强制登出
  */
 function detectTenantBaseUrl() {
-    const pathMatch = window.location.pathname.match(/\/(ENT\d+)\//);
-    if (pathMatch)
-        return `https://app.hhaexchange.com/${pathMatch[1]}`;
-    const scriptSrc = Array.from(document.scripts).find((s) => s.src.includes("/ENT"))?.src;
-    const scriptMatch = scriptSrc?.match(/\/(ENT\d+)\//);
-    if (scriptMatch)
-        return `https://app.hhaexchange.com/${scriptMatch[1]}`;
-    const hrefMatch = window.location.href.match(/\/(ENT\d+)\//);
-    if (hrefMatch)
-        return `https://app.hhaexchange.com/${hrefMatch[1]}`;
-    return "https://app.hhaexchange.com/ENT2602010000"; // fallback
+    // 从 URL 字符串中提取版本号（纯数字部分），支持多种前缀格式
+    function extractVersion(url) {
+        // /ENT2603010000/ 直接匹配
+        const m1 = url.match(/\/ENT(\d+)\//);
+        if (m1)
+            return m1[1];
+        // /HHANotification2603010000/ 或 /ENTP2603010000/ → 推导相同版本号
+        const m2 = url.match(/\/(?:HHANotification|ENTP)(\d+)\//);
+        if (m2)
+            return m2[1];
+        return null;
+    }
+    // 方法1：当前页面路径（含 HHANotification/ENTP 子应用路径）
+    const r1 = extractVersion(window.location.pathname);
+    if (r1)
+        return `https://app.hhaexchange.com/ENT${r1}`;
+    // 方法2：页面已加载的 <script> src 属性
+    for (const script of Array.from(document.scripts)) {
+        if (script.src) {
+            const r2 = extractVersion(script.src);
+            if (r2)
+                return `https://app.hhaexchange.com/ENT${r2}`;
+        }
+    }
+    // 方法3：完整页面 URL（含 hash）
+    const r3 = extractVersion(window.location.href);
+    if (r3)
+        return `https://app.hhaexchange.com/ENT${r3}`;
+    // 方法4：父窗口 URL（适用于 HHANotification/ENTP 等同源 iframe）
+    try {
+        if (window.parent !== window) {
+            const r4 = extractVersion(window.parent.location.href);
+            if (r4)
+                return `https://app.hhaexchange.com/ENT${r4}`;
+        }
+    }
+    catch (_) {
+        /* 跨域父窗口，跳过 */
+    }
+    console.warn("[IncomingCallHandler] Could not detect tenant prefix from URL, using fallback");
+    return "https://app.hhaexchange.com/ENT2603010000"; // fallback
 }
 
 // ==================== 常量定义 ====================
@@ -3572,22 +3603,52 @@ const highlight2Call = () => {
 ;// ./src/js/VisitMonitor.ts
 
 /**
- * 动态检测当前 HHAExchange 租户路径前缀（如 "ENT2602010000"）
- * 避免因服务器版本升级导致硬缀码路径失效触发强制登出
+ * 动态检测当前 HHAExchange 租户路径前缀
+ * 支持所有已知 URL 格式：ENT / HHANotification / ENTP
+ * 并在同源 iframe 中尝试从父窗口推导，避免版本升级触发强制登出
  */
 function VisitMonitor_detectTenantBaseUrl() {
-    const pathMatch = window.location.pathname.match(/\/(ENT\d+)\//);
-    if (pathMatch)
-        return `https://app.hhaexchange.com/${pathMatch[1]}`;
-    const scriptSrc = Array.from(document.scripts).find((s) => s.src.includes("/ENT"))?.src;
-    const scriptMatch = scriptSrc?.match(/\/(ENT\d+)\//);
-    if (scriptMatch)
-        return `https://app.hhaexchange.com/${scriptMatch[1]}`;
-    const hrefMatch = window.location.href.match(/\/(ENT\d+)\//);
-    if (hrefMatch)
-        return `https://app.hhaexchange.com/${hrefMatch[1]}`;
-    console.warn("[VisitMonitor] Could not detect tenant prefix, using fallback");
-    return "https://app.hhaexchange.com/ENT2602010000";
+    // 从 URL 字符串中提取版本号（纯数字部分），支持多种前缀格式
+    function extractVersion(url) {
+        // /ENT2603010000/ 直接匹配
+        const m1 = url.match(/\/ENT(\d+)\//);
+        if (m1)
+            return m1[1];
+        // /HHANotification2603010000/ 或 /ENTP2603010000/ → 推导相同版本号
+        const m2 = url.match(/\/(?:HHANotification|ENTP)(\d+)\//);
+        if (m2)
+            return m2[1];
+        return null;
+    }
+    // 方法1：当前页面路径（含 HHANotification/ENTP 子应用路径）
+    const r1 = extractVersion(window.location.pathname);
+    if (r1)
+        return `https://app.hhaexchange.com/ENT${r1}`;
+    // 方法2：页面已加载的 <script> src 属性
+    for (const script of Array.from(document.scripts)) {
+        if (script.src) {
+            const r2 = extractVersion(script.src);
+            if (r2)
+                return `https://app.hhaexchange.com/ENT${r2}`;
+        }
+    }
+    // 方法3：完整页面 URL（含 hash）
+    const r3 = extractVersion(window.location.href);
+    if (r3)
+        return `https://app.hhaexchange.com/ENT${r3}`;
+    // 方法4：父窗口 URL（适用于 HHANotification/ENTP 等同源 iframe）
+    try {
+        if (window.parent !== window) {
+            const r4 = extractVersion(window.parent.location.href);
+            if (r4)
+                return `https://app.hhaexchange.com/ENT${r4}`;
+        }
+    }
+    catch (_) {
+        /* 跨域父窗口，跳过 */
+    }
+    console.warn("[VisitMonitor] Could not detect tenant prefix from URL, using fallback");
+    return "https://app.hhaexchange.com/ENT2603010000";
 }
 const visitMonitor = async () => {
     // --- FIX 1: 三层防御机制，彻底杜绝脚本重复执行 ---
@@ -7726,20 +7787,47 @@ class StatusTrackingTab extends BaseTab {
  * 避免因服务器版本升级导致的硬编码路径失效
  */
 function ApiParamProvider_detectTenantBaseUrl() {
-    const pathMatch = window.location.pathname.match(/\/(ENT\d+)\//);
-    if (pathMatch)
-        return `https://app.hhaexchange.com/${pathMatch[1]}`;
-    const scriptSrc = Array.from(document.scripts).find((s) => s.src.includes("/ENT"))?.src;
-    const scriptMatch = scriptSrc?.match(/\/(ENT\d+)\//);
-    if (scriptMatch)
-        return `https://app.hhaexchange.com/${scriptMatch[1]}`;
-    // Fallback: try extracting from current URL (for pages where ENT is not in path)
-    const hrefMatch = window.location.href.match(/\/(ENT\d+)\//);
-    if (hrefMatch)
-        return `https://app.hhaexchange.com/${hrefMatch[1]}`;
+    // 从 URL 字符串中提取版本号（纯数字部分），支持多种前缀格式
+    function extractVersion(url) {
+        // /ENT2603010000/ 直接匹配
+        const m1 = url.match(/\/ENT(\d+)\//);
+        if (m1)
+            return m1[1];
+        // /HHANotification2603010000/ 或 /ENTP2603010000/ → 推导相同版本号
+        const m2 = url.match(/\/(?:HHANotification|ENTP)(\d+)\//);
+        if (m2)
+            return m2[1];
+        return null;
+    }
+    // 方法1：当前页面路径（含 HHANotification/ENTP 子应用路径）
+    const r1 = extractVersion(window.location.pathname);
+    if (r1)
+        return `https://app.hhaexchange.com/ENT${r1}`;
+    // 方法2：页面已加载的 <script> src 属性
+    for (const script of Array.from(document.scripts)) {
+        if (script.src) {
+            const r2 = extractVersion(script.src);
+            if (r2)
+                return `https://app.hhaexchange.com/ENT${r2}`;
+        }
+    }
+    // 方法3：完整页面 URL（含 hash）（for pages where ENT is not in path)
+    const r3 = extractVersion(window.location.href);
+    if (r3)
+        return `https://app.hhaexchange.com/ENT${r3}`;
+    // 方法4：父窗口 URL（适用于 HHANotification/ENTP 等同源 iframe）
+    try {
+        if (window.parent !== window) {
+            const r4 = extractVersion(window.parent.location.href);
+            if (r4)
+                return `https://app.hhaexchange.com/ENT${r4}`;
+        }
+    }
+    catch (_) {
+        /* 跨域父窗口，跳过 */
+    }
     console.warn("[ApiParamProvider] Could not detect tenant prefix from URL, using fallback");
-    // Last resort fallback - will be updated next time URL changes
-    return "https://app.hhaexchange.com/ENT2602010000";
+    return "https://app.hhaexchange.com/ENT2603010000";
 }
 const CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes cache
 // ============================================================================
@@ -15074,7 +15162,7 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.11.3"};
+const package_namespaceObject = {"rE":"3.11.4"};
 ;// ./src/index.ts
 
 
