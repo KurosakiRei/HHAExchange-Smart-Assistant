@@ -788,7 +788,7 @@
 
 // ===== Epic 11: 过滤浮窗样式 =====
 .column-filter-popover {
-    position: absolute;
+    position: fixed; // 必须用 fixed：JS 用 getBoundingClientRect() 得到视口坐标，fixed 定位坐标系与之匹配，absolute 会在页面滚动时偏移
     z-index: 100003;
     min-width: 220px;
     background: @background-white;

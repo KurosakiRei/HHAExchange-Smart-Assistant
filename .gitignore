@@ -8,7 +8,9 @@ dist
 
 _bmad
 .github/prompts/*
-.github/agents/*
+.agent/skills/*
+.github/skills/*
+.gemini/skills/*
 .github/copilot-instructions.md
 
 Untitled-1.html

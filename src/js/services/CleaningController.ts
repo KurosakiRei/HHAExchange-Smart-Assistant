@@ -505,10 +505,11 @@ export class CleaningController {
     let targetRow: Element | null = null;
     let foundByMatch = false;
 
-    // First try to find by matching Admission ID and Patient Name
+    // ── 第一轮：精确四字段匹配（admissionId + patientName + visitDate + scheduledTime）──
     for (const row of rows) {
       const cells = row.querySelectorAll("td");
-      if (cells.length < 10) continue;
+      // 使用与 PrebillingTableParser 一致的 14 列判断（ACTIONS 列索引 13）
+      if (cells.length < 14) continue;
 
       // Normalize spaces to match PrebillingTableParser logic
       const visitDate = cells[0]?.textContent?.trim().replace(/\s+/g, " ");
@@ -523,49 +524,115 @@ export class CleaningController {
         scheduledTime === task.scheduledTime
       ) {
         console.log(
-          `[CleaningController] Searching Row: Matched ${task.patientName} (${task.admissionId}) on ${task.visitDate} at ${task.scheduledTime}`
+          `[CleaningController] [Match-1] Matched ${task.patientName} (${task.admissionId}) on ${task.visitDate} at ${task.scheduledTime}`
         );
         targetRow = row;
         foundByMatch = true;
-        console.log(
-          `[CleaningController] Found row by match for ${task.patientName} (${task.admissionId})`
-        );
         break;
       }
     }
 
-    // Fallback to rowIndex ONLY if match failed and rowIndex seems plausible (but risky)
+    // ── 第二轮：三字段匹配（忽略 scheduledTime 格式差异）──
+    // 当页面刷新后 scheduledTime 格式（如前导零）可能与解析时不同，此轮作为降级手段
+    if (!foundByMatch) {
+      console.warn(
+        `[CleaningController] 4-field match failed for ${task.patientName} (${task.admissionId}). Trying 3-field match (admissionId + patientName + visitDate)...`
+      );
+      for (const row of rows) {
+        const cells = row.querySelectorAll("td");
+        if (cells.length < 14) continue;
+
+        const visitDate = cells[0]?.textContent?.trim().replace(/\s+/g, " ");
+        const admissionId = cells[1]?.textContent?.trim().replace(/\s+/g, " ");
+        const patientName = cells[2]?.textContent?.trim().replace(/\s+/g, " ");
+
+        if (
+          admissionId === task.admissionId &&
+          patientName?.includes(task.patientName || "") &&
+          visitDate === task.visitDate
+        ) {
+          console.warn(
+            `[CleaningController] [Match-2] Fallback matched by 3 fields (no scheduledTime): ${task.patientName} (${task.admissionId}) on ${task.visitDate}`
+          );
+          targetRow = row;
+          foundByMatch = true;
+          break;
+        }
+      }
+    }
+
+    // ── 第三轮：精确双字段匹配（admissionId + visitDate，无 patientName 子串匹配）──
+    // 进一步兜底：patientName 可能含特殊字符或因大小写不同导致 includes 失败
+    if (!foundByMatch) {
+      console.warn(
+        `[CleaningController] 3-field match also failed. Trying 2-field match (admissionId + visitDate)...`
+      );
+      for (const row of rows) {
+        const cells = row.querySelectorAll("td");
+        if (cells.length < 14) continue;
+
+        const visitDate = cells[0]?.textContent?.trim().replace(/\s+/g, " ");
+        const admissionId = cells[1]?.textContent?.trim().replace(/\s+/g, " ");
+
+        if (admissionId === task.admissionId && visitDate === task.visitDate) {
+          console.warn(
+            `[CleaningController] [Match-3] Fallback matched by admissionId+visitDate only: ${task.patientName} (${task.admissionId}) on ${task.visitDate}`
+          );
+          targetRow = row;
+          foundByMatch = true;
+          break;
+        }
+      }
+    }
+
+    // ── 最终降级：rowIndex + admissionId+visitDate 双字段核实 ──
+    // 仅在以上三轮均失败时使用，且必须通过日期核实防止错配
     if (!foundByMatch && task.rowIndex !== undefined && rows[task.rowIndex]) {
       console.warn(
-        `[CleaningController] Could not find by match, falling back to rowIndex ${task.rowIndex} for ${task.patientName}`
+        `[CleaningController] All field-matches failed. Falling back to rowIndex ${task.rowIndex} with date verification for ${task.patientName}`
       );
-      targetRow = rows[task.rowIndex]; // Tentatively set targetRow to the one at rowIndex
+      const candidateRow = rows[task.rowIndex] as HTMLTableRowElement;
+      const candidateCells = candidateRow.querySelectorAll("td");
+      if (candidateCells.length >= 14) {
+        const candidateAdmId = candidateCells[1]?.textContent?.trim() || "";
+        const candidateDate =
+          candidateCells[0]?.textContent?.trim().replace(/\s+/g, " ") || "";
 
-      // Verify admission ID matches the row
-      let admissionIdStr =
-        (targetRow as HTMLTableRowElement).cells[1]?.textContent?.trim() || "";
-
-      if (!admissionIdStr.includes(task.admissionId)) {
-        // 备用机制：由于记录被清理，有些行可能会消失导致 rowIndex 变化
-        // 在整个表格中搜索包含匹配 admissionId 的行
-        console.warn(
-          `[CleaningController] RowIndex ${task.rowIndex} mismatch. Searching by admission ID ${task.admissionId}...`
-        );
-        const fallbackRow = Array.from(rows).find((r) => {
-          const idStr =
-            (r as HTMLTableRowElement).cells[1]?.textContent?.trim() || "";
-          return idStr.includes(task.admissionId);
-        }) as HTMLTableRowElement | undefined;
-
-        if (fallbackRow) {
-          console.log("[CleaningController] Found correct row by admission ID");
-          targetRow = fallbackRow;
-        } else {
-          console.error(
-            `[CleaningController] RowIndex ${task.rowIndex} mismatch! Expected ${task.admissionId}, found ${admissionIdStr}`
+        if (
+          candidateAdmId.includes(task.admissionId) &&
+          candidateDate === task.visitDate
+        ) {
+          console.warn(
+            `[CleaningController] [Match-4] rowIndex ${task.rowIndex} verified by admissionId+visitDate`
           );
-          // CRITICAL FIX: nullify targetRow so it doesn't click the wrong patient
-          targetRow = null as any;
+          targetRow = candidateRow;
+        } else {
+          // rowIndex 对应行不匹配：在全表中按 admissionId + visitDate 搜索
+          console.warn(
+            `[CleaningController] rowIndex ${task.rowIndex} mismatch. Searching by admissionId+visitDate: ${task.admissionId} / ${task.visitDate}`
+          );
+          const deepFallback = Array.from(rows).find((r) => {
+            const rCells = (r as HTMLTableRowElement).querySelectorAll("td");
+            if (rCells.length < 14) return false;
+            const idStr = rCells[1]?.textContent?.trim() || "";
+            const dateStr =
+              rCells[0]?.textContent?.trim().replace(/\s+/g, " ") || "";
+            return (
+              idStr.includes(task.admissionId) && dateStr === task.visitDate
+            );
+          });
+
+          if (deepFallback) {
+            console.warn(
+              `[CleaningController] [Match-4b] Found by admissionId+visitDate scan`
+            );
+            targetRow = deepFallback;
+          } else {
+            console.error(
+              `[CleaningController] All fallbacks exhausted. Row not found for ${task.patientName} (${task.admissionId}) on ${task.visitDate}`
+            );
+            targetRow = null;
+          }
         }
       }
     }

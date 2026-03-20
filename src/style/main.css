@@ -3392,7 +3392,7 @@
   color: #666666;
 }
 .column-filter-popover {
-  position: absolute;
+  position: fixed;
   z-index: 100003;
   min-width: 220px;
   background: #ffffff;

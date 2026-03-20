@@ -1099,6 +1099,8 @@ export const visitMonitor = async () => {
     if (popTop + popover.offsetHeight > window.innerHeight - 4) {
       popTop = btnRect.top - popover.offsetHeight - 4;
     }
+    // 上边界保护：翻转到按钮上方后仍可能超出视口顶部
+    if (popTop < 4) popTop = 4;
     popover.style.left = `${popLeft}px`;
     popover.style.top = `${popTop}px`;
 

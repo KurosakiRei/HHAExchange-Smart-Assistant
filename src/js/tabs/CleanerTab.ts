@@ -48,6 +48,8 @@ export class CleanerTab extends BaseTab {
   private callEventHandlersSet: boolean = false;
   /** POC 清理器：事件处理器是否已设置 */
   private prebillingEventHandlersSet: boolean = false;
+  /** POC 清理器：是否正在执行分析（防止并发调用竞态条件） */
+  private _prebillingAnalyzing: boolean = false;
 
   async init(): Promise<void> {
     this.initialized = true;
@@ -260,6 +262,15 @@ export class CleanerTab extends BaseTab {
    * Story 2 & 3: 使用 PrebillingTableParser 解析并渲染列表
    */
   private async analyzePrebillingTable(): Promise<void> {
+    // 防止并发调用导致竞态条件：若上一次分析仍在进行，直接跳过本次调用
+    if (this._prebillingAnalyzing) {
+      console.log(
+        "[CleanerTab] analyzePrebillingTable already running, skipping concurrent call"
+      );
+      return;
+    }
+    this._prebillingAnalyzing = true;
+
     const statusEl = document.getElementById("cleaner-analysis-status");
     const recordsContainer = document.getElementById(
       "cleaner-records-container"
@@ -268,24 +279,30 @@ export class CleanerTab extends BaseTab {
 
     try {
       // 记住当前的选中状态 (保存特征: admissionId + visitDate + scheduledTime)
+      // 使用可选链防止 selectedIndices 中存在越界索引时抛出异常
       const selectedFeatures = new Set(
-        Array.from(this.selectedIndices).map((i) => {
-          const r = this.visitRecords[i];
-          return `${r.admissionId}|${r.visitDate}|${r.scheduledTime}`;
-        })
+        Array.from(this.selectedIndices)
+          .map((i) => {
+            const r = this.visitRecords[i];
+            if (!r) return null;
+            return `${r.admissionId}|${r.visitDate}|${r.scheduledTime}`;
+          })
+          .filter((f): f is string => f !== null)
       );
 
       // 调用真实的解析器
       this.visitRecords = await PrebillingTableParser.parseTable();
-      this.selectedIndices.clear();
 
-      // 恢复选中状态
+      // 原子替换选中状态：计算新的 selectedIndices 后整体赋值
+      // 避免 .clear() 后立即恢复期间用户操作引发的竞态条件
+      const newSelectedIndices = new Set<number>();
       this.visitRecords.forEach((record, index) => {
         const feature = `${record.admissionId}|${record.visitDate}|${record.scheduledTime}`;
         if (selectedFeatures.has(feature)) {
-          this.selectedIndices.add(index);
+          newSelectedIndices.add(index);
         }
       });
+      this.selectedIndices = newSelectedIndices;
 
       if (statusEl) statusEl.style.display = "none";
 
@@ -311,6 +328,11 @@ export class CleanerTab extends BaseTab {
       if (statusEl) {
         statusEl.innerHTML = `<span style="color: #e53935;">❌ 分析表格时出错</span>`;
       }
+    } finally {
+      this._prebillingAnalyzing = false;
+      // 更新上次检测到的行数，防止轮询在初始分析完成后立即因 lastTableRowCount=0
+      // 与实际行数不符而触发不必要的重分析
+      this.lastTableRowCount = PrebillingTableParser.getTotalRowCount();
     }
   }
 
