@@ -1,0 +1,1 @@
+﻿fix(tenant): 修复hidProviderURL硬编码PROVIDER2507010000导致Session被踢问题，升级至v3.11.5

@@ -1,0 +1,20 @@
+﻿[
+  {
+    "id": 100,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        { "header": "content-security-policy", "operation": "remove" },
+        {
+          "header": "content-security-policy-report-only",
+          "operation": "remove"
+        }
+      ]
+    },
+    "condition": {
+      "requestDomains": ["outlook.office.com", "outlook.office365.com"],
+      "resourceTypes": ["main_frame", "sub_frame"]
+    }
+  }
+]

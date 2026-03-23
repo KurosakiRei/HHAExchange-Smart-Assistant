@@ -12,6 +12,15 @@
     "browsingData",
     "declarativeNetRequest"
   ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "outlook_csp_bypass",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
   "background": {
     "service_worker": "service_worker.js"
   },
