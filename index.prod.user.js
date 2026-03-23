@@ -11554,6 +11554,10 @@ class CleanerTab extends BaseTab {
     renderContent() {
         if (!this.container)
             return;
+        // 清空容器前，重置分析锁：旧 DOM 已被销毁，任何飞行中的分析 Promise
+        // 持有的 statusEl/recordsContainer 引用将失效（detached），
+        // 不能阻塞新一轮的分析调用。
+        this._prebillingAnalyzing = false;
         // 清空容器
         this.container.innerHTML = "";
         switch (this.currentPageType) {
