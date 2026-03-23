@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.11.4
+// @version             3.11.5
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -5330,7 +5330,9 @@ const visitMonitor = async () => {
         formData.append("ctl00$ContentPlaceHolder1$uxHidFromCallDashBoard", "1");
         formData.append("ctl00$ContentPlaceHolder1$hdnFromTime", "");
         formData.append("ctl00$ContentPlaceHolder1$hdnToTime", "");
-        formData.append("ctl00$ContentPlaceHolder1$hidProviderURL", "https://app.hhaexchange.com/PROVIDER2507010000/caregiver-availability");
+        formData.append("ctl00$ContentPlaceHolder1$hidProviderURL", 
+        // 动态推导 PROVIDER URL：与 ENT 共享相同的版本号（PROVIDER2603010000 等同于 ENT2603010000）
+        `${TENANT_BASE_URL.replace("https://app.hhaexchange.com/ENT", "https://app.hhaexchange.com/PROVIDER")}/caregiver-availability`);
         formData.append("ctl00$ContentPlaceHolder1$hdnEditSkilledSchedule", "True");
         formData.append("ctl00$ContentPlaceHolder1$hdnEditNonSkillSchedule", "True");
         formData.append("ctl00$ContentPlaceHolder1$hdnEditPayrollInfoAfterPayroll", "False");
@@ -15236,7 +15238,7 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.11.4"};
+const package_namespaceObject = {"rE":"3.11.5"};
 ;// ./src/index.ts
 
 
