@@ -2391,7 +2391,11 @@ export const visitMonitor = async () => {
     formData.append("ctl00$ContentPlaceHolder1$hdnToTime", "");
     formData.append(
       "ctl00$ContentPlaceHolder1$hidProviderURL",
-      "https://app.hhaexchange.com/PROVIDER2507010000/caregiver-availability"
+      // 动态推导 PROVIDER URL：与 ENT 共享相同的版本号（PROVIDER2603010000 等同于 ENT2603010000）
+      `${TENANT_BASE_URL.replace(
+        "https://app.hhaexchange.com/ENT",
+        "https://app.hhaexchange.com/PROVIDER"
+      )}/caregiver-availability`
     );
     formData.append("ctl00$ContentPlaceHolder1$hdnEditSkilledSchedule", "True");
     formData.append(
