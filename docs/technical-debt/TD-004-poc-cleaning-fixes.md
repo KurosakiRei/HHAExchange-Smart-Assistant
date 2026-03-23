@@ -1,9 +1,9 @@
 ---
 id: TD-004
 title: POC Cleaning 状态不同步与任务匹配不准问题
-status: "Fixed (v2 - 2026-03-17)"
+status: "Fixed (v3 - 2026-03-23)"
 created: 2026-03-17
-fixed: 2026-03-17
+fixed: 2026-03-23
 severity: High
 components:
   - CleanerTab.ts
@@ -89,3 +89,44 @@ Prebilling Report / POC Cleaning（POC 自动清理功能）在自动执行过�
 ## 残留边缘情况（已知、低风险）
 
 同一病人、同一日期、不同时间段存在两次访问，且 `scheduledTime` 在页面重载后格式发生变化时，Match-2 会取同日第一行。此问题与本次高危 Bug 性质不同（需两个条件同时满足），风险极低，后续可通过规范化时间格式字符串后再比对来彻底消除。
+
+---
+
+## Bug 3（v3 后续, 2026-03-23）：`_prebillingAnalyzing` 锁在 DOM 重建后未重置导致清理器永久停留在「正在分析表格」
+
+### 现象
+
+在 Prebilling Report Internal 页面打开面板（点击铃铛），POC 清理器始终显示「⏳ 正在分析表格...」，记录列表（`cleaner-records-container`）保持 `display: none`，即使表格数据已完整加载。手动点击 🔄 刷新按钮后恢复正常。
+
+### 根本原因
+
+这是 TD-004 Bug 1 修复的二阶问题——Bug 1 引入的 `_prebillingAnalyzing` 锁与 `onActivate()` 的 DOM 重建路径之间存在竞态：
+
+1. `initializeDefaultTab()` 在页面初始化时渲染清理器 tab → 设置 `_prebillingAnalyzing = true` → 通过 `requestIdleCallback` 异步启动解析（此时 Prebilling AJAX 数据仍在加载）
+2. 用户打开面板 → `switchTab()` 发现容器已有子元素，跳过 `tab.render()` → 调用 `onActivate()` → `renderContent()` 执行 **`this.container.innerHTML = ""`** 销毁全部 DOM
+3. 旧的 DOM 被销毁，新的 spinner 被渲染 → `analyzePrebillingTable()` 再次被调用 → **`_prebillingAnalyzing` 仍为 `true`**（由步骤 1 设置），新调用直接返回
+4. 步骤 1 的 `requestIdleCallback` 最终触发 → 解析完成 → 试图 `statusEl.style.display = "none"` → **`statusEl` 是已 detached 的旧元素**，新 spinner 不受影响 → `finally` 块将锁释放并更新 `lastTableRowCount`
+5. 轮询检测到行数未变化 → 不触发重分析 → **清理器永久卡在 spinner 状态**
+
+### 修复（v3）
+
+在 `renderContent()` 清空容器前，主动重置 `_prebillingAnalyzing = false`：
+
+```typescript
+private renderContent(): void {
+  if (!this.container) return;
+
+  // 清空容器前，重置分析锁：旧 DOM 已被销毁，任何飞行中的分析 Promise
+  // 持有的 statusEl/recordsContainer 引用将失效（detached），
+  // 不能阻塞新一轮的分析调用。
+  this._prebillingAnalyzing = false;
+
+  // 清空容器
+  this.container.innerHTML = "";
+  ...
+}
+```
+
+**根因路径**：`initializeDefaultTab()` → `_prebillingAnalyzing=true` → `onActivate()` → `renderContent()` → `innerHTML=""` 销毁 DOM → 新调用被旧锁阻塞 → 旧 Promise 操作 detached 元素 → 永久卡住
+
+**修复 commit**：`b0db15f`（2026-03-23）
