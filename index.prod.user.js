@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.11.5
+// @version             3.11.6
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -10819,10 +10819,38 @@ class CleaningController {
                 if (!isOnExpectedPage) {
                     return; // Wrong page — skip this polling tick entirely
                 }
-                // Prevent launching the next task if the modal iframe is still open
-                const isModalOpen = Array.from(document.querySelectorAll('.reveal-overlay, [id*="PopWin"], .hhax-modal')).some((el) => window.getComputedStyle(el).display !== "none");
+                // Prevent launching the next task if a meaningful modal is still open.
+                // Empty-content modals (e.g. pre-created reveal containers) are excluded
+                // to avoid permanent false-positive blocking.
+                const visibleModals = Array.from(document.querySelectorAll('.reveal-overlay, [id*="PopWin"], .hhax-modal')).filter((el) => window.getComputedStyle(el).display !== "none" &&
+                    el.innerHTML.trim().length > 10);
+                // Self-healing: if #confirmDelete is stuck open (callback threw an exception
+                // so its close() was never called), force-close it after 5 seconds.
+                const confirmDeleteEl = document.getElementById("confirmDelete");
+                if (confirmDeleteEl &&
+                    window.getComputedStyle(confirmDeleteEl).display !== "none") {
+                    if (this.confirmDeleteStuckSince === 0) {
+                        this.confirmDeleteStuckSince = Date.now();
+                    }
+                    else if (Date.now() - this.confirmDeleteStuckSince > 5000) {
+                        console.warn("[CleaningController] #confirmDelete stuck open >5s, force-closing to unblock polling.");
+                        confirmDeleteEl.style.display = "none";
+                        confirmDeleteEl.setAttribute("aria-hidden", "true");
+                        // Also close the backing overlay
+                        document.querySelectorAll(".reveal-overlay").forEach((ov) => {
+                            if (window.getComputedStyle(ov).display !== "none") {
+                                ov.style.display = "none";
+                            }
+                        });
+                        this.confirmDeleteStuckSince = 0;
+                    }
+                }
+                else {
+                    this.confirmDeleteStuckSince = 0;
+                }
+                const isModalOpen = visibleModals.length > 0;
                 if (isModalOpen) {
-                    return; // Wait for the iframe modal to close
+                    return; // Wait for the modal to close
                 }
                 if (queue.currentIndex > this.lastStartedIndex) {
                     console.log(`[CleaningController] Polling detected queue advancement (${this.lastStartedIndex} -> ${queue.currentIndex}). Triggering next task...`);
@@ -11201,11 +11229,58 @@ class CleaningController {
         // 页面会重新加载，在详情页会检测到待处理任务并执行 POCResolver
     }
     /**
+     * 确保 CallMaintenance_ns AjaxPro 代理已正确初始化。
+     * 页面首次加载时 ashx 可能因 session/timing 问题执行失败，
+     * 导致 CallMaintenance_ns 为空对象或 undefined。
+     *
+     * 重要：检测使用 unsafeWindow（页面真实 window），修复使用 GM.addElement 将
+     * script 标签注入到页面上下文执行——这样可以绕过 Tampermonkey sandbox 限制和
+     * 页面 CSP，确保变量被注册到页面的 window 上，供页面原生 RejectCall() 使用。
+     */
+    static async ensureCallMaintenanceNs() {
+        // 必须检查 unsafeWindow（页面真实 window），而非 sandbox 代理的 window
+        const pageWin = unsafeWindow;
+        const ns = pageWin["CallMaintenance_ns"];
+        if (ns && typeof ns["RejectCall"] === "function") {
+            return; // 已正确初始化
+        }
+        console.warn("[CleaningController] CallMaintenance_ns not initialized, re-injecting via GM.addElement...");
+        // 动态获取 ashx URL，从页面上已有的 script 标签中提取，避免硬编码租户路径
+        const existingAshxScript = Array.from(document.scripts).find((s) => s.src.includes("CallMaintenance_ns,HHAExchangeUI.ashx"));
+        const ashxUrl = existingAshxScript?.src ||
+            (() => {
+                const m = window.location.pathname.match(/\/(ENT\d+)\//);
+                return m
+                    ? `/${m[1]}/ajaxpro/CallMaintenance_ns,HHAExchangeUI.ashx`
+                    : "/ajaxpro/CallMaintenance_ns,HHAExchangeUI.ashx";
+            })();
+        // 使用 GM.addElement 注入 <script src> 元素：
+        // - 在页面真实上下文（而非 userscript sandbox）中执行
+        // - Tampermonkey 的 privileged context 可绕过页面 CSP
+        // - 加 _r 参数防止浏览器 script 缓存阻止重新执行
+        await new Promise((resolve, reject) => {
+            const cacheBustedUrl = ashxUrl.split("?")[0] + "?_r=" + Date.now();
+            const script = GM.addElement(document.head, "script", {
+                src: cacheBustedUrl,
+                type: "text/javascript",
+            });
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error(`Failed to load ashx from: ${cacheBustedUrl}`));
+        });
+        const nsAfter = pageWin["CallMaintenance_ns"];
+        if (!nsAfter || typeof nsAfter["RejectCall"] !== "function") {
+            throw new Error("CallMaintenance_ns.RejectCall still not available after GM.addElement re-injection");
+        }
+        console.log("[CleaningController] CallMaintenance_ns re-injected successfully via GM.addElement.");
+    }
+    /**
      * 执行 Call Reject
      * 点击 Reject 按钮，然后处理确认对话框
      */
     static async executeCallReject(task) {
         console.log("[CleaningController] Executing Call reject for:", task.caregiverName);
+        // 确保 AjaxPro 代理已初始化，避免 RejectCall callback 抛出 ReferenceError
+        await this.ensureCallMaintenanceNs();
         // 查找 Call Maintenance 表格
         const table = document.querySelector("#ctl00_ContentPlaceHolder1_uxGvSearch");
         if (!table) {
@@ -11264,9 +11339,18 @@ class CleaningController {
         let okButton = null;
         for (const selector of selectors) {
             const btn = document.querySelector(selector);
-            if (btn && btn.offsetParent !== null) {
-                okButton = btn;
-                break;
+            // Use computed display instead of offsetParent — Foundation reveal modals
+            // can have offsetParent===null even when visually open (position:fixed ancestry).
+            if (btn) {
+                // Walk up to the modal container to check if it is actually visible
+                const modal = btn.closest(".hhax-modal, .reveal");
+                const isVisible = modal
+                    ? window.getComputedStyle(modal).display !== "none"
+                    : window.getComputedStyle(btn).display !== "none";
+                if (isVisible) {
+                    okButton = btn;
+                    break;
+                }
             }
         }
         if (okButton) {
@@ -11291,7 +11375,24 @@ class CleaningController {
             setTimeout(() => this.handleCallRejectConfirmation(retryCount + 1), 300);
         }
         else {
-            console.log("[CleaningController] No Call Reject confirmation dialog found (may not be needed)");
+            // Confirmation dialog never appeared — the reject may have silently succeeded
+            // (ASP.NET UpdatePanel sometimes skips the dialog) or the Reject click had no
+            // effect. Either way, we MUST advance the index so the queue is not frozen.
+            console.warn("[CleaningController] Confirmation dialog not found after max retries. Advancing queue to prevent freeze.");
+            try {
+                const queue = GM_getValue(CLEANING_QUEUE_KEY, null);
+                if (queue && queue.status === "IN_PROGRESS") {
+                    queue.tasks[queue.currentIndex].completed = true;
+                    queue.tasks[queue.currentIndex].error =
+                        "Confirmation dialog not found — may have silently succeeded";
+                    queue.currentIndex++;
+                    GM_setValue(CLEANING_QUEUE_KEY, queue);
+                    console.log(`[CleaningController] Queue advanced to ${queue.currentIndex}/${queue.tasks.length} after dialog timeout`);
+                }
+            }
+            catch (e) {
+                console.error("[CleaningController] Failed to advance queue after dialog timeout:", e);
+            }
         }
     }
     /**
@@ -11380,6 +11481,8 @@ class CleaningController {
 }
 CleaningController.lastStartedIndex = -1;
 CleaningController.pollingTimer = 0;
+// Timestamp when #confirmDelete was first observed stuck open
+CleaningController.confirmDeleteStuckSince = 0;
 
 ;// ./src/js/tabs/CleanerTab.ts
 
@@ -15238,7 +15341,7 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.11.5"};
+const package_namespaceObject = {"rE":"3.11.6"};
 ;// ./src/index.ts
 
 
