@@ -107,16 +107,21 @@ function getAideName(ctx: Document = document): string {
   // 2 Windows: 0-topWindow, 1-popupWindow
   let topWidow = window.parent;
 
+  // 0. Direct read from popup hidden field (NonskilledVisitInfo_ns popup, Call/Patient page)
+  const hdnCGName = (ctx.querySelector("#hdnCaregiverName") as HTMLInputElement)
+    ?.value;
+  if (hdnCGName) return hdnCGName;
+
   // 1. On patient page
   if (!flag) {
-    let aideLinks = topWidow[0].document.querySelectorAll("#aidelink");
+    let aideLinks = topWidow[0]?.document?.querySelectorAll("#aidelink") ?? [];
     for (const aideLink of aideLinks) {
       if (
         aideLink
           .getAttribute("onClick")
-          .includes($(visitDateSelector, ctx).text())
+          ?.includes($(visitDateSelector, ctx).text())
       ) {
-        aideName = aideLink.innerHTML.trim();
+        aideName = (aideLink as HTMLElement).innerHTML.trim();
         flag = true;
         break;
       }
@@ -136,39 +141,25 @@ function getAideName(ctx: Document = document): string {
 
   // 3. On CHHA Patient page
   if (!flag) {
-    let hhaxLinks = topWidow[0].document.querySelectorAll(".hhax-link");
-    // let hhaxLinks = searchElementInAllFrames(window.top,".hhax-link");
-    // console.log(hhaxLinks)
+    let hhaxLinks = topWidow[0]?.document?.querySelectorAll(".hhax-link") ?? [];
     for (const hhaxLink of hhaxLinks) {
       if (
         hhaxLink
           .getAttribute("onClick")
-          .includes($(visitDateSelector, ctx).text())
+          ?.includes($(visitDateSelector, ctx).text())
       ) {
-        // aideName = hhaxLink.innerHTML.trim();
-        // console.log(hhaxLink)
-        // console.log($(hhaxLink).parent())
-        aideName = $(hhaxLink)
+        const aideProfileLink = $(hhaxLink)
           .parent()
-          .find("a[onclick^='OpenAideProfileMax'")[0]
-          .innerText.trim();
-        flag = true;
-        break;
+          .find("a[onclick^='OpenAideProfileMax']")[0] as
+          | HTMLElement
+          | undefined;
+        if (aideProfileLink) {
+          aideName = aideProfileLink.innerText.trim();
+          flag = true;
+          break;
+        }
       }
     }
-
-    // console.log(hhaxLinks)
-    /*     for (const hhaxLink of hhaxLinks) {
-          console.log(hhaxLink)
-              if (
-            !flag &&
-            aideLink.getAttribute("onClick").includes($(visitDateSelector).text())
-          ) {
-            aideName = aideLink.innerHTML.trim();
-            flag = true;
-            break;
-          }
-        } */
   }
 
   // 4. On CHHA Prebilling page
@@ -177,34 +168,28 @@ function getAideName(ctx: Document = document): string {
       window.top,
       prebillingSearchResultsSelector
     );
-    // console.log(table)
-    let list = table.querySelectorAll("tbody > tr");
-    for (const visit of list) {
-      let date = visit.querySelector("td:nth-child(1)");
-      let id = visit.querySelector("td:nth-child(2) > a");
-      let time = visit.querySelector("td:nth-child(9)");
-      //ucVisitHeader_lblAdmissionID
-      //ucVisitHeader_lblVisitDate
-      //lblScheduledTime
-      // console.log($("#ucVisitHeader_lblAdmissionID").text())
-      // console.log($("#ucVisitHeader_lblVisitDate").text())
-      // console.log($("#lblScheduledTime").text())
-
-      if (
-        (date as HTMLElement)?.innerText ==
-          $(prebillingVisitDateSelector, ctx).text() &&
-        (id as HTMLElement).innerText ==
-          $(prebillingVisitAdmissionIdSelector, ctx).text() &&
-        (time as HTMLElement).innerText ==
-          $(prebillingVisitScheduledTimeSelector, ctx).text()
-      ) {
-        aideName = (
-          visit.querySelector("td:nth-child(6) > a") as HTMLElement
-        ).innerText
-          .split("\n")[0]
-          .trim();
-        flag = true;
-        break;
+    if (table) {
+      let list = table.querySelectorAll("tbody > tr");
+      for (const visit of list) {
+        let date = visit.querySelector("td:nth-child(1)");
+        let id = visit.querySelector("td:nth-child(2) > a");
+        let time = visit.querySelector("td:nth-child(9)");
+        if (
+          (date as HTMLElement)?.innerText ==
+            $(prebillingVisitDateSelector, ctx).text() &&
+          (id as HTMLElement).innerText ==
+            $(prebillingVisitAdmissionIdSelector, ctx).text() &&
+          (time as HTMLElement).innerText ==
+            $(prebillingVisitScheduledTimeSelector, ctx).text()
+        ) {
+          aideName = (
+            visit.querySelector("td:nth-child(6) > a") as HTMLElement
+          ).innerText
+            .split("\n")[0]
+            .trim();
+          flag = true;
+          break;
+        }
       }
     }
   }
