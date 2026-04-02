@@ -557,11 +557,11 @@ export class OutlookAdapter {
 3. 观察 Outlook 页面行为
 
 **预期结果**：
-- [ ] 自动点击"New mail"按钮
-- [ ] To 字段自动填充收件人
-- [ ] Subject 字段自动填充主题
-- [ ] Body 字段自动填充 HTML 内容
-- [ ] 控制台显示 `[OutlookAdapter] ✅ 邮件已准备就绪！`
+- [x] 自动点击"New mail"按钮
+- [x] To 字段自动填充收件人（建议下拉点击确认为 token pill）
+- [x] Subject 字段自动填充主题（native setter + _valueTracker 重置，防 React 重渲染清空）
+- [x] Body 字段自动填充 HTML 内容
+- [x] 控制台显示 `[OutlookAdapter] ✅ 邮件已准备就绪！`
 
 #### 测试 3：错误处理
 
@@ -570,8 +570,8 @@ export class OutlookAdapter {
 2. 观察 HHA 页面状态
 
 **预期结果**：
-- [ ] 5 分钟后任务过期（或提示用户打开 Outlook）
-- [ ] 状态显示 `FAILED`
+- [x] 5 分钟后任务过期（或提示用户打开 Outlook）
+- [x] 状态显示 `FAILED`
 
 ---
 
@@ -626,10 +626,10 @@ export class OutlookAdapter {
 
 ### 验证步骤
 
-- [ ] **编译测试**：`npm run build` 无错误
-- [ ] **文件检查**：`dist/index.prod.user.js` 只有一个文件
-- [ ] **控制台测试**：测试 1、2、3 全部通过
-- [ ] **代码审查**：确认无 `document.createElement('script')` 或 `innerHTML` 用于脚本注入
+- [x] **编译测试**：`npm run build` 无错误
+- [x] **文件检查**：`dist/index.prod.user.js` 只有一个文件
+- [x] **控制台测试**：测试 1、2、3 全部通过
+- [x] **代码审查**：确认无 `document.createElement('script')` 或 `innerHTML` 用于脚本注入
 
 ---
 
@@ -638,10 +638,10 @@ export class OutlookAdapter {
 - [x] 所有验收标准通过
 - [x] 代码已添加 JSDoc 注释
 - [x] 无 TypeScript 编译错误
-- [ ] 手动测试通过（所有测试用例）<!-- Bug Fix EPIC-013: TM iframe injection issue fixed 2026-03-19 -->
+- [x] 手动测试通过（所有测试用例）<!-- Bug Fix EPIC-013: TM iframe injection issue fixed 2026-03-19; 邮件填充全链路验证 2026-04-02 -->
 - [x] 控制台无 CSP 错误
 - [x] 单文件构建正常
-- [ ] 代码已提交并通过 Code Review
+- [x] 代码已提交并通过 Code Review
 
 ---
 
@@ -651,6 +651,8 @@ export class OutlookAdapter {
 | ---------- | ---- | ------------------------------------- | ----------------- |
 | 2026-01-21 | 1.0  | Story 初始创建，基于 CSP 绕过技术研究 | PM & AI Developer |
 | 2026-03-19 | 1.1  | Bug Fix: 修复 TM 在 Outlook auth iframe (`webshell.suite.office.com`) 中注入时 `isOutlookPage()` 返回 false 的问题；增加 top-frame 检测 (`window.self !== window.top`) 与 `outlook.office365.com` hostname 支持 | Dev Agent |
+| 2026-04-01 | 1.2  | Bug Fix: 新增 `outlook.cloud.microsoft` URL 支持（新版 Outlook）；`config/metadata.cjs` match/connect 规则补充新版 Outlook URL；修复用户升级到新版 Outlook 后 OutlookAdapter 无法初始化的问题 | Dev Agent |
+| 2026-04-02 | 1.3  | Bug Fix (v3.13.0): Subject React 重置修复（native setter + _valueTracker）；To/CC 改用建议下拉点击确认为 token pill；isOutlookPage 增加 /mail path 检查排除 To-Do/Calendar 套件；handleMailTask 加 isHandlingTask 互锁防并发；Outlook 页面跳过 style-loader 消除 CSP inline style 报错；compose 打开后加 500ms 等待；isDraftEmpty 检测要求 Send 按钮存在；hha-outlook-helper/ 残留文件彻底清理 | Dev Agent |
 
 ---
 

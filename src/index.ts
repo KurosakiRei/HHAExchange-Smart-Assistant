@@ -1,4 +1,11 @@
-import "./style/main.less";
+// Only inject styles on HHA pages — Outlook's strict CSP blocks style-loader injection
+if (
+  !window.location.hostname.includes("outlook") &&
+  window.location.hostname !== "webshell.suite.office.com"
+) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require("./style/main.less");
+}
 import {
   saveButtonSelector,
   documentManagementSaveButtonSelector,
@@ -33,6 +40,7 @@ import { OutlookAdapter } from "./js/services/OutlookAdapter";
 import { TinyMCEBundler } from "./js/services/TinyMCEBundler";
 import { initDocumentDropzone } from "./js/services/DocumentDropzone";
 import { initScheduledVisitsConfigCardUI } from "./js/ScheduledVisitsFilter";
+
 import { version } from "../package.json";
 
 async function main() {

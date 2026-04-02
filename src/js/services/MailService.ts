@@ -287,9 +287,25 @@ export class MailService {
 
   /**
    * 检查是否在 Outlook 页面
+   * - 经典版：outlook.office.com
+   * - 新版：outlook.cloud.microsoft（顶层页面，包含完整邮件 UI）
+   * - webshell.suite.office.com/iframe/TokenFact 是 SSO token exchange frame，没有邮件 UI，跳过
    */
   static isOutlookPage(): boolean {
-    return window.location.hostname === "outlook.office.com";
+    const hostname = window.location.hostname;
+    const pathname = window.location.pathname;
+    if (hostname === "outlook.office.com" && pathname.startsWith("/mail"))
+      return true;
+    // /mail/* = 邮件收件箱/正文; /host/* = To-Do、Calendar 等 M365 套件，没有邮件 Compose UI
+    if (hostname === "outlook.cloud.microsoft" && pathname.startsWith("/mail"))
+      return true;
+    // webshell 的 /iframe/* 路径是 auth helper frame（TokenFact 等），没有邮件 UI
+    if (
+      hostname === "webshell.suite.office.com" &&
+      !pathname.startsWith("/iframe/")
+    )
+      return true;
+    return false;
   }
 
   /**

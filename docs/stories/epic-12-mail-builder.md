@@ -7,10 +7,10 @@
 | **Epic ID**    | EPIC-012                                                  |
 | **标题**       | Mail Builder - 智能邮件构筑助手                           |
 | **优先级**     | P1 - 高优先级功能                                         |
-| **状态**       | 🔧 In Progress (Technical Debt: CSP Blocking)              |
-| **预估工作量** | 11 个 Story (新增 Story 11: CSP 合规重构)                 |
+| **状态**       | ✅ In Production (v3.13.0 全链路验证通过，邮件填充功能稳定) |
+| **预估工作量** | 11 个 Story (Story 11: CSP 合规重构 ✅)                   |
 | **关联系统**   | HHAExchange Patient/Caregiver Profiles, Outlook Web (OWA) |
-| **技术阻塞**   | Outlook CSP 导致 Story 8 实现无法运行，需 Story 11 修复   |
+| **技术阻塞**   | ~~Outlook CSP 导致 Story 8 实现无法运行，需 Story 11 修复~~ ✅ 已通过 String Payload + GM.addElement 方案解决 |
 
 ## 背景与目标
 

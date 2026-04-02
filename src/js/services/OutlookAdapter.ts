@@ -52,6 +52,7 @@ declare global {
 export class OutlookAdapter {
   private static isListening: boolean = false;
   private static controllerInjected: boolean = false;
+  private static isHandlingTask: boolean = false;
   private static statusToast: HTMLElement | null = null;
 
   /**
@@ -145,6 +146,15 @@ export class OutlookAdapter {
     task: MailTask,
     taskId: string
   ): Promise<void> {
+    if (this.isHandlingTask) {
+      console.warn(
+        "[OutlookAdapter] Already handling a task, dropping duplicate:",
+        taskId
+      );
+      MailService.reportFailed(taskId, "Controller busy with another task");
+      return;
+    }
+    this.isHandlingTask = true;
     try {
       this.showStatus("📧 正在打开新邮件...");
 
@@ -210,6 +220,8 @@ export class OutlookAdapter {
 
       // 5秒后隐藏状态
       setTimeout(() => this.hideStatus(), 5000);
+    } finally {
+      this.isHandlingTask = false;
     }
   }
 

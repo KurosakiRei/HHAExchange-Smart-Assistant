@@ -982,6 +982,13 @@ export class MailBuilderTab extends BaseTab {
 
   /**
    * 发送到 Outlook
+   * 将邮件任务写入 GM 共享存储，Outlook 页面上运行的 OutlookAdapter 会通过
+   * MailService 轮询拾取任务，并调用注入的 HHAOutlookController 填写邮件。
+   *
+   * 依赖：
+   * - Outlook 页面已打开（否则轮询无法运行）
+   * - TM @match 覆盖 outlook.cloud.microsoft/*
+   * - "Bypass Outlook Trusted Types for HHA" 脚本也匹配该域（document-start）
    */
   private sendToOutlook(templateId: string): void {
     const template = this.findTemplateById(templateId);
@@ -990,33 +997,15 @@ export class MailBuilderTab extends BaseTab {
     // 使用 TemplateEngine 进行变量替换
     const rendered = TemplateEngine.render(template, this.profileData);
 
-    // 通过 MailService 发送任务
     const taskId = MailService.sendMailTask({
-      to: rendered.to,
+      to: rendered.to || "",
       cc: rendered.cc,
-      subject: rendered.subject,
-      body: rendered.body,
+      subject: rendered.subject || "",
+      body: rendered.body || "",
     });
 
-    this.showToast("📧 已发送到 Outlook，请切换到 Outlook 标签页");
-    console.log("[MailBuilderTab] Sent mail task:", taskId);
-
-    // 监听任务状态
-    const statusHandler = (
-      payload: import("../services/MailService").MailTaskPayload
-    ) => {
-      if (payload.id === taskId) {
-        if (payload.status === "COMPLETED") {
-          this.showToast("✅ Outlook 已准备好邮件");
-          MailService.offStatusChange(statusHandler);
-        } else if (payload.status === "FAILED") {
-          this.showToast(`❌ Outlook 错误: ${payload.error}`);
-          MailService.offStatusChange(statusHandler);
-        }
-      }
-    };
-
-    MailService.onStatusChange(statusHandler);
+    console.log("[MailBuilderTab] Mail task queued:", taskId, rendered.subject);
+    this.showToast("📧 正在准备 Outlook...");
   }
 
   /**
