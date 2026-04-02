@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.11.7
+// @version             3.13.0
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -17,6 +17,8 @@
 // @match               *://outlook.office.com/mail/*
 // @match               https://outlook.office.com/mail/*
 // @match               *://*.office.com/*
+// @match               *://outlook.cloud.microsoft/*
+// @match               https://outlook.cloud.microsoft/*
 // @require             https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js
 // @grant               GM.xmlHttpRequest
 // @grant               GM_openInTab
@@ -27,6 +29,7 @@
 // @connect             app.hhaexchange.com
 // @connect             reports.hhaexchange.com
 // @connect             outlook.office.com
+// @connect             outlook.cloud.microsoft
 // @connect             unpkg.com
 // @run-at              document-idle
 // ==/UserScript==
@@ -215,6 +218,57 @@ module.exports = function (url, options) {
 module.exports = function (i) {
   return i[1];
 };
+
+/***/ }),
+
+/***/ "./src/style/main.less":
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./node_modules/style-loader/dist/runtime/styleDomAPI.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("./node_modules/style-loader/dist/runtime/insertBySelector.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("./node_modules/style-loader/dist/runtime/insertStyleElement.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("./node_modules/style-loader/dist/runtime/styleTagTransform.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_main_less__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__("./node_modules/css-loader/dist/cjs.js!./node_modules/less-loader/dist/cjs.js!./src/style/main.less");
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
+var options = {};
+
+options.styleTagTransform = (_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default());
+options.setAttributes = (_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default());
+
+      options.insert = _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default().bind(null, "head");
+    
+options.domAPI = (_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default());
+options.insertStyleElement = (_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default());
+
+var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_main_less__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A, options);
+
+
+
+
+       /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_main_less__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A && _node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_main_less__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A.locals ? _node_modules_css_loader_dist_cjs_js_node_modules_less_loader_dist_cjs_js_main_less__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A.locals : undefined);
+
 
 /***/ }),
 
@@ -572,6 +626,17 @@ module.exports = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\"http://www.w3.
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
 /******/ 	})();
 /******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/jsonp chunk loading */
 /******/ 	(() => {
 /******/ 		__webpack_require__.b = document.baseURI || self.location.href;
@@ -605,55 +670,6 @@ module.exports = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\"http://www.w3.
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js
-var injectStylesIntoStyleTag = __webpack_require__("./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
-var injectStylesIntoStyleTag_default = /*#__PURE__*/__webpack_require__.n(injectStylesIntoStyleTag);
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/styleDomAPI.js
-var styleDomAPI = __webpack_require__("./node_modules/style-loader/dist/runtime/styleDomAPI.js");
-var styleDomAPI_default = /*#__PURE__*/__webpack_require__.n(styleDomAPI);
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/insertBySelector.js
-var insertBySelector = __webpack_require__("./node_modules/style-loader/dist/runtime/insertBySelector.js");
-var insertBySelector_default = /*#__PURE__*/__webpack_require__.n(insertBySelector);
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js
-var setAttributesWithoutAttributes = __webpack_require__("./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js");
-var setAttributesWithoutAttributes_default = /*#__PURE__*/__webpack_require__.n(setAttributesWithoutAttributes);
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/insertStyleElement.js
-var insertStyleElement = __webpack_require__("./node_modules/style-loader/dist/runtime/insertStyleElement.js");
-var insertStyleElement_default = /*#__PURE__*/__webpack_require__.n(insertStyleElement);
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/styleTagTransform.js
-var styleTagTransform = __webpack_require__("./node_modules/style-loader/dist/runtime/styleTagTransform.js");
-var styleTagTransform_default = /*#__PURE__*/__webpack_require__.n(styleTagTransform);
-// EXTERNAL MODULE: ./node_modules/css-loader/dist/cjs.js!./node_modules/less-loader/dist/cjs.js!./src/style/main.less
-var main = __webpack_require__("./node_modules/css-loader/dist/cjs.js!./node_modules/less-loader/dist/cjs.js!./src/style/main.less");
-;// ./src/style/main.less
-
-      
-      
-      
-      
-      
-      
-      
-      
-      
-
-var options = {};
-
-options.styleTagTransform = (styleTagTransform_default());
-options.setAttributes = (setAttributesWithoutAttributes_default());
-
-      options.insert = insertBySelector_default().bind(null, "head");
-    
-options.domAPI = (styleDomAPI_default());
-options.insertStyleElement = (insertStyleElement_default());
-
-var update = injectStylesIntoStyleTag_default()(main/* default */.A, options);
-
-
-
-
-       /* harmony default export */ const style_main = (main/* default */.A && main/* default */.A.locals ? main/* default */.A.locals : undefined);
 
 ;// ./src/utils/templates&const.ts
 const saveButtonSelector = "#uxBtnSaveVisit";
@@ -1306,6 +1322,24 @@ async function messageHandler(reason, notes) {
     $(newMessageNoteSelector)[0].dispatchEvent(new Event("change"));
 }
 
+// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js
+var injectStylesIntoStyleTag = __webpack_require__("./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+var injectStylesIntoStyleTag_default = /*#__PURE__*/__webpack_require__.n(injectStylesIntoStyleTag);
+// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/styleDomAPI.js
+var styleDomAPI = __webpack_require__("./node_modules/style-loader/dist/runtime/styleDomAPI.js");
+var styleDomAPI_default = /*#__PURE__*/__webpack_require__.n(styleDomAPI);
+// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/insertBySelector.js
+var insertBySelector = __webpack_require__("./node_modules/style-loader/dist/runtime/insertBySelector.js");
+var insertBySelector_default = /*#__PURE__*/__webpack_require__.n(insertBySelector);
+// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js
+var setAttributesWithoutAttributes = __webpack_require__("./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js");
+var setAttributesWithoutAttributes_default = /*#__PURE__*/__webpack_require__.n(setAttributesWithoutAttributes);
+// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/insertStyleElement.js
+var insertStyleElement = __webpack_require__("./node_modules/style-loader/dist/runtime/insertStyleElement.js");
+var insertStyleElement_default = /*#__PURE__*/__webpack_require__.n(insertStyleElement);
+// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/styleTagTransform.js
+var styleTagTransform = __webpack_require__("./node_modules/style-loader/dist/runtime/styleTagTransform.js");
+var styleTagTransform_default = /*#__PURE__*/__webpack_require__.n(styleTagTransform);
 // EXTERNAL MODULE: ./node_modules/css-loader/dist/cjs.js!./node_modules/less-loader/dist/cjs.js!./src/style/prebilling-config-card.less
 var prebilling_config_card = __webpack_require__("./node_modules/css-loader/dist/cjs.js!./node_modules/less-loader/dist/cjs.js!./src/style/prebilling-config-card.less");
 ;// ./src/style/prebilling-config-card.less
@@ -1320,17 +1354,17 @@ var prebilling_config_card = __webpack_require__("./node_modules/css-loader/dist
       
       
 
-var prebilling_config_card_options = {};
+var options = {};
 
-prebilling_config_card_options.styleTagTransform = (styleTagTransform_default());
-prebilling_config_card_options.setAttributes = (setAttributesWithoutAttributes_default());
+options.styleTagTransform = (styleTagTransform_default());
+options.setAttributes = (setAttributesWithoutAttributes_default());
 
-      prebilling_config_card_options.insert = insertBySelector_default().bind(null, "head");
+      options.insert = insertBySelector_default().bind(null, "head");
     
-prebilling_config_card_options.domAPI = (styleDomAPI_default());
-prebilling_config_card_options.insertStyleElement = (insertStyleElement_default());
+options.domAPI = (styleDomAPI_default());
+options.insertStyleElement = (insertStyleElement_default());
 
-var prebilling_config_card_update = injectStylesIntoStyleTag_default()(prebilling_config_card/* default */.A, prebilling_config_card_options);
+var update = injectStylesIntoStyleTag_default()(prebilling_config_card/* default */.A, options);
 
 
 
@@ -12942,9 +12976,23 @@ class MailService {
     }
     /**
      * 检查是否在 Outlook 页面
+     * - 经典版：outlook.office.com
+     * - 新版：outlook.cloud.microsoft（顶层页面，包含完整邮件 UI）
+     * - webshell.suite.office.com/iframe/TokenFact 是 SSO token exchange frame，没有邮件 UI，跳过
      */
     static isOutlookPage() {
-        return window.location.hostname === "outlook.office.com";
+        const hostname = window.location.hostname;
+        const pathname = window.location.pathname;
+        if (hostname === "outlook.office.com" && pathname.startsWith("/mail"))
+            return true;
+        // /mail/* = 邮件收件箱/正文; /host/* = To-Do、Calendar 等 M365 套件，没有邮件 Compose UI
+        if (hostname === "outlook.cloud.microsoft" && pathname.startsWith("/mail"))
+            return true;
+        // webshell 的 /iframe/* 路径是 auth helper frame（TokenFact 等），没有邮件 UI
+        if (hostname === "webshell.suite.office.com" &&
+            !pathname.startsWith("/iframe/"))
+            return true;
+        return false;
     }
     /**
      * 检查是否在 HHA 页面
@@ -14102,6 +14150,13 @@ class MailBuilderTab extends BaseTab {
     }
     /**
      * 发送到 Outlook
+     * 将邮件任务写入 GM 共享存储，Outlook 页面上运行的 OutlookAdapter 会通过
+     * MailService 轮询拾取任务，并调用注入的 HHAOutlookController 填写邮件。
+     *
+     * 依赖：
+     * - Outlook 页面已打开（否则轮询无法运行）
+     * - TM @match 覆盖 outlook.cloud.microsoft/*
+     * - "Bypass Outlook Trusted Types for HHA" 脚本也匹配该域（document-start）
      */
     sendToOutlook(templateId) {
         const template = this.findTemplateById(templateId);
@@ -14109,29 +14164,14 @@ class MailBuilderTab extends BaseTab {
             return;
         // 使用 TemplateEngine 进行变量替换
         const rendered = TemplateEngine.render(template, this.profileData);
-        // 通过 MailService 发送任务
         const taskId = MailService.sendMailTask({
-            to: rendered.to,
+            to: rendered.to || "",
             cc: rendered.cc,
-            subject: rendered.subject,
-            body: rendered.body,
+            subject: rendered.subject || "",
+            body: rendered.body || "",
         });
-        this.showToast("📧 已发送到 Outlook，请切换到 Outlook 标签页");
-        console.log("[MailBuilderTab] Sent mail task:", taskId);
-        // 监听任务状态
-        const statusHandler = (payload) => {
-            if (payload.id === taskId) {
-                if (payload.status === "COMPLETED") {
-                    this.showToast("✅ Outlook 已准备好邮件");
-                    MailService.offStatusChange(statusHandler);
-                }
-                else if (payload.status === "FAILED") {
-                    this.showToast(`❌ Outlook 错误: ${payload.error}`);
-                    MailService.offStatusChange(statusHandler);
-                }
-            }
-        };
-        MailService.onStatusChange(statusHandler);
+        console.log("[MailBuilderTab] Mail task queued:", taskId, rendered.subject);
+        this.showToast("📧 正在准备 Outlook...");
     }
     /**
      * 刷新模板面板
@@ -14266,7 +14306,8 @@ const OutlookDOMControllerPayload = `
   'use strict';
   
   const SELECTORS = {
-    newMailButton: 'button[aria-label="New mail"]',
+    // 新旧 Outlook 使用不同的 aria-label，全部覆盖
+    newMailButton: 'button[aria-label="New mail"], button[aria-label="New message"], div[role="button"][aria-label="New mail"], [data-testid="newMailButton"]',
     toField: 'div[aria-label="To"]',
     toFieldAlt: '[role="combobox"][aria-label="To"], input[aria-label="To"]',
     ccButton: 'button[aria-label="Cc"]',
@@ -14276,35 +14317,75 @@ const OutlookDOMControllerPayload = `
     sendButton: 'button[aria-label="Send"]',
   };
   
-  function fillRecipientField(selector, email) {
+  // fillRecipientField is async to support per-address confirmation delays
+  async function fillRecipientField(selector, address) {
     const field = document.querySelector(selector);
     if (!field) {
       console.warn('[OutlookDOMController] Field not found:', selector);
       return false;
     }
     field.focus();
-    
+
     if (field.tagName === 'INPUT') {
-      field.value = email;
-      // React synthetic event workaround
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        'value'
-      ).set;
-      if (nativeInputValueSetter) {
-          nativeInputValueSetter.call(field, email);
-      }
-      field.dispatchEvent(new Event('input', { bubbles: true }));
+      // Subject field is a React-controlled <input>.
+      // execCommand('insertText') updates both the DOM value AND React's _valueTracker,
+      // so React sees no delta and its internal state stays at "". On next re-render
+      // React resets the DOM value back to "" — that's why subject disappears on click.
+      // Fix: reset _valueTracker to "" AFTER setting the value so React detects the change.
+      field.select();
+      const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+      if (nativeSetter) nativeSetter.call(field, address);
+      // Reset tracker so React sees: tracked="" vs current=address → fires onChange
+      if (field._valueTracker) field._valueTracker.setValue('');
+      field.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, data: address, inputType: 'insertText' }));
       field.dispatchEvent(new Event('change', { bubbles: true }));
+      // Blur forces Outlook's draft store to commit the value immediately.
+      // Without this, the draft store still has "" and re-renders reset the field.
+      field.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
     } else if (field.isContentEditable) {
-      // Modern Outlook uses contenteditable divs for addressing
-      document.execCommand('insertText', false, email);
-      field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true }));
+      // Modern Outlook uses contenteditable divs for To/CC addressing.
+      // Strategy: type each address, wait for Outlook's floating suggestion dropdown,
+      // then click the first suggestion button. Fall back to Enter if no suggestion appears.
+      const emails = address.split(/[,;]\s*/);
+      for (let i = 0; i < emails.length; i++) {
+        const singleEmail = emails[i].trim();
+        if (!singleEmail) continue;
+
+        // Re-query each iteration — DOM refs shift after each confirmation
+        const currentField = document.querySelector(selector);
+        if (!currentField) break;
+
+        // Use click() not focus() — triggers React's synthetic mouse/focus events
+        currentField.click();
+        await sleep(50);
+
+        document.execCommand('insertText', false, singleEmail);
+        await sleep(300); // Wait for Outlook's floating suggestion dropdown to render
+
+        // Outlook renders suggestions in: [role="listbox"] > ul[class*="FloatingSuggestions"] > li > div > button[role="option"]
+        const suggestionBtn = document.querySelector(
+          'ul[class*="FloatingSuggestions"] button[role="option"]'
+        );
+        if (suggestionBtn) {
+          suggestionBtn.click();
+          await sleep(200);
+        } else {
+          // No suggestion dropdown (external/unknown email) — confirm with Enter
+          currentField.dispatchEvent(new KeyboardEvent('keydown', {
+            key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true
+          }));
+          await sleep(50);
+          currentField.dispatchEvent(new KeyboardEvent('keyup', {
+            key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true
+          }));
+          await sleep(300);
+        }
+      }
     } else {
-      field.textContent = email;
+      field.textContent = address;
     }
-    
-    console.log('[OutlookDOMController] Filled field:', selector, email);
+
+    console.log('[OutlookDOMController] Filled field:', selector, address);
     return true;
   }
   
@@ -14345,9 +14426,11 @@ const OutlookDOMControllerPayload = `
     try {
       let subjectInput = document.querySelector(SELECTORS.subjectField);
       let toInput = document.querySelector(SELECTORS.toField) || document.querySelector(SELECTORS.toFieldAlt);
-      
+      let sendButton = document.querySelector(SELECTORS.sendButton);
+
+      // Require Send button to confirm an actual compose window is open (not just inbox read-mode)
       let isDraftEmpty = false;
-      if (subjectInput && toInput) {
+      if (subjectInput && toInput && sendButton) {
         const subjStr = subjectInput.value || '';
         const toStr = toInput.textContent ? toInput.textContent.trim() : (toInput.value || '');
         if (subjStr === '' && toStr === '') {
@@ -14357,44 +14440,47 @@ const OutlookDOMControllerPayload = `
       }
 
       if (!isDraftEmpty) {
-        let newMailBtn = document.querySelector(SELECTORS.newMailButton);
-        if (!newMailBtn) {
-          console.log('[OutlookDOMController] New mail button not found, trying Home tab...');
-          const homeTabs = Array.from(document.querySelectorAll('button[role="tab"]')).filter(el => el.textContent === 'Home');
-          if (homeTabs.length > 0) {
-            homeTabs[0].click();
-            await sleep(500);
-            newMailBtn = document.querySelector(SELECTORS.newMailButton);
-          }
-        }
-        
-        if (!newMailBtn) {
-           throw new Error('New mail button not found even after tab switch');
+        // 新 Outlook 用 React 渲染，按钮可能在 document-idle 后才挂载，用 waitForElement 等待
+        let newMailBtn;
+        try {
+          console.log('[OutlookDOMController] Waiting for New mail button...');
+          newMailBtn = await waitForElement(SELECTORS.newMailButton, 8000);
+        } catch (e) {
+          throw new Error('New mail button not found after 8s. Selectors tried: ' + SELECTORS.newMailButton);
         }
         
         newMailBtn.click();
         await waitForElement(SELECTORS.subjectField, 5000);
+        await sleep(500); // Allow React to finish mounting compose window event handlers
       }
       
       if (task.to) {
-        const selectors = [SELECTORS.toField, SELECTORS.toFieldAlt];
-        for (const sel of selectors) {
-          if (fillRecipientField(sel, task.to)) break;
+        let toFilled = false;
+        for (const sel of [SELECTORS.toField, SELECTORS.toFieldAlt]) {
+          if (document.querySelector(sel)) {
+            await fillRecipientField(sel, task.to);
+            toFilled = true;
+            break;
+          }
         }
-        await sleep(300);
+        if (!toFilled) console.warn('[OutlookDOMController] To field not found with any selector');
       }
       
       if (task.cc) {
         const ccBtn = document.querySelector(SELECTORS.ccButton);
-        if (ccBtn) ccBtn.click();
-        await sleep(300);
-        fillRecipientField(SELECTORS.ccField, task.cc);
-        await sleep(300);
+        if (ccBtn) { ccBtn.click(); await sleep(300); }
+        await fillRecipientField(SELECTORS.ccField, task.cc);
       }
       
       if (task.subject) {
-        fillRecipientField(SELECTORS.subjectField, task.subject);
-        await sleep(300);
+        // Re-focus subject after To/CC fills so the field is active for our setter
+        const subjectField = document.querySelector(SELECTORS.subjectField);
+        if (subjectField) {
+          subjectField.focus();
+          await sleep(50);
+        }
+        await fillRecipientField(SELECTORS.subjectField, task.subject);
+        await sleep(100);
       }
       
       if (task.body) {
@@ -14538,6 +14624,12 @@ class OutlookAdapter {
      * 处理邮件任务（调用注入的 Controller）
      */
     static async handleMailTask(task, taskId) {
+        if (this.isHandlingTask) {
+            console.warn("[OutlookAdapter] Already handling a task, dropping duplicate:", taskId);
+            MailService.reportFailed(taskId, "Controller busy with another task");
+            return;
+        }
+        this.isHandlingTask = true;
         try {
             this.showStatus("📧 正在打开新邮件...");
             // 确保 Controller 已注入
@@ -14585,6 +14677,9 @@ class OutlookAdapter {
             MailService.reportFailed(taskId, errorMsg);
             // 5秒后隐藏状态
             setTimeout(() => this.hideStatus(), 5000);
+        }
+        finally {
+            this.isHandlingTask = false;
         }
     }
     /**
@@ -14703,6 +14798,7 @@ class OutlookAdapter {
 }
 OutlookAdapter.isListening = false;
 OutlookAdapter.controllerInjected = false;
+OutlookAdapter.isHandlingTask = false;
 OutlookAdapter.statusToast = null;
 
 ;// ./src/js/services/DocumentDropzone.ts
@@ -15330,8 +15426,14 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.11.7"};
+const package_namespaceObject = {"rE":"3.13.0"};
 ;// ./src/index.ts
+// Only inject styles on HHA pages — Outlook's strict CSP blocks style-loader injection
+if (!window.location.hostname.includes("outlook") &&
+    window.location.hostname !== "webshell.suite.office.com") {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    __webpack_require__("./src/style/main.less");
+}
 
 
 
@@ -15356,8 +15458,7 @@ const package_namespaceObject = {"rE":"3.11.7"};
 
 
 
-
-async function src_main() {
+async function main() {
     console.log("HHA Exchange Smart Assistant " + package_namespaceObject.rE + " : script start");
     // Set a global flag to indicate script is running (for debugging)
     window.HHA_SMART_ASSISTANT_STARTED = true;
@@ -15998,7 +16099,7 @@ function findOkButtonInAllFrames(win, selectors) {
     }
     return null;
 }
-src_main().catch((e) => {
+main().catch((e) => {
     console.log(e);
 });
 
