@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.13.0
+// @version             3.14.0
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -12554,60 +12554,28 @@ class TemplateManager {
         const templates = this.getAll();
         if (templates.length > 0)
             return;
-        // 创建示例模板
+        // 创建默认模板
         this.save({
-            name: "护理员请假通知",
+            name: "Staff Leaving Form",
             targetPageType: "CAREGIVER",
-            to: "scheduler@example.com",
+            to: "SNazarov@AlwaysNY.net",
             cc: "",
-            subject: "Aide: {{aide_name}} {{aide_id}} Vacation Request",
-            body: `Hi,
-
-Please be advised that the following caregiver is requesting time off:
-
-Name: {{aide_name}}
-ID: {{aide_id}}
-
-Thank you.`,
-            variables: [
-                {
-                    placeholder: "{{aide_name}}",
-                    selector: "#ctl00_ContentPlaceHolder1_uxlblInfoName",
-                    method: "text",
-                },
-                {
-                    placeholder: "{{aide_id}}",
-                    selector: "#ctl00_ContentPlaceHolder1_uxlblInfoAideInitials",
-                    method: "text",
-                },
-            ],
+            subject: "Aide: {{aide_name}} {{aide_id}} Staff Leaving Form",
+            body: `<div data-olk-copy-source="MessageBody">Hello Serge,&nbsp;</div>
+<div aria-hidden="true">&nbsp;</div>
+<div>Please see the attachment.</div>`,
+            variables: [],
         });
         this.save({
-            name: "病人信息请求",
-            targetPageType: "PATIENT",
-            to: "info@example.com",
+            name: "Vacation/Sick Hours",
+            targetPageType: "CAREGIVER",
+            to: "SNazarov@AlwaysNY.net",
             cc: "",
-            subject: "Patient: {{patient_name}} {{patient_id}} - Information Request",
-            body: `Hi,
-
-I am requesting information for the following patient:
-
-Name: {{patient_name}}
-ID: {{patient_id}}
-
-Thank you.`,
-            variables: [
-                {
-                    placeholder: "{{patient_name}}",
-                    selector: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientName",
-                    method: "text",
-                },
-                {
-                    placeholder: "{{patient_id}}",
-                    selector: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientNumber",
-                    method: "text",
-                },
-            ],
+            subject: "Aide: {{aide_name}} {{aide_id}} Vacation/Sick Hours",
+            body: `<div data-olk-copy-source="MessageBody">Hello Serge,</div>
+<div>&nbsp;</div>
+<div>Could you please provide me the vacation and sick hours for the aide?</div>`,
+            variables: [],
         });
         console.log("[TemplateManager] Created default templates");
     }
@@ -13608,11 +13576,9 @@ class MailBuilderTab extends BaseTab {
         // 内置模板不显示编辑/删除按钮
         const actionButtons = isBuiltin
             ? `
-                <button class="template-card-btn use-btn" data-id="${template.id}" title="复制到剪贴板">📋 复制</button>
                 <button class="template-card-btn outlook-btn" data-id="${template.id}" title="发送到 Outlook">📧 Outlook</button>
             `
             : `
-                <button class="template-card-btn use-btn" data-id="${template.id}" title="复制到剪贴板">📋 复制</button>
                 <button class="template-card-btn outlook-btn" data-id="${template.id}" title="发送到 Outlook">📧 Outlook</button>
                 <button class="template-card-btn edit-btn" data-id="${template.id}" title="编辑">✏️</button>
                 <button class="template-card-btn delete-btn" data-id="${template.id}" title="删除">🗑️</button>
@@ -13737,13 +13703,6 @@ class MailBuilderTab extends BaseTab {
             }
         });
         // 模板卡片操作按钮
-        panel.querySelectorAll(".use-btn").forEach((btn) => {
-            btn.addEventListener("click", (e) => {
-                const id = e.currentTarget.dataset.id;
-                if (id)
-                    this.useTemplate(id);
-            });
-        });
         panel.querySelectorAll(".edit-btn").forEach((btn) => {
             btn.addEventListener("click", (e) => {
                 const id = e.currentTarget.dataset.id;
@@ -15426,7 +15385,7 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.13.0"};
+const package_namespaceObject = {"rE":"3.14.0"};
 ;// ./src/index.ts
 // Only inject styles on HHA pages — Outlook's strict CSP blocks style-loader injection
 if (!window.location.hostname.includes("outlook") &&
