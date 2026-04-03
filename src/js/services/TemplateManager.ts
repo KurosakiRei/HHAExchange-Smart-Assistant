@@ -219,62 +219,29 @@ export class TemplateManager {
     const templates = this.getAll();
     if (templates.length > 0) return;
 
-    // 创建示例模板
+    // 创建默认模板
     this.save({
-      name: "护理员请假通知",
+      name: "Staff Leaving Form",
       targetPageType: "CAREGIVER",
-      to: "scheduler@example.com",
+      to: "SNazarov@AlwaysNY.net",
       cc: "",
-      subject: "Aide: {{aide_name}} {{aide_id}} Vacation Request",
-      body: `Hi,
-
-Please be advised that the following caregiver is requesting time off:
-
-Name: {{aide_name}}
-ID: {{aide_id}}
-
-Thank you.`,
-      variables: [
-        {
-          placeholder: "{{aide_name}}",
-          selector: "#ctl00_ContentPlaceHolder1_uxlblInfoName",
-          method: "text",
-        },
-        {
-          placeholder: "{{aide_id}}",
-          selector: "#ctl00_ContentPlaceHolder1_uxlblInfoAideInitials",
-          method: "text",
-        },
-      ],
+      subject: "Aide: {{aide_name}} {{aide_id}} Staff Leaving Form",
+      body: `<div data-olk-copy-source="MessageBody">Hello Serge,&nbsp;</div>
+<div aria-hidden="true">&nbsp;</div>
+<div>Please see the attachment.</div>`,
+      variables: [],
     });
 
     this.save({
-      name: "病人信息请求",
-      targetPageType: "PATIENT",
-      to: "info@example.com",
+      name: "Vacation/Sick Hours",
+      targetPageType: "CAREGIVER",
+      to: "SNazarov@AlwaysNY.net",
       cc: "",
-      subject: "Patient: {{patient_name}} {{patient_id}} - Information Request",
-      body: `Hi,
-
-I am requesting information for the following patient:
-
-Name: {{patient_name}}
-ID: {{patient_id}}
-
-Thank you.`,
-      variables: [
-        {
-          placeholder: "{{patient_name}}",
-          selector: "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientName",
-          method: "text",
-        },
-        {
-          placeholder: "{{patient_id}}",
-          selector:
-            "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblPatientNumber",
-          method: "text",
-        },
-      ],
+      subject: "Aide: {{aide_name}} {{aide_id}} Vacation/Sick Hours",
+      body: `<div data-olk-copy-source="MessageBody">Hello Serge,</div>
+<div>&nbsp;</div>
+<div>Could you please provide me the vacation and sick hours for the aide?</div>`,
+      variables: [],
     });
 
     console.log("[TemplateManager] Created default templates");

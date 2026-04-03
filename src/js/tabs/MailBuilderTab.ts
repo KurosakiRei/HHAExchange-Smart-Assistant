@@ -326,11 +326,9 @@ export class MailBuilderTab extends BaseTab {
     // 内置模板不显示编辑/删除按钮
     const actionButtons = isBuiltin
       ? `
-                <button class="template-card-btn use-btn" data-id="${template.id}" title="复制到剪贴板">📋 复制</button>
                 <button class="template-card-btn outlook-btn" data-id="${template.id}" title="发送到 Outlook">📧 Outlook</button>
             `
       : `
-                <button class="template-card-btn use-btn" data-id="${template.id}" title="复制到剪贴板">📋 复制</button>
                 <button class="template-card-btn outlook-btn" data-id="${template.id}" title="发送到 Outlook">📧 Outlook</button>
                 <button class="template-card-btn edit-btn" data-id="${template.id}" title="编辑">✏️</button>
                 <button class="template-card-btn delete-btn" data-id="${template.id}" title="删除">🗑️</button>
@@ -489,13 +487,6 @@ export class MailBuilderTab extends BaseTab {
     });
 
     // 模板卡片操作按钮
-    panel.querySelectorAll(".use-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const id = (e.currentTarget as HTMLButtonElement).dataset.id;
-        if (id) this.useTemplate(id);
-      });
-    });
-
     panel.querySelectorAll(".edit-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const id = (e.currentTarget as HTMLButtonElement).dataset.id;
