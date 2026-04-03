@@ -7,7 +7,7 @@
 | **Story ID**   | EPIC-016-STORY-001                                               |
 | **标题**       | Timesheet 提交通知 — 内置 Prebilling 邮件模板                   |
 | **优先级**     | P1 - 高                                                          |
-| **状态**       | 📝 计划中                                                        |
+| **状态**       | ✅ 已完成                                                        |
 | **预估工作量** | 6-8 Story Points                                                 |
 | **目标页面**   | `PrebillingReportInternal_ns.aspx`（Prebilling Review）          |
 | **关联 Epic**  | Epic 16（内置模板体系）、Epic 12（Mail Builder 基础框架）        |
@@ -42,13 +42,13 @@ Coordinator 在提交每个病人的 Timesheet 时，需要给固定收件人发
 
 ### 2. Modal（点击卡片后弹出）
 
-Modal 标题：**HHAexchange Smart Assistant**（与品牌标准一致）
+Modal 标题：**Timesheet 提交**
 
 #### 2a. 顶部配置区
 
 ```
-Recipient Name: [ Enter Name          ]    To: [ Enter Address       ]   [ 保存配置 ]
-                                           CC: [ Enter CC Address    ]
+收件人: [ Enter Name          ]    To: [ Enter Address       ]   [ 保存配置 ]
+                                   CC: [ Enter CC Address    ]
 ```
 
 - **Recipient Name**：初次加载默认值 `Mariana`
@@ -63,18 +63,19 @@ Recipient Name: [ Enter Name          ]    To: [ Enter Address       ]   [ 保�
 #### 2b. Visit 列表区
 
 ```
-📅 SELECT SCHEDULED SESSIONS          [ 🔍 Patient Name 或 Admission ID ]
+Visits                                [ 🔍 Patient Name 或 Admission ID ]
 
 ┌──────────────────────────────────────────────────────────────────────┐
-│  LIN GUOZHENG | AHC-908687                        [ ▶ Send to Outlook ] │
-│  📅 03/24/2026  🕐 0700-1500                                         │
+│  [头像]  LIN GUOZHENG | AHC-908687              [ ▶ Outlook ]        │
+│          📅 03/24/2026  🕐 0700-1500                                  │
 ├──────────────────────────────────────────────────────────────────────┤
-│  ZHENG BIQING | AHC-908874                        [ ▶ Send to Outlook ] │
-│  📅 04/02/2026  🕐 1700-2200                                         │
+│  [头像]  ZHENG BIQING | AHC-908874              [ ▶ Outlook ]        │
+│          📅 04/02/2026  🕐 1700-2200                                  │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **无复选框**，每行右侧一个 "Send to Outlook" 按钮
+- **无复选框**，每行右侧一个 "▶ Outlook" 按钮
+- 每行左侧显示患者姓名首字母圆形头像
 - 列表显示**全部 visit 行**（不过滤 POC），来源：`PrebillingTableParser.parseAllRows()`
 - 每行显示字段：Patient Name、Admission ID、Visit Date、Scheduled Time
 - **搜索框**：模糊匹配 Patient Name 或 Admission ID，大小写不敏感
@@ -215,7 +216,7 @@ static async parseAllRows(): Promise<TimesheetRecord[]>
 - [x] Modal 打开时立即调用 `parseAllRows()` 渲染列表
 - [x] 列表展示所有行（含无 POC 问题的 visit）
 - [x] 每行显示：Patient Name | Admission ID、Visit Date、Scheduled Time
-- [x] 每行右侧有 "Send to Outlook" 按钮
+- [x] 每行右侧有 "▶ Outlook" 按钮
 - [x] 搜索框可按 Patient Name 或 Admission ID 实时过滤
 - [x] 轮询每 5s 刷新列表，搜索词在刷新后保留
 - [x] Modal 关闭时停止轮询
@@ -223,13 +224,12 @@ static async parseAllRows(): Promise<TimesheetRecord[]>
 
 ### 发送逻辑
 
-- [x] 点击"Send to Outlook"时，从 `GM_getValue` 读取配置构建邮件
+- [x] 点击 "▶ Outlook" 时，从 `GM_getValue` 读取配置构建邮件
 - [x] Subject 格式：`PT: {patientName} {admissionId} Timesheet for {visitDate}`
 - [x] Body：`Hello {recipientName},<br><br>Please see the attached. Let me know if there is any problem.`
 - [x] 有未保存的脏状态时，弹出警告确认框
 - [x] 警告框点击"继续发送"使用旧保存值发送；点击"取消"返回 Modal
 - [x] 发送成功后关闭 Modal（或显示成功提示，与 Epic 12 行为一致）
-
 ### 边界情况
 
 - [x] Modal 在非 Prebilling 页面被意外打开时，列表区显示 `⚠️ 请先导航到 Prebilling Review 页面`
@@ -246,3 +246,30 @@ static async parseAllRows(): Promise<TimesheetRecord[]>
 | `src/js/services/builtin/TimesheetNotificationTemplate.ts`   | 新增     | 内置模板服务类（Modal、轮询、配置、发送） |
 | `src/js/tabs/MailBuilderTab.ts`                              | 修改     | 内置模板 Tab 渲染时集成入口卡片          |
 | `src/js/services/BuiltinTemplates.ts`                        | 修改     | 添加注释说明独立渲染路径                 |
+| `src/style/mail-builder-tab.less`                            | 修改     | 新增 Timesheet Modal 全套样式            |
+
+---
+
+## Dev Agent Record
+
+### 实现摘要
+
+| 任务 | 文件 | 说明 |
+|------|------|------|
+| Task 1 | `PrebillingTableParser.ts` | 在现有接口列表前新增 `TimesheetRecord` 接口；在 `searchTableInAllFrames` 上方插入 `parseAllRows()` 静态方法，复用 iframe 搜索逻辑和 `COLUMN_INDEX` 常量，跳过不完整行，不读取 Problems 列 |
+| Task 2 | `builtin/TimesheetNotificationTemplate.ts` | 全新服务类：`renderEntryCard()` 渲染卡片并通过 `PageDetector.onPageChange` 动态更新置灰状态；`openModal()` 创建含配置区 + visit 列表的 Modal；`startPolling()` / `stopPolling()` 以 5000ms 间隔刷新列表；`handleSend()` 处理未保存配置警告；`doSend()` 调用 `MailService.sendMailTask()`；`destroy()` 完整清理 |
+| Task 3 | `MailBuilderTab.ts` | import 新类；添加 `timesheetTemplate` 实例字段；修改 `renderTemplateList()` 新增内置 Tab 分支调用 `timesheetTemplate.renderEntryCard(list)`；`destroy()` 末尾调用 `timesheetTemplate.destroy()` |
+| Task 4 | `BuiltinTemplates.ts` | 文件顶部注释新增"独立渲染路径说明"段落 |
+| Task 5 | `mail-builder-tab.less` | 新增 Timesheet Modal 专属样式：横向配置区（收件人 + To/CC 双行 + 保存按钮顶对齐）、卡片式 visit 列表（头像首字母圆圈 + 患者信息 + "▶ Outlook" 按钮）、固定高度可滚动列表容器、未保存提示确认浮层 |
+
+### 技术决策
+
+- `renderEntryCard()` 每次调用前先 `offPageChange` 旧 handler，保证多次 `refreshTemplatePanel()` 不累积监听器
+- `timesheetTemplate` 实例懒创建（首次渲染内置 Tab 时），在 `destroy()` 中置 null
+- `parseAllRows()` 沿用 `requestIdleCallback` 降级 `setTimeout(0)` 模式，与 `parseTable()` 保持一致
+- 未保存确认弹窗使用 `document.body.appendChild` —— 与现有 Modal 对话框模式一致
+- Modal 标题由 "HHAexchange Smart Assistant" 调整为 "Timesheet 提交"；收件人标签改为 "收件人:"；列表区标题改为 "Visits"；发送按钮文案简化为 "▶ Outlook"
+- 配置区布局：`收件人:` label+input 占左列（`flex:1`，input 设 `min-width:0`）+ To/CC 双行堆叠占中列（`flex:1.5`）+ 保存按钮 `align-self:flex-start` 与 To 行顶对齐；整行 `align-items:flex-start`
+- Visit 渲染为卡片式：左侧 42px 渐变背景首字母圆圈头像 + 右侧姓名/ID/日期/时段信息 + 最右 "▶ Outlook" 按钮
+- 样式全部写入 `mail-builder-tab.less`（项目不使用 `.css`，由 `main.less` import 后打包）
+- `npm run build` 零错误，5 个 webpack 警告（均为现有代码，非新增）

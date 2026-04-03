@@ -12,6 +12,7 @@ import {
   isBuiltinTemplate,
 } from "../services/BuiltinTemplates";
 import { TinyMCEBundler } from "../services/TinyMCEBundler";
+import { TimesheetNotificationTemplate } from "../services/builtin/TimesheetNotificationTemplate";
 
 declare const unsafeWindow: Window;
 
@@ -40,6 +41,7 @@ export class MailBuilderTab extends BaseTab {
   private activeTemplateTab: "builtin" | "custom" = "custom";
   private editingTemplate: MailTemplate | null = null;
   private isEditorOpen: boolean = false;
+  private timesheetTemplate: TimesheetNotificationTemplate | null = null;
 
   async init(): Promise<void> {
     this.initialized = true;
@@ -282,13 +284,17 @@ export class MailBuilderTab extends BaseTab {
     const list = document.createElement("div");
     list.className = "template-list";
 
-    // 根据当前 tab 筛选模板
-    const filteredTemplates =
-      this.activeTemplateTab === "builtin"
-        ? getBuiltinTemplates()
-        : this.templates;
+    // 内置模板 Tab：由 TimesheetNotificationTemplate 独立渲染入口卡片
+    if (this.activeTemplateTab === "builtin") {
+      if (!this.timesheetTemplate) {
+        this.timesheetTemplate = new TimesheetNotificationTemplate();
+      }
+      this.timesheetTemplate.renderEntryCard(list);
+      return list;
+    }
 
-    if (filteredTemplates.length === 0) {
+    // 自定义模板 Tab
+    if (this.templates.length === 0) {
       list.innerHTML = `
                 <div class="template-empty">
                     <div class="template-empty-icon">📝</div>
@@ -297,7 +303,7 @@ export class MailBuilderTab extends BaseTab {
                 </div>
             `;
     } else {
-      filteredTemplates.forEach((template) => {
+      this.templates.forEach((template) => {
         const card = this.renderTemplateCard(template);
         list.appendChild(card);
       });
@@ -1137,6 +1143,11 @@ export class MailBuilderTab extends BaseTab {
     if (this.pageChangeHandler) {
       ProfileDataExtractor.offPageChange(this.pageChangeHandler);
       this.pageChangeHandler = null;
+    }
+    // 销毁内置模板实例（停止轮询、注销页面变化监听，关闭 Modal）
+    if (this.timesheetTemplate) {
+      this.timesheetTemplate.destroy();
+      this.timesheetTemplate = null;
     }
     super.destroy();
   }

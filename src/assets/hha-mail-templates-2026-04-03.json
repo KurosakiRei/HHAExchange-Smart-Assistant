@@ -1,0 +1,26 @@
+[
+  {
+    "id": "tpl_1775233475164_tism6yvlt",
+    "name": "Staff Leaving Form",
+    "targetPageType": "CAREGIVER",
+    "to": "SNazarov@AlwaysNY.net",
+    "cc": "",
+    "subject": "Aide: {{aide_name}} {{aide_id}} Staff Leaving Form",
+    "body": "<div data-olk-copy-source=\"MessageBody\">Hello Serge,&nbsp;</div>\n<div aria-hidden=\"true\">&nbsp;</div>\n<div>Please see the attachment.</div>",
+    "variables": [],
+    "createdAt": 1775233475164,
+    "updatedAt": 1775233574369
+  },
+  {
+    "id": "tpl_1775233560523_uwzef0rj4",
+    "name": "Vacation/Sick Hours",
+    "targetPageType": "CAREGIVER",
+    "to": "SNazarov@AlwaysNY.net",
+    "cc": "",
+    "subject": "Aide: {{aide_name}} {{aide_id}} Vacation/Sick Hours",
+    "body": "<div data-olk-copy-source=\"MessageBody\">Hello Serge,</div>\n<div>&nbsp;</div>\n<div>Could you please provide me the vacation and sick hours for the aide?</div>",
+    "variables": [],
+    "createdAt": 1775233560523,
+    "updatedAt": 1775233560523
+  }
+]

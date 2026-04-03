@@ -8,6 +8,16 @@
  */
 
 /**
+ * 精简的 Visit 记录，用于 Timesheet 内置模板
+ */
+export interface TimesheetRecord {
+  patientName: string;
+  admissionId: string;
+  visitDate: string;
+  scheduledTime: string;
+}
+
+/**
  * 单个 Visit 记录
  */
 export interface VisitRecord {
@@ -301,6 +311,87 @@ export class PrebillingTableParser {
     const tableBody = document.querySelector(SELECTORS.TABLE_BODY);
     if (!tableBody) return 0;
     return tableBody.querySelectorAll("tr").length;
+  }
+
+  /**
+   * 解析表格，返回所有行（不过滤 Problems 列）
+   * 用于 Timesheet 内置模板
+   */
+  static async parseAllRows(): Promise<TimesheetRecord[]> {
+    console.log("[PrebillingTableParser] parseAllRows: starting...");
+
+    const records: TimesheetRecord[] = [];
+
+    return new Promise((resolve) => {
+      const parseRows = () => {
+        try {
+          let table = document.querySelector(
+            SELECTORS.TABLE
+          ) as HTMLTableElement | null;
+
+          if (!table) {
+            table = PrebillingTableParser.searchTableInAllFrames(
+              window,
+              SELECTORS.TABLE
+            );
+          }
+
+          if (!table) {
+            console.warn(
+              "[PrebillingTableParser] parseAllRows: table not found"
+            );
+            resolve([]);
+            return;
+          }
+
+          const tbody = table.querySelector("tbody");
+          const rows = tbody
+            ? tbody.querySelectorAll("tr")
+            : table.querySelectorAll("tr");
+
+          rows.forEach((row) => {
+            const cells = row.querySelectorAll("td");
+
+            if (cells.length < COLUMN_INDEX.ACTIONS + 1) {
+              return;
+            }
+
+            const record: TimesheetRecord = {
+              patientName: PrebillingTableParser.getCellText(
+                cells[COLUMN_INDEX.PATIENT]
+              ),
+              admissionId: PrebillingTableParser.getCellText(
+                cells[COLUMN_INDEX.ADMISSION_ID]
+              ),
+              visitDate: PrebillingTableParser.getCellText(
+                cells[COLUMN_INDEX.VISIT_DATE]
+              ),
+              scheduledTime: PrebillingTableParser.getCellText(
+                cells[COLUMN_INDEX.SCHEDULED_TIME]
+              ),
+            };
+
+            if (record.patientName || record.admissionId) {
+              records.push(record);
+            }
+          });
+
+          console.log(
+            `[PrebillingTableParser] parseAllRows: found ${records.length} rows`
+          );
+          resolve(records);
+        } catch (error) {
+          console.error("[PrebillingTableParser] parseAllRows error:", error);
+          resolve([]);
+        }
+      };
+
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(parseRows, { timeout: 3000 });
+      } else {
+        setTimeout(parseRows, 0);
+      }
+    });
   }
 
   /**

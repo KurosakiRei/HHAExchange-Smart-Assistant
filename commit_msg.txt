@@ -1,1 +1,26 @@
-﻿fix(tenant): 修复hidProviderURL硬编码PROVIDER2507010000导致Session被踢问题，升级至v3.11.5
+feat(epic-16): 实现 Timesheet 提交通知内置模板 (Story 16.1)
+
+功能概述：
+- 在邮件助手「内置模板」Tab 新增「Timesheet 提交」入口卡片
+- 非 Prebilling 页面时卡片自动置灰并显示 tooltip 提示
+- 页面切换时通过 PageDetector.onPageChange 实时更新卡片状态
+- 点击卡片弹出 Modal，支持配置收件人/To/CC 并保存至 GM storage
+- Visit 列表实时从 PrebillingTableParser.parseAllRows() 拉取，支持姓名/ID 搜索过滤
+- Modal 开启期间每 5s 轮询刷新数据，关闭时自动停止
+- 点击「▶ Outlook」按钮一键发送格式化 Timesheet 通知邮件至 Outlook
+- 存在未保存配置时弹出确认对话框防止误操作
+
+界面设计：
+- Modal 标题：「Timesheet 提交」
+- 配置区三栏横向布局：收件人 label+input（左栏）| To/CC 双行（中栏）| 保存按钮顶对齐（右侧）
+- Visit 列表卡片式渲染：42px 渐变首字母圆圈头像 + 患者姓名/ID/日期/时段 + 「▶ Outlook」按钮
+- 样式全部写入 mail-builder-tab.less，保证打包正确
+
+技术变更：
+- 新增 TimesheetRecord 接口与 parseAllRows() 静态方法至 PrebillingTableParser
+- 新增服务类 src/js/services/builtin/TimesheetNotificationTemplate.ts
+- MailBuilderTab 集成内置模板入口卡片渲染及生命周期管理（懒创建实例，destroy 时清理）
+- BuiltinTemplates.ts 添加注释说明独立渲染路径设计
+- mail-builder-tab.less 新增 Timesheet Modal 完整样式体系（含未保存确认浮层）
+
+版本：3.14.0 → 3.15.0
