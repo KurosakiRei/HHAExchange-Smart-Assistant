@@ -68,7 +68,8 @@ interface BuiltinTemplateService {
 
 | Story ID | 模板名称           | 目标页面              | 状态       | 文件                                              |
 | -------- | ------------------ | --------------------- | ---------- | ------------------------------------------------- |
-| 16.1     | Timesheet 提交通知 | Prebilling Review     | 📝 计划中  | [epic-16-story-1-timesheet-notification.md](epic-16-story-1-timesheet-notification.md) |
+| 16.1     | Timesheet 提交通知    | Prebilling Review     | ✅ 已完成  | [epic-16-story-1-timesheet-notification.md](epic-16-story-1-timesheet-notification.md) |
+| 16.2     | Patient Vacation 通知 | Patient Profile       | 📝 计划中  | [epic-16-story-2-patient-vacation.md](epic-16-story-2-patient-vacation.md)              |
 
 ---
 

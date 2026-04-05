@@ -13,6 +13,7 @@ import {
 } from "../services/BuiltinTemplates";
 import { TinyMCEBundler } from "../services/TinyMCEBundler";
 import { TimesheetNotificationTemplate } from "../services/builtin/TimesheetNotificationTemplate";
+import { PatientVacationTemplate } from "../services/builtin/PatientVacationTemplate";
 
 declare const unsafeWindow: Window;
 
@@ -42,6 +43,7 @@ export class MailBuilderTab extends BaseTab {
   private editingTemplate: MailTemplate | null = null;
   private isEditorOpen: boolean = false;
   private timesheetTemplate: TimesheetNotificationTemplate | null = null;
+  private patientVacationTemplate: PatientVacationTemplate | null = null;
 
   async init(): Promise<void> {
     this.initialized = true;
@@ -284,12 +286,17 @@ export class MailBuilderTab extends BaseTab {
     const list = document.createElement("div");
     list.className = "template-list";
 
-    // 内置模板 Tab：由 TimesheetNotificationTemplate 独立渲染入口卡片
+    // 内置模板 Tab：由 TimesheetNotificationTemplate 和 PatientVacationTemplate 独立渲染入口卡片
     if (this.activeTemplateTab === "builtin") {
       if (!this.timesheetTemplate) {
         this.timesheetTemplate = new TimesheetNotificationTemplate();
       }
       this.timesheetTemplate.renderEntryCard(list);
+
+      if (!this.patientVacationTemplate) {
+        this.patientVacationTemplate = new PatientVacationTemplate();
+      }
+      this.patientVacationTemplate.renderEntryCard(list);
       return list;
     }
 
@@ -1148,6 +1155,10 @@ export class MailBuilderTab extends BaseTab {
     if (this.timesheetTemplate) {
       this.timesheetTemplate.destroy();
       this.timesheetTemplate = null;
+    }
+    if (this.patientVacationTemplate) {
+      this.patientVacationTemplate.destroy();
+      this.patientVacationTemplate = null;
     }
     super.destroy();
   }
