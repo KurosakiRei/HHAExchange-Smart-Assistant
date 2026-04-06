@@ -14,6 +14,7 @@ import {
 import { TinyMCEBundler } from "../services/TinyMCEBundler";
 import { TimesheetNotificationTemplate } from "../services/builtin/TimesheetNotificationTemplate";
 import { PatientVacationTemplate } from "../services/builtin/PatientVacationTemplate";
+import { EodReportTemplate } from "../services/builtin/EodReportTemplate";
 
 declare const unsafeWindow: Window;
 
@@ -44,6 +45,7 @@ export class MailBuilderTab extends BaseTab {
   private isEditorOpen: boolean = false;
   private timesheetTemplate: TimesheetNotificationTemplate | null = null;
   private patientVacationTemplate: PatientVacationTemplate | null = null;
+  private eodReportTemplate: EodReportTemplate | null = null;
 
   async init(): Promise<void> {
     this.initialized = true;
@@ -297,6 +299,11 @@ export class MailBuilderTab extends BaseTab {
         this.patientVacationTemplate = new PatientVacationTemplate();
       }
       this.patientVacationTemplate.renderEntryCard(list);
+
+      if (!this.eodReportTemplate) {
+        this.eodReportTemplate = new EodReportTemplate();
+      }
+      this.eodReportTemplate.renderEntryCard(list);
       return list;
     }
 

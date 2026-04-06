@@ -13,19 +13,11 @@ export class DocumentDropzone {
   private initObserver() {
     // Determine if we are on a page/iframe that could contain the modal
     // It's safe to observe the body of the top window and inner iframes as the modal could be either.
-    this.observer = new MutationObserver((mutations) => {
-      // Look for the required elements for the Add Document modal
-      const fileInput =
-        document.querySelector('input[type="file"][name="fuUpload2"]') ||
-        document.querySelector(".fileInput57");
-      const docTypeSelect = document.getElementById("documentTypeDropdown");
-
-      // We consider the modal "open" if we find the file input
-      if (fileInput && !this.isBound) {
-        this.bindDropzone(
-          fileInput.closest("table, div.modal-content, body") as HTMLElement
-        );
-      } else if (!fileInput && this.isBound) {
+    this.observer = new MutationObserver(() => {
+      const container = this.findAddDocumentModal();
+      if (container && !this.isBound) {
+        this.bindDropzone(container);
+      } else if (!container && this.isBound) {
         this.unbindDropzone();
       }
     });
@@ -35,15 +27,42 @@ export class DocumentDropzone {
       subtree: true,
     });
 
-    // Initial check in case it's already there
-    const fileInput =
-      document.querySelector('input[type="file"][name="fuUpload2"]') ||
-      document.querySelector(".fileInput57");
-    if (fileInput) {
-      this.bindDropzone(
-        fileInput.closest("table, div.modal-content, body") as HTMLElement
-      );
+    // Initial check in case it's already visible
+    const container = this.findAddDocumentModal();
+    if (container) {
+      this.bindDropzone(container);
     }
+  }
+
+  /**
+   * Detects whether the "Add Document" modal is currently open and visible.
+   * Returns the modal container element, or null if the modal is not open.
+   *
+   * HHAExchange keeps fuUpload2 in the DOM even when the modal is closed,
+   * so we must check for a visible "Add Document" heading rather than
+   * just the presence of the file input.
+   */
+  private findAddDocumentModal(): HTMLElement | null {
+    // Find any heading element whose trimmed text is "Add Document"
+    const headings = document.querySelectorAll(
+      "h1, h2, h3, h4, h5, legend, .modal-title, strong"
+    );
+    const header = Array.from(headings).find((el) => {
+      const text = (el.textContent || "").trim();
+      return text === "Add Document";
+    }) as HTMLElement | undefined;
+
+    if (!header) return null;
+
+    // Confirm the heading is actually visible (non-zero bounding box)
+    const rect = header.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) return null;
+
+    // Return the closest modal/dialog container, falling back to a general div
+    return (
+      (header.closest(".reveal, [role='dialog'], .modal") as HTMLElement) ??
+      (header.closest("table, div") as HTMLElement)
+    );
   }
 
   /**
@@ -136,28 +155,77 @@ export class DocumentDropzone {
       console.log("[Epic 14] File dropped:", originalFile.name);
 
       // Story 14.3 - Prompt for rename
-      const newFileName = await this.promptForRename(originalFile.name);
-      if (!newFileName || newFileName.trim() === "") {
+      const result = await this.promptForRename(originalFile.name);
+      if (!result.name || result.name.trim() === "") {
         console.log("[Epic 14] Rename cancelled or empty, aborting upload.");
         return;
       }
 
       // Story 14.4 - Reconstruct File
-      const newFile = new File([originalFile], newFileName.trim(), {
+      const newFile = new File([originalFile], result.name.trim(), {
         type: originalFile.type,
       });
+
+      // Story 14.6 - Optionally save renamed file to local disk via Save As dialog
+      if (result.saveToLocal) {
+        try {
+          const showSaveFilePicker = (window as any).showSaveFilePicker as
+            | ((opts?: object) => Promise<FileSystemFileHandle>)
+            | undefined;
+          if (showSaveFilePicker) {
+            const ext = newFile.name
+              .slice(newFile.name.lastIndexOf("."))
+              .toLowerCase();
+            const fileHandle = await showSaveFilePicker({
+              suggestedName: newFile.name,
+              types: [
+                {
+                  description: "All Files",
+                  accept: { "*/*": ext ? [ext] : [] },
+                },
+              ],
+            });
+            const writable = await fileHandle.createWritable();
+            await writable.write(newFile);
+            await writable.close();
+            console.log(
+              "[Epic 14] Saved file via Save As dialog:",
+              newFile.name
+            );
+          } else {
+            // Fallback: trigger browser download
+            const url = URL.createObjectURL(newFile);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = newFile.name;
+            a.click();
+            URL.revokeObjectURL(url);
+            console.log(
+              "[Epic 14] Triggered local download for:",
+              newFile.name
+            );
+          }
+        } catch (e) {
+          // User cancelled the Save As dialog — do not abort the upload
+          console.log("[Epic 14] Save As cancelled or failed:", e);
+        }
+      }
+
       this.attachFileToInput(newFile);
 
       // Story 14.5 - Auto-fill form
-      this.autoFillMetadata(newFileName.trim());
+      this.autoFillMetadata(result.name.trim());
     }
   };
 
   /**
    * Prompts the user to rename the file. Pre-fills and selects the original name.
-   * Returns a promise that resolves with the new name, or null if cancelled.
+   * Returns a promise that resolves with the new name (or null if cancelled)
+   * and whether the user chose to save the renamed file to local disk.
    */
-  private promptForRename(originalName: string): Promise<string | null> {
+  private promptForRename(
+    originalName: string
+  ): Promise<{ name: string | null; saveToLocal: boolean }> {
     return new Promise((resolve) => {
       // Extract name without extension if possible for better UX
       const lastDotIndex = originalName.lastIndexOf(".");
@@ -182,6 +250,12 @@ export class DocumentDropzone {
           <input type="text" id="rename-input" value="${baseName}" />
           ${hasExtension ? `<span class="rename-ext">${extension}</span>` : ""}
         </div>
+        <div class="rename-save-local-row">
+          <label class="rename-save-local-label">
+            <input type="checkbox" id="save-local-check" checked />
+            同时保存到本地
+          </label>
+        </div>
         <div class="rename-footer">
           <button class="tracker-btn-secondary" id="rename-cancel">取消</button>
           <button class="tracker-btn-primary" id="rename-confirm">✓ 确认</button>
@@ -198,6 +272,9 @@ export class DocumentDropzone {
       const cancelBtn = modal.querySelector(
         "#rename-cancel"
       ) as HTMLButtonElement;
+      const saveLocalCheck = modal.querySelector(
+        "#save-local-check"
+      ) as HTMLInputElement;
 
       // Focus and select the text for quick overtyping
       input.focus();
@@ -212,9 +289,12 @@ export class DocumentDropzone {
       const submitAction = () => {
         const value = input.value.trim();
         if (value) {
-          resolve(value + extension);
+          resolve({
+            name: value + extension,
+            saveToLocal: saveLocalCheck.checked,
+          });
         } else {
-          resolve(null);
+          resolve({ name: null, saveToLocal: false });
         }
         cleanup();
       };
@@ -222,7 +302,7 @@ export class DocumentDropzone {
       confirmBtn.addEventListener("click", submitAction);
 
       cancelBtn.addEventListener("click", () => {
-        resolve(null);
+        resolve({ name: null, saveToLocal: false });
         cleanup();
       });
 
@@ -231,7 +311,7 @@ export class DocumentDropzone {
           e.preventDefault();
           submitAction();
         } else if (e.key === "Escape") {
-          resolve(null);
+          resolve({ name: null, saveToLocal: false });
           cleanup();
         }
       });

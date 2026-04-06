@@ -185,6 +185,10 @@ export const OutlookDOMControllerPayload = `
       if (task.body) {
         fillBodyEditor(task.body);
       }
+
+      if (task.attachments && task.attachments.length > 0) {
+        await attachFiles(task.attachments);
+      }
       
       notifyTaskComplete('SUCCESS');
     } catch (error) {
@@ -193,6 +197,43 @@ export const OutlookDOMControllerPayload = `
     }
   }
   
+  /**
+   * Attach files to the Outlook compose window.
+   * Decodes base64 attachments and injects them via the hidden file input Outlook exposes.
+   * Falls back to clipboard (image types only) if the file input is not found.
+   */
+  async function attachFiles(attachments) {
+    const files = attachments.map(att => {
+      const binary = atob(att.base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new File([bytes], att.name, { type: att.type });
+    });
+
+    // Wait for the compose toolbar to finish rendering
+    await sleep(800);
+
+    // Outlook Web exposes two types of file inputs in the Ribbon:
+    //   1. input[accept="image/*"]  -> inline picture insertion (NOT what we want)
+    //   2. input (no accept / empty accept) -> file attachment (what we want)
+    // Use :not([accept="image/*"]) to guarantee we never hit the inline-image input.
+    var fileInput = /** @type {HTMLInputElement|null} */ (document.querySelector(
+      'input[type="file"][data-testid="local-computer-filein"]:not([accept="image/*"])'
+    ));
+
+    if (fileInput) {
+      const dt = new DataTransfer();
+      files.forEach(f => dt.items.add(f));
+      fileInput.files = dt.files;
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+      fileInput.dispatchEvent(new Event('input',  { bubbles: true }));
+      console.log('[OutlookDOMController] Attached', files.length, 'file(s) as attachment(s) via', fileInput.getAttribute('data-testid'));
+      await sleep(1000);
+    } else {
+      console.warn('[OutlookDOMController] Attachment file input not found — files not attached');
+    }
+  }
+
   function waitForElement(selector, timeout) {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();

@@ -5,7 +5,7 @@
 | **Story ID**   | EPIC-016-STORY-003                                                               |
 | **标题**       | End of Day Report — 内置每日收工报告邮件模板（含本地截图自动读取）              |
 | **优先级**     | P1 - 高                                                                          |
-| **状态**       | 📋 待开发                                                                        |
+| **状态**       | ✅ 已完成                                                                        |
 | **预估工作量** | 8-10 Story Points                                                                |
 | **目标页面**   | 任意页面（不依赖页面 DOM，卡片始终可用）                                         |
 | **关联 Epic**  | Epic 16（内置模板体系）、Epic 12（Mail Builder 基础框架）                        |
@@ -184,4 +184,37 @@ interface EodReportConfig {
 | 非递归扫描 | 仅扫描所选文件夹的第一层级，子文件夹内的文件不被读取 |
 ---
 ## Dev Agent Record
-*（待实现后填写）*
+
+### 实现说明
+- **`src/js/utils/IDBHandleStore.ts`（新建）**: 轻量级 IndexedDB 工具模块。DB: `hha-smart-assistant`，Store: `fs-handles`。提供 `saveHandleToIDB` / `loadHandleFromIDB` 两个异步函数，供 EodReportTemplate 持久化 `FileSystemDirectoryHandle`。
+- **`src/js/services/builtin/EodReportTemplate.ts`（新建）**: 完整实现 Epic 16 Story 3 所有 AC：
+  - 入口卡片始终可点击，无置灰逻辑，TagBadge 显示「任意页面」。
+  - 首次使用时触发 `showDirectoryPicker()`，后续使用通过 `handle.requestPermission()` 触发原生权限横幅。
+  - Modal 含：收件人名/邮箱配置区（dirty 追踪 + 保存配置按钮）、可编辑 Subject（格式 `The End of Day Report MM/DD/YYYY`）、`contenteditable` 富文本编辑器（预填 `Hello {recipientName},\nPlease see attached.`）、文件夹区（显示格式：`📁 已选择文件夹：{handle.name}`）、附件列表（扫描 SUPPORTED_EXTS，按 lastModified 降序排列，每项含 `[✕]` 删除按钮）。
+  - 「发送到 Outlook」按钮：空列表时弹出 `confirm()` 确认；文件通过 `FileReader` 转 base64 后存入 `MailTask.attachments[]`；成功后关闭 Modal。
+- **`src/js/services/MailService.ts`（修改）**: `MailTask` 接口新增可选字段 `attachments?: Array<{name: string; type: string; base64: string}>`。
+- **`src/js/services/OutlookDOMControllerPayload.ts`（修改）**: `executeMailTask()` 新增 `attachFiles()` 调用；`attachFiles` 将 base64 解码为 `File[]`，通过精确 selector `input[type="file"][data-testid="local-computer-filein"]:not([accept="image/*"])` 定位 Outlook Ribbon 的真正附件 input（排除 `accept="image/*"` 的内嵌图片 input），注入文件并派发 `change`/`input` 事件。注意：整个 payload 是注入为纯 JS 字符串执行，不可包含 TypeScript 语法（如 `as` 类型断言）。
+- **`src/js/tabs/MailBuilderTab.ts`（修改）**: 导入 `EodReportTemplate`，新增 `eodReportTemplate` 实例字段，在内置模板 Tab 的 `renderTemplateList()` 中调用 `this.eodReportTemplate.renderEntryCard(list)`。
+- **`src/style/mail-builder-tab.less`（修改）**: 新增 `.eod-modal`、`.eod-modal-body`、`.eod-config-*`、`.eod-subject-*`、`.eod-editor-*`（`min-height: 180px`，`max-height: 280px`，`overflow-y: auto`）、`.eod-folder-*`、`.eod-file-*`、`.eod-modal-footer`、`.eod-save-config-btn`、`.eod-outlook-btn`、`.eod-toast` 样式规则。Modal 主题沿用 userscript 标准紫色渐变，无独立绿色主题。
+
+### 修复记录（本次 session）
+- **Modal UI 主题**：移除独立绿色渐变 `.eod-modal-header` 和 `.eod-outlook-btn` 覆写，改为继承 `.template-modal-header` 和 `.template-modal-btn.btn-save` 的标准紫色主题，与 Timesheet 等其他内置模板风格一致。
+- **「▶ Outlook」按钮**：发送按钮文字从「📤 发送到 Outlook」改为「▶ Outlook」，保持简洁。
+- **富文本编辑器高度**：`min-height` 从 90px 提升至 180px，新增 `max-height: 280px` + `overflow-y: auto`，内容超出后在编辑器内部滚动，不再撑大弹窗。
+- **附件注入根本性修复**：通过 Chrome DevTools MCP 实时查询 Outlook Web DOM，发现 Ribbon 中存在两个 file input：`accept="image/*"`（内联图片嵌入正文）和无 accept 限制（真正的附件上传）。旧代码 `querySelector('input[type="file"][multiple]')` 因 DOM 顺序命中了 `image/*` input，导致所有文件被嵌入邮件正文而非作为附件。修复后精确使用 `[data-testid="local-computer-filein"]:not([accept="image/*"])` 选择器。
+- **Controller 语法错误修复**：附件注入修复初版在注入字符串里误写了 TypeScript 类型断言 `as HTMLInputElement | null`，导致浏览器解析时抛 `SyntaxError: Unexpected identifier 'as'`，controller 完全无法加载。改为纯 JS 写法（`/** @type {...} */` 注释）修复。
+- **tsconfig types 补全**：新增 `"types": ["node", "jquery", "greasemonkey"]` 消除 `index.ts` 的已知类型误报（依赖包均已安装，仅缺 types 字段声明）。
+
+### File List（变更文件）
+- `src/js/utils/IDBHandleStore.ts`（新建）
+- `src/js/services/builtin/EodReportTemplate.ts`（新建）
+- `src/js/services/MailService.ts`（修改）
+- `src/js/services/OutlookDOMControllerPayload.ts`（修改）
+- `src/js/tabs/MailBuilderTab.ts`（修改）
+- `src/style/mail-builder-tab.less`（修改）
+- `src/style/document-dropzone.less`（修改）
+- `src/js/services/DocumentDropzone.ts`（修改）
+- `tsconfig.json`（修改）
+- `package.json`（修改 — 版本升至 3.16.1）
+- `docs/stories/epic-14-drag-and-drop-attachment.md`（修改）
+- `docs/stories/epic-16-story-3-end-of-day-report.md`（修改）

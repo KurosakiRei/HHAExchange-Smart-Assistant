@@ -26,6 +26,7 @@ export interface MailTask {
   cc?: string;
   subject: string;
   body: string; // 支持 HTML
+  attachments?: Array<{ name: string; type: string; base64: string }>;
 }
 
 /**

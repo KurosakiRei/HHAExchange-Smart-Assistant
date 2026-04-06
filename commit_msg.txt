@@ -1,13 +1,60 @@
-feat(epic-16): 实现 Timesheet 提交通知内置模板 (Story 16.1)
+feat(epic-16): 新增 Patient Vacation 通知内置模板 (Story 16.2) [v3.16.0]
 
-功能概述：
-- 在邮件助手「内置模板」Tab 新增「Timesheet 提交」入口卡片
-- 非 Prebilling 页面时卡片自动置灰并显示 tooltip 提示
-- 页面切换时通过 PageDetector.onPageChange 实时更新卡片状态
-- 点击卡片弹出 Modal，支持配置收件人/To/CC 并保存至 GM storage
-- Visit 列表实时从 PrebillingTableParser.parseAllRows() 拉取，支持姓名/ID 搜索过滤
-- Modal 开启期间每 5s 轮询刷新数据，关闭时自动停止
-- 点击「▶ Outlook」按钮一键发送格式化 Timesheet 通知邮件至 Outlook
+## 新增功能
+
+### PatientCalendarApiProvider（新文件）
+- 专用服务类，用于获取 HHAExchange Calendar API 所需的认证参数
+- 策略一：优先从当前页面的 iframefrmRightSide 中读取隐藏 input 字段（零网络请求）
+- 策略二：fallback 通过 GM_fetch 拉取 Calendar 页 HTML 并解析同类字段
+- 返回 CalendarApiParams 接口对象（含 hhwsPath、appSecret、userID、officeID 等 12 个字段）
+
+### PatientVacationTemplate（新文件）
+- Patient Vacation 通知完整内置模板，针对 Patient Profile 页面（PATIENT_PROFILE 类型）
+- 入口卡片：仅在 PATIENT_PROFILE 页面时可点击，其他页面置灰并提示
+- Loading 蒙版：全屏毛玻璃遮罩，显示旋转动画及"正在获取患者假期信息..."提示，含 180 秒超时保护
+- 数据获取与推算：
+  - 调用 GetCalendarVacationInfo 接口获取当前休假区间（起止日期）
+  - 调用 GetCalendarVisitInfo 接口推算 Last Service Date（本月最后一次早于假期开始的就诊日）
+  - 调用 GetCalendarVisitInfo（策略一）或 Master Week 页面解析（策略二）推算 Resumption Date
+  - 无法获取的字段以"[无法获取]"占位，并在模态框内以橙色警告高亮
+- 邮件编辑 Modal：包含 To/CC 配置区、Subject 输入、格式工具栏（Bold/Italic/Underline/Color/List）、320px 富文本编辑框
+- Split Button：主按钮"复制并关闭"，下拉含"仅复制 Body"，复制成功/失败均通过 Toast 反馈
+- Toast 通知：顶部居中固定（top: 20px），从上方滑入，支持 success / warning 两种样式
+- 完整 destroy() 清理：移除 loading overlay、modal、toast、事件监听器及定时器
+
+### PageDetector（修改）
+- PageType 联合类型新增 "PATIENT_PROFILE"
+- detectPageType() 新增 InternalPatientInfo_ns.aspx 的 URL 匹配
+- getPageDisplayName() 新增对应中英文显示名
+
+### MailBuilderTab（修改）
+- 导入并实例化 PatientVacationTemplate
+- 在内置模板 Tab 的 renderTemplateList() 中注册 PV 入口卡片
+- destroy() 中追加 PV 模板资源释放
+
+### BuiltinTemplates（修改）
+- 更新注释，说明 Patient Vacation 模板采用独立渲染路径（非通用列表项）
+
+## Bug 修复
+
+### [Critical] Resumption Date 推算失败，始终返回"[无法获取]"
+- 根本原因：旧实现将 HTML 赋给 detached div 后读取 innerText；未挂载到 live DOM 的元素不会为块级标签产生换行，导致"Days:\n..."正则永远无法匹配，serviceDays Set 始终为空
+- 修复方案：改用 DOMParser.parseFromString() 生成真实 Document，直接遍历 table DOM 结构，建立列索引至 day-of-week 映射，提取有排班值的列，彻底解决解析失败问题
+- 验证结果：成功识别服务日 {Sat, Sun, Fri}，正确推算 resumption date
+
+### Toast 位置错误（显示在底部）
+- 修复：CSS bottom: 24px 改为 top: 20px；入场动画 translateY(30px) 改为 translateY(-40px)
+
+### 富文本编辑框高度不足
+- 修复：min-height 100px 调整为 320px
+
+### Outlook 正文段落格式错乱
+- 修复：buildBodyHtml() 改为 br+br 分隔段落（移除 p 标签），两句内容合并为单段
+
+## 版本
+- package.json: 3.15.0 升级至 3.16.0
+- epic-16-builtin-templates.md: 新增 Story 16.2 记录
+- epic-16-story-2-patient-vacation.md: 全部 27 个验收标准已通过（状态：已完成）
 - 存在未保存配置时弹出确认对话框防止误操作
 
 界面设计：

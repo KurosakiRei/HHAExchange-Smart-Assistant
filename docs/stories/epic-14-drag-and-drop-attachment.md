@@ -179,8 +179,8 @@
 浏览器安全沙箱限制了 userscript 直接修改本地文件，因此**原始文件的文件名不会被脚本改变**。此 Story 提供的是一个替代方案：将内存中已重命名的 `File` 对象通过浏览器下载机制「另存为」到本地，等效于以新名字保留一份副本。此步骤为**可选**——用户可选择跳过，直接提交上传即可。
 
 ### 验收标准
-- [ ] 在重命名确认 Modal 的底部增加一个可选的复选框或次级按钮：`「同时保存到本地」`，默认不勾选。
-- [ ] 若用户勾选（或点击该按钮），在确认新文件名后，通过以下方式触发浏览器下载：
+- [x] 在重命名确认 Modal 的底部增加一个可选的复选框或次级按钮：`「同时保存到本地」`，默认不勾选。
+- [x] 若用户勾选（或点击该按钮），在确认新文件名后，通过以下方式触发浏览器下载：
   ```typescript
   const url = URL.createObjectURL(renamedFile);
   const a = document.createElement('a');
@@ -189,9 +189,9 @@
   a.click();
   URL.revokeObjectURL(url);
   ```
-- [ ] 下载触发后，浏览器显示标准下载提示（保存到下载目录或弹出另存为对话框，取决于浏览器设置），无需额外 UI。
-- [ ] 下载触发与 HHAExchange 页面的上传流程（14.4）**互不阻塞**，两者可并行完成。
-- [ ] 若用户不勾选该选项，流程与现有 14.3-14.5 行为完全一致，无任何额外干扰。
+- [x] 下载触发后，浏览器显示标准下载提示（保存到下载目录或弹出另存为对话框，取决于浏览器设置），无需额外 UI。
+- [x] 下载触发与 HHAExchange 页面的上传流程（14.4）**互不阻塞**，两者可并行完成。
+- [x] 若用户不勾选该选项，流程与现有 14.3-14.5 行为完全一致，无任何额外干扰。
 
 ---
 
@@ -208,9 +208,19 @@
 - **Story 14.4**: Used the captured input to initialize `new File([originalFile], newFileName, { type: originalFile.type })` in `attachFileToInput`. Injected this new file into the DOM using `DataTransfer` and dispatched the necessary `change` event.
 - **Story 14.5**: Hooked up `autoFillMetadata` to set Document Type `documentTypeDropdown` to '29132' and `attachedDocumentDescription` to the new filename (without extension), dispatching `change` and `input` events automatically. All forms are synced now. Ready for user testing!
 
+### Story 14.6
+- Added `保存到本地` checkbox (default: **checked**) to the rename modal footer in `DocumentDropzone.ts`.
+- `promptForRename()` return type changed to `{ name: string | null; saveToLocal: boolean }` to carry the checkbox state — existing 14.3–14.5 logic is completely unaffected when unchecked.
+- `onDrop` handler: when `saveToLocal === true`, uses `window.showSaveFilePicker()` (File System Access API) to open a native OS "Save As" dialog; falls back to anchor-download if the API is unavailable. Cancelling the Save As dialog does not abort the HHAExchange upload.
+- Added `.rename-save-local-row` + `.rename-save-local-label` styles to `document-dropzone.less`.
+
+### 修复记录（本次 session）
+- **Dropzone 早激活问题修复**：MutationObserver 回调从仅检测 `fuUpload2` input 的存在改为 `findAddDocumentModal()`，该方法通过查找可见的「Add Document」标题元素（`getBoundingClientRect` 非零）来判断弹窗是否真正打开，彻底解决弹窗未出现时 dropzone 就绑定的问题。
+- **Rename Modal 标题栏颜色**：从深蓝 `#0d3e61` 改为与 userscript 主题一致的紫色渐变 `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`。
+
 ### File List (Changed Files)
 - `src/index.ts` (Modified)
 - `src/style/main.less` (Modified)
-- `src/style/document-dropzone.less` (New)
-- `src/js/services/DocumentDropzone.ts` (New)
+- `src/style/document-dropzone.less` (Modified — `.rename-save-local-row` 样式 + rename header 颜色修正为紫色渐变)
+- `src/js/services/DocumentDropzone.ts` (Modified — Story 14.6: Save As dialog + default checked; dropzone 早激活修复)
 - `docs/stories/epic-14-drag-and-drop-attachment.md` (Modified)
