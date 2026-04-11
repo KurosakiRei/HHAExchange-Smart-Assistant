@@ -219,11 +219,17 @@ export class TimesheetNotificationTemplate {
     // ── Close handlers ───────────────────────────────────────────────────
     overlay
       .querySelector("#timesheet-modal-close")
-      ?.addEventListener("click", () => this.closeModal(overlay));
-
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) this.closeModal(overlay);
-    });
+      ?.addEventListener("click", () => {
+        const saveBtn =
+          overlay.querySelector<HTMLButtonElement>("#ts-save-config");
+        if (
+          saveBtn &&
+          !saveBtn.disabled &&
+          !window.confirm("有未保存的配置修改，确认丢弃并关闭吗？")
+        )
+          return;
+        this.closeModal(overlay);
+      });
 
     // ── Search ───────────────────────────────────────────────────────────
     let currentSearchTerm = "";

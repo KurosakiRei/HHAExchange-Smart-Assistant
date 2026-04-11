@@ -15,6 +15,11 @@ export type ProfilePageType =
   | "CAREGIVER"
   | "UNKNOWN";
 
+export interface PhoneEntry {
+  label: string; // e.g. 'Home Phone' | 'Patient Phone 2'
+  number: string; // e.g. '929-557-5611'
+}
+
 export interface ProfileData {
   type: "PATIENT" | "CAREGIVER";
   name: string;
@@ -23,6 +28,8 @@ export interface ProfileData {
   address?: string;
   phone?: string;
   insurance?: string;
+  phones?: PhoneEntry[]; // Epic 17: all phone entries from #menulist
+  insurances?: string[]; // Epic 17: all insurance names from Authorization table
 }
 
 /**
@@ -113,6 +120,8 @@ export class ProfileDataExtractor {
    */
   private static extractPatientInternal(): ProfileData {
     const selectors = SELECTORS.PATIENT_INTERNAL;
+    const insurances = this.getInsurancesFromAuthTable();
+    const phones = this.getPhonesFromMenu();
     return {
       type: "PATIENT",
       name: this.getText(selectors.name),
@@ -120,8 +129,90 @@ export class ProfileDataExtractor {
       dob: this.getText(selectors.dob),
       address: this.getText(selectors.address),
       phone: this.getPhoneFromTelLink(),
-      insurance: this.getText(selectors.insurance),
+      // insurance stays for backward-compat with TemplateEngine etc.
+      insurance: insurances[0] ?? this.getText(selectors.insurance),
+      insurances,
+      phones,
     };
+  }
+
+  /**
+   * Epic 17: 从 Authorization iframe 表格提取所有保险名称（去重）
+   * 仅在 PATIENT_INTERNAL 页面调用。
+   */
+  private static getInsurancesFromAuthTable(): string[] {
+    const seen = new Set<string>();
+    const result: string[] = [];
+
+    // Baseline: always read the contract span visible on the main page
+    try {
+      const spanEl = document.querySelector(
+        "#ctl00_ContentPlaceHolder1_PatientInfo1_uxLblContracts"
+      );
+      const spanText = spanEl?.textContent?.trim();
+      if (spanText) {
+        seen.add(spanText);
+        result.push(spanText);
+      }
+    } catch {
+      /* ignore */
+    }
+
+    // Supplement with auth table rows from the right-side iframe
+    try {
+      const iframe = document.getElementById(
+        "iframefrmRightSide"
+      ) as HTMLIFrameElement | null;
+      if (iframe?.contentDocument?.readyState === "complete") {
+        const cells = iframe.contentDocument.querySelectorAll(
+          "#PatientAuthorization_uxGvAuthorization tbody tr td:first-child"
+        );
+        cells.forEach((td) => {
+          const name = td.textContent?.trim() || "";
+          if (name && !seen.has(name)) {
+            seen.add(name);
+            result.push(name);
+          }
+        });
+      }
+    } catch {
+      return result;
+    }
+
+    return result;
+  }
+
+  /**
+   * Epic 17: 从 #menulist 下拉提取所有电话条目
+   */
+  private static getPhonesFromMenu(): PhoneEntry[] {
+    const entries: PhoneEntry[] = [];
+    try {
+      const items = document.querySelectorAll("#menulist li");
+      items.forEach((li) => {
+        const anchor = li.querySelector(
+          'a[href^="tel:"]'
+        ) as HTMLAnchorElement | null;
+        if (!anchor) return;
+        const number = (anchor.getAttribute("href") || "")
+          .replace("tel:", "")
+          .trim();
+        // textContent may be "Patient Phone 2 :  929-557-5611" or "Home Phone718-877-8808"
+        const rawLabel = anchor.textContent?.trim() || "Phone";
+        const label =
+          rawLabel
+            .replace(number, "") // strip embedded phone number (exact href format)
+            .replace(/\s*:?\s*[\+\d][\d\s\-\.\(\)]{6,}$/, "") // fallback: strip trailing phone number (any format)
+            .replace(/\s*:?\s*$/, "") // strip trailing " :" or " : "
+            .trim() || "Phone";
+        if (number) {
+          entries.push({ label, number });
+        }
+      });
+    } catch {
+      // ignore DOM errors
+    }
+    return entries;
   }
 
   /**
@@ -170,14 +261,13 @@ export class ProfileDataExtractor {
   }
 
   /**
-   * 从 tel: 链接提取电话号码
+   * 从第一个 tel: 链接提取电话号码（兼容旧逻辑）
    */
   private static getPhoneFromTelLink(): string {
     const telLink = document.querySelector(
       'a[href^="tel:"]'
     ) as HTMLAnchorElement;
     if (telLink) {
-      // 从 href="tel:917-622-0826" 提取号码
       const href = telLink.getAttribute("href") || "";
       return href.replace("tel:", "").trim();
     }

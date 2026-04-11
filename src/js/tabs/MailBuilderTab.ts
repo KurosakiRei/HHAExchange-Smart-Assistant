@@ -15,6 +15,8 @@ import { TinyMCEBundler } from "../services/TinyMCEBundler";
 import { TimesheetNotificationTemplate } from "../services/builtin/TimesheetNotificationTemplate";
 import { PatientVacationTemplate } from "../services/builtin/PatientVacationTemplate";
 import { EodReportTemplate } from "../services/builtin/EodReportTemplate";
+import { matchInsurance } from "../utils/InsuranceMatcher";
+import { FaxPreviewModal } from "../components/FaxPreviewModal";
 
 declare const unsafeWindow: Window;
 
@@ -43,6 +45,7 @@ export class MailBuilderTab extends BaseTab {
   private activeTemplateTab: "builtin" | "custom" = "custom";
   private editingTemplate: MailTemplate | null = null;
   private isEditorOpen: boolean = false;
+  private editorDirty: boolean = false;
   private timesheetTemplate: TimesheetNotificationTemplate | null = null;
   private patientVacationTemplate: PatientVacationTemplate | null = null;
   private eodReportTemplate: EodReportTemplate | null = null;
@@ -76,6 +79,35 @@ export class MailBuilderTab extends BaseTab {
 
     // 渲染对应的 UI
     this.renderContent();
+
+    // 如果是病人内页，尝试在 iframe 加载完成后刷新保险数据（解决时序问题）
+    if (this.currentPageType === "PATIENT_INTERNAL") {
+      const iframe = document.getElementById(
+        "iframefrmRightSide"
+      ) as HTMLIFrameElement | null;
+      if (iframe && iframe.contentDocument?.readyState !== "complete") {
+        const refreshOnIframeLoad = () => {
+          const fresh = ProfileDataExtractor.extract();
+          const oldCount = this.profileData?.insurances?.length ?? 0;
+          if ((fresh?.insurances?.length ?? 0) > oldCount) {
+            this.profileData = fresh;
+            const existingPanel = this.container?.querySelector(
+              ".mail-builder-info-panel"
+            ) as HTMLElement | null;
+            if (existingPanel) {
+              existingPanel.replaceWith(this.renderInfoPanel());
+              this.setupCopyHandlers(
+                this.container?.querySelector(
+                  ".mail-builder-info-panel"
+                ) as HTMLElement
+              );
+            }
+          }
+          iframe.removeEventListener("load", refreshOnIframeLoad);
+        };
+        iframe.addEventListener("load", refreshOnIframeLoad);
+      }
+    }
 
     // 监听页面变化
     this.pageChangeHandler = (pageType: ProfilePageType) => {
@@ -175,30 +207,77 @@ export class MailBuilderTab extends BaseTab {
 
     // 构建信息字段列表
     const fields = this.buildFieldsList();
+    const isPatientInternal = this.currentPageType === "PATIENT_INTERNAL";
 
-    panel.innerHTML = `
-      <div class="mail-builder-info-list">
-        ${fields
-          .map(
-            (field) => `
-          <div class="mail-builder-info-item">
-            <span class="info-label">${field.label}:</span>
-            <span class="info-value" title="${field.value}">${this.truncateText(
-              field.value,
-              20
-            )}</span>
-            <button class="info-copy-btn" data-value="${this.escapeHtml(
-              field.value
-            )}" title="复制">📋</button>
-          </div>
-        `
-          )
-          .join("")}
-      </div>
-      <div class="mail-builder-quick-copy">
-        <button class="quick-copy-btn" id="copy-name-id">📋 复制 名字+ID</button>
-      </div>
-    `;
+    const list = document.createElement("div");
+    list.className = "mail-builder-info-list";
+
+    fields.forEach((field) => {
+      const item = document.createElement("div");
+      item.className = "mail-builder-info-item";
+
+      const labelEl = document.createElement("span");
+      labelEl.className = "info-label";
+      labelEl.textContent = `${field.label}:`;
+
+      const valueEl = document.createElement("span");
+      valueEl.className = "info-value";
+      valueEl.title = field.value;
+      valueEl.textContent = this.truncateText(field.value, 20);
+
+      item.appendChild(labelEl);
+      item.appendChild(valueEl);
+
+      // 复制按钮（所有字段都有）
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "info-copy-btn";
+      copyBtn.dataset.value = field.value;
+      copyBtn.title = "复制";
+      copyBtn.textContent = "📋";
+      item.appendChild(copyBtn);
+
+      if (field.isInsurance) {
+        // 传真按钮
+        const faxBtn = document.createElement("button");
+        faxBtn.className = "info-fax-btn";
+        faxBtn.title = isPatientInternal
+          ? "创建传真模板"
+          : "仅在病人档案页可用";
+        faxBtn.textContent = "📠";
+        if (!isPatientInternal) {
+          faxBtn.disabled = true;
+          faxBtn.classList.add("disabled");
+        } else {
+          faxBtn.addEventListener("click", () => {
+            const insuranceRecord = matchInsurance(field.value);
+            const modal = new FaxPreviewModal({
+              profileData: this.profileData!,
+              insuranceName: field.value,
+              insuranceRecord,
+            });
+            modal.open();
+          });
+        }
+        item.appendChild(faxBtn);
+      } else if (field.isPhone) {
+        // 拨打按钮
+        const dialBtn = document.createElement("a");
+        dialBtn.className = "info-dial-btn";
+        dialBtn.href = `tel:${field.value}`;
+        dialBtn.title = "拨打";
+        dialBtn.textContent = "📞";
+        item.appendChild(dialBtn);
+      }
+
+      list.appendChild(item);
+    });
+
+    panel.appendChild(list);
+
+    const quickCopy = document.createElement("div");
+    quickCopy.className = "mail-builder-quick-copy";
+    quickCopy.innerHTML = `<button class="quick-copy-btn" id="copy-name-id">📋 复制 名字+ID</button>`;
+    panel.appendChild(quickCopy);
 
     // 添加事件监听
     this.setupCopyHandlers(panel);
@@ -209,10 +288,20 @@ export class MailBuilderTab extends BaseTab {
   /**
    * 构建字段列表
    */
-  private buildFieldsList(): Array<{ label: string; value: string }> {
+  private buildFieldsList(): Array<{
+    label: string;
+    value: string;
+    isInsurance?: boolean;
+    isPhone?: boolean;
+  }> {
     if (!this.profileData) return [];
 
-    const fields: Array<{ label: string; value: string }> = [
+    const fields: Array<{
+      label: string;
+      value: string;
+      isInsurance?: boolean;
+      isPhone?: boolean;
+    }> = [
       { label: "名字", value: this.profileData.name },
       { label: "ID", value: this.profileData.id },
     ];
@@ -221,19 +310,73 @@ export class MailBuilderTab extends BaseTab {
       fields.push({ label: "生日", value: this.profileData.dob });
     }
 
-    if (this.profileData.phone) {
-      fields.push({ label: "电话", value: this.profileData.phone });
+    // 多电话：展示 phones 数组（Epic 17），fallback to single phone
+    // 始终将 phone 字段（Home Phone）作为 Phone 1 前置，避免被子菜单遮漏
+    if (this.profileData.phones && this.profileData.phones.length > 0) {
+      const primaryPhone = this.profileData.phone;
+      const inSubMenu = this.profileData.phones.some(
+        (p) => p.number === primaryPhone
+      );
+      if (primaryPhone && !inSubMenu) {
+        fields.push({ label: "电话 1", value: primaryPhone, isPhone: true });
+      }
+      this.profileData.phones.forEach((entry) => {
+        fields.push({
+          label: this.shortenPhoneLabel(entry.label),
+          value: entry.number,
+          isPhone: true,
+        });
+      });
+    } else if (this.profileData.phone) {
+      fields.push({
+        label: "电话 1",
+        value: this.profileData.phone,
+        isPhone: true,
+      });
     }
 
     if (this.profileData.address) {
       fields.push({ label: "地址", value: this.profileData.address });
     }
 
-    if (this.profileData.insurance) {
-      fields.push({ label: "保险", value: this.profileData.insurance });
+    // 多保险：展示 insurances 数组（Epic 17），多条时加编号
+    if (this.profileData.insurances && this.profileData.insurances.length > 0) {
+      const multi = this.profileData.insurances.length > 1;
+      this.profileData.insurances.forEach((name, idx) => {
+        fields.push({
+          label: multi ? `保险${idx + 1}` : "保险",
+          value: name,
+          isInsurance: true,
+        });
+      });
+    } else if (this.profileData.insurance) {
+      fields.push({
+        label: "保险",
+        value: this.profileData.insurance,
+        isInsurance: true,
+      });
     }
 
     return fields;
+  }
+
+  /**
+   * 缩短电话标签：
+   * "Patient Phone N" → "Phone N"
+   * "Emergency Phone N" → "EMC N"
+   * "Home Phone" → "Phone 1"
+   */
+  private shortenPhoneLabel(label: string): string {
+    const s = label.trim();
+    // Check Emergency first (before generic Phone match)
+    const em = s.match(/Emergency\s+Phone\s*(\d+)/i);
+    if (em) return `紧急 ${em[1]}`;
+    if (/Emergency\s+Phone/i.test(s)) return "紧急";
+    if (/Home\s+Phone/i.test(s)) return "电话 1";
+    // Match any "[Patient ]Phone N" substring — tolerates trailing garbage
+    const pm = s.match(/(?:Patient\s+)?Phone\s*(\d+)/i);
+    if (pm) return `电话 ${pm[1]}`;
+    return s.replace(/^Patient\s+/i, "");
   }
 
   /**
@@ -847,27 +990,39 @@ export class MailBuilderTab extends BaseTab {
       });
     });
 
-    // 点击遮罩关闭
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) {
-        this.closeEditor();
-      }
-    });
-
     // ESC 键关闭
     const escHandler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         this.closeEditor();
-        document.removeEventListener("keydown", escHandler);
+        if (!this.isEditorOpen) {
+          document.removeEventListener("keydown", escHandler);
+        }
       }
     };
     document.addEventListener("keydown", escHandler);
+
+    // 脏状态追踪
+    this.editorDirty = false;
+    overlay
+      .querySelectorAll<HTMLElement>("input, textarea, select")
+      .forEach((el) => {
+        el.addEventListener("change", () => {
+          this.editorDirty = true;
+        });
+        el.addEventListener("input", () => {
+          this.editorDirty = true;
+        });
+      });
   }
 
   /**
    * 关闭编辑器
    */
   private closeEditor(): void {
+    if (this.editorDirty) {
+      if (!window.confirm("有未保存的修改，确认丢弃并关闭吗？")) return;
+    }
+    this.editorDirty = false;
     // 销毁 TinyMCE 实例（使用 unsafeWindow 因为 TinyMCE 在页面主世界）
     this.cleanupTinyMCE();
 
@@ -940,6 +1095,7 @@ export class MailBuilderTab extends BaseTab {
     TemplateManager.save(templateData);
     this.templates = TemplateManager.getAll();
     this.showToast("✅ 模板已保存");
+    this.editorDirty = false;
     this.closeEditor();
     this.refreshTemplatePanel();
   }

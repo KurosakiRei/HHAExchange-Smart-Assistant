@@ -838,11 +838,8 @@ export class PatientVacationTemplate {
 
     // ── Close handlers ──────────────────────────────────────────────────
     overlay.querySelector("#pv-modal-close")?.addEventListener("click", () => {
+      if (!window.confirm("邮件尚未发送，确认关闭吗？")) return;
       this.closeModal(overlay);
-    });
-
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) this.closeModal(overlay);
     });
   }
 

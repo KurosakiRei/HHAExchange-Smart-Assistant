@@ -69,12 +69,13 @@
     padding: 12px;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow: hidden;
     background: #fff;
 }
 
 .mail-builder-info-list {
     flex: 1;
+    overflow-y: auto;
 }
 
 .mail-builder-info-item {
@@ -1628,4 +1629,151 @@
         background: #f57c00;
         color: #fff;
     }
+}
+
+/* ── Epic 17: Insurance fax button & Phone dial button ── */
+.info-fax-btn,
+.info-dial-btn {
+    background: #f0f4f8;
+    border: 1px solid #c8d8e8;
+    border-radius: 4px;
+    padding: 3px 5px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    line-height: 1;
+    text-decoration: none;
+    color: inherit;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+}
+
+.info-fax-btn:hover { background: #dce8f5; }
+.info-dial-btn:hover { background: #dce8f5; }
+.info-fax-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ── Epic 17: Fax Preview Modal ── */
+
+/* overlay z-index override (template-modal-overlay is z-index:100002) */
+.fax-modal-overlay {
+    z-index: 100003;
+}
+
+/* Size override for fax modal */
+.fax-modal {
+    width: 740px;
+    max-width: 96vw;
+}
+
+/* Scrollable body */
+.fax-modal-body {
+    padding: 16px 20px 8px;
+    max-height: calc(85vh - 120px);
+    overflow-y: auto;
+}
+
+/* Info grid: 4-column table layout [label | value | label | value] */
+.fax-info-grid {
+    display: grid;
+    grid-template-columns: auto 1fr auto 1fr;
+    gap: 5px 14px;
+    align-items: baseline;
+    background: #f5f7ff;
+    border: 1px solid #dde3f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+}
+
+.fax-ig-label {
+    font-weight: 600;
+    color: #5a5f7d;
+    white-space: nowrap;
+    &::after { content: "："; }
+}
+
+.fax-ig-value {
+    color: #222;
+    word-break: break-all;
+}
+
+/* Form sections */
+.fax-form-section {
+    border-bottom: 1px solid #edf0f7;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+.fax-config-section {
+    padding-bottom: 4px;
+}
+
+.fax-config-title {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 10px;
+    text-align: center;
+    letter-spacing: 0.05em;
+}
+
+.fax-field-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.fax-field-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+    min-width: 46px;
+    padding-top: 9px;
+    flex-shrink: 0;
+    text-align: right;
+}
+
+/* 页数 number spinner */
+.fax-pages-input {
+    max-width: 90px;
+    text-align: center;
+}
+
+/* textarea heights */
+.fax-field-textarea {
+    min-height: 120px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+/* inputs inside fax field rows should stretch */
+.fax-field-row .template-form-input {
+    flex: 1;
+    width: auto;
+    box-sizing: border-box;
+}
+
+.fax-sig-textarea {
+    min-height: 80px;
+}
+
+.fax-config-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.fax-modal-footer {
+    padding: 12px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #edf0f7;
 }

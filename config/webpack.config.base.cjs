@@ -105,6 +105,11 @@ const webpackConfig = {
           filename: 'fonts/[name].[hash:8][ext]'
         }
       },
+      /* config.module.rule('docx') — Epic 17: fax template inline */
+      {
+        test: /\.docx$/,
+        type: 'asset/inline',
+      },
     ],
   },
   plugins: process.env.npm_config_report ? [new BundleAnalyzerPlugin()] : [new VueLoaderPlugin(),
