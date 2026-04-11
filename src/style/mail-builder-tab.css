@@ -65,6 +65,7 @@
 .mail-builder-info-list {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .mail-builder-info-item {
   display: flex;
@@ -542,6 +543,7 @@
 .template-modal-body {
   padding: 20px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   flex: 1;
   max-height: calc(90vh - 140px);
 }
@@ -1435,6 +1437,7 @@
   padding: 16px 20px 8px;
   max-height: calc(85vh - 120px);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 /* Info grid: 4-column table layout [label | value | label | value] */
 .fax-info-grid {

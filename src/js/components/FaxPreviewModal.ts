@@ -28,6 +28,7 @@ export class FaxPreviewModal {
   private overlay: HTMLElement | null = null;
   private options: FaxPreviewModalOptions;
   private escHandler: ((e: KeyboardEvent) => void) | null = null;
+  private wheelHandler: ((e: WheelEvent) => void) | null = null;
 
   constructor(options: FaxPreviewModalOptions) {
     this.options = options;
@@ -137,6 +138,19 @@ export class FaxPreviewModal {
       if (e.key === "Escape") this.close();
     };
     document.addEventListener("keydown", this.escHandler);
+
+    // Prevent scroll penetration: block wheel events on the backdrop from
+    // reaching the underlying page. Events inside .fax-modal-body are allowed
+    // through (overscroll-behavior:contain in CSS handles the boundary case).
+    this.wheelHandler = (e: WheelEvent) => {
+      const modalBody = this.overlay?.querySelector(".fax-modal-body");
+      if (!modalBody || !modalBody.contains(e.target as Node)) {
+        e.preventDefault();
+      }
+    };
+    this.overlay.addEventListener("wheel", this.wheelHandler, {
+      passive: false,
+    });
   }
 
   private handleDownload(date: string): void {
@@ -216,6 +230,10 @@ export class FaxPreviewModal {
     if (this.escHandler) {
       document.removeEventListener("keydown", this.escHandler);
       this.escHandler = null;
+    }
+    if (this.wheelHandler && this.overlay) {
+      this.overlay.removeEventListener("wheel", this.wheelHandler);
+      this.wheelHandler = null;
     }
     if (this.overlay) {
       this.overlay.remove();
