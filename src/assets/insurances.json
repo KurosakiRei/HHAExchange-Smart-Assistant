@@ -1,0 +1,78 @@
+[
+  {
+    "company_name": "Aetna Better Health",
+    "aliases": ["Aetna Better Health of NY", "Aetna"],
+    "phone": "855-456-9126",
+    "fax": "855-863-6421"
+  },
+  {
+    "company_name": "Anthem (Integra)",
+    "aliases": ["Anthem(Integra)", "Anthem Integra", "Anthem"],
+    "phone": "929-946-6500",
+    "fax": "866-661-2145"
+  },
+  {
+    "company_name": "CenterLight HealthCare",
+    "aliases": ["CenterLight", "Center Light HealthCare"],
+    "phone": "718-239-1840",
+    "fax": "315-825-4810"
+  },
+  {
+    "company_name": "CENTERS PLAN for a HEALTHY LIVING",
+    "aliases": [
+      "CENTERS PLAN for a HEALTHY LIV",
+      "Centers Plan",
+      "CENTERS PLAN"
+    ],
+    "phone": "855-270-1600",
+    "fax": "718-581-5522"
+  },
+  {
+    "company_name": "Elderplan/HomeFirst",
+    "aliases": ["Elderplan", "HomeFirst", "Elder Plan"],
+    "phone": "718-921-7772",
+    "fax": "718-759-4161"
+  },
+  {
+    "company_name": "Fidelis Care",
+    "aliases": ["Fidelis"],
+    "phone": "716-564-3630",
+    "fax": "833-710-1772"
+  },
+  {
+    "company_name": "Healthfirst",
+    "aliases": ["Health First"],
+    "phone": "888-394-4327",
+    "fax": "646-313-4603"
+  },
+  {
+    "company_name": "Revival Home Care",
+    "aliases": ["Revival"],
+    "phone": "718-629-1000",
+    "fax": "718-629-1200"
+  },
+  {
+    "company_name": "ElderServe Health",
+    "aliases": ["ElderServe", "Elder Serve Health"],
+    "phone": "800-370-3600",
+    "fax": "866-889-1552"
+  },
+  {
+    "company_name": "Senior Whole Health",
+    "aliases": ["SWH", "Senior Whole Health of NY"],
+    "phone": "646-273-2300",
+    "fax": "855-818-4871"
+  },
+  {
+    "company_name": "Village Care Max",
+    "aliases": ["VillageCareMax", "Village Care"],
+    "phone": "800-469-6292",
+    "fax": "212-337-5711"
+  },
+  {
+    "company_name": "VNS Health",
+    "aliases": ["VNS", "Visiting Nurse Service"],
+    "phone": "866-791-2215",
+    "fax": "212-897-9448"
+  }
+]
