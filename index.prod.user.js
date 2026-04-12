@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.17.1
+// @version             3.17.2
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -8205,7 +8205,7 @@ var ___CSS_LOADER_URL_IMPORT_0___ = new URL(/* asset import */ __webpack_require
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 var ___CSS_LOADER_URL_REPLACEMENT_0___ = _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default()(___CSS_LOADER_URL_IMPORT_0___);
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "/**\n * Main Stylesheet Entry Point\n * \n * This file imports all component stylesheets.\n * Visit Monitor (Coordinator Tracker) styles are in coordinator-tracker.less\n */\n.hha-smart-panel {\n  position: absolute;\n  top: 0;\n  width: 680px;\n  height: 460px;\n  max-height: 80vh;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n  font-size: 14px;\n  color: #333333;\n}\n.hha-smart-panel-header {\n  height: 40px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 16px;\n  border-bottom: none;\n  cursor: move;\n  user-select: none;\n}\n.hha-smart-panel-title {\n  font-size: 14px;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-panel-controls {\n  display: flex;\n  gap: 8px;\n  position: relative;\n  z-index: 100000;\n}\n.hha-smart-panel-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 2px;\n  background: rgba(255, 255, 255, 0.2);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: background 0.15s ease;\n  font-size: 14px;\n  padding: 0;\n  position: relative;\n  z-index: 100001;\n}\n.hha-smart-panel-btn:hover {\n  background: rgba(255, 255, 255, 0.3);\n}\n.hha-smart-panel-btn:active {\n  background: rgba(255, 255, 255, 0.4);\n}\n.hha-smart-panel-body {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-content-wrapper {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n  position: relative;\n  isolation: isolate;\n}\n.hha-smart-tab-bar {\n  width: 100px;\n  min-width: 40px;\n  background: #f7f8fa;\n  border-right: 1px solid #e0e0e0;\n  transition: width 0.2s ease;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  flex-shrink: 0;\n  position: relative;\n  z-index: 2;\n}\n.hha-smart-tab-bar.collapsed {\n  width: 40px;\n}\n.hha-smart-tab-list {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n}\n.hha-smart-tab-list::-webkit-scrollbar {\n  width: 4px;\n}\n.hha-smart-tab-list::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n.hha-smart-tab-item {\n  position: relative;\n  padding: 12px 8px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  white-space: nowrap;\n  border-bottom: 1px solid #f0f0f0;\n}\n.hha-smart-tab-item:hover {\n  background: #f0f2f5;\n}\n.hha-smart-tab-item.active {\n  background: #f0efff;\n  color: #667eea;\n  font-weight: 500;\n}\n.hha-smart-tab-icon {\n  flex-shrink: 0;\n  font-size: 18px;\n  line-height: 1;\n  width: 20px;\n  text-align: center;\n}\n.hha-smart-tab-text {\n  opacity: 1;\n  transition: opacity 0.2s ease;\n  font-size: 13px;\n  overflow-x: auto;\n  overflow-y: hidden;\n  white-space: nowrap;\n  flex: 1;\n  scroll-behavior: smooth;\n}\n.hha-smart-tab-text::-webkit-scrollbar {\n  height: 0;\n  display: none;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-tab-text {\n  opacity: 0;\n  width: 0;\n  overflow: hidden;\n  pointer-events: none;\n}\n.hha-smart-tab-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 4px;\n  height: 100%;\n  background: #667eea;\n  opacity: 0;\n  transition: opacity 0.2s ease;\n  z-index: 1;\n}\n.hha-smart-tab-item.active .hha-smart-tab-indicator {\n  opacity: 1;\n}\n.hha-smart-tab-collapse-btn {\n  padding: 8px;\n  text-align: center;\n  cursor: pointer;\n  border-top: 1px solid #e0e0e0;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 36px;\n  position: relative;\n  z-index: 10;\n}\n.hha-smart-tab-collapse-btn:hover {\n  background: #f0f2f5;\n}\n.hha-smart-collapse-icon {\n  display: inline-block;\n  transition: transform 0.2s ease;\n  font-size: 14px;\n  color: #666666;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-collapse-icon {\n  transform: rotate(180deg);\n}\n.hha-smart-content-area {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: #ffffff;\n  min-height: 0;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-panel-footer {\n  height: 28px;\n  background: #f7f8fa;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  padding: 0 16px;\n  font-size: 12px;\n  color: #666666;\n  flex-shrink: 0;\n}\n.footer-branding {\n  font-style: italic;\n  opacity: 0.6;\n  user-select: none;\n}\n.hha-smart-tab-content {\n  display: none !important;\n  padding: 0;\n  animation: fadeIn 0.2s ease;\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  box-sizing: border-box;\n  min-height: 0;\n  position: relative;\n  z-index: 0;\n}\n.hha-smart-tab-content.active {\n  display: flex !important;\n  flex-direction: column;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n.hha-smart-config-card {\n  background: #ffffff;\n  border-radius: 4px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: box-shadow 0.2s ease;\n}\n.hha-smart-config-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.hha-smart-config-card-title {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-config-card-body {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.hha-smart-btn {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.hha-smart-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #667eea;\n  color: white;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.hha-smart-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary:hover:not(:disabled) {\n  background: #5a6fd6;\n}\n.hha-smart-btn-primary:active:not(:disabled) {\n  background: #4c5ec2;\n}\n.hha-smart-btn-secondary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #f7f8fa;\n  color: #333333;\n  border: 1px solid #e0e0e0;\n}\n.hha-smart-btn-secondary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-secondary:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #a29bfe;\n}\n.hha-smart-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 32px;\n  text-align: center;\n  color: #666666;\n  min-height: 300px;\n}\n.hha-smart-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.hha-smart-placeholder-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.hha-smart-placeholder-text {\n  font-size: 14px;\n  color: #666666;\n}\n#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/**\n * QA Report Tab Styles\n * Epic 8: QA 报告功能\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.qa-report-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n}\n.qa-report-wrapper {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  gap: 0;\n}\n.qa-report-header {\n  display: none;\n}\n.qa-report-title {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.qa-report-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.qa-toolbar-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-left > * {\n  margin: 0;\n  vertical-align: middle;\n}\n.qa-toolbar-actions {\n  display: flex;\n  align-items: center;\n  gap: 0;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-actions .qa-load-btn {\n  border-radius: 2px 0 0 2px;\n  border-right: 1px solid rgba(255, 255, 255, 0.3);\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-actions .qa-export-btn {\n  border-radius: 0 2px 2px 0;\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-select-label {\n  font-size: 13px;\n  color: #666666;\n  font-weight: 500;\n  line-height: 28px;\n  white-space: nowrap;\n}\n.qa-coordinator-select {\n  padding: 0 28px 0 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: white;\n  background-image: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n  background-repeat: no-repeat;\n  background-position: right 8px center;\n  background-size: 12px 12px;\n  font-size: 13px;\n  min-width: 180px;\n  max-width: 300px;\n  height: 28px !important;\n  line-height: 26px;\n  vertical-align: middle;\n  cursor: pointer;\n  box-sizing: border-box;\n  appearance: none;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.qa-coordinator-select:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px #a29bfe;\n}\n.qa-coordinator-select:disabled {\n  background: #f7f8fa;\n  cursor: not-allowed;\n}\n.qa-load-btn {\n  padding: 0 14px;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-load-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.qa-export-btn {\n  padding: 0 12px;\n  font-size: 13px;\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  color: #333333;\n  cursor: pointer;\n  transition: all 0.2s;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-export-btn:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #667eea;\n}\n.qa-export-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.qa-status-text {\n  font-size: 12px;\n  color: #666666;\n  white-space: nowrap;\n}\n.qa-view-toggle {\n  display: flex;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  overflow: hidden;\n  height: 28px;\n}\n.qa-view-btn {\n  padding: 0 10px;\n  border: none;\n  background: white;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  transition: all 0.2s;\n  height: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-view-btn:first-child {\n  border-right: 1px solid #e0e0e0;\n}\n.qa-view-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-view-btn.active {\n  background: #667eea;\n  color: white;\n}\n.qa-report-content-body {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n  background: #f7f8fa;\n}\n.qa-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  text-align: center;\n  color: #666666;\n}\n.qa-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.qa-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.qa-empty-text {\n  font-size: 13px;\n}\n.qa-report-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n  background: white;\n  border-radius: 2px;\n  overflow: hidden;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.qa-report-table thead {\n  background: #f7f8fa;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n}\n.qa-report-table thead th {\n  padding: 8px 16px;\n  text-align: left;\n  font-weight: 600;\n  color: #666666;\n  border-bottom: 2px solid #e0e0e0;\n  white-space: nowrap;\n}\n.qa-report-table thead th.sortable {\n  cursor: pointer;\n  user-select: none;\n  transition: background 0.15s;\n}\n.qa-report-table thead th.sortable:hover {\n  background: #e7eaf0;\n}\n.qa-report-table thead th.sortable .sort-icon {\n  margin-left: 4px;\n  font-size: 10px;\n  opacity: 0.5;\n  display: inline-block;\n  vertical-align: middle;\n}\n.qa-report-table thead th.sortable .sort-icon.sort-asc,\n.qa-report-table thead th.sortable .sort-icon.sort-desc {\n  opacity: 1;\n  color: #667eea;\n}\n.qa-report-table tbody tr {\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s;\n}\n.qa-report-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.qa-report-table tbody tr:last-child {\n  border-bottom: none;\n}\n.qa-report-table tbody td {\n  padding: 8px 16px;\n  vertical-align: middle;\n  user-select: text;\n  cursor: text;\n}\n.qa-report-table tbody td.col-action {\n  user-select: none;\n  cursor: default;\n}\n.qa-report-table .col-id {\n  width: 110px;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  color: #667eea;\n  font-weight: 500;\n}\n.qa-report-table .col-name {\n  width: auto;\n  min-width: 150px;\n  font-weight: 500;\n}\n.qa-report-table .col-phone {\n  width: 140px;\n}\n.qa-report-table .phone-loading {\n  color: #666666;\n  font-style: italic;\n  font-size: 13px;\n}\n.qa-report-table .phone-error {\n  color: #dc3545;\n  font-size: 13px;\n}\n.qa-report-table .phone-single {\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n}\n.qa-report-table .phone-single a {\n  color: #667eea;\n  text-decoration: none;\n}\n.qa-report-table .phone-single a:hover {\n  text-decoration: underline;\n}\n.qa-report-table .phone-multiple {\n  position: relative;\n  display: inline-block;\n  cursor: pointer;\n}\n.qa-report-table .phone-multiple .phone-trigger {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  padding: 2px 6px;\n  background: rgba(102, 126, 234, 0.1);\n  border: 1px solid #667eea;\n  border-radius: 2px;\n  color: #667eea;\n  cursor: pointer;\n  font-size: 13px;\n  transition: all 0.2s;\n}\n.qa-report-table .phone-multiple .phone-trigger:hover {\n  background: #667eea;\n  color: white;\n}\n.qa-report-table .phone-multiple .phone-trigger .phone-count {\n  font-weight: 600;\n}\n.qa-report-table .phone-dropdown {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  z-index: 1000;\n  min-width: 160px;\n  padding: 4px 0;\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  margin-top: 4px;\n}\n.qa-report-table .phone-dropdown .phone-item {\n  display: block;\n  padding: 4px 8px;\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n  text-decoration: none;\n  transition: background 0.15s;\n}\n.qa-report-table .phone-dropdown .phone-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-table .col-qa {\n  width: 100px;\n  font-weight: 500;\n}\n.qa-report-table .col-action {\n  width: 50px;\n  text-align: center;\n}\n.phone-item {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.phone-item + .phone-item {\n  margin-top: 2px;\n}\n.qa-never {\n  color: #dc3545 !important;\n  font-weight: 600;\n}\n.qa-action-btn {\n  padding: 4px 8px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 16px;\n  color: #666666;\n  border-radius: 2px;\n  transition: all 0.2s;\n}\n.qa-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 8px;\n  padding: 8px;\n}\n.qa-card {\n  background: white;\n  border-radius: 2px;\n  padding: 16px;\n  border-left: 4px solid #e0e0e0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  transition: all 0.2s;\n  position: relative;\n  overflow: hidden;\n  user-select: text;\n}\n.qa-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  transform: translateY(-2px);\n}\n.card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  margin-bottom: 8px;\n}\n.card-name {\n  font-weight: 600;\n  font-size: 13px;\n  color: #333333;\n  flex: 1;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  padding-right: 8px;\n}\n.card-action-btn {\n  padding: 2px 6px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  border-radius: 2px;\n  flex-shrink: 0;\n  user-select: none;\n}\n.card-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.card-id {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #667eea;\n  margin-bottom: 8px;\n}\n.card-phones {\n  margin-bottom: 8px;\n}\n.card-phone {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.card-phone + .card-phone {\n  margin-top: 2px;\n}\n.card-qa {\n  font-weight: 600;\n  font-size: 13px;\n  margin-bottom: 8px;\n}\n.card-priority-badge {\n  position: absolute;\n  bottom: 0;\n  right: 0;\n  padding: 2px 8px;\n  font-size: 12px;\n  color: white;\n  border-radius: 2px 0 0 0;\n  font-weight: 500;\n}\n.priority-critical .col-qa {\n  color: #dc3545;\n}\n.priority-high .col-qa {\n  color: #e74c3c;\n}\n.priority-medium-high .col-qa {\n  color: #fd7e14;\n}\n.priority-medium .col-qa {\n  color: #ffc107;\n}\n.priority-low-medium .col-qa {\n  color: #a8d08d;\n}\n.priority-low .col-qa {\n  color: #28a745;\n}\n.qa-export-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 140px;\n}\n.export-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  transition: background 0.15s;\n}\n.export-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.export-menu-item + .export-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-action-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 180px;\n}\n.action-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: background 0.15s;\n}\n.action-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.action-menu-item + .action-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-toast {\n  position: fixed;\n  top: 24px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100%);\n  padding: 8px 24px;\n  border-radius: 2px;\n  font-size: 13px;\n  color: white;\n  z-index: 100001;\n  opacity: 0;\n  transition: all 0.3s ease;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n}\n.qa-toast.show {\n  transform: translateX(-50%) translateY(0);\n  opacity: 1;\n}\n.qa-toast.qa-toast-success {\n  background: #28a745;\n}\n.qa-toast.qa-toast-error {\n  background: #dc3545;\n}\n.qa-toast.qa-toast-info {\n  background: #667eea;\n}\n.qa-note-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n}\n.qa-note-modal {\n  background: white;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  width: 90%;\n  max-width: 520px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.qa-note-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.qa-note-modal-title {\n  font-size: 14px;\n  font-weight: 600;\n}\n.qa-note-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 28px;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  transition: background 0.15s;\n}\n.qa-note-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.qa-note-modal-body {\n  padding: 16px;\n  overflow-y: auto;\n  flex: 1;\n}\n.qa-note-section {\n  margin-bottom: 16px;\n}\n.qa-note-section:last-child {\n  margin-bottom: 0;\n}\n.qa-note-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #666666;\n  margin-bottom: 4px;\n}\n.qa-note-template {\n  padding: 8px 16px;\n  background: #f0f2f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  line-height: 1.5;\n  color: #333333;\n}\n.qa-note-textarea {\n  width: 100%;\n  padding: 8px 16px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  font-family: inherit;\n  resize: vertical;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.qa-note-textarea:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);\n}\n.qa-note-textarea::placeholder {\n  color: #666666;\n}\n.qa-note-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  padding: 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #f0f2f5;\n}\n.qa-note-btn {\n  padding: 4px 16px;\n  font-size: 13px;\n  border-radius: 2px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.qa-note-btn.qa-note-btn-cancel {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #666666;\n}\n.qa-note-btn.qa-note-btn-cancel:hover {\n  background: #f0f2f5;\n  border-color: #666666;\n}\n.qa-note-btn.qa-note-btn-submit {\n  background: #667eea;\n  border: 1px solid #667eea;\n  color: white;\n}\n.qa-note-btn.qa-note-btn-submit:hover {\n  background: #5a6fd6;\n  border-color: #5a6fd6;\n}\n/**\n * Status Tracking Tab Styles\n * Epic 7: Multi-Tab Panel - 状态追踪 Tab\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.status-tracking-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n  padding: 0;\n}\n#status-tracking-wrapper {\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n#status-tracking-wrapper #tracker-panel {\n  background: #ffffff;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view {\n  height: 100%;\n  overflow: hidden;\n  min-height: 0;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view.hidden {\n  display: none !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content {\n  flex: 1 1 auto;\n  min-height: 0;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-header,\n#status-tracking-wrapper #tracker-panel .tracker-footer {\n  flex-shrink: 0;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar {\n  width: 6px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb:hover {\n  background: #666666;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n/* Empty State Styles - matches QA Report empty state */\n#status-tracking-wrapper .tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 200px;\n  padding: 40px 20px;\n  text-align: center;\n  color: #666;\n  background: #f7f8fa;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.7;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-title {\n  font-size: 18px;\n  font-weight: 600;\n  color: #333;\n  margin-bottom: 8px;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-text {\n  font-size: 14px;\n  color: #888;\n}\n/**\n * Cleaner Tab Styles\n * Epic 11: POC 和 Duplicate Call 智能清理器\n */\n.cleaner-tab {\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  padding: 0;\n}\n.cleaner-wrapper {\n  flex: 1;\n  overflow-y: auto;\n  padding: 12px 16px;\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n}\n/* Header */\n.cleaner-header {\n  margin-bottom: 12px;\n}\n.cleaner-title-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cleaner-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.cleaner-page-tag {\n  font-size: 12px;\n  color: #666;\n  background: #f0f4f8;\n  padding: 3px 8px;\n  border-radius: 4px;\n  white-space: nowrap;\n}\n.cleaner-btn-refresh {\n  background: #f8f9fa;\n  border: none;\n  border-radius: 4px;\n  padding: 4px 8px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background 0.2s ease;\n  margin-left: auto;\n  outline: none;\n}\n.cleaner-btn-refresh:hover {\n  background: #e8f4fd;\n}\n.cleaner-btn-refresh:focus {\n  outline: none;\n}\n.cleaner-hint {\n  font-size: 12px;\n  color: #888;\n  margin-top: 8px;\n  font-style: italic;\n}\n/* Status */\n.cleaner-status {\n  text-align: center;\n  padding: 20px;\n  color: #666;\n}\n.cleaner-spinner {\n  animation: cleaner-spin 1s linear infinite;\n  display: inline-block;\n}\n@keyframes cleaner-spin {\n  from {\n    transform: rotate(0deg);\n  }\n  to {\n    transform: rotate(360deg);\n  }\n}\n/* Toolbar */\n.cleaner-toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 12px;\n  padding: 10px 12px;\n  background: #f8f9fa;\n  border-radius: 6px;\n}\n.cleaner-select-all {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  color: #333;\n  line-height: 1;\n}\n.cleaner-select-all input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin: 0;\n  cursor: pointer;\n  vertical-align: middle;\n}\n.cleaner-select-all span {\n  vertical-align: middle;\n}\n/* Buttons */\n.cleaner-btn-primary {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-primary:hover:not(:disabled) {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n  transform: translateY(-1px);\n}\n.cleaner-btn-primary:disabled {\n  background: #ccc;\n  cursor: not-allowed;\n  transform: none;\n}\n.cleaner-btn-secondary {\n  background: white;\n  color: #666;\n  border: 1px solid #ddd;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-secondary:hover {\n  background: #f5f5f5;\n  border-color: #ccc;\n}\n/* Records List */\n.cleaner-records-list {\n  max-height: 260px;\n  overflow-y: auto;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  overscroll-behavior: contain;\n}\n.cleaner-record-item {\n  display: flex;\n  align-items: flex-start;\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.cleaner-record-item:last-child {\n  border-bottom: none;\n}\n.cleaner-record-item:hover {\n  background: #f8f9fa;\n}\n.cleaner-record-item input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin-right: 10px;\n  margin-top: 2px;\n  cursor: pointer;\n}\n.cleaner-record-info {\n  flex: 1;\n  font-size: 13px;\n}\n.cleaner-record-info .record-main {\n  font-weight: 500;\n  color: #333;\n  margin-bottom: 4px;\n}\n.cleaner-record-info .record-detail {\n  color: #666;\n  font-size: 12px;\n}\n.cleaner-badge {\n  display: inline-block;\n  padding: 2px 8px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 500;\n  margin-right: 8px;\n}\n.cleaner-badge.badge-poc {\n  background: #e3f2fd;\n  color: #1976d2;\n}\n.cleaner-badge.badge-poc-caregiver {\n  background: #fff3e0;\n  color: #f57c00;\n}\n/* Call Summary */\n.cleaner-call-summary {\n  text-align: center;\n  padding: 16px;\n  background: #e8f4fd;\n  border-radius: 8px;\n  margin-bottom: 12px;\n}\n.cleaner-call-summary .cleaner-call-count {\n  font-size: 15px;\n  color: #1976d2;\n}\n.cleaner-call-summary .cleaner-call-count strong {\n  font-size: 20px;\n  font-weight: 600;\n}\n.cleaner-call-details {\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  margin-top: 12px;\n  max-height: 250px;\n  overflow-y: auto;\n}\n.cleaner-call-item {\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 13px;\n  color: #333;\n}\n.cleaner-call-item:last-child {\n  border-bottom: none;\n}\n.cleaner-call-item::before {\n  content: \"•\";\n  color: #1976d2;\n  margin-right: 8px;\n}\n/* Empty State */\n.cleaner-empty-state {\n  text-align: center;\n  padding: 40px 20px;\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  min-height: 300px;\n}\n.cleaner-empty-state .cleaner-empty-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n}\n.cleaner-empty-state .cleaner-hint {\n  font-size: 13px;\n  color: #666;\n}\n.cleaner-empty-state p {\n  font-size: 15px;\n  color: #4caf50;\n  font-weight: 500;\n  margin: 0;\n}\n/* No Page Detected */\n.cleaner-no-page-info {\n  text-align: left;\n  margin-top: 16px;\n  padding: 16px;\n  background: #f8f9fa;\n  border-radius: 8px;\n}\n.cleaner-no-page-info p {\n  margin: 0 0 12px 0;\n  font-size: 14px;\n  color: #333;\n}\n.cleaner-no-page-info ul {\n  margin: 0 0 12px 20px;\n  padding: 0;\n}\n.cleaner-no-page-info ul li {\n  margin-bottom: 8px;\n  font-size: 13px;\n  color: #555;\n}\n.cleaner-no-page-info .cleaner-hint {\n  color: #999;\n  font-size: 13px;\n  font-style: italic;\n  margin-bottom: 0;\n}\n/* Cleaning Overlay - 浅色半透明蒙版 */\n#hha-cleaning-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.15);\n  backdrop-filter: blur(2px);\n  z-index: 999999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  pointer-events: all;\n  /* 旋转动画 */\n}\n#hha-cleaning-overlay .cleaning-modal {\n  background: white;\n  padding: 30px 40px;\n  border-radius: 12px;\n  text-align: center;\n  min-width: 400px;\n  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);\n  /* 确认对话框按钮 */\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon {\n  font-size: 48px;\n  margin-bottom: 15px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon.success {\n  color: #4CAF50;\n}\n#hha-cleaning-overlay .cleaning-modal h3 {\n  margin: 0 0 10px;\n  font-size: 20px;\n  color: #333;\n}\n#hha-cleaning-overlay .cleaning-modal p {\n  margin: 0;\n  color: #666;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar {\n  height: 8px;\n  background: #e0e0e0;\n  border-radius: 4px;\n  overflow: hidden;\n  margin: 20px 0;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar .progress-fill {\n  height: 100%;\n  background: linear-gradient(90deg, #4CAF50, #8BC34A);\n  transition: width 0.3s ease;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-warning {\n  color: #ff9800;\n  font-size: 14px;\n  margin-top: 15px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .success-note {\n  color: #666;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .error-message {\n  color: #e53935;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n  margin-top: 20px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel {\n  padding: 10px 24px;\n  background: #f5f5f5;\n  color: #666;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel:hover {\n  background: #e0e0e0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm {\n  padding: 10px 24px;\n  background: #4caf50;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm:hover {\n  background: #43a047;\n}\n#hha-cleaning-overlay .spinning {\n  animation: cleaner-spin 1s linear infinite;\n}\n/**\n * Mail Builder Tab Styles\n * Epic 12: 智能邮件构筑助手\n */\n.mail-builder-tab {\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  padding: 0;\n}\n.mail-builder-wrapper {\n  flex: 1;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n}\n/* Header */\n.mail-builder-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: #fafbfc;\n  flex-shrink: 0;\n}\n.mail-builder-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.mail-builder-page-tag {\n  font-size: 12px;\n  color: #666;\n  background: #e8f4fd;\n  padding: 4px 10px;\n  border-radius: 12px;\n  white-space: nowrap;\n}\n/* Main Content - 35% / 65% Split */\n.mail-builder-main {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n}\n.mail-builder-main.full-width .mail-builder-template-panel {\n  width: 100%;\n  border-left: none;\n}\n/* Left Info Panel (35%) */\n.mail-builder-info-panel {\n  width: 35%;\n  min-width: 200px;\n  border-right: 1px solid #e0e0e0;\n  padding: 12px;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: #fff;\n}\n.mail-builder-info-list {\n  flex: 1;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n.mail-builder-info-item {\n  display: flex;\n  align-items: center;\n  padding: 8px 0;\n  border-bottom: 1px solid #f0f0f0;\n  gap: 8px;\n}\n.mail-builder-info-item:last-child {\n  border-bottom: none;\n}\n.info-label {\n  font-size: 12px;\n  color: #888;\n  min-width: 40px;\n  flex-shrink: 0;\n}\n.info-value {\n  flex: 1;\n  font-size: 13px;\n  color: #333;\n  font-weight: 500;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.info-copy-btn {\n  background: #f0f4f8;\n  border: none;\n  border-radius: 4px;\n  padding: 4px 6px;\n  font-size: 11px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  flex-shrink: 0;\n}\n.info-copy-btn:hover {\n  background: #e0e8f0;\n  transform: scale(1.05);\n}\n.info-copy-btn:active {\n  transform: scale(0.95);\n}\n/* Quick Copy Buttons */\n.mail-builder-quick-copy {\n  margin-top: 12px;\n  padding-top: 12px;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.quick-copy-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  font-size: 12px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  text-align: center;\n}\n.quick-copy-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n  transform: translateY(-1px);\n}\n.quick-copy-btn:active {\n  transform: translateY(0);\n}\n/* Right Template Panel (65%) */\n.mail-builder-template-panel {\n  flex: 1;\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  background: #fafbfc;\n}\n.mail-builder-template-tabs {\n  display: flex;\n  border-bottom: 1px solid #e0e0e0;\n  background: #fff;\n  flex-shrink: 0;\n}\n.template-tab-btn {\n  flex: 1;\n  padding: 10px 16px;\n  background: transparent;\n  border: none;\n  border-bottom: 2px solid transparent;\n  font-size: 13px;\n  color: #666;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.template-tab-btn:hover {\n  color: #333;\n  background: #f5f5f5;\n}\n.template-tab-btn.active {\n  color: #1976d2;\n  border-bottom-color: #1976d2;\n  font-weight: 500;\n}\n.mail-builder-template-content {\n  flex: 1;\n  padding: 16px;\n  overflow-y: auto;\n}\n.template-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 200px;\n  color: #999;\n}\n.template-placeholder .template-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n.template-placeholder p {\n  margin: 0;\n  font-size: 14px;\n}\n.template-placeholder .template-hint {\n  margin-top: 8px;\n  font-size: 12px;\n  color: #bbb;\n}\n.mail-builder-template-actions {\n  display: flex;\n  gap: 8px;\n  padding: 12px;\n  border-top: 1px solid #e0e0e0;\n  background: #fff;\n  flex-shrink: 0;\n}\n.template-action-btn {\n  flex: 1;\n  padding: 8px 12px;\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  font-size: 12px;\n  color: #666;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.template-action-btn:hover:not(:disabled) {\n  background: #e8e8e8;\n  color: #333;\n}\n.template-action-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n/* No Data State */\n.mail-builder-no-data {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  color: #999;\n  font-size: 13px;\n}\n/* No Page Detected */\n.mail-builder-no-page-info {\n  text-align: left;\n  margin-top: 16px;\n  padding: 16px;\n  background: #f8f9fa;\n  border-radius: 8px;\n}\n.mail-builder-no-page-info p {\n  margin: 0 0 12px 0;\n  font-size: 14px;\n  color: #333;\n}\n.mail-builder-no-page-info ul {\n  margin: 0 0 12px 20px;\n  padding: 0;\n}\n.mail-builder-no-page-info ul li {\n  margin-bottom: 8px;\n  font-size: 13px;\n  color: #555;\n}\n.mail-builder-no-page-info .mail-builder-hint {\n  color: #999;\n  font-size: 13px;\n  font-style: italic;\n  margin-bottom: 0;\n}\n/* Template List */\n.template-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.template-empty {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  min-height: 200px;\n  color: #999;\n}\n.template-empty .template-empty-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n.template-empty p {\n  margin: 0;\n  font-size: 14px;\n}\n.template-empty .template-hint {\n  margin-top: 8px;\n  font-size: 12px;\n  color: #bbb;\n}\n/* Template Card */\n.template-card {\n  background: #fff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  padding: 12px;\n  transition: all 0.2s ease;\n}\n.template-card:hover {\n  border-color: #1976d2;\n  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);\n}\n.template-card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 8px;\n}\n.template-name {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333;\n}\n.template-target-badge {\n  font-size: 11px;\n  padding: 2px 8px;\n  border-radius: 12px;\n  background: #e3f2fd;\n  color: #1976d2;\n}\n.template-badges {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n}\n.template-builtin-badge {\n  font-size: 10px;\n  padding: 2px 6px;\n  border-radius: 10px;\n  background: #fff3e0;\n  color: #f57c00;\n  font-weight: 500;\n}\n.template-card-preview {\n  margin-bottom: 10px;\n}\n.template-card-preview .template-subject {\n  font-size: 12px;\n  color: #666;\n}\n.template-card-actions {\n  display: flex;\n  gap: 8px;\n  justify-content: flex-end;\n}\n.template-card-btn {\n  padding: 4px 10px;\n  border-radius: 4px;\n  font-size: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: 1px solid #e0e0e0;\n  background: #fff;\n}\n.template-card-btn.use-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n}\n.template-card-btn.use-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n}\n.template-card-btn.edit-btn,\n.template-card-btn.delete-btn {\n  background: #f5f5f5;\n}\n.template-card-btn.edit-btn:hover,\n.template-card-btn.delete-btn:hover {\n  background: #e0e0e0;\n}\n.template-card-btn.delete-btn:hover {\n  background: #ffebee;\n  border-color: #e53935;\n}\n/* Template Editor */\n.template-editor {\n  background: #fff;\n  border-radius: 8px;\n  overflow: hidden;\n}\n.editor-header {\n  padding: 12px 16px;\n  background: #f5f5f5;\n  border-bottom: 1px solid #e0e0e0;\n}\n.editor-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.editor-form {\n  padding: 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.form-group label {\n  font-size: 12px;\n  color: #666;\n  font-weight: 500;\n}\n.form-group input,\n.form-group select,\n.form-group textarea {\n  padding: 8px 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  font-size: 13px;\n  transition: border-color 0.2s ease;\n}\n.form-group input:focus,\n.form-group select:focus,\n.form-group textarea:focus {\n  outline: none;\n  border-color: #1976d2;\n}\n.form-group textarea {\n  resize: vertical;\n  min-height: 80px;\n  font-family: inherit;\n}\n.editor-actions {\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n  padding: 12px 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n}\n.editor-btn {\n  padding: 8px 20px;\n  border-radius: 6px;\n  font-size: 13px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.editor-btn.cancel-btn {\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  color: #666;\n}\n.editor-btn.cancel-btn:hover {\n  background: #e0e0e0;\n}\n.editor-btn.save-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n}\n.editor-btn.save-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n}\n/* Toast Notification */\n.mail-builder-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100px);\n  background: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-size: 14px;\n  z-index: 1000000;\n  opacity: 0;\n  transition: all 0.3s ease;\n  pointer-events: none;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.mail-builder-toast.show {\n  opacity: 1;\n  transform: translateX(-50%) translateY(0);\n}\n/* ============================================================================\n   Template Editor Modal\n   ============================================================================ */\n.template-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n  backdrop-filter: blur(2px);\n}\n.template-modal {\n  background: white;\n  border-radius: 12px;\n  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);\n  width: 90%;\n  max-width: 700px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.template-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.template-modal-title {\n  font-size: 16px;\n  font-weight: 600;\n  margin: 0;\n}\n.template-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 32px;\n  height: 32px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 6px;\n  transition: background 0.15s;\n}\n.template-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.template-modal-body {\n  padding: 20px;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n  flex: 1;\n  max-height: calc(90vh - 140px);\n}\n.template-form-group {\n  margin-bottom: 16px;\n}\n.template-form-group:last-child {\n  margin-bottom: 0;\n}\n.template-form-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #555;\n  margin-bottom: 6px;\n}\n.template-form-input,\n.template-form-select {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  font-size: 14px;\n  transition: border-color 0.2s, box-shadow 0.2s;\n  box-sizing: border-box;\n}\n.template-form-input:focus,\n.template-form-select:focus {\n  outline: none;\n  border-color: #4a90d9;\n  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);\n}\n.template-form-row {\n  display: flex;\n  gap: 12px;\n}\n.template-form-row .template-form-group {\n  flex: 1;\n}\n/* TinyMCE wrapper */\n.template-body-editor {\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  overflow: hidden;\n}\n.template-body-editor .tox-tinymce {\n  border: none !important;\n}\n.template-body-editor textarea {\n  width: 100%;\n  min-height: 150px;\n  padding: 12px;\n  border: none;\n  font-family: inherit;\n  font-size: 14px;\n  resize: vertical;\n  box-sizing: border-box;\n}\n.template-body-editor textarea:focus {\n  outline: none;\n}\n/* Custom Variables Section */\n.template-variables-section {\n  margin-top: 20px;\n  padding-top: 16px;\n  border-top: 1px solid #e0e0e0;\n}\n.template-variables-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  margin-bottom: 12px;\n}\n.template-variables-header h5 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333;\n}\n.template-add-var-btn {\n  padding: 4px 10px;\n  font-size: 12px;\n  background: #e3f2fd;\n  color: #1976d2;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.template-add-var-btn:hover {\n  background: #bbdefb;\n}\n.template-variables-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.template-variables-table th,\n.template-variables-table td {\n  padding: 8px 10px;\n  text-align: left;\n  border: 1px solid #e0e0e0;\n}\n.template-variables-table th {\n  background: #f5f5f5;\n  font-weight: 500;\n  color: #666;\n}\n.template-variables-table input {\n  width: 100%;\n  padding: 6px 8px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  font-size: 12px;\n  box-sizing: border-box;\n}\n.template-variables-table input:focus {\n  outline: none;\n  border-color: #4a90d9;\n}\n.template-variables-table .var-delete-btn {\n  padding: 4px 8px;\n  background: #ffebee;\n  color: #e53935;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  font-size: 14px;\n}\n.template-variables-table .var-delete-btn:hover {\n  background: #ffcdd2;\n}\n.template-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  padding: 16px 20px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n}\n.template-modal-btn {\n  padding: 10px 24px;\n  font-size: 14px;\n  font-weight: 500;\n  border-radius: 6px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.template-modal-btn.btn-cancel {\n  background: #f5f5f5;\n  border: 1px solid #ddd;\n  color: #666;\n}\n.template-modal-btn.btn-cancel:hover {\n  background: #e0e0e0;\n}\n.template-modal-btn.btn-save {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border: none;\n  color: white;\n}\n.template-modal-btn.btn-save:hover {\n  background: linear-gradient(135deg, #5a6fd6 0%, #6b4199 100%);\n}\n.template-modal-btn.btn-save:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.timesheet-modal {\n  max-width: 820px;\n}\n.timesheet-modal-body {\n  overflow: hidden !important;\n  display: flex !important;\n  flex-direction: column !important;\n  padding: 20px 20px 16px !important;\n  gap: 0 !important;\n}\n.timesheet-config-section {\n  flex-shrink: 0;\n  padding-bottom: 14px;\n  border-bottom: 1px solid #e8e8e8;\n  margin-bottom: 14px;\n}\n.timesheet-config-row {\n  display: flex;\n  align-items: flex-start;\n  gap: 16px;\n}\n.timesheet-config-col-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 1;\n}\n.timesheet-config-col-left .timesheet-config-input {\n  flex: 1;\n  min-width: 0;\n}\n.timesheet-config-col-mid {\n  flex: 1.5;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.timesheet-config-inline {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.timesheet-config-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 600;\n  color: #444;\n  white-space: nowrap;\n}\n.ts-short-label {\n  min-width: 28px;\n  text-align: right;\n  flex-shrink: 0;\n}\n.timesheet-config-input {\n  flex: 1;\n  width: 100%;\n  padding: 8px 10px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.timesheet-config-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);\n}\n.ts-save-btn {\n  flex-shrink: 0;\n  align-self: flex-start;\n  padding: 8px 14px !important;\n  font-size: 13px !important;\n  white-space: nowrap;\n}\n.timesheet-list-section {\n  flex: 1;\n  min-height: 0;\n  display: flex;\n  flex-direction: column;\n}\n.timesheet-list-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  margin-bottom: 10px;\n  flex-shrink: 0;\n}\n.timesheet-list-title {\n  font-size: 11px;\n  font-weight: 700;\n  color: #888;\n  letter-spacing: 0.7px;\n  text-transform: uppercase;\n}\n.timesheet-search-input {\n  padding: 7px 14px;\n  border: 1px solid #ddd;\n  border-radius: 20px;\n  font-size: 13px;\n  width: 220px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.timesheet-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);\n}\n.timesheet-visit-list {\n  flex: 1;\n  overflow-y: auto;\n  max-height: 300px;\n  border: 1px solid #e4e4e4;\n  border-radius: 10px;\n  background: #fff;\n}\n.timesheet-visit-list::-webkit-scrollbar {\n  width: 5px;\n}\n.timesheet-visit-list::-webkit-scrollbar-track {\n  background: #f5f5f5;\n  border-radius: 3px;\n}\n.timesheet-visit-list::-webkit-scrollbar-thumb {\n  background: #ccc;\n  border-radius: 3px;\n}\n.timesheet-visit-list::-webkit-scrollbar-thumb:hover {\n  background: #aaa;\n}\n.timesheet-visit-card {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  padding: 12px 16px;\n  border-bottom: 1px solid #f0f0f0;\n  background: #fff;\n  transition: background 0.15s;\n}\n.timesheet-visit-card:last-child {\n  border-bottom: none;\n}\n.timesheet-visit-card:hover {\n  background: #f6f7ff;\n}\n.timesheet-avatar {\n  width: 42px;\n  height: 42px;\n  border-radius: 50%;\n  background: linear-gradient(135deg, #90a4ae, #607d8b);\n  color: #fff;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 17px;\n  font-weight: 700;\n  flex-shrink: 0;\n  user-select: none;\n}\n.timesheet-visit-info {\n  flex: 1;\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.timesheet-patient {\n  font-size: 14px;\n  font-weight: 700;\n  color: #1a1a1a;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.timesheet-details {\n  font-size: 12px;\n  color: #888;\n  display: flex;\n  gap: 14px;\n}\n.timesheet-date,\n.timesheet-time {\n  white-space: nowrap;\n}\n.timesheet-send-btn {\n  flex-shrink: 0;\n  padding: 8px 16px !important;\n  font-size: 13px !important;\n}\n.timesheet-no-data,\n.timesheet-loading {\n  padding: 28px;\n  text-align: center;\n  color: #aaa;\n  font-size: 13px;\n}\n.timesheet-confirm-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.45);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100010;\n}\n.timesheet-confirm-box {\n  background: #fff;\n  border-radius: 10px;\n  padding: 24px 28px;\n  max-width: 400px;\n  width: 90%;\n  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);\n}\n.timesheet-confirm-box p {\n  margin: 0 0 10px;\n  font-size: 14px;\n  color: #333;\n  line-height: 1.5;\n}\n.timesheet-confirm-box p:last-of-type {\n  margin-bottom: 0;\n}\n.timesheet-confirm-actions {\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n  margin-top: 18px;\n}\n/* ============================================================================\n   Patient Vacation Template (Epic 16, Story 2)\n   ============================================================================ */\n/* Loading Overlay */\n.pv-loading-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.55);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100020;\n}\n.pv-loading-inner {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 16px;\n}\n.pv-spinner {\n  width: 44px;\n  height: 44px;\n  border: 4px solid rgba(255, 255, 255, 0.3);\n  border-top-color: #fff;\n  border-radius: 50%;\n  animation: pv-spin 0.8s linear infinite;\n}\n@keyframes pv-spin {\n  to {\n    transform: rotate(360deg);\n  }\n}\n.pv-loading-text {\n  color: #fff;\n  font-size: 15px;\n  font-weight: 500;\n  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);\n}\n/* Modal */\n.pv-modal {\n  max-width: 780px;\n}\n.pv-modal-body {\n  padding: 16px 20px 8px;\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n  overflow-y: auto;\n  max-height: calc(90vh - 160px);\n}\n/* Config Section */\n.pv-config-section {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.pv-config-row {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.pv-config-label {\n  flex-shrink: 0;\n  width: 56px;\n  font-size: 13px;\n  font-weight: 600;\n  color: #555;\n}\n.pv-config-input,\n.pv-subject-input {\n  flex: 1;\n  padding: 6px 10px;\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  font-size: 13px;\n  outline: none;\n  transition: border-color 0.2s;\n}\n.pv-config-input:focus,\n.pv-subject-input:focus {\n  border-color: #667eea;\n}\n/* Subject Row */\n.pv-subject-row {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n/* Rich Text Editor */\n.pv-editor-section {\n  display: flex;\n  flex-direction: column;\n  border: 1px solid #d0d0d0;\n  border-radius: 8px;\n  overflow: hidden;\n}\n.pv-editor-toolbar {\n  display: flex;\n  gap: 2px;\n  padding: 6px 8px;\n  background: #f5f5f5;\n  border-bottom: 1px solid #e0e0e0;\n  flex-wrap: wrap;\n}\n.pv-editor-toolbar button {\n  background: none;\n  border: 1px solid transparent;\n  border-radius: 4px;\n  padding: 3px 7px;\n  font-size: 13px;\n  cursor: pointer;\n  color: #333;\n  transition: background 0.15s, border-color 0.15s;\n}\n.pv-editor-toolbar button:hover {\n  background: #e0e0e0;\n  border-color: #ccc;\n}\n.pv-editor-toolbar button:active {\n  background: #d0d0d0;\n}\n.pv-rich-editor {\n  min-height: 320px;\n  padding: 10px 12px;\n  font-size: 13px;\n  line-height: 1.6;\n  outline: none;\n  background: #fff;\n}\n.pv-rich-editor:focus {\n  background: #fafafa;\n}\n/* Modal Footer */\n.pv-modal-footer {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 20px;\n  border-top: 1px solid #e0e0e0;\n  background: #f9f9f9;\n  gap: 10px;\n}\n/* Split Button */\n.pv-split-btn {\n  position: relative;\n  display: flex;\n}\n.pv-copy-main {\n  border-radius: 6px 0 0 6px !important;\n  border-right: 1px solid rgba(255, 255, 255, 0.3) !important;\n}\n.pv-copy-chevron {\n  border-radius: 0 6px 6px 0 !important;\n  padding: 6px 8px !important;\n  min-width: unset;\n}\n.pv-split-dropdown {\n  position: absolute;\n  bottom: calc(100% + 4px);\n  left: 0;\n  background: #fff;\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);\n  z-index: 10;\n  min-width: 120px;\n  overflow: hidden;\n}\n.pv-split-dropdown button {\n  display: block;\n  width: 100%;\n  padding: 8px 14px;\n  text-align: left;\n  background: none;\n  border: none;\n  font-size: 13px;\n  cursor: pointer;\n  color: #333;\n}\n.pv-split-dropdown button:hover {\n  background: #f0f0f0;\n}\n/* Toast */\n.pv-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-40px);\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-size: 14px;\n  z-index: 200000;\n  opacity: 0;\n  transition: all 0.3s ease;\n  pointer-events: none;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  max-width: 440px;\n  text-align: center;\n}\n.pv-toast.show {\n  opacity: 1;\n  transform: translateX(-50%) translateY(0);\n}\n.pv-toast.pv-toast--success {\n  background: #28a745;\n  color: #fff;\n}\n.pv-toast.pv-toast--warning {\n  background: #856404;\n  color: #fff8e1;\n}\n.eod-modal {\n  max-width: 720px;\n}\n.eod-modal-body {\n  padding: 16px 20px 8px;\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n  overflow-y: auto;\n  max-height: calc(90vh - 160px);\n}\n.eod-config-section {\n  flex-shrink: 0;\n  padding-bottom: 12px;\n  border-bottom: 1px solid #e8e8e8;\n}\n.eod-config-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  margin-bottom: 8px;\n}\n.eod-config-row:last-child {\n  margin-bottom: 0;\n}\n.eod-config-label {\n  font-size: 13px;\n  font-weight: 600;\n  color: #444;\n  white-space: nowrap;\n  min-width: 68px;\n}\n.eod-config-input {\n  flex: 1;\n  padding: 7px 10px;\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  font-size: 13px;\n}\n.eod-config-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.12);\n}\n.eod-subject-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-shrink: 0;\n}\n.eod-subject-input {\n  flex: 1;\n  padding: 7px 10px;\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  font-size: 13px;\n  font-weight: 500;\n}\n.eod-subject-input:focus {\n  outline: none;\n  border-color: #1a6b3a;\n  box-shadow: 0 0 0 2px rgba(26, 107, 58, 0.12);\n}\n.eod-editor-section {\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  overflow: hidden;\n  flex-shrink: 0;\n}\n.eod-editor-toolbar {\n  display: flex;\n  gap: 2px;\n  padding: 4px 8px;\n  background: #f7f7f7;\n  border-bottom: 1px solid #e0e0e0;\n}\n.eod-editor-toolbar button {\n  padding: 3px 8px;\n  border: 1px solid transparent;\n  border-radius: 4px;\n  background: transparent;\n  cursor: pointer;\n  font-size: 13px;\n  color: #333;\n}\n.eod-editor-toolbar button:hover {\n  background: #e8e8e8;\n  border-color: #d0d0d0;\n}\n.eod-rich-editor {\n  min-height: 180px;\n  max-height: 280px;\n  overflow-y: auto;\n  padding: 10px 12px;\n  font-size: 13px;\n  outline: none;\n  background: #fff;\n  line-height: 1.5;\n}\n.eod-folder-section {\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  overflow: hidden;\n}\n.eod-folder-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 8px 12px;\n  background: #f7f7f7;\n  border-bottom: 1px solid #e0e0e0;\n}\n.eod-folder-label {\n  font-size: 13px;\n  font-weight: 500;\n  color: #333;\n}\n.eod-folder-hint {\n  color: #888;\n  font-weight: 400;\n  font-size: 12px;\n}\n.eod-change-folder-btn {\n  padding: 4px 10px;\n  font-size: 12px;\n  border: 1px solid #d0d0d0;\n  border-radius: 4px;\n  background: #fff;\n  cursor: pointer;\n  color: #555;\n}\n.eod-change-folder-btn:hover {\n  background: #e8e8e8;\n}\n.eod-file-list {\n  max-height: 160px;\n  overflow-y: auto;\n  background: #fff;\n}\n.eod-file-item {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 7px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.eod-file-item:last-child {\n  border-bottom: none;\n}\n.eod-file-icon {\n  flex-shrink: 0;\n}\n.eod-file-name {\n  flex: 1;\n  color: #333;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.eod-file-date {\n  color: #888;\n  white-space: nowrap;\n  flex-shrink: 0;\n}\n.eod-file-remove {\n  padding: 2px 6px;\n  border: 1px solid #e0e0e0;\n  border-radius: 4px;\n  background: #fff;\n  cursor: pointer;\n  color: #e53935;\n  font-size: 12px;\n  flex-shrink: 0;\n}\n.eod-file-remove:hover {\n  background: #ffebee;\n  border-color: #e53935;\n}\n.eod-file-empty {\n  padding: 16px 12px;\n  color: #f57c00;\n  font-size: 12px;\n  text-align: center;\n}\n.eod-modal-footer {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 14px 20px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n  flex-shrink: 0;\n}\n.eod-save-config-btn {\n  background: #f0f4f8 !important;\n  color: #555 !important;\n  border: 1px solid #d0d0d0 !important;\n}\n.eod-save-config-btn:not(:disabled):hover {\n  background: #e0e8f0 !important;\n}\n.eod-save-config-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.eod-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-80px);\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-size: 14px;\n  z-index: 1000010;\n  opacity: 0;\n  transition: opacity 0.3s ease, transform 0.3s ease;\n  pointer-events: none;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  max-width: 480px;\n  text-align: center;\n}\n.eod-toast.show {\n  opacity: 1;\n  transform: translateX(-50%) translateY(0);\n}\n.eod-toast.eod-toast--success {\n  background: #4caf50;\n  color: #fff;\n}\n.eod-toast.eod-toast--warning {\n  background: #f57c00;\n  color: #fff;\n}\n/* ── Epic 17: Insurance fax button & Phone dial button ── */\n.info-fax-btn,\n.info-dial-btn {\n  background: #f0f4f8;\n  border: 1px solid #c8d8e8;\n  border-radius: 4px;\n  padding: 3px 5px;\n  font-size: 11px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  line-height: 1;\n  text-decoration: none;\n  color: inherit;\n  flex-shrink: 0;\n  display: inline-flex;\n  align-items: center;\n}\n.info-fax-btn:hover {\n  background: #dce8f5;\n}\n.info-dial-btn:hover {\n  background: #dce8f5;\n}\n.info-fax-btn.disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n  pointer-events: none;\n}\n/* ── Epic 17: Fax Preview Modal ── */\n/* overlay z-index override (template-modal-overlay is z-index:100002) */\n.fax-modal-overlay {\n  z-index: 100003;\n}\n/* Size override for fax modal */\n.fax-modal {\n  width: 740px;\n  max-width: 96vw;\n}\n/* Scrollable body */\n.fax-modal-body {\n  padding: 16px 20px 8px;\n  max-height: calc(85vh - 120px);\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n/* Info grid: 4-column table layout [label | value | label | value] */\n.fax-info-grid {\n  display: grid;\n  grid-template-columns: auto 1fr auto 1fr;\n  gap: 5px 14px;\n  align-items: baseline;\n  background: #f5f7ff;\n  border: 1px solid #dde3f0;\n  border-radius: 8px;\n  padding: 10px 14px;\n  margin-bottom: 14px;\n  font-size: 13px;\n}\n.fax-ig-label {\n  font-weight: 600;\n  color: #5a5f7d;\n  white-space: nowrap;\n}\n.fax-ig-label::after {\n  content: \"：\";\n}\n.fax-ig-value {\n  color: #222;\n  word-break: break-all;\n}\n/* Form sections */\n.fax-form-section {\n  border-bottom: 1px solid #edf0f7;\n  padding-bottom: 12px;\n  margin-bottom: 12px;\n}\n.fax-config-section {\n  padding-bottom: 4px;\n}\n.fax-config-title {\n  font-size: 12px;\n  color: #999;\n  margin-bottom: 10px;\n  text-align: center;\n  letter-spacing: 0.05em;\n}\n.fax-field-row {\n  display: flex;\n  align-items: flex-start;\n  gap: 10px;\n  margin-bottom: 10px;\n}\n.fax-field-label {\n  font-size: 13px;\n  font-weight: 500;\n  color: #555;\n  min-width: 46px;\n  padding-top: 9px;\n  flex-shrink: 0;\n  text-align: right;\n}\n/* 页数 number spinner */\n.fax-pages-input {\n  max-width: 90px;\n  text-align: center;\n}\n/* textarea heights */\n.fax-field-textarea {\n  min-height: 120px;\n  resize: vertical;\n  font-family: inherit;\n}\n/* inputs inside fax field rows should stretch */\n.fax-field-row .template-form-input {\n  flex: 1;\n  width: auto;\n  box-sizing: border-box;\n}\n.fax-sig-textarea {\n  min-height: 80px;\n}\n.fax-config-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 4px;\n  margin-bottom: 2px;\n}\n.fax-modal-footer {\n  padding: 12px 20px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #edf0f7;\n}\n/**\n * Visit Monitor (Coordinator Tracker) Styles\n * Epic 10: UI 现代化升级\n *\n * 依赖: variables.less\n * @author HHA Smart Assistant\n * @date 2026-01-12\n */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  font-size: 24px;\n  transition: all 0.15s ease;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  height: 480px;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333333;\n  overflow: hidden;\n  transition: height 0.3s ease;\n}\n.tracker-view {\n  display: flex;\n  flex-direction: column;\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n  transition: transform 0.3s ease;\n}\n.tracker-view.hidden {\n  display: none;\n}\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n.slide-out-to-right {\n  transform: translateX(100%);\n}\n.slide-in-from-left {\n  transform: translateX(-100%);\n}\n.tracker-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.tracker-header-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.tracker-header-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n}\n#last-refresh-time {\n  font-size: 13px;\n  color: #666666;\n  line-height: 28px;\n}\n.tracker-btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border: none;\n  color: white;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  font-weight: 500;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-primary:hover:not(:disabled) {\n  filter: brightness(1.1);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.tracker-btn-primary:active:not(:disabled) {\n  transform: translateY(1px);\n}\n.tracker-btn-primary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-secondary {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #333333;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-secondary:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-btn-secondary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-icon {\n  width: 28px;\n  height: 28px;\n  padding: 0;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  font-size: 16px;\n}\n.tracker-header-btn {\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  padding: 0 14px;\n  height: 28px;\n  border-radius: 2px;\n  cursor: pointer;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-header-btn:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-header-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.back-btn {\n  font-size: 18px;\n  width: 28px;\n  height: 28px;\n  padding: 0;\n}\n.tracker-footer {\n  padding: 8px 16px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  border-top: 1px solid #e0e0e0;\n  background: #f7f8fa;\n  flex-shrink: 0;\n}\n.tracker-content {\n  flex: 1 1 auto;\n  padding: 8px 16px;\n  overflow-y: auto;\n  overflow-x: hidden;\n  overscroll-behavior: contain;\n  min-height: 0;\n}\n.tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.tracker-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 13px;\n  text-align: center;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.th-filter-btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  width: 16px;\n  height: 16px;\n  margin-left: 2px;\n  font-size: 10px;\n  color: #666666;\n  cursor: pointer;\n  border-radius: 2px;\n  transition: all 0.15s ease;\n  vertical-align: middle;\n  user-select: none;\n}\n.th-filter-btn:hover {\n  color: #667eea;\n  background: rgba(102, 126, 234, 0.1);\n}\n.th-filter-btn.active {\n  color: #667eea;\n  transform: rotate(180deg);\n}\n.th-filter-btn.warning {\n  color: #e67e22;\n}\n.tracker-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.tracker-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.tracker-table tbody tr:last-child {\n  border-bottom: none;\n}\n.tracker-table th,\n.tracker-table td {\n  padding: 8px 16px;\n  text-align: center;\n  vertical-align: middle;\n  border: none;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon:hover {\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  opacity: 0.9;\n}\n.status-icon:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon.status-disabled {\n  opacity: 0.5;\n  cursor: default;\n}\n.status-icon.status-disabled:hover {\n  transform: none;\n  opacity: 0.5;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0%,\n  100% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n}\n.edit-list-actions {\n  text-align: right;\n  padding-right: 16px;\n}\n.edit-list-actions button {\n  font-size: 13px;\n  width: 28px;\n  height: 28px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 600;\n  transition: all 0.15s ease;\n}\n.edit-list-actions button:hover:not(:disabled) {\n  filter: brightness(1.15);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n  transform: scale(1.05);\n}\n.edit-list-actions button:active:not(:disabled) {\n  transform: translateY(1px) scale(1.05);\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.add-btn:hover:not(:disabled) {\n  background-color: #218838;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button.remove-btn:hover:not(:disabled) {\n  background-color: #c82333;\n}\n.edit-list-actions button:disabled {\n  background-color: #e0e0e0;\n  color: #999999;\n  cursor: not-allowed;\n  opacity: 0.6;\n}\n.edit-list-actions button:disabled:hover {\n  filter: none;\n  box-shadow: none;\n  transform: none;\n}\n.loader {\n  text-align: center;\n  padding: 32px;\n}\n.spinner {\n  border: 4px solid #f0f0f0;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333333;\n  color: white;\n  padding: 8px 16px;\n  border-radius: 4px;\n  z-index: 100000;\n  opacity: 0;\n  transition: opacity 0.3s ease, top 0.3s ease;\n  font-size: 13px;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n#details-popover {\n  position: fixed;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  min-width: 600px;\n  max-width: 90vw;\n  min-height: 400px;\n  max-height: 80vh;\n  display: flex;\n  flex-direction: column;\n  z-index: 100000;\n  overflow: hidden;\n}\n.popover-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  height: 44px;\n  box-sizing: border-box;\n  cursor: move;\n  flex-shrink: 0;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.popover-close-btn {\n  width: 28px;\n  height: 28px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: #ffffff;\n  color: #666666;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 16px;\n  transition: all 0.15s ease;\n}\n.popover-close-btn:hover {\n  border-color: #dc3545;\n  color: #dc3545;\n  background: #fff5f5;\n}\n.popover-content {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n}\n.popover-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.popover-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 12px;\n  text-align: left;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.popover-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.popover-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.popover-table tbody tr:last-child {\n  border-bottom: none;\n}\n.popover-table td {\n  padding: 8px 16px;\n  font-size: 12px;\n  color: #333333;\n  vertical-align: middle;\n}\n.note-cell {\n  max-width: 300px;\n  word-wrap: break-word;\n  white-space: pre-wrap;\n}\n.datetime-cell {\n  white-space: nowrap;\n}\n.popover-resize-handle {\n  position: absolute;\n  background: transparent;\n  z-index: 10;\n}\n.popover-resize-handle:hover {\n  background: rgba(102, 126, 234, 0.15);\n}\n.popover-resize-handle-s {\n  bottom: 0;\n  left: 16px;\n  right: 16px;\n  height: 4px;\n  cursor: s-resize;\n}\n.popover-resize-handle-w {\n  top: 16px;\n  bottom: 16px;\n  left: 0;\n  width: 8px;\n  cursor: w-resize;\n}\n.popover-resize-handle-e {\n  top: 16px;\n  bottom: 16px;\n  right: 0;\n  width: 8px;\n  cursor: e-resize;\n}\n.popover-resize-handle-se {\n  bottom: 0;\n  right: 0;\n  width: 16px;\n  height: 16px;\n  cursor: se-resize;\n  z-index: 11;\n  border-radius: 0 0 8px 0;\n}\n/* Empty State Styles - matches QA Report empty state */\n.tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 300px;\n  text-align: center;\n  color: #666666;\n  background: #f7f8fa;\n}\n.tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.tracker-empty-state .tracker-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.tracker-empty-state .tracker-empty-text {\n  font-size: 13px;\n  color: #666666;\n}\n.column-filter-popover {\n  position: fixed;\n  z-index: 100003;\n  min-width: 220px;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 4px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  padding: 0;\n  font-size: 13px;\n}\n.column-filter-popover .filter-header {\n  padding: 8px 16px;\n}\n.column-filter-popover .filter-select-all {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  cursor: pointer;\n  font-weight: 600;\n  color: #333333;\n  user-select: none;\n}\n.column-filter-popover .filter-select-all input[type=\"checkbox\"] {\n  margin: 0;\n  cursor: pointer;\n}\n.column-filter-popover .filter-divider {\n  height: 1px;\n  background: #f0f0f0;\n  margin: 0;\n}\n.column-filter-popover .filter-list {\n  max-height: 300px;\n  overflow-y: auto;\n  padding: 4px 0;\n}\n.column-filter-popover .filter-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  padding: 4px 16px;\n  cursor: pointer;\n  user-select: none;\n  transition: background 0.15s ease;\n}\n.column-filter-popover .filter-item:hover {\n  background: #f0f2f5;\n}\n.column-filter-popover .filter-item input[type=\"checkbox\"] {\n  margin: 0;\n  cursor: pointer;\n  flex-shrink: 0;\n}\n.column-filter-popover .filter-name {\n  flex: 1;\n  color: #333333;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.column-filter-popover .filter-count {\n  margin-left: auto;\n  color: #666666;\n  font-size: 12px;\n  flex-shrink: 0;\n}\n.column-filter-popover .filter-stats {\n  padding: 4px 16px;\n  font-size: 12px;\n  color: #666666;\n  text-align: center;\n}\n.column-filter-popover .filter-stats strong {\n  color: #667eea;\n  font-weight: 600;\n}\n.column-filter-popover .filter-actions {\n  display: flex;\n  justify-content: flex-end;\n  gap: 4px;\n  padding: 8px 16px;\n}\n.tracking-disabled {\n  color: #666666;\n  font-size: 13px;\n  cursor: default;\n  user-select: none;\n}\n.document-dropzone-overlay {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  background-color: rgba(232, 244, 253, 0.85);\n  /* 浅蓝色半透明背景 */\n  border: 3px dashed #2196F3;\n  /* 虚线边框 */\n  border-radius: 4px;\n  z-index: 10000;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  opacity: 0;\n  pointer-events: none;\n  /* 默认不拦截鼠标事件 */\n  transition: opacity 0.2s ease-in-out, background-color 0.2s;\n  backdrop-filter: blur(2px);\n}\n.document-dropzone-overlay.active {\n  opacity: 1;\n  background-color: rgba(200, 230, 201, 0.9);\n  /* 拖入时变为浅绿色提示可释放 */\n  border-color: #4CAF50;\n  pointer-events: auto;\n  /* 激活时拦截事件以便 drop */\n}\n.document-dropzone-overlay .dropzone-content {\n  text-align: center;\n  pointer-events: none;\n  /* 防止内部元素干扰 leave 事件计算 */\n  animation: pulse 2s infinite;\n}\n.document-dropzone-overlay .dropzone-icon {\n  font-size: 48px;\n  margin-bottom: 10px;\n  color: #1976D2;\n}\n.document-dropzone-overlay .dropzone-text {\n  font-size: 18px;\n  font-weight: bold;\n  color: #0D47A1;\n  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);\n}\n@keyframes pulse {\n  0% {\n    transform: scale(1);\n  }\n  50% {\n    transform: scale(1.05);\n  }\n  100% {\n    transform: scale(1);\n  }\n}\n/* \n * ==========================================================================\n * Rename Modal Styles\n * ==========================================================================\n */\n.document-rename-backdrop {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background: rgba(0, 0, 0, 0.5);\n  z-index: 100005;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  backdrop-filter: blur(3px);\n}\n.document-rename-modal {\n  background: #fff;\n  width: 400px;\n  border-radius: 8px;\n  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);\n  overflow: hidden;\n  animation: slideDownFade 0.2s ease-out forwards;\n}\n.document-rename-modal .rename-header {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: #fff;\n  padding: 12px 16px;\n  font-size: 16px;\n  font-weight: 600;\n}\n.document-rename-modal .rename-body {\n  padding: 24px 20px;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.document-rename-modal .rename-body label {\n  white-space: nowrap;\n  font-weight: 500;\n  color: #333;\n  margin: 0;\n}\n.document-rename-modal .rename-body input {\n  flex: 1;\n  padding: 8px 12px;\n  border: 2px solid #2196F3;\n  border-radius: 4px;\n  font-size: 15px;\n  outline: none;\n  box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);\n}\n.document-rename-modal .rename-body input:focus {\n  border-color: #0D47A1;\n  box-shadow: 0 0 5px rgba(13, 71, 161, 0.5);\n}\n.document-rename-modal .rename-ext {\n  color: #777;\n  font-size: 15px;\n  font-weight: 500;\n}\n.document-rename-modal .rename-save-local-row {\n  padding: 4px 20px 12px;\n}\n.document-rename-modal .rename-save-local-row .rename-save-local-label {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-size: 13px;\n  color: #555;\n  cursor: pointer;\n  user-select: none;\n}\n.document-rename-modal .rename-save-local-row .rename-save-local-label input[type=\"checkbox\"] {\n  width: 14px;\n  height: 14px;\n  cursor: pointer;\n  accent-color: #2196F3;\n  flex-shrink: 0;\n}\n.document-rename-modal .rename-footer {\n  padding: 12px 20px;\n  background: #f5f5f5;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #e0e0e0;\n}\n@keyframes slideDownFade {\n  0% {\n    transform: translateY(-20px) scale(0.95);\n    opacity: 0;\n  }\n  100% {\n    transform: translateY(0) scale(1);\n    opacity: 1;\n  }\n}\n/* \n * ==========================================================================\n * Legacy Popover Styles (Details Popover)\n * These styles are for the patient details popover that appears\n * when clicking status icons in the Visit Monitor\n * ==========================================================================\n */\n#details-popover {\n  position: fixed;\n  z-index: 100001;\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* Note Cell Styling */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* Authorization Note Table */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* Popover Resize Handle - Legacy (disabled, handled by coordinator-tracker.less) */\n/* \n.popover-resize-handle {\n    position: absolute;\n    right: 0;\n    bottom: 0;\n    width: 16px;\n    height: 16px;\n    cursor: nwse-resize;\n    background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n    border-bottom-right-radius: 8px;\n}\n\n.popover-resize-handle::before {\n    content: '';\n    position: absolute;\n    right: 4px;\n    bottom: 4px;\n    width: 4px;\n    height: 4px;\n    background: #666;\n    border-radius: 1px;\n}\n*/\n/* \n * ==========================================================================\n * Phone Tooltip Styles\n * Tooltip that appears when hovering over phone icons in patient rows\n * ==========================================================================\n */\n.phone-icon-wrapper {\n  position: relative;\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  position: absolute;\n  top: 100%;\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n}\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "/**\n * Main Stylesheet Entry Point\n * \n * This file imports all component stylesheets.\n * Visit Monitor (Coordinator Tracker) styles are in coordinator-tracker.less\n */\n.hha-smart-panel {\n  position: absolute;\n  top: 0;\n  width: 680px;\n  height: 460px;\n  max-height: 80vh;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n  font-size: 14px;\n  color: #333333;\n}\n.hha-smart-panel-header {\n  height: 40px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 16px;\n  border-bottom: none;\n  cursor: move;\n  user-select: none;\n}\n.hha-smart-panel-title {\n  font-size: 14px;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-panel-controls {\n  display: flex;\n  gap: 8px;\n  position: relative;\n  z-index: 100000;\n}\n.hha-smart-panel-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 2px;\n  background: rgba(255, 255, 255, 0.2);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: background 0.15s ease;\n  font-size: 14px;\n  padding: 0;\n  position: relative;\n  z-index: 100001;\n}\n.hha-smart-panel-btn:hover {\n  background: rgba(255, 255, 255, 0.3);\n}\n.hha-smart-panel-btn:active {\n  background: rgba(255, 255, 255, 0.4);\n}\n.hha-smart-panel-body {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-content-wrapper {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n  position: relative;\n  isolation: isolate;\n}\n.hha-smart-tab-bar {\n  width: 100px;\n  min-width: 40px;\n  background: #f7f8fa;\n  border-right: 1px solid #e0e0e0;\n  transition: width 0.2s ease;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  flex-shrink: 0;\n  position: relative;\n  z-index: 2;\n}\n.hha-smart-tab-bar.collapsed {\n  width: 40px;\n}\n.hha-smart-tab-list {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n}\n.hha-smart-tab-list::-webkit-scrollbar {\n  width: 4px;\n}\n.hha-smart-tab-list::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n.hha-smart-tab-item {\n  position: relative;\n  padding: 12px 8px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  white-space: nowrap;\n  border-bottom: 1px solid #f0f0f0;\n}\n.hha-smart-tab-item:hover {\n  background: #f0f2f5;\n}\n.hha-smart-tab-item.active {\n  background: #f0efff;\n  color: #667eea;\n  font-weight: 500;\n}\n.hha-smart-tab-icon {\n  flex-shrink: 0;\n  font-size: 18px;\n  line-height: 1;\n  width: 20px;\n  text-align: center;\n}\n.hha-smart-tab-text {\n  opacity: 1;\n  transition: opacity 0.2s ease;\n  font-size: 13px;\n  overflow-x: auto;\n  overflow-y: hidden;\n  white-space: nowrap;\n  flex: 1;\n  scroll-behavior: smooth;\n}\n.hha-smart-tab-text::-webkit-scrollbar {\n  height: 0;\n  display: none;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-tab-text {\n  opacity: 0;\n  width: 0;\n  overflow: hidden;\n  pointer-events: none;\n}\n.hha-smart-tab-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 4px;\n  height: 100%;\n  background: #667eea;\n  opacity: 0;\n  transition: opacity 0.2s ease;\n  z-index: 1;\n}\n.hha-smart-tab-item.active .hha-smart-tab-indicator {\n  opacity: 1;\n}\n.hha-smart-tab-collapse-btn {\n  padding: 8px;\n  text-align: center;\n  cursor: pointer;\n  border-top: 1px solid #e0e0e0;\n  transition: background 0.15s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 36px;\n  position: relative;\n  z-index: 10;\n}\n.hha-smart-tab-collapse-btn:hover {\n  background: #f0f2f5;\n}\n.hha-smart-collapse-icon {\n  display: inline-block;\n  transition: transform 0.2s ease;\n  font-size: 14px;\n  color: #666666;\n}\n.hha-smart-tab-bar.collapsed .hha-smart-collapse-icon {\n  transform: rotate(180deg);\n}\n.hha-smart-content-area {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: #ffffff;\n  min-height: 0;\n  position: relative;\n  z-index: 1;\n}\n.hha-smart-panel-footer {\n  height: 28px;\n  background: #f7f8fa;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  padding: 0 16px;\n  font-size: 12px;\n  color: #666666;\n  flex-shrink: 0;\n}\n.footer-branding {\n  font-style: italic;\n  opacity: 0.6;\n  user-select: none;\n}\n.hha-smart-tab-content {\n  display: none !important;\n  padding: 0;\n  animation: fadeIn 0.2s ease;\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  overscroll-behavior: contain;\n  box-sizing: border-box;\n  min-height: 0;\n  position: relative;\n  z-index: 0;\n}\n.hha-smart-tab-content.active {\n  display: flex !important;\n  flex-direction: column;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n.hha-smart-config-card {\n  background: #ffffff;\n  border-radius: 4px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: box-shadow 0.2s ease;\n}\n.hha-smart-config-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.hha-smart-config-card-title {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.hha-smart-config-card-body {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.hha-smart-btn {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.hha-smart-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #667eea;\n  color: white;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.hha-smart-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-primary:hover:not(:disabled) {\n  background: #5a6fd6;\n}\n.hha-smart-btn-primary:active:not(:disabled) {\n  background: #4c5ec2;\n}\n.hha-smart-btn-secondary {\n  border: none;\n  border-radius: 4px;\n  padding: 8px 16px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  background: #f7f8fa;\n  color: #333333;\n  border: 1px solid #e0e0e0;\n}\n.hha-smart-btn-secondary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.hha-smart-btn-secondary:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #a29bfe;\n}\n.hha-smart-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 32px;\n  text-align: center;\n  color: #666666;\n  min-height: 300px;\n}\n.hha-smart-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.hha-smart-placeholder-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.hha-smart-placeholder-text {\n  font-size: 14px;\n  color: #666666;\n}\n#highlight-caller-popup {\n  position: fixed;\n  z-index: 999999;\n  background-color: #ffffff;\n  border: 1px solid #dcdcdc;\n  border-radius: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #333;\n  padding: 12px;\n  min-width: 200px;\n}\n#highlight-caller-popup .hcp-title {\n  font-weight: 600;\n  font-size: 16px;\n  margin-bottom: 8px;\n}\n#highlight-caller-popup .hcp-number {\n  background-color: #f0f0f0;\n  padding: 4px 8px;\n  border-radius: 4px;\n  margin-bottom: 12px;\n  text-align: center;\n  font-weight: 500;\n}\n#highlight-caller-popup .hcp-actions {\n  display: flex;\n  justify-content: space-around;\n  gap: 10px;\n}\n#highlight-caller-popup .hcp-button {\n  display: inline-block;\n  text-decoration: none;\n  color: #fff;\n  background-color: #007bff;\n  padding: 8px 12px;\n  border-radius: 5px;\n  transition: background-color 0.2s;\n  flex-grow: 1;\n  text-align: center;\n}\n#highlight-caller-popup .hcp-button:hover {\n  background-color: #0056b3;\n}\n#highlight-caller-popup .hcp-close-btn {\n  position: absolute;\n  top: 5px;\n  right: 8px;\n  font-size: 20px;\n  color: #aaa;\n  cursor: pointer;\n  font-weight: bold;\n}\n#highlight-caller-popup .hcp-close-btn:hover {\n  color: #333;\n}\n#highlight-caller-popup .hcp-actions-full {\n  margin-top: 10px;\n}\n#highlight-caller-popup .hcp-search-hha {\n  width: 100%;\n  background-color: #28a745;\n  border: none;\n  cursor: pointer;\n  font-size: 14px;\n}\n#highlight-caller-popup .hcp-search-hha:hover {\n  background-color: #218838;\n}\n.manual-search-btn-hha {\n  background-color: #28a745;\n  color: white;\n  padding: 10px 15px;\n  margin: 10px 15px;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n  font-size: 16px;\n  font-weight: bold;\n  display: block;\n  text-align: center;\n}\n.manual-search-btn-hha:hover {\n  background-color: #218838;\n}\n#prebilling-selector-wrapper {\n  position: relative;\n  display: inline-block;\n}\n#prebilling-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#prebilling-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#prebilling-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#prebilling-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#prebilling-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#prebilling-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#prebilling-config-card .config-card-body {\n  padding: 16px;\n}\n#prebilling-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#prebilling-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#prebilling-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#prebilling-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#prebilling-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"checkbox\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#prebilling-config-card .config-card-body .coordinator-list .coordinator-option label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#prebilling-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#prebilling-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#prebilling-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#prebilling-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#prebilling-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#prebilling-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#prebilling-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#prebilling-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#prebilling-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.prebilling-selector-btn {\n  transition: all 0.2s !important;\n}\n.prebilling-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n#homepage-config-card {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  margin-top: 8px;\n  width: 380px;\n  max-height: 520px;\n  background: white;\n  border: 1px solid #ddd;\n  border-radius: 8px;\n  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);\n  z-index: 10000;\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  overflow: hidden;\n}\n#homepage-config-card.show {\n  display: block;\n  animation: slideDown 0.2s ease-out;\n}\n@keyframes slideDown {\n  from {\n    opacity: 0;\n    transform: translateY(-10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n#homepage-config-card .config-card-header {\n  padding: 12px 16px;\n  border-bottom: 1px solid #eee;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border-radius: 8px 8px 0 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}\n#homepage-config-card .config-card-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n}\n#homepage-config-card .config-card-header .config-close-btn {\n  background: transparent;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0 4px;\n  line-height: 1;\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n#homepage-config-card .config-card-header .config-close-btn:hover {\n  opacity: 1;\n}\n#homepage-config-card .config-card-body {\n  padding: 16px;\n}\n#homepage-config-card .config-card-body > label {\n  display: block;\n  margin-bottom: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  color: #333;\n}\n#homepage-config-card .config-card-body .config-search-input {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  margin-bottom: 12px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n#homepage-config-card .config-card-body .config-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);\n}\n#homepage-config-card .config-card-body .config-search-input::placeholder {\n  color: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list {\n  max-height: 280px;\n  overflow-y: auto;\n  border: 1px solid #eee;\n  border-radius: 6px;\n  padding: 8px;\n  background: #fafafa;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar {\n  width: 6px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb {\n  background: #c1c1c1;\n  border-radius: 3px;\n}\n#homepage-config-card .config-card-body .coordinator-list::-webkit-scrollbar-thumb:hover {\n  background: #999;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option {\n  padding: 8px 10px;\n  cursor: pointer;\n  border-radius: 4px;\n  margin-bottom: 2px;\n  display: flex;\n  align-items: center;\n  transition: background 0.15s;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:hover {\n  background: #e8f0fe;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option:last-child {\n  margin-bottom: 0;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option.hidden {\n  display: none;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option input[type=\"radio\"] {\n  margin-right: 10px;\n  width: 16px;\n  height: 16px;\n  cursor: pointer;\n  accent-color: #667eea;\n}\n#homepage-config-card .config-card-body .coordinator-list .coordinator-option .coordinator-label {\n  cursor: pointer;\n  font-size: 12px;\n  color: #333;\n  margin: 0;\n  flex: 1;\n  line-height: 1.4;\n  word-break: break-word;\n}\n#homepage-config-card .config-card-body .coordinator-list .no-results {\n  text-align: center;\n  padding: 20px;\n  color: #999;\n  font-size: 13px;\n}\n#homepage-config-card .config-card-body .config-summary {\n  margin-top: 12px;\n  font-size: 12px;\n  color: #666;\n  text-align: right;\n}\n#homepage-config-card .config-card-body .config-summary span {\n  font-weight: 700;\n  color: #667eea;\n  font-size: 14px;\n}\n#homepage-config-card .config-card-footer {\n  padding: 12px 16px;\n  border-top: 1px solid #eee;\n  display: flex;\n  gap: 10px;\n  background: #f8f9fa;\n}\n#homepage-config-card .config-card-footer button {\n  flex: 1;\n  padding: 10px 16px;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s;\n}\n#homepage-config-card .config-card-footer button.btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n#homepage-config-card .config-card-footer button.btn-primary:hover {\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);\n  transform: translateY(-1px);\n}\n#homepage-config-card .config-card-footer button.btn-primary:active {\n  transform: translateY(0);\n}\n#homepage-config-card .config-card-footer button.btn-secondary {\n  background: #e9ecef;\n  color: #495057;\n}\n#homepage-config-card .config-card-footer button.btn-secondary:hover {\n  background: #dee2e6;\n}\n.homepage-selector-btn {\n  transition: all 0.2s !important;\n}\n.homepage-selector-btn:hover {\n  background: #f0f8ff !important;\n  border-color: #667eea !important;\n}\n/**\n * QA Report Tab Styles\n * Epic 8: QA 报告功能\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.qa-report-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n}\n.qa-report-wrapper {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  gap: 0;\n}\n.qa-report-header {\n  display: none;\n}\n.qa-report-title {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.qa-report-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.qa-toolbar-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-left > * {\n  margin: 0;\n  vertical-align: middle;\n}\n.qa-toolbar-actions {\n  display: flex;\n  align-items: center;\n  gap: 0;\n  flex: 0 0 auto;\n  height: 28px;\n}\n.qa-toolbar-actions .qa-load-btn {\n  border-radius: 2px 0 0 2px;\n  border-right: 1px solid rgba(255, 255, 255, 0.3);\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-actions .qa-export-btn {\n  border-radius: 0 2px 2px 0;\n  height: 28px !important;\n  line-height: 26px;\n  padding: 0 14px;\n}\n.qa-toolbar-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-select-label {\n  font-size: 13px;\n  color: #666666;\n  font-weight: 500;\n  line-height: 28px;\n  white-space: nowrap;\n}\n.qa-coordinator-select {\n  padding: 0 28px 0 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: white;\n  background-image: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n  background-repeat: no-repeat;\n  background-position: right 8px center;\n  background-size: 12px 12px;\n  font-size: 13px;\n  min-width: 180px;\n  max-width: 300px;\n  height: 28px !important;\n  line-height: 26px;\n  vertical-align: middle;\n  cursor: pointer;\n  box-sizing: border-box;\n  appearance: none;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.qa-coordinator-select:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px #a29bfe;\n}\n.qa-coordinator-select:disabled {\n  background: #f7f8fa;\n  cursor: not-allowed;\n}\n.qa-load-btn {\n  padding: 0 14px;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  height: 28px;\n}\n.qa-load-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.qa-export-btn {\n  padding: 0 12px;\n  font-size: 13px;\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  color: #333333;\n  cursor: pointer;\n  transition: all 0.2s;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-export-btn:hover:not(:disabled) {\n  background: #f0f2f5;\n  border-color: #667eea;\n}\n.qa-export-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.qa-status-text {\n  font-size: 12px;\n  color: #666666;\n  white-space: nowrap;\n}\n.qa-view-toggle {\n  display: flex;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  overflow: hidden;\n  height: 28px;\n}\n.qa-view-btn {\n  padding: 0 10px;\n  border: none;\n  background: white;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  transition: all 0.2s;\n  height: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.qa-view-btn:first-child {\n  border-right: 1px solid #e0e0e0;\n}\n.qa-view-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-view-btn.active {\n  background: #667eea;\n  color: white;\n}\n.qa-report-content-body {\n  flex: 1;\n  overflow: auto;\n  overscroll-behavior: contain;\n  padding: 8px;\n  background: #f7f8fa;\n}\n.qa-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  text-align: center;\n  color: #666666;\n}\n.qa-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.qa-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.qa-empty-text {\n  font-size: 13px;\n}\n.qa-report-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n  background: white;\n  border-radius: 2px;\n  overflow: hidden;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.qa-report-table thead {\n  background: #f7f8fa;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n}\n.qa-report-table thead th {\n  padding: 8px 16px;\n  text-align: left;\n  font-weight: 600;\n  color: #666666;\n  border-bottom: 2px solid #e0e0e0;\n  white-space: nowrap;\n}\n.qa-report-table thead th.sortable {\n  cursor: pointer;\n  user-select: none;\n  transition: background 0.15s;\n}\n.qa-report-table thead th.sortable:hover {\n  background: #e7eaf0;\n}\n.qa-report-table thead th.sortable .sort-icon {\n  margin-left: 4px;\n  font-size: 10px;\n  opacity: 0.5;\n  display: inline-block;\n  vertical-align: middle;\n}\n.qa-report-table thead th.sortable .sort-icon.sort-asc,\n.qa-report-table thead th.sortable .sort-icon.sort-desc {\n  opacity: 1;\n  color: #667eea;\n}\n.qa-report-table tbody tr {\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s;\n}\n.qa-report-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.qa-report-table tbody tr:last-child {\n  border-bottom: none;\n}\n.qa-report-table tbody td {\n  padding: 8px 16px;\n  vertical-align: middle;\n  user-select: text;\n  cursor: text;\n}\n.qa-report-table tbody td.col-action {\n  user-select: none;\n  cursor: default;\n}\n.qa-report-table .col-id {\n  width: 110px;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  color: #667eea;\n  font-weight: 500;\n}\n.qa-report-table .col-name {\n  width: auto;\n  min-width: 150px;\n  font-weight: 500;\n}\n.qa-report-table .col-phone {\n  width: 140px;\n}\n.qa-report-table .phone-loading {\n  color: #666666;\n  font-style: italic;\n  font-size: 13px;\n}\n.qa-report-table .phone-error {\n  color: #dc3545;\n  font-size: 13px;\n}\n.qa-report-table .phone-single {\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n}\n.qa-report-table .phone-single a {\n  color: #667eea;\n  text-decoration: none;\n}\n.qa-report-table .phone-single a:hover {\n  text-decoration: underline;\n}\n.qa-report-table .phone-multiple {\n  position: relative;\n  display: inline-block;\n  cursor: pointer;\n}\n.qa-report-table .phone-multiple .phone-trigger {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  padding: 2px 6px;\n  background: rgba(102, 126, 234, 0.1);\n  border: 1px solid #667eea;\n  border-radius: 2px;\n  color: #667eea;\n  cursor: pointer;\n  font-size: 13px;\n  transition: all 0.2s;\n}\n.qa-report-table .phone-multiple .phone-trigger:hover {\n  background: #667eea;\n  color: white;\n}\n.qa-report-table .phone-multiple .phone-trigger .phone-count {\n  font-weight: 600;\n}\n.qa-report-table .phone-dropdown {\n  position: absolute;\n  top: 100%;\n  left: 0;\n  z-index: 1000;\n  min-width: 160px;\n  padding: 4px 0;\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  margin-top: 4px;\n}\n.qa-report-table .phone-dropdown .phone-item {\n  display: block;\n  padding: 4px 8px;\n  color: #333333;\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 13px;\n  text-decoration: none;\n  transition: background 0.15s;\n}\n.qa-report-table .phone-dropdown .phone-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-table .col-qa {\n  width: 100px;\n  font-weight: 500;\n}\n.qa-report-table .col-action {\n  width: 50px;\n  text-align: center;\n}\n.phone-item {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.phone-item + .phone-item {\n  margin-top: 2px;\n}\n.qa-never {\n  color: #dc3545 !important;\n  font-weight: 600;\n}\n.qa-action-btn {\n  padding: 4px 8px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 16px;\n  color: #666666;\n  border-radius: 2px;\n  transition: all 0.2s;\n}\n.qa-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.qa-report-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 8px;\n  padding: 8px;\n}\n.qa-card {\n  background: white;\n  border-radius: 2px;\n  padding: 16px;\n  border-left: 4px solid #e0e0e0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  transition: all 0.2s;\n  position: relative;\n  overflow: hidden;\n  user-select: text;\n}\n.qa-card:hover {\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  transform: translateY(-2px);\n}\n.card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  margin-bottom: 8px;\n}\n.card-name {\n  font-weight: 600;\n  font-size: 13px;\n  color: #333333;\n  flex: 1;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  padding-right: 8px;\n}\n.card-action-btn {\n  padding: 2px 6px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 14px;\n  color: #666666;\n  border-radius: 2px;\n  flex-shrink: 0;\n  user-select: none;\n}\n.card-action-btn:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.card-id {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #667eea;\n  margin-bottom: 8px;\n}\n.card-phones {\n  margin-bottom: 8px;\n}\n.card-phone {\n  font-family: \"Monaco\", \"Menlo\", \"Consolas\", monospace;\n  font-size: 12px;\n  color: #666666;\n}\n.card-phone + .card-phone {\n  margin-top: 2px;\n}\n.card-qa {\n  font-weight: 600;\n  font-size: 13px;\n  margin-bottom: 8px;\n}\n.card-priority-badge {\n  position: absolute;\n  bottom: 0;\n  right: 0;\n  padding: 2px 8px;\n  font-size: 12px;\n  color: white;\n  border-radius: 2px 0 0 0;\n  font-weight: 500;\n}\n.priority-critical .col-qa {\n  color: #dc3545;\n}\n.priority-high .col-qa {\n  color: #e74c3c;\n}\n.priority-medium-high .col-qa {\n  color: #fd7e14;\n}\n.priority-medium .col-qa {\n  color: #ffc107;\n}\n.priority-low-medium .col-qa {\n  color: #a8d08d;\n}\n.priority-low .col-qa {\n  color: #28a745;\n}\n.qa-export-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 140px;\n}\n.export-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  transition: background 0.15s;\n}\n.export-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.export-menu-item + .export-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-action-menu {\n  background: white;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  overflow: hidden;\n  z-index: 100000;\n  min-width: 180px;\n}\n.action-menu-item {\n  padding: 8px 16px;\n  cursor: pointer;\n  font-size: 13px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: background 0.15s;\n}\n.action-menu-item:hover {\n  background: #f0f2f5;\n  color: #667eea;\n}\n.action-menu-item + .action-menu-item {\n  border-top: 1px solid #f0f0f0;\n}\n.qa-toast {\n  position: fixed;\n  top: 24px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100%);\n  padding: 8px 24px;\n  border-radius: 2px;\n  font-size: 13px;\n  color: white;\n  z-index: 100001;\n  opacity: 0;\n  transition: all 0.3s ease;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n}\n.qa-toast.show {\n  transform: translateX(-50%) translateY(0);\n  opacity: 1;\n}\n.qa-toast.qa-toast-success {\n  background: #28a745;\n}\n.qa-toast.qa-toast-error {\n  background: #dc3545;\n}\n.qa-toast.qa-toast-info {\n  background: #667eea;\n}\n.qa-note-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n}\n.qa-note-modal {\n  background: white;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  width: 90%;\n  max-width: 520px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.qa-note-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.qa-note-modal-title {\n  font-size: 14px;\n  font-weight: 600;\n}\n.qa-note-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 28px;\n  height: 28px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  transition: background 0.15s;\n}\n.qa-note-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.qa-note-modal-body {\n  padding: 16px;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n  flex: 1;\n}\n.qa-note-section {\n  margin-bottom: 16px;\n}\n.qa-note-section:last-child {\n  margin-bottom: 0;\n}\n.qa-note-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #666666;\n  margin-bottom: 4px;\n}\n.qa-note-template {\n  padding: 8px 16px;\n  background: #f0f2f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  line-height: 1.5;\n  color: #333333;\n}\n.qa-note-textarea {\n  width: 100%;\n  padding: 8px 16px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  font-size: 13px;\n  font-family: inherit;\n  resize: vertical;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.qa-note-textarea:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);\n}\n.qa-note-textarea::placeholder {\n  color: #666666;\n}\n.qa-note-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  padding: 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #f0f2f5;\n}\n.qa-note-btn {\n  padding: 4px 16px;\n  font-size: 13px;\n  border-radius: 2px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.qa-note-btn.qa-note-btn-cancel {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #666666;\n}\n.qa-note-btn.qa-note-btn-cancel:hover {\n  background: #f0f2f5;\n  border-color: #666666;\n}\n.qa-note-btn.qa-note-btn-submit {\n  background: #667eea;\n  border: 1px solid #667eea;\n  color: white;\n}\n.qa-note-btn.qa-note-btn-submit:hover {\n  background: #5a6fd6;\n  border-color: #5a6fd6;\n}\n/**\n * Status Tracking Tab Styles\n * Epic 7: Multi-Tab Panel - 状态追踪 Tab\n *\n * 依赖: variables.less, multi-tab-panel.less\n * @author HHA Smart Assistant\n * @date 2026-01-08\n */\n.status-tracking-tab {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n  padding: 0;\n}\n#status-tracking-wrapper {\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n#status-tracking-wrapper #tracker-panel {\n  background: #ffffff;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view {\n  height: 100%;\n  overflow: hidden;\n  min-height: 0;\n}\n#status-tracking-wrapper #tracker-panel .tracker-view.hidden {\n  display: none !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content {\n  flex: 1 1 auto;\n  min-height: 0;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n#status-tracking-wrapper #tracker-panel .tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n#status-tracking-wrapper #tracker-panel .tracker-header,\n#status-tracking-wrapper #tracker-panel .tracker-footer {\n  flex-shrink: 0;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar {\n  width: 6px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb {\n  background: #e0e0e0;\n  border-radius: 2px;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-thumb:hover,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-thumb:hover {\n  background: #666666;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n#status-tracking-wrapper #tracker-panel::-webkit-scrollbar-track,\n#status-tracking-wrapper #tracker-panel .tracker-content::-webkit-scrollbar-track {\n  background: #f7f8fa;\n}\n/* Empty State Styles - matches QA Report empty state */\n#status-tracking-wrapper .tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 200px;\n  padding: 40px 20px;\n  text-align: center;\n  color: #666;\n  background: #f7f8fa;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.7;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-title {\n  font-size: 18px;\n  font-weight: 600;\n  color: #333;\n  margin-bottom: 8px;\n}\n#status-tracking-wrapper .tracker-empty-state .tracker-empty-text {\n  font-size: 14px;\n  color: #888;\n}\n/**\n * Cleaner Tab Styles\n * Epic 11: POC 和 Duplicate Call 智能清理器\n */\n.cleaner-tab {\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  padding: 0;\n}\n.cleaner-wrapper {\n  flex: 1;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n  padding: 12px 16px;\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n}\n/* Header */\n.cleaner-header {\n  margin-bottom: 12px;\n}\n.cleaner-title-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cleaner-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.cleaner-page-tag {\n  font-size: 12px;\n  color: #666;\n  background: #f0f4f8;\n  padding: 3px 8px;\n  border-radius: 4px;\n  white-space: nowrap;\n}\n.cleaner-btn-refresh {\n  background: #f8f9fa;\n  border: none;\n  border-radius: 4px;\n  padding: 4px 8px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background 0.2s ease;\n  margin-left: auto;\n  outline: none;\n}\n.cleaner-btn-refresh:hover {\n  background: #e8f4fd;\n}\n.cleaner-btn-refresh:focus {\n  outline: none;\n}\n.cleaner-hint {\n  font-size: 12px;\n  color: #888;\n  margin-top: 8px;\n  font-style: italic;\n}\n/* Status */\n.cleaner-status {\n  text-align: center;\n  padding: 20px;\n  color: #666;\n}\n.cleaner-spinner {\n  animation: cleaner-spin 1s linear infinite;\n  display: inline-block;\n}\n@keyframes cleaner-spin {\n  from {\n    transform: rotate(0deg);\n  }\n  to {\n    transform: rotate(360deg);\n  }\n}\n/* Toolbar */\n.cleaner-toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 12px;\n  padding: 10px 12px;\n  background: #f8f9fa;\n  border-radius: 6px;\n}\n.cleaner-select-all {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  color: #333;\n  line-height: 1;\n}\n.cleaner-select-all input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin: 0;\n  cursor: pointer;\n  vertical-align: middle;\n}\n.cleaner-select-all span {\n  vertical-align: middle;\n}\n/* Buttons */\n.cleaner-btn-primary {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-primary:hover:not(:disabled) {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n  transform: translateY(-1px);\n}\n.cleaner-btn-primary:disabled {\n  background: #ccc;\n  cursor: not-allowed;\n  transform: none;\n}\n.cleaner-btn-secondary {\n  background: white;\n  color: #666;\n  border: 1px solid #ddd;\n  padding: 8px 16px;\n  border-radius: 6px;\n  font-size: 14px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.cleaner-btn-secondary:hover {\n  background: #f5f5f5;\n  border-color: #ccc;\n}\n/* Records List */\n.cleaner-records-list {\n  max-height: 260px;\n  overflow-y: auto;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  overscroll-behavior: contain;\n}\n.cleaner-record-item {\n  display: flex;\n  align-items: flex-start;\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.cleaner-record-item:last-child {\n  border-bottom: none;\n}\n.cleaner-record-item:hover {\n  background: #f8f9fa;\n}\n.cleaner-record-item input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  margin-right: 10px;\n  margin-top: 2px;\n  cursor: pointer;\n}\n.cleaner-record-info {\n  flex: 1;\n  font-size: 13px;\n}\n.cleaner-record-info .record-main {\n  font-weight: 500;\n  color: #333;\n  margin-bottom: 4px;\n}\n.cleaner-record-info .record-detail {\n  color: #666;\n  font-size: 12px;\n}\n.cleaner-badge {\n  display: inline-block;\n  padding: 2px 8px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 500;\n  margin-right: 8px;\n}\n.cleaner-badge.badge-poc {\n  background: #e3f2fd;\n  color: #1976d2;\n}\n.cleaner-badge.badge-poc-caregiver {\n  background: #fff3e0;\n  color: #f57c00;\n}\n/* Call Summary */\n.cleaner-call-summary {\n  text-align: center;\n  padding: 16px;\n  background: #e8f4fd;\n  border-radius: 8px;\n  margin-bottom: 12px;\n}\n.cleaner-call-summary .cleaner-call-count {\n  font-size: 15px;\n  color: #1976d2;\n}\n.cleaner-call-summary .cleaner-call-count strong {\n  font-size: 20px;\n  font-weight: 600;\n}\n.cleaner-call-details {\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  margin-top: 12px;\n  max-height: 250px;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n.cleaner-call-item {\n  padding: 10px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 13px;\n  color: #333;\n}\n.cleaner-call-item:last-child {\n  border-bottom: none;\n}\n.cleaner-call-item::before {\n  content: \"•\";\n  color: #1976d2;\n  margin-right: 8px;\n}\n/* Empty State */\n.cleaner-empty-state {\n  text-align: center;\n  padding: 40px 20px;\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  min-height: 300px;\n}\n.cleaner-empty-state .cleaner-empty-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n}\n.cleaner-empty-state .cleaner-hint {\n  font-size: 13px;\n  color: #666;\n}\n.cleaner-empty-state p {\n  font-size: 15px;\n  color: #4caf50;\n  font-weight: 500;\n  margin: 0;\n}\n/* No Page Detected */\n.cleaner-no-page-info {\n  text-align: left;\n  margin-top: 16px;\n  padding: 16px;\n  background: #f8f9fa;\n  border-radius: 8px;\n}\n.cleaner-no-page-info p {\n  margin: 0 0 12px 0;\n  font-size: 14px;\n  color: #333;\n}\n.cleaner-no-page-info ul {\n  margin: 0 0 12px 20px;\n  padding: 0;\n}\n.cleaner-no-page-info ul li {\n  margin-bottom: 8px;\n  font-size: 13px;\n  color: #555;\n}\n.cleaner-no-page-info .cleaner-hint {\n  color: #999;\n  font-size: 13px;\n  font-style: italic;\n  margin-bottom: 0;\n}\n/* Cleaning Overlay - 浅色半透明蒙版 */\n#hha-cleaning-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.15);\n  backdrop-filter: blur(2px);\n  z-index: 999999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  pointer-events: all;\n  /* 旋转动画 */\n}\n#hha-cleaning-overlay .cleaning-modal {\n  background: white;\n  padding: 30px 40px;\n  border-radius: 12px;\n  text-align: center;\n  min-width: 400px;\n  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);\n  /* 确认对话框按钮 */\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon {\n  font-size: 48px;\n  margin-bottom: 15px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-icon.success {\n  color: #4CAF50;\n}\n#hha-cleaning-overlay .cleaning-modal h3 {\n  margin: 0 0 10px;\n  font-size: 20px;\n  color: #333;\n}\n#hha-cleaning-overlay .cleaning-modal p {\n  margin: 0;\n  color: #666;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar {\n  height: 8px;\n  background: #e0e0e0;\n  border-radius: 4px;\n  overflow: hidden;\n  margin: 20px 0;\n}\n#hha-cleaning-overlay .cleaning-modal .progress-bar .progress-fill {\n  height: 100%;\n  background: linear-gradient(90deg, #4CAF50, #8BC34A);\n  transition: width 0.3s ease;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-warning {\n  color: #ff9800;\n  font-size: 14px;\n  margin-top: 15px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .success-note {\n  color: #666;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .error-message {\n  color: #e53935;\n  font-size: 14px;\n  margin-top: 10px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .btn-primary:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close {\n  margin-top: 20px;\n  padding: 10px 30px;\n  background: #1976d2;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 16px;\n}\n#hha-cleaning-overlay .cleaning-modal .cleaning-btn-close:hover {\n  background: #1565c0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n  margin-top: 20px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel {\n  padding: 10px 24px;\n  background: #f5f5f5;\n  color: #666;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-cancel:hover {\n  background: #e0e0e0;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm {\n  padding: 10px 24px;\n  background: #4caf50;\n  color: white;\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 14px;\n  font-weight: 500;\n}\n#hha-cleaning-overlay .cleaning-modal .dialog-buttons .btn-confirm:hover {\n  background: #43a047;\n}\n#hha-cleaning-overlay .spinning {\n  animation: cleaner-spin 1s linear infinite;\n}\n/**\n * Mail Builder Tab Styles\n * Epic 12: 智能邮件构筑助手\n */\n.mail-builder-tab {\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  padding: 0;\n}\n.mail-builder-wrapper {\n  flex: 1;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n}\n/* Header */\n.mail-builder-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 16px;\n  border-bottom: 1px solid #e0e0e0;\n  background: #fafbfc;\n  flex-shrink: 0;\n}\n.mail-builder-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.mail-builder-page-tag {\n  font-size: 12px;\n  color: #666;\n  background: #e8f4fd;\n  padding: 4px 10px;\n  border-radius: 12px;\n  white-space: nowrap;\n}\n/* Main Content - 35% / 65% Split */\n.mail-builder-main {\n  flex: 1;\n  display: flex;\n  overflow: hidden;\n  min-height: 0;\n}\n.mail-builder-main.full-width .mail-builder-template-panel {\n  width: 100%;\n  border-left: none;\n}\n/* Left Info Panel (35%) */\n.mail-builder-info-panel {\n  width: 35%;\n  min-width: 200px;\n  border-right: 1px solid #e0e0e0;\n  padding: 12px;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: #fff;\n}\n.mail-builder-info-list {\n  flex: 1;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n.mail-builder-info-item {\n  display: flex;\n  align-items: center;\n  padding: 8px 0;\n  border-bottom: 1px solid #f0f0f0;\n  gap: 8px;\n}\n.mail-builder-info-item:last-child {\n  border-bottom: none;\n}\n.info-label {\n  font-size: 12px;\n  color: #888;\n  min-width: 40px;\n  flex-shrink: 0;\n}\n.info-value {\n  flex: 1;\n  font-size: 13px;\n  color: #333;\n  font-weight: 500;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.info-copy-btn {\n  background: #f0f4f8;\n  border: none;\n  border-radius: 4px;\n  padding: 4px 6px;\n  font-size: 11px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  flex-shrink: 0;\n}\n.info-copy-btn:hover {\n  background: #e0e8f0;\n  transform: scale(1.05);\n}\n.info-copy-btn:active {\n  transform: scale(0.95);\n}\n/* Quick Copy Buttons */\n.mail-builder-quick-copy {\n  margin-top: 12px;\n  padding-top: 12px;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.quick-copy-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  font-size: 12px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  text-align: center;\n}\n.quick-copy-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n  transform: translateY(-1px);\n}\n.quick-copy-btn:active {\n  transform: translateY(0);\n}\n/* Right Template Panel (65%) */\n.mail-builder-template-panel {\n  flex: 1;\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  background: #fafbfc;\n}\n.mail-builder-template-tabs {\n  display: flex;\n  border-bottom: 1px solid #e0e0e0;\n  background: #fff;\n  flex-shrink: 0;\n}\n.template-tab-btn {\n  flex: 1;\n  padding: 10px 16px;\n  background: transparent;\n  border: none;\n  border-bottom: 2px solid transparent;\n  font-size: 13px;\n  color: #666;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.template-tab-btn:hover {\n  color: #333;\n  background: #f5f5f5;\n}\n.template-tab-btn.active {\n  color: #1976d2;\n  border-bottom-color: #1976d2;\n  font-weight: 500;\n}\n.mail-builder-template-content {\n  flex: 1;\n  padding: 16px;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n.template-placeholder {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 200px;\n  color: #999;\n}\n.template-placeholder .template-placeholder-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n.template-placeholder p {\n  margin: 0;\n  font-size: 14px;\n}\n.template-placeholder .template-hint {\n  margin-top: 8px;\n  font-size: 12px;\n  color: #bbb;\n}\n.mail-builder-template-actions {\n  display: flex;\n  gap: 8px;\n  padding: 12px;\n  border-top: 1px solid #e0e0e0;\n  background: #fff;\n  flex-shrink: 0;\n}\n.template-action-btn {\n  flex: 1;\n  padding: 8px 12px;\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  font-size: 12px;\n  color: #666;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.template-action-btn:hover:not(:disabled) {\n  background: #e8e8e8;\n  color: #333;\n}\n.template-action-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n/* No Data State */\n.mail-builder-no-data {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  color: #999;\n  font-size: 13px;\n}\n/* No Page Detected */\n.mail-builder-no-page-info {\n  text-align: left;\n  margin-top: 16px;\n  padding: 16px;\n  background: #f8f9fa;\n  border-radius: 8px;\n}\n.mail-builder-no-page-info p {\n  margin: 0 0 12px 0;\n  font-size: 14px;\n  color: #333;\n}\n.mail-builder-no-page-info ul {\n  margin: 0 0 12px 20px;\n  padding: 0;\n}\n.mail-builder-no-page-info ul li {\n  margin-bottom: 8px;\n  font-size: 13px;\n  color: #555;\n}\n.mail-builder-no-page-info .mail-builder-hint {\n  color: #999;\n  font-size: 13px;\n  font-style: italic;\n  margin-bottom: 0;\n}\n/* Template List */\n.template-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.template-empty {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  min-height: 200px;\n  color: #999;\n}\n.template-empty .template-empty-icon {\n  font-size: 48px;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n.template-empty p {\n  margin: 0;\n  font-size: 14px;\n}\n.template-empty .template-hint {\n  margin-top: 8px;\n  font-size: 12px;\n  color: #bbb;\n}\n/* Template Card */\n.template-card {\n  background: #fff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  padding: 12px;\n  transition: all 0.2s ease;\n}\n.template-card:hover {\n  border-color: #1976d2;\n  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);\n}\n.template-card-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 8px;\n}\n.template-name {\n  font-size: 14px;\n  font-weight: 600;\n  color: #333;\n}\n.template-target-badge {\n  font-size: 11px;\n  padding: 2px 8px;\n  border-radius: 12px;\n  background: #e3f2fd;\n  color: #1976d2;\n}\n.template-badges {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n}\n.template-builtin-badge {\n  font-size: 10px;\n  padding: 2px 6px;\n  border-radius: 10px;\n  background: #fff3e0;\n  color: #f57c00;\n  font-weight: 500;\n}\n.template-card-preview {\n  margin-bottom: 10px;\n}\n.template-card-preview .template-subject {\n  font-size: 12px;\n  color: #666;\n}\n.template-card-actions {\n  display: flex;\n  gap: 8px;\n  justify-content: flex-end;\n}\n.template-card-btn {\n  padding: 4px 10px;\n  border-radius: 4px;\n  font-size: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: 1px solid #e0e0e0;\n  background: #fff;\n}\n.template-card-btn.use-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n}\n.template-card-btn.use-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n}\n.template-card-btn.edit-btn,\n.template-card-btn.delete-btn {\n  background: #f5f5f5;\n}\n.template-card-btn.edit-btn:hover,\n.template-card-btn.delete-btn:hover {\n  background: #e0e0e0;\n}\n.template-card-btn.delete-btn:hover {\n  background: #ffebee;\n  border-color: #e53935;\n}\n/* Template Editor */\n.template-editor {\n  background: #fff;\n  border-radius: 8px;\n  overflow: hidden;\n}\n.editor-header {\n  padding: 12px 16px;\n  background: #f5f5f5;\n  border-bottom: 1px solid #e0e0e0;\n}\n.editor-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: #333;\n}\n.editor-form {\n  padding: 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.form-group label {\n  font-size: 12px;\n  color: #666;\n  font-weight: 500;\n}\n.form-group input,\n.form-group select,\n.form-group textarea {\n  padding: 8px 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 6px;\n  font-size: 13px;\n  transition: border-color 0.2s ease;\n}\n.form-group input:focus,\n.form-group select:focus,\n.form-group textarea:focus {\n  outline: none;\n  border-color: #1976d2;\n}\n.form-group textarea {\n  resize: vertical;\n  min-height: 80px;\n  font-family: inherit;\n}\n.editor-actions {\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n  padding: 12px 16px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n}\n.editor-btn {\n  padding: 8px 20px;\n  border-radius: 6px;\n  font-size: 13px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.editor-btn.cancel-btn {\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  color: #666;\n}\n.editor-btn.cancel-btn:hover {\n  background: #e0e0e0;\n}\n.editor-btn.save-btn {\n  background: linear-gradient(135deg, #4a90d9, #357abd);\n  color: white;\n  border: none;\n}\n.editor-btn.save-btn:hover {\n  background: linear-gradient(135deg, #357abd, #2d6aa3);\n}\n/* Toast Notification */\n.mail-builder-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-100px);\n  background: #333;\n  color: white;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-size: 14px;\n  z-index: 1000000;\n  opacity: 0;\n  transition: all 0.3s ease;\n  pointer-events: none;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n.mail-builder-toast.show {\n  opacity: 1;\n  transform: translateX(-50%) translateY(0);\n}\n/* ============================================================================\n   Template Editor Modal\n   ============================================================================ */\n.template-modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100002;\n  backdrop-filter: blur(2px);\n}\n.template-modal {\n  background: white;\n  border-radius: 12px;\n  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);\n  width: 90%;\n  max-width: 700px;\n  max-height: 90vh;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n.template-modal-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  border-bottom: 1px solid #e0e0e0;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n}\n.template-modal-title {\n  font-size: 16px;\n  font-weight: 600;\n  margin: 0;\n}\n.template-modal-close {\n  background: none;\n  border: none;\n  color: white;\n  font-size: 20px;\n  cursor: pointer;\n  padding: 0;\n  width: 32px;\n  height: 32px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 6px;\n  transition: background 0.15s;\n}\n.template-modal-close:hover {\n  background: rgba(255, 255, 255, 0.2);\n}\n.template-modal-body {\n  padding: 20px;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n  flex: 1;\n  max-height: calc(90vh - 140px);\n}\n.template-form-group {\n  margin-bottom: 16px;\n}\n.template-form-group:last-child {\n  margin-bottom: 0;\n}\n.template-form-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 500;\n  color: #555;\n  margin-bottom: 6px;\n}\n.template-form-input,\n.template-form-select {\n  width: 100%;\n  padding: 10px 12px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  font-size: 14px;\n  transition: border-color 0.2s, box-shadow 0.2s;\n  box-sizing: border-box;\n}\n.template-form-input:focus,\n.template-form-select:focus {\n  outline: none;\n  border-color: #4a90d9;\n  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);\n}\n.template-form-row {\n  display: flex;\n  gap: 12px;\n}\n.template-form-row .template-form-group {\n  flex: 1;\n}\n/* TinyMCE wrapper */\n.template-body-editor {\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  overflow: hidden;\n}\n.template-body-editor .tox-tinymce {\n  border: none !important;\n}\n.template-body-editor textarea {\n  width: 100%;\n  min-height: 150px;\n  padding: 12px;\n  border: none;\n  font-family: inherit;\n  font-size: 14px;\n  resize: vertical;\n  box-sizing: border-box;\n}\n.template-body-editor textarea:focus {\n  outline: none;\n}\n/* Custom Variables Section */\n.template-variables-section {\n  margin-top: 20px;\n  padding-top: 16px;\n  border-top: 1px solid #e0e0e0;\n}\n.template-variables-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  margin-bottom: 12px;\n}\n.template-variables-header h5 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333;\n}\n.template-add-var-btn {\n  padding: 4px 10px;\n  font-size: 12px;\n  background: #e3f2fd;\n  color: #1976d2;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.template-add-var-btn:hover {\n  background: #bbdefb;\n}\n.template-variables-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.template-variables-table th,\n.template-variables-table td {\n  padding: 8px 10px;\n  text-align: left;\n  border: 1px solid #e0e0e0;\n}\n.template-variables-table th {\n  background: #f5f5f5;\n  font-weight: 500;\n  color: #666;\n}\n.template-variables-table input {\n  width: 100%;\n  padding: 6px 8px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  font-size: 12px;\n  box-sizing: border-box;\n}\n.template-variables-table input:focus {\n  outline: none;\n  border-color: #4a90d9;\n}\n.template-variables-table .var-delete-btn {\n  padding: 4px 8px;\n  background: #ffebee;\n  color: #e53935;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  font-size: 14px;\n}\n.template-variables-table .var-delete-btn:hover {\n  background: #ffcdd2;\n}\n.template-modal-footer {\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  padding: 16px 20px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n}\n.template-modal-btn {\n  padding: 10px 24px;\n  font-size: 14px;\n  font-weight: 500;\n  border-radius: 6px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.template-modal-btn.btn-cancel {\n  background: #f5f5f5;\n  border: 1px solid #ddd;\n  color: #666;\n}\n.template-modal-btn.btn-cancel:hover {\n  background: #e0e0e0;\n}\n.template-modal-btn.btn-save {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border: none;\n  color: white;\n}\n.template-modal-btn.btn-save:hover {\n  background: linear-gradient(135deg, #5a6fd6 0%, #6b4199 100%);\n}\n.template-modal-btn.btn-save:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.timesheet-modal {\n  max-width: 820px;\n}\n.timesheet-modal-body {\n  overflow: hidden !important;\n  display: flex !important;\n  flex-direction: column !important;\n  padding: 20px 20px 16px !important;\n  gap: 0 !important;\n}\n.timesheet-config-section {\n  flex-shrink: 0;\n  padding-bottom: 14px;\n  border-bottom: 1px solid #e8e8e8;\n  margin-bottom: 14px;\n}\n.timesheet-config-row {\n  display: flex;\n  align-items: flex-start;\n  gap: 16px;\n}\n.timesheet-config-col-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 1;\n}\n.timesheet-config-col-left .timesheet-config-input {\n  flex: 1;\n  min-width: 0;\n}\n.timesheet-config-col-mid {\n  flex: 1.5;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.timesheet-config-inline {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.timesheet-config-label {\n  display: block;\n  font-size: 13px;\n  font-weight: 600;\n  color: #444;\n  white-space: nowrap;\n}\n.ts-short-label {\n  min-width: 28px;\n  text-align: right;\n  flex-shrink: 0;\n}\n.timesheet-config-input {\n  flex: 1;\n  width: 100%;\n  padding: 8px 10px;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  font-size: 13px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.timesheet-config-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);\n}\n.ts-save-btn {\n  flex-shrink: 0;\n  align-self: flex-start;\n  padding: 8px 14px !important;\n  font-size: 13px !important;\n  white-space: nowrap;\n}\n.timesheet-list-section {\n  flex: 1;\n  min-height: 0;\n  display: flex;\n  flex-direction: column;\n}\n.timesheet-list-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  margin-bottom: 10px;\n  flex-shrink: 0;\n}\n.timesheet-list-title {\n  font-size: 11px;\n  font-weight: 700;\n  color: #888;\n  letter-spacing: 0.7px;\n  text-transform: uppercase;\n}\n.timesheet-search-input {\n  padding: 7px 14px;\n  border: 1px solid #ddd;\n  border-radius: 20px;\n  font-size: 13px;\n  width: 220px;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.timesheet-search-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);\n}\n.timesheet-visit-list {\n  flex: 1;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n  max-height: 300px;\n  border: 1px solid #e4e4e4;\n  border-radius: 10px;\n  background: #fff;\n}\n.timesheet-visit-list::-webkit-scrollbar {\n  width: 5px;\n}\n.timesheet-visit-list::-webkit-scrollbar-track {\n  background: #f5f5f5;\n  border-radius: 3px;\n}\n.timesheet-visit-list::-webkit-scrollbar-thumb {\n  background: #ccc;\n  border-radius: 3px;\n}\n.timesheet-visit-list::-webkit-scrollbar-thumb:hover {\n  background: #aaa;\n}\n.timesheet-visit-card {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  padding: 12px 16px;\n  border-bottom: 1px solid #f0f0f0;\n  background: #fff;\n  transition: background 0.15s;\n}\n.timesheet-visit-card:last-child {\n  border-bottom: none;\n}\n.timesheet-visit-card:hover {\n  background: #f6f7ff;\n}\n.timesheet-avatar {\n  width: 42px;\n  height: 42px;\n  border-radius: 50%;\n  background: linear-gradient(135deg, #90a4ae, #607d8b);\n  color: #fff;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 17px;\n  font-weight: 700;\n  flex-shrink: 0;\n  user-select: none;\n}\n.timesheet-visit-info {\n  flex: 1;\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.timesheet-patient {\n  font-size: 14px;\n  font-weight: 700;\n  color: #1a1a1a;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.timesheet-details {\n  font-size: 12px;\n  color: #888;\n  display: flex;\n  gap: 14px;\n}\n.timesheet-date,\n.timesheet-time {\n  white-space: nowrap;\n}\n.timesheet-send-btn {\n  flex-shrink: 0;\n  padding: 8px 16px !important;\n  font-size: 13px !important;\n}\n.timesheet-no-data,\n.timesheet-loading {\n  padding: 28px;\n  text-align: center;\n  color: #aaa;\n  font-size: 13px;\n}\n.timesheet-confirm-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.45);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100010;\n}\n.timesheet-confirm-box {\n  background: #fff;\n  border-radius: 10px;\n  padding: 24px 28px;\n  max-width: 400px;\n  width: 90%;\n  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);\n}\n.timesheet-confirm-box p {\n  margin: 0 0 10px;\n  font-size: 14px;\n  color: #333;\n  line-height: 1.5;\n}\n.timesheet-confirm-box p:last-of-type {\n  margin-bottom: 0;\n}\n.timesheet-confirm-actions {\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n  margin-top: 18px;\n}\n/* ============================================================================\n   Patient Vacation Template (Epic 16, Story 2)\n   ============================================================================ */\n/* Loading Overlay */\n.pv-loading-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.55);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 100020;\n}\n.pv-loading-inner {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 16px;\n}\n.pv-spinner {\n  width: 44px;\n  height: 44px;\n  border: 4px solid rgba(255, 255, 255, 0.3);\n  border-top-color: #fff;\n  border-radius: 50%;\n  animation: pv-spin 0.8s linear infinite;\n}\n@keyframes pv-spin {\n  to {\n    transform: rotate(360deg);\n  }\n}\n.pv-loading-text {\n  color: #fff;\n  font-size: 15px;\n  font-weight: 500;\n  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);\n}\n/* Modal */\n.pv-modal {\n  max-width: 780px;\n}\n.pv-modal-body {\n  padding: 16px 20px 8px;\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n  max-height: calc(90vh - 160px);\n}\n/* Config Section */\n.pv-config-section {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.pv-config-row {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.pv-config-label {\n  flex-shrink: 0;\n  width: 56px;\n  font-size: 13px;\n  font-weight: 600;\n  color: #555;\n}\n.pv-config-input,\n.pv-subject-input {\n  flex: 1;\n  padding: 6px 10px;\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  font-size: 13px;\n  outline: none;\n  transition: border-color 0.2s;\n}\n.pv-config-input:focus,\n.pv-subject-input:focus {\n  border-color: #667eea;\n}\n/* Subject Row */\n.pv-subject-row {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n/* Rich Text Editor */\n.pv-editor-section {\n  display: flex;\n  flex-direction: column;\n  border: 1px solid #d0d0d0;\n  border-radius: 8px;\n  overflow: hidden;\n}\n.pv-editor-toolbar {\n  display: flex;\n  gap: 2px;\n  padding: 6px 8px;\n  background: #f5f5f5;\n  border-bottom: 1px solid #e0e0e0;\n  flex-wrap: wrap;\n}\n.pv-editor-toolbar button {\n  background: none;\n  border: 1px solid transparent;\n  border-radius: 4px;\n  padding: 3px 7px;\n  font-size: 13px;\n  cursor: pointer;\n  color: #333;\n  transition: background 0.15s, border-color 0.15s;\n}\n.pv-editor-toolbar button:hover {\n  background: #e0e0e0;\n  border-color: #ccc;\n}\n.pv-editor-toolbar button:active {\n  background: #d0d0d0;\n}\n.pv-rich-editor {\n  min-height: 320px;\n  padding: 10px 12px;\n  font-size: 13px;\n  line-height: 1.6;\n  outline: none;\n  background: #fff;\n}\n.pv-rich-editor:focus {\n  background: #fafafa;\n}\n/* Modal Footer */\n.pv-modal-footer {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 20px;\n  border-top: 1px solid #e0e0e0;\n  background: #f9f9f9;\n  gap: 10px;\n}\n/* Split Button */\n.pv-split-btn {\n  position: relative;\n  display: flex;\n}\n.pv-copy-main {\n  border-radius: 6px 0 0 6px !important;\n  border-right: 1px solid rgba(255, 255, 255, 0.3) !important;\n}\n.pv-copy-chevron {\n  border-radius: 0 6px 6px 0 !important;\n  padding: 6px 8px !important;\n  min-width: unset;\n}\n.pv-split-dropdown {\n  position: absolute;\n  bottom: calc(100% + 4px);\n  left: 0;\n  background: #fff;\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);\n  z-index: 10;\n  min-width: 120px;\n  overflow: hidden;\n}\n.pv-split-dropdown button {\n  display: block;\n  width: 100%;\n  padding: 8px 14px;\n  text-align: left;\n  background: none;\n  border: none;\n  font-size: 13px;\n  cursor: pointer;\n  color: #333;\n}\n.pv-split-dropdown button:hover {\n  background: #f0f0f0;\n}\n/* Toast */\n.pv-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-40px);\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-size: 14px;\n  z-index: 200000;\n  opacity: 0;\n  transition: all 0.3s ease;\n  pointer-events: none;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  max-width: 440px;\n  text-align: center;\n}\n.pv-toast.show {\n  opacity: 1;\n  transform: translateX(-50%) translateY(0);\n}\n.pv-toast.pv-toast--success {\n  background: #28a745;\n  color: #fff;\n}\n.pv-toast.pv-toast--warning {\n  background: #856404;\n  color: #fff8e1;\n}\n.eod-modal {\n  max-width: 720px;\n}\n.eod-modal-body {\n  padding: 16px 20px 8px;\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n  max-height: calc(90vh - 160px);\n}\n.eod-config-section {\n  flex-shrink: 0;\n  padding-bottom: 12px;\n  border-bottom: 1px solid #e8e8e8;\n}\n.eod-config-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  margin-bottom: 8px;\n}\n.eod-config-row:last-child {\n  margin-bottom: 0;\n}\n.eod-config-label {\n  font-size: 13px;\n  font-weight: 600;\n  color: #444;\n  white-space: nowrap;\n  min-width: 68px;\n}\n.eod-config-input {\n  flex: 1;\n  padding: 7px 10px;\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  font-size: 13px;\n}\n.eod-config-input:focus {\n  outline: none;\n  border-color: #667eea;\n  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.12);\n}\n.eod-subject-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-shrink: 0;\n}\n.eod-subject-input {\n  flex: 1;\n  padding: 7px 10px;\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  font-size: 13px;\n  font-weight: 500;\n}\n.eod-subject-input:focus {\n  outline: none;\n  border-color: #1a6b3a;\n  box-shadow: 0 0 0 2px rgba(26, 107, 58, 0.12);\n}\n.eod-editor-section {\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  overflow: hidden;\n  flex-shrink: 0;\n}\n.eod-editor-toolbar {\n  display: flex;\n  gap: 2px;\n  padding: 4px 8px;\n  background: #f7f7f7;\n  border-bottom: 1px solid #e0e0e0;\n}\n.eod-editor-toolbar button {\n  padding: 3px 8px;\n  border: 1px solid transparent;\n  border-radius: 4px;\n  background: transparent;\n  cursor: pointer;\n  font-size: 13px;\n  color: #333;\n}\n.eod-editor-toolbar button:hover {\n  background: #e8e8e8;\n  border-color: #d0d0d0;\n}\n.eod-rich-editor {\n  min-height: 180px;\n  max-height: 280px;\n  overflow-y: auto;\n  padding: 10px 12px;\n  font-size: 13px;\n  outline: none;\n  background: #fff;\n  line-height: 1.5;\n}\n.eod-folder-section {\n  border: 1px solid #d0d0d0;\n  border-radius: 6px;\n  overflow: hidden;\n}\n.eod-folder-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 8px 12px;\n  background: #f7f7f7;\n  border-bottom: 1px solid #e0e0e0;\n}\n.eod-folder-label {\n  font-size: 13px;\n  font-weight: 500;\n  color: #333;\n}\n.eod-folder-hint {\n  color: #888;\n  font-weight: 400;\n  font-size: 12px;\n}\n.eod-change-folder-btn {\n  padding: 4px 10px;\n  font-size: 12px;\n  border: 1px solid #d0d0d0;\n  border-radius: 4px;\n  background: #fff;\n  cursor: pointer;\n  color: #555;\n}\n.eod-change-folder-btn:hover {\n  background: #e8e8e8;\n}\n.eod-file-list {\n  max-height: 160px;\n  overflow-y: auto;\n  background: #fff;\n}\n.eod-file-item {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 7px 12px;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.eod-file-item:last-child {\n  border-bottom: none;\n}\n.eod-file-icon {\n  flex-shrink: 0;\n}\n.eod-file-name {\n  flex: 1;\n  color: #333;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.eod-file-date {\n  color: #888;\n  white-space: nowrap;\n  flex-shrink: 0;\n}\n.eod-file-remove {\n  padding: 2px 6px;\n  border: 1px solid #e0e0e0;\n  border-radius: 4px;\n  background: #fff;\n  cursor: pointer;\n  color: #e53935;\n  font-size: 12px;\n  flex-shrink: 0;\n}\n.eod-file-remove:hover {\n  background: #ffebee;\n  border-color: #e53935;\n}\n.eod-file-empty {\n  padding: 16px 12px;\n  color: #f57c00;\n  font-size: 12px;\n  text-align: center;\n}\n.eod-modal-footer {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 14px 20px;\n  border-top: 1px solid #e0e0e0;\n  background: #fafbfc;\n  flex-shrink: 0;\n}\n.eod-save-config-btn {\n  background: #f0f4f8 !important;\n  color: #555 !important;\n  border: 1px solid #d0d0d0 !important;\n}\n.eod-save-config-btn:not(:disabled):hover {\n  background: #e0e8f0 !important;\n}\n.eod-save-config-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.eod-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%) translateY(-80px);\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-size: 14px;\n  z-index: 1000010;\n  opacity: 0;\n  transition: opacity 0.3s ease, transform 0.3s ease;\n  pointer-events: none;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n  max-width: 480px;\n  text-align: center;\n}\n.eod-toast.show {\n  opacity: 1;\n  transform: translateX(-50%) translateY(0);\n}\n.eod-toast.eod-toast--success {\n  background: #4caf50;\n  color: #fff;\n}\n.eod-toast.eod-toast--warning {\n  background: #f57c00;\n  color: #fff;\n}\n/* ── Epic 17: Insurance fax button & Phone dial button ── */\n.info-fax-btn,\n.info-dial-btn {\n  background: #f0f4f8;\n  border: 1px solid #c8d8e8;\n  border-radius: 4px;\n  padding: 3px 5px;\n  font-size: 11px;\n  cursor: pointer;\n  transition: background 0.15s ease;\n  line-height: 1;\n  text-decoration: none;\n  color: inherit;\n  flex-shrink: 0;\n  display: inline-flex;\n  align-items: center;\n}\n.info-fax-btn:hover {\n  background: #dce8f5;\n}\n.info-dial-btn:hover {\n  background: #dce8f5;\n}\n.info-fax-btn.disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n  pointer-events: none;\n}\n/* ── Epic 17: Fax Preview Modal ── */\n/* overlay z-index override (template-modal-overlay is z-index:100002) */\n.fax-modal-overlay {\n  z-index: 100003;\n}\n/* Size override for fax modal */\n.fax-modal {\n  width: 740px;\n  max-width: 96vw;\n}\n/* Scrollable body */\n.fax-modal-body {\n  padding: 16px 20px 8px;\n  max-height: calc(85vh - 120px);\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n/* Info grid: 4-column table layout [label | value | label | value] */\n.fax-info-grid {\n  display: grid;\n  grid-template-columns: auto 1fr auto 1fr;\n  gap: 5px 14px;\n  align-items: baseline;\n  background: #f5f7ff;\n  border: 1px solid #dde3f0;\n  border-radius: 8px;\n  padding: 10px 14px;\n  margin-bottom: 14px;\n  font-size: 13px;\n}\n.fax-ig-label {\n  font-weight: 600;\n  color: #5a5f7d;\n  white-space: nowrap;\n}\n.fax-ig-label::after {\n  content: \"：\";\n}\n.fax-ig-value {\n  color: #222;\n  word-break: break-all;\n}\n/* Form sections */\n.fax-form-section {\n  border-bottom: 1px solid #edf0f7;\n  padding-bottom: 12px;\n  margin-bottom: 12px;\n}\n.fax-config-section {\n  padding-bottom: 4px;\n}\n.fax-config-title {\n  font-size: 12px;\n  color: #999;\n  margin-bottom: 10px;\n  text-align: center;\n  letter-spacing: 0.05em;\n}\n.fax-field-row {\n  display: flex;\n  align-items: flex-start;\n  gap: 10px;\n  margin-bottom: 10px;\n}\n.fax-field-label {\n  font-size: 13px;\n  font-weight: 500;\n  color: #555;\n  min-width: 46px;\n  padding-top: 9px;\n  flex-shrink: 0;\n  text-align: right;\n}\n/* 页数 number spinner */\n.fax-pages-input {\n  max-width: 90px;\n  text-align: center;\n}\n/* textarea heights */\n.fax-field-textarea {\n  min-height: 120px;\n  resize: vertical;\n  font-family: inherit;\n}\n/* inputs inside fax field rows should stretch */\n.fax-field-row .template-form-input {\n  flex: 1;\n  width: auto;\n  box-sizing: border-box;\n}\n.fax-sig-textarea {\n  min-height: 80px;\n}\n.fax-config-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 4px;\n  margin-bottom: 2px;\n}\n.fax-modal-footer {\n  padding: 12px 20px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #edf0f7;\n}\n/**\n * Visit Monitor (Coordinator Tracker) Styles\n * Epic 10: UI 现代化升级\n *\n * 依赖: variables.less\n * @author HHA Smart Assistant\n * @date 2026-01-12\n */\n#tracker-container {\n  position: fixed;\n  top: 20px;\n  right: 20px;\n  z-index: 99999;\n  user-select: none;\n  -webkit-user-select: none;\n}\n#tracker-drag-handle {\n  width: 48px;\n  height: 48px;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  font-size: 24px;\n  transition: all 0.15s ease;\n}\n#tracker-drag-handle:hover {\n  transform: scale(1.1);\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\n}\n#tracker-drag-handle:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n#tracker-panel {\n  position: absolute;\n  top: 0;\n  width: 550px;\n  height: 480px;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  display: none;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;\n  color: #333333;\n  overflow: hidden;\n  transition: height 0.3s ease;\n}\n.tracker-view {\n  display: flex;\n  flex-direction: column;\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n  transition: transform 0.3s ease;\n}\n.tracker-view.hidden {\n  display: none;\n}\n.slide-in {\n  transform: translateX(0);\n}\n.slide-out {\n  transform: translateX(-100%);\n}\n.slide-in-from-right {\n  transform: translateX(100%);\n}\n.slide-out-to-right {\n  transform: translateX(100%);\n}\n.slide-in-from-left {\n  transform: translateX(-100%);\n}\n.tracker-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  flex-shrink: 0;\n  height: 44px;\n  box-sizing: border-box;\n  gap: 8px;\n}\n.tracker-header-left {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.tracker-header-right {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.tracker-header h3 {\n  margin: 0;\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n}\n#last-refresh-time {\n  font-size: 13px;\n  color: #666666;\n  line-height: 28px;\n}\n.tracker-btn-primary {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  border: none;\n  color: white;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  font-weight: 500;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-primary:hover:not(:disabled) {\n  filter: brightness(1.1);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.tracker-btn-primary:active:not(:disabled) {\n  transform: translateY(1px);\n}\n.tracker-btn-primary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-secondary {\n  background: white;\n  border: 1px solid #e0e0e0;\n  color: #333333;\n  border-radius: 2px;\n  height: 28px;\n  padding: 0 14px;\n  font-size: 13px;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-btn-secondary:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-btn-secondary:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.tracker-btn-icon {\n  width: 28px;\n  height: 28px;\n  padding: 0;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 2px;\n  font-size: 16px;\n}\n.tracker-header-btn {\n  background: #f7f8fa;\n  border: 1px solid #e0e0e0;\n  padding: 0 14px;\n  height: 28px;\n  border-radius: 2px;\n  cursor: pointer;\n  font-size: 13px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 4px;\n  transition: all 0.15s ease;\n}\n.tracker-header-btn:hover:not(:disabled) {\n  border-color: #667eea;\n  color: #667eea;\n  background: #f0efff;\n}\n.tracker-header-btn:disabled {\n  opacity: 0.6;\n  cursor: not-allowed;\n}\n.back-btn {\n  font-size: 18px;\n  width: 28px;\n  height: 28px;\n  padding: 0;\n}\n.tracker-footer {\n  padding: 8px 16px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 8px;\n  border-top: 1px solid #e0e0e0;\n  background: #f7f8fa;\n  flex-shrink: 0;\n}\n.tracker-content {\n  flex: 1 1 auto;\n  padding: 8px 16px;\n  overflow-y: auto;\n  overflow-x: hidden;\n  overscroll-behavior: contain;\n  min-height: 0;\n}\n.tracker-content.tracker-content-empty {\n  padding: 0 !important;\n}\n.tracker-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.tracker-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 13px;\n  text-align: center;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.th-filter-btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  width: 16px;\n  height: 16px;\n  margin-left: 2px;\n  font-size: 10px;\n  color: #666666;\n  cursor: pointer;\n  border-radius: 2px;\n  transition: all 0.15s ease;\n  vertical-align: middle;\n  user-select: none;\n}\n.th-filter-btn:hover {\n  color: #667eea;\n  background: rgba(102, 126, 234, 0.1);\n}\n.th-filter-btn.active {\n  color: #667eea;\n  transform: rotate(180deg);\n}\n.th-filter-btn.warning {\n  color: #e67e22;\n}\n.tracker-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.tracker-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.tracker-table tbody tr:last-child {\n  border-bottom: none;\n}\n.tracker-table th,\n.tracker-table td {\n  padding: 8px 16px;\n  text-align: center;\n  vertical-align: middle;\n  border: none;\n}\n.tracker-table td {\n  font-size: 13px;\n}\n.tracker-table .col-coordinator {\n  text-align: left;\n  width: auto;\n  min-width: 150px;\n}\n.status-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  color: white;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  font-size: 13px;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon:hover {\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n  opacity: 0.9;\n}\n.status-icon:active {\n  transform: scale(0.95);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-icon.status-disabled {\n  opacity: 0.5;\n  cursor: default;\n}\n.status-icon.status-disabled:hover {\n  transform: none;\n  opacity: 0.5;\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n}\n.status-ok {\n  background-color: #28a745;\n}\n.status-error {\n  background-color: #dc3545;\n  animation: blink-animation 1.5s infinite;\n}\n@keyframes blink-animation {\n  0%,\n  100% {\n    opacity: 1;\n  }\n  50% {\n    opacity: 0.4;\n  }\n}\n.edit-list-actions {\n  text-align: right;\n  padding-right: 16px;\n}\n.edit-list-actions button {\n  font-size: 13px;\n  width: 28px;\n  height: 28px;\n  border: none;\n  border-radius: 50%;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 600;\n  transition: all 0.15s ease;\n}\n.edit-list-actions button:hover:not(:disabled) {\n  filter: brightness(1.15);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\n  transform: scale(1.05);\n}\n.edit-list-actions button:active:not(:disabled) {\n  transform: translateY(1px) scale(1.05);\n}\n.edit-list-actions button.add-btn {\n  background-color: #28a745;\n  color: white;\n}\n.edit-list-actions button.add-btn:hover:not(:disabled) {\n  background-color: #218838;\n}\n.edit-list-actions button.remove-btn {\n  background-color: #dc3545;\n  color: white;\n}\n.edit-list-actions button.remove-btn:hover:not(:disabled) {\n  background-color: #c82333;\n}\n.edit-list-actions button:disabled {\n  background-color: #e0e0e0;\n  color: #999999;\n  cursor: not-allowed;\n  opacity: 0.6;\n}\n.edit-list-actions button:disabled:hover {\n  filter: none;\n  box-shadow: none;\n  transform: none;\n}\n.loader {\n  text-align: center;\n  padding: 32px;\n}\n.spinner {\n  border: 4px solid #f0f0f0;\n  border-top: 4px solid #3498db;\n  border-radius: 50%;\n  width: 40px;\n  height: 40px;\n  animation: spin 1s linear infinite;\n  margin: 0 auto;\n}\n@keyframes spin {\n  0% {\n    transform: rotate(0deg);\n  }\n  100% {\n    transform: rotate(360deg);\n  }\n}\n.tracker-toast {\n  position: fixed;\n  top: 20px;\n  left: 50%;\n  transform: translateX(-50%);\n  background-color: #333333;\n  color: white;\n  padding: 8px 16px;\n  border-radius: 4px;\n  z-index: 100000;\n  opacity: 0;\n  transition: opacity 0.3s ease, top 0.3s ease;\n  font-size: 13px;\n}\n.tracker-toast.show {\n  opacity: 1;\n  top: 40px;\n}\n.tracker-toast.success {\n  background-color: #28a745;\n}\n.tracker-toast.error {\n  background-color: #dc3545;\n}\n#details-popover {\n  position: fixed;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  min-width: 600px;\n  max-width: 90vw;\n  min-height: 400px;\n  max-height: 80vh;\n  display: flex;\n  flex-direction: column;\n  z-index: 100000;\n  overflow: hidden;\n}\n.popover-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 4px 16px;\n  background: #ffffff;\n  border-bottom: 1px solid #e0e0e0;\n  height: 44px;\n  box-sizing: border-box;\n  cursor: move;\n  flex-shrink: 0;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333333;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.popover-close-btn {\n  width: 28px;\n  height: 28px;\n  border: 1px solid #e0e0e0;\n  border-radius: 2px;\n  background: #ffffff;\n  color: #666666;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 16px;\n  transition: all 0.15s ease;\n}\n.popover-close-btn:hover {\n  border-color: #dc3545;\n  color: #dc3545;\n  background: #fff5f5;\n}\n.popover-content {\n  flex: 1;\n  overflow: auto;\n  padding: 8px;\n}\n.popover-table {\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n.popover-table thead th {\n  background: #f7f8fa;\n  color: #333333;\n  font-weight: 600;\n  font-size: 12px;\n  text-align: left;\n  padding: 8px 16px;\n  border: none;\n  border-bottom: 2px solid #e0e0e0;\n  position: sticky;\n  top: 0;\n  z-index: 10;\n  white-space: nowrap;\n}\n.popover-table tbody tr {\n  border: none;\n  border-bottom: 1px solid #f0f0f0;\n  transition: background 0.15s ease;\n}\n.popover-table tbody tr:hover {\n  background: #f0f2f5;\n}\n.popover-table tbody tr:last-child {\n  border-bottom: none;\n}\n.popover-table td {\n  padding: 8px 16px;\n  font-size: 12px;\n  color: #333333;\n  vertical-align: middle;\n}\n.note-cell {\n  max-width: 300px;\n  word-wrap: break-word;\n  white-space: pre-wrap;\n}\n.datetime-cell {\n  white-space: nowrap;\n}\n.popover-resize-handle {\n  position: absolute;\n  background: transparent;\n  z-index: 10;\n}\n.popover-resize-handle:hover {\n  background: rgba(102, 126, 234, 0.15);\n}\n.popover-resize-handle-s {\n  bottom: 0;\n  left: 16px;\n  right: 16px;\n  height: 4px;\n  cursor: s-resize;\n}\n.popover-resize-handle-w {\n  top: 16px;\n  bottom: 16px;\n  left: 0;\n  width: 8px;\n  cursor: w-resize;\n}\n.popover-resize-handle-e {\n  top: 16px;\n  bottom: 16px;\n  right: 0;\n  width: 8px;\n  cursor: e-resize;\n}\n.popover-resize-handle-se {\n  bottom: 0;\n  right: 0;\n  width: 16px;\n  height: 16px;\n  cursor: se-resize;\n  z-index: 11;\n  border-radius: 0 0 8px 0;\n}\n/* Empty State Styles - matches QA Report empty state */\n.tracker-empty-state {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  height: 100%;\n  min-height: 300px;\n  text-align: center;\n  color: #666666;\n  background: #f7f8fa;\n}\n.tracker-empty-state .tracker-empty-icon {\n  font-size: 48px;\n  margin-bottom: 16px;\n  opacity: 0.5;\n}\n.tracker-empty-state .tracker-empty-title {\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n  margin-bottom: 8px;\n}\n.tracker-empty-state .tracker-empty-text {\n  font-size: 13px;\n  color: #666666;\n}\n.column-filter-popover {\n  position: fixed;\n  z-index: 100003;\n  min-width: 220px;\n  background: #ffffff;\n  border: 1px solid #e0e0e0;\n  border-radius: 4px;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);\n  padding: 0;\n  font-size: 13px;\n}\n.column-filter-popover .filter-header {\n  padding: 8px 16px;\n}\n.column-filter-popover .filter-select-all {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  cursor: pointer;\n  font-weight: 600;\n  color: #333333;\n  user-select: none;\n}\n.column-filter-popover .filter-select-all input[type=\"checkbox\"] {\n  margin: 0;\n  cursor: pointer;\n}\n.column-filter-popover .filter-divider {\n  height: 1px;\n  background: #f0f0f0;\n  margin: 0;\n}\n.column-filter-popover .filter-list {\n  max-height: 300px;\n  overflow-y: auto;\n  padding: 4px 0;\n}\n.column-filter-popover .filter-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  padding: 4px 16px;\n  cursor: pointer;\n  user-select: none;\n  transition: background 0.15s ease;\n}\n.column-filter-popover .filter-item:hover {\n  background: #f0f2f5;\n}\n.column-filter-popover .filter-item input[type=\"checkbox\"] {\n  margin: 0;\n  cursor: pointer;\n  flex-shrink: 0;\n}\n.column-filter-popover .filter-name {\n  flex: 1;\n  color: #333333;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.column-filter-popover .filter-count {\n  margin-left: auto;\n  color: #666666;\n  font-size: 12px;\n  flex-shrink: 0;\n}\n.column-filter-popover .filter-stats {\n  padding: 4px 16px;\n  font-size: 12px;\n  color: #666666;\n  text-align: center;\n}\n.column-filter-popover .filter-stats strong {\n  color: #667eea;\n  font-weight: 600;\n}\n.column-filter-popover .filter-actions {\n  display: flex;\n  justify-content: flex-end;\n  gap: 4px;\n  padding: 8px 16px;\n}\n.tracking-disabled {\n  color: #666666;\n  font-size: 13px;\n  cursor: default;\n  user-select: none;\n}\n.document-dropzone-overlay {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  background-color: rgba(232, 244, 253, 0.85);\n  /* 浅蓝色半透明背景 */\n  border: 3px dashed #2196F3;\n  /* 虚线边框 */\n  border-radius: 4px;\n  z-index: 10000;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  opacity: 0;\n  pointer-events: none;\n  /* 默认不拦截鼠标事件 */\n  transition: opacity 0.2s ease-in-out, background-color 0.2s;\n  backdrop-filter: blur(2px);\n}\n.document-dropzone-overlay.active {\n  opacity: 1;\n  background-color: rgba(200, 230, 201, 0.9);\n  /* 拖入时变为浅绿色提示可释放 */\n  border-color: #4CAF50;\n  pointer-events: auto;\n  /* 激活时拦截事件以便 drop */\n}\n.document-dropzone-overlay .dropzone-content {\n  text-align: center;\n  pointer-events: none;\n  /* 防止内部元素干扰 leave 事件计算 */\n  animation: pulse 2s infinite;\n}\n.document-dropzone-overlay .dropzone-icon {\n  font-size: 48px;\n  margin-bottom: 10px;\n  color: #1976D2;\n}\n.document-dropzone-overlay .dropzone-text {\n  font-size: 18px;\n  font-weight: bold;\n  color: #0D47A1;\n  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);\n}\n@keyframes pulse {\n  0% {\n    transform: scale(1);\n  }\n  50% {\n    transform: scale(1.05);\n  }\n  100% {\n    transform: scale(1);\n  }\n}\n/* \n * ==========================================================================\n * Rename Modal Styles\n * ==========================================================================\n */\n.document-rename-backdrop {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background: rgba(0, 0, 0, 0.5);\n  z-index: 100005;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  backdrop-filter: blur(3px);\n}\n.document-rename-modal {\n  background: #fff;\n  width: 400px;\n  border-radius: 8px;\n  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);\n  overflow: hidden;\n  animation: slideDownFade 0.2s ease-out forwards;\n}\n.document-rename-modal .rename-header {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: #fff;\n  padding: 12px 16px;\n  font-size: 16px;\n  font-weight: 600;\n}\n.document-rename-modal .rename-body {\n  padding: 24px 20px;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.document-rename-modal .rename-body label {\n  white-space: nowrap;\n  font-weight: 500;\n  color: #333;\n  margin: 0;\n}\n.document-rename-modal .rename-body input {\n  flex: 1;\n  padding: 8px 12px;\n  border: 2px solid #2196F3;\n  border-radius: 4px;\n  font-size: 15px;\n  outline: none;\n  box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);\n}\n.document-rename-modal .rename-body input:focus {\n  border-color: #0D47A1;\n  box-shadow: 0 0 5px rgba(13, 71, 161, 0.5);\n}\n.document-rename-modal .rename-ext {\n  color: #777;\n  font-size: 15px;\n  font-weight: 500;\n}\n.document-rename-modal .rename-save-local-row {\n  padding: 4px 20px 12px;\n}\n.document-rename-modal .rename-save-local-row .rename-save-local-label {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-size: 13px;\n  color: #555;\n  cursor: pointer;\n  user-select: none;\n}\n.document-rename-modal .rename-save-local-row .rename-save-local-label input[type=\"checkbox\"] {\n  width: 14px;\n  height: 14px;\n  cursor: pointer;\n  accent-color: #2196F3;\n  flex-shrink: 0;\n}\n.document-rename-modal .rename-footer {\n  padding: 12px 20px;\n  background: #f5f5f5;\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  border-top: 1px solid #e0e0e0;\n}\n@keyframes slideDownFade {\n  0% {\n    transform: translateY(-20px) scale(0.95);\n    opacity: 0;\n  }\n  100% {\n    transform: translateY(0) scale(1);\n    opacity: 1;\n  }\n}\n/* \n * ==========================================================================\n * Legacy Popover Styles (Details Popover)\n * These styles are for the patient details popover that appears\n * when clicking status icons in the Visit Monitor\n * ==========================================================================\n */\n#details-popover {\n  position: fixed;\n  z-index: 100001;\n  width: 800px;\n  max-width: 95vw;\n  max-height: 90vh;\n  background: #fff;\n  border-radius: 8px;\n  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);\n  border: 1px solid #ddd;\n  display: flex;\n  flex-direction: column;\n  opacity: 0;\n  transform: scale(0.95);\n  transition: opacity 0.2s ease-out, transform 0.2s ease-out;\n}\n#details-popover.visible {\n  opacity: 1;\n  transform: scale(1);\n}\n.popover-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 15px;\n  background: #f1f1f1;\n  border-bottom: 1px solid #ddd;\n  flex-shrink: 0;\n  cursor: move;\n}\n.popover-header h4 {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n}\n.popover-close-btn {\n  background: none;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  cursor: pointer;\n  padding: 0 5px;\n  color: #666;\n}\n.popover-content {\n  padding: 5px;\n  overflow-y: auto;\n  flex-grow: 1;\n}\n#details-popover .popover-table {\n  color: #000 !important;\n  width: 100%;\n  border-collapse: collapse;\n  font-size: 12px;\n}\n.popover-table th,\n.popover-table td {\n  border: 1px solid #eee;\n  padding: 6px 8px;\n  text-align: left;\n  white-space: nowrap;\n}\n.popover-table th {\n  background-color: #f9f9f9;\n  position: sticky;\n  top: 0;\n}\n/* Note Cell Styling */\n.popover-table td.note-cell {\n  white-space: normal !important;\n  max-width: 350px;\n  word-wrap: break-word;\n  overflow-wrap: break-word;\n  vertical-align: top;\n}\n/* Authorization Note Table */\n.auth-note-table {\n  width: 100%;\n  border-collapse: collapse;\n  background: #f8f9fa;\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  margin-top: 6px;\n  font-size: 11px;\n}\n.auth-note-table th,\n.auth-note-table td {\n  border: 1px solid #dee2e6;\n  padding: 4px 8px;\n  text-align: left;\n  white-space: normal;\n  word-wrap: break-word;\n}\n.auth-note-table th {\n  background: #e9ecef;\n  font-weight: 600;\n  color: #495057;\n}\n.auth-note-table td {\n  color: #212529;\n  background: #fff;\n}\n/* Popover Resize Handle - Legacy (disabled, handled by coordinator-tracker.less) */\n/* \n.popover-resize-handle {\n    position: absolute;\n    right: 0;\n    bottom: 0;\n    width: 16px;\n    height: 16px;\n    cursor: nwse-resize;\n    background: linear-gradient(135deg, transparent 0%, transparent 50%, #999 50%, #999 100%);\n    border-bottom-right-radius: 8px;\n}\n\n.popover-resize-handle::before {\n    content: '';\n    position: absolute;\n    right: 4px;\n    bottom: 4px;\n    width: 4px;\n    height: 4px;\n    background: #666;\n    border-radius: 1px;\n}\n*/\n/* \n * ==========================================================================\n * Phone Tooltip Styles\n * Tooltip that appears when hovering over phone icons in patient rows\n * ==========================================================================\n */\n.phone-icon-wrapper {\n  position: relative;\n  display: inline-flex;\n  align-items: center;\n}\n.phone-icon {\n  margin-left: 8px;\n  color: #007bff;\n  cursor: pointer;\n}\n.phone-tooltip {\n  display: none;\n  position: absolute;\n  top: 100%;\n  left: 0;\n  width: 220px;\n  background: #fff;\n  border: 1px solid #ccc;\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);\n  border-radius: 4px;\n  padding: 10px;\n  z-index: 100002;\n}\n.phone-icon-wrapper:hover .phone-tooltip {\n  display: block;\n}\n.phone-tooltip-item {\n  display: flex;\n  justify-content: space-between;\n  padding: 4px 0;\n  border-bottom: 1px solid #f0f0f0;\n  font-size: 12px;\n}\n.phone-tooltip-item:last-child {\n  border-bottom: none;\n}\n.phone-tooltip-item label {\n  font-weight: bold;\n  color: #555;\n  margin-right: 10px;\n}\n.phone-tooltip-item span {\n  color: #000;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -19598,31 +19598,27 @@ function getScheduleTime(ctx = document) {
     };
 }
 
-;// ./src/js/IncomingCallHandler.ts
+;// ./src/js/services/HhaSearchService.ts
 
+// ==================== 动态 Tenant URL 检测 ====================
 /**
  * 动态检测当前 HHAExchange 租户路径前缀
  * 支持所有已知 URL 格式：ENT / HHANotification / ENTP
  * 并在同源 iframe 中尝试从父窗口推导，避免版本升级触发强制登出
  */
 function detectTenantBaseUrl() {
-    // 从 URL 字符串中提取版本号（纯数字部分），支持多种前缀格式
     function extractVersion(url) {
-        // /ENT2603010000/ 直接匹配
         const m1 = url.match(/\/ENT(\d+)\//);
         if (m1)
             return m1[1];
-        // /HHANotification2603010000/ 或 /ENTP2603010000/ → 推导相同版本号
         const m2 = url.match(/\/(?:HHANotification|ENTP)(\d+)\//);
         if (m2)
             return m2[1];
         return null;
     }
-    // 方法1：当前页面路径（含 HHANotification/ENTP 子应用路径）
     const r1 = extractVersion(window.location.pathname);
     if (r1)
         return `https://app.hhaexchange.com/ENT${r1}`;
-    // 方法2：页面已加载的 <script> src 属性
     for (const script of Array.from(document.scripts)) {
         if (script.src) {
             const r2 = extractVersion(script.src);
@@ -19630,11 +19626,9 @@ function detectTenantBaseUrl() {
                 return `https://app.hhaexchange.com/ENT${r2}`;
         }
     }
-    // 方法3：完整页面 URL（含 hash）
     const r3 = extractVersion(window.location.href);
     if (r3)
         return `https://app.hhaexchange.com/ENT${r3}`;
-    // 方法4：父窗口 URL（适用于 HHANotification/ENTP 等同源 iframe）
     try {
         if (window.parent !== window) {
             const r4 = extractVersion(window.parent.location.href);
@@ -19645,12 +19639,20 @@ function detectTenantBaseUrl() {
     catch (_) {
         /* 跨域父窗口，跳过 */
     }
-    console.warn("[IncomingCallHandler] Could not detect tenant prefix from URL, using fallback");
-    return "https://app.hhaexchange.com/ENT2603010000"; // fallback
+    console.warn("[HhaSearchService] Could not detect tenant prefix from URL, using fallback");
+    return "https://app.hhaexchange.com/ENT2603010000";
 }
-
-// ==================== 常量定义 ====================
-/** Active 状态列表 (包括 Hospitalized，因为需要同等关注) */
+// ==================== URL 常量 ====================
+const _TENANT_BASE_URL = detectTenantBaseUrl();
+/** Aide (护工) 搜索 URL - 使用动态租户前缀 */
+const AIDE_SEARCH_URL = `${_TENANT_BASE_URL}/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=`;
+const AIDE_SEARCH_PARAMS = "&LastName=&Type=-1&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=";
+const AIDE_PROFILE_URL_TEMPLATE = `${_TENANT_BASE_URL}/Aide/Aide_ns.aspx?AideId={ID}`;
+/** Patient (病人) 搜索 URL - 使用动态租户前缀 */
+const PATIENT_SEARCH_URL = `${_TENANT_BASE_URL}/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=`;
+const PATIENT_SEARCH_PARAMS = "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-1&DisciplineID=0&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
+const PATIENT_PROFILE_URL_TEMPLATE = `${_TENANT_BASE_URL}/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}`;
+/** Active 状态列表 */
 const ACTIVE_STATUSES = [
     "Active",
     "Hospitalized",
@@ -19661,33 +19663,57 @@ const NON_ACTIVE_STATUSES = [
     "Hold",
     "Waiting",
 ];
-// ==================== 配置区域 ====================
-const _TENANT_BASE_URL = detectTenantBaseUrl();
-/** Aide (护工) 搜索 URL - 使用动态租户前缀 */
-const AIDE_SEARCH_URL = `${_TENANT_BASE_URL}/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=`;
-const AIDE_SEARCH_PARAMS = "&LastName=&Type=-1&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=";
-const AIDE_PROFILE_URL_TEMPLATE = `${_TENANT_BASE_URL}/Aide/Aide_ns.aspx?AideId={ID}`;
-/** Patient (病人) 搜索 URL - 使用动态租户前缀 */
-const PATIENT_SEARCH_URL = `${_TENANT_BASE_URL}/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=`;
-const PATIENT_SEARCH_PARAMS = "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-1&DisciplineID=0&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
-const PATIENT_PROFILE_URL_TEMPLATE = `${_TENANT_BASE_URL}/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}`;
-// ==================== 状态变量 ====================
-let lastCallWasIncoming = false;
-/** 当前搜索的电话号码（用于高亮显示） */
-let currentSearchPhone = "";
 // ==================== 工具函数 ====================
 /**
  * 判断给定的状态是否为 Active 状态
- * Active 状态包括: Active, Hospitalized
- * @param status - Patient 的状态字符串
- * @returns 是否为 Active 状态
  */
 function isActiveStatus(status) {
     return ACTIVE_STATUSES.some((activeStatus) => status.toLowerCase() === activeStatus.toLowerCase());
 }
 /**
+ * 格式化电话号码为 HHAeXchange 接受的格式 (e.g., 917-415-2489)
+ */
+function formatPhoneNumber(rawNumber) {
+    if (!rawNumber)
+        return null;
+    const digits = rawNumber.replace(/\D/g, "");
+    if (digits.length === 11 && digits.startsWith("1")) {
+        return `${digits.substring(1, 4)}-${digits.substring(4, 7)}-${digits.substring(7)}`;
+    }
+    else if (digits.length === 10) {
+        return `${digits.substring(0, 3)}-${digits.substring(3, 6)}-${digits.substring(6)}`;
+    }
+    return null;
+}
+/**
+ * 以弹窗形式打开一个URL或HTML内容
+ */
+function openInPopup(urlOrHtml, _windowName = "HHA_Search_Result", isHtml = false) {
+    const windowFeatures = "width=1200,height=900,resizable=yes,scrollbars=yes,status=yes";
+    // Always use a unique name so each search opens a fresh window
+    const uniqueName = `HHA_Search_${Date.now()}`;
+    if (isHtml) {
+        const blob = new Blob([urlOrHtml], { type: "text/html;charset=utf-8" });
+        const blobUrl = URL.createObjectURL(blob);
+        const popup = window.open(blobUrl, uniqueName, windowFeatures);
+        if (popup) {
+            popup.addEventListener("load", () => {
+                URL.revokeObjectURL(blobUrl);
+            });
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+        }
+        else {
+            URL.revokeObjectURL(blobUrl);
+            console.warn("弹窗被浏览器阻止，请允许弹窗后重试");
+        }
+    }
+    else {
+        window.open(urlOrHtml, uniqueName, windowFeatures);
+    }
+}
+// ==================== HTML 处理工具 ====================
+/**
  * HHA 风格的 CSS 样式
- * 用于在弹窗中复现 HHAeXchange 原版的表格样式
  */
 const HHA_STYLE_CSS = (/* unused pure expression or super */ null && (`
 <style>
@@ -19925,11 +19951,8 @@ const HHA_STYLE_CSS = (/* unused pure expression or super */ null && (`
 `));
 /**
  * 在 HTML 中注入 HHA 风格的 CSS 样式
- * @param html - 原始 HTML 字符串
- * @returns 处理后的 HTML 字符串
  */
 function injectHhaStyles(html) {
-    // 在 </head> 前注入样式，如果没有 head 标签则在开头添加
     if (html.includes("</head>")) {
         return html.replace("</head>", HHA_STYLE_CSS + "</head>");
     }
@@ -19941,73 +19964,40 @@ function injectHhaStyles(html) {
     }
 }
 /**
- * 清理 HTML 中的无用元素，移除用户不需要看到的链接和表单
- *
- * ★ 关键：必须移除所有 <script> 标签 ★
- * 原始 HHAExchange 页面包含大量 inline JS，这些脚本依赖：
- * 1. jQuery ($) - blob 页中未加载 jQuery，导致 "$ is not defined"
- * 2. parent.Hide() / parent.xxx() - 原页面运行在 iframe 中，但 blob 页是顶级窗口
- * 这两种情况都会导致 blob 页面白屏
- *
- * @param html - 原始 HTML 字符串
- * @returns 清理后的 HTML 字符串
+ * 清理 HTML 中的无用元素
  */
 function cleanupHtml(html) {
-    // ★ Step 1: 移除所有 <script> 标签（含内容）
-    // 防止 jQuery/$、parent.Hide 等在 blob 上下文报错白屏
     html = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
     html = html.replace(/<script\b[^>]*\/>/gi, "");
-    // ★ Step 2: 移除所有 inline 事件属性 (onload, onclick, onsubmit, onfocus 等)
-    // 关键：HHAExchange 原始页面的 <body onload="parent.Hide(...)"> 会导致白屏
-    // 因为 blob 页是顶级窗口，没有 parent frame，parent.Hide 不存在
-    // 注意：要在不破坏标签内其他属性的情况下移除 on* 属性
-    // 使用两个 pass 分别处理双引号和单引号的属性值
     html = html.replace(/(\s+on\w+\s*=\s*"[^"]*")/gi, "");
     html = html.replace(/(\s+on\w+\s*=\s*'[^']*')/gi, "");
-    // 移除 uxfrmSearchXSLT 相关的链接和表单（包含 URL 参数的那种长链接）
-    // 匹配: <a ...id="uxfrmSearchXSLT"...>...</a>
     html = html.replace(/<a[^>]*id\s*=\s*["']?uxfrmSearchXSLT["']?[^>]*>[\s\S]*?<\/a>/gi, "");
-    // 移除 href 中包含 uxfrmSearchXSLT 的链接
     html = html.replace(/<a[^>]*href\s*=\s*["'][^"']*uxfrmSearchXSLT[^"']*["'][^>]*>[\s\S]*?<\/a>/gi, "");
-    // ★ Step 4: "解包" uxfrmSearch 表单标签（只移除标签本身，保留内容）
-    // 关键：<form id="uxfrmSearchXSLT"> 包裹了整个搜索结果表格 (#tdSearchResults)！
-    // 如果连同内容一起删除，会把搜索结果全部丢失导致白屏
-    // 所以只移除开始标签和结束标签，保留里面的内容
     html = html.replace(/<form[^>]*id\s*=\s*["']?uxfrmSearch[^"']*["']?[^>]*>/gi, "");
     html = html.replace(/<\/form>/gi, "");
-    // 移除那些包含完整 URL 参数的链接文本 (如 "&LastName=...&FirstName=..." 这种)
     html = html.replace(/<a[^>]*>[^<]*(&amp;|&)LastName=[^<]*<\/a>/gi, "");
     return html;
 }
 /**
  * 在 HTML 中高亮指定的电话号码
- * @param html - 原始 HTML 字符串
- * @param phoneNumber - 要高亮的电话号码 (格式: xxx-xxx-xxxx)
- * @returns 处理后的 HTML 字符串
  */
 function highlightPhoneNumber(html, phoneNumber) {
     if (!phoneNumber)
         return html;
-    // 生成多种格式的电话号码进行匹配
     const digits = phoneNumber.replace(/\D/g, "");
     const formats = [
-        phoneNumber, // xxx-xxx-xxxx
-        digits, // xxxxxxxxxx
-        `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`, // (xxx) xxx-xxxx
-        `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`, // xxx.xxx.xxxx
-        `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`, // xxx xxx xxxx
+        phoneNumber,
+        digits,
+        `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`,
+        `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`,
+        `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`,
     ];
-    // 转义正则特殊字符并创建匹配模式
     const escapedFormats = formats.map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
     const pattern = new RegExp(`(${escapedFormats.join("|")})`, "g");
-    // 替换为高亮版本（避免在标签内替换）
     return html.replace(pattern, '<span style="background-color: #ffff00; padding: 1px 3px; border-radius: 2px; font-weight: bold;">$1</span>');
 }
 /**
- * 为 HTML 注入重定向脚本，使点击链接能正常跳转到 profile 页面
- * @param html - 原始 HTML 字符串
- * @param type - 搜索类型 'aide' 或 'patient'
- * @returns 处理后的 HTML 字符串
+ * 为 HTML 注入重定向脚本
  */
 function injectRedirectScript(html, type) {
     const profileUrlTemplate = type === "aide" ? AIDE_PROFILE_URL_TEMPLATE : PATIENT_PROFILE_URL_TEMPLATE;
@@ -20025,7 +20015,6 @@ function RedirectToPatientPage(id) {
 }
 </script>
 `;
-    // 在 </head> 或 </body> 前注入脚本
     if (html.includes("</head>")) {
         return html.replace("</head>", script + "</head>");
     }
@@ -20038,72 +20027,18 @@ function RedirectToPatientPage(id) {
 }
 /**
  * 处理 HTML: 注入样式 + 高亮电话号码 + 注入重定向脚本
- * @param html - 原始 HTML
- * @param type - 搜索类型
- * @param phoneNumber - 要高亮的电话号码
- * @returns 处理后的 HTML
  */
 function processHtmlForDisplay(html, type, phoneNumber) {
     let processed = html;
-    processed = cleanupHtml(processed); // 先清理无用元素
-    processed = injectHhaStyles(processed); // 注入 HHA 风格样式
+    processed = cleanupHtml(processed);
+    processed = injectHhaStyles(processed);
     processed = highlightPhoneNumber(processed, phoneNumber);
     processed = injectRedirectScript(processed, type);
     return processed;
 }
-/**
- * 格式化电话号码为 HHAeXchange 接受的格式 (e.g., 917-415-2489)
- * @param rawNumber - 从页面提取的原始号码字符串
- * @returns 格式化后的号码字符串, 如果格式无效则返回 null
- */
-function formatPhoneNumber(rawNumber) {
-    if (!rawNumber)
-        return null;
-    const digits = rawNumber.replace(/\D/g, "");
-    if (digits.length === 11 && digits.startsWith("1")) {
-        return `${digits.substring(1, 4)}-${digits.substring(4, 7)}-${digits.substring(7)}`;
-    }
-    else if (digits.length === 10) {
-        return `${digits.substring(0, 3)}-${digits.substring(3, 6)}-${digits.substring(6)}`;
-    }
-    return null;
-}
-/**
- * 以弹窗形式打开一个URL或HTML内容
- * 使用 Blob URL 避免 data URL 的长度限制和编码问题
- * @param urlOrHtml - 要打开的网址或HTML字符串
- * @param windowName - 弹窗的名称, 相同的名称会覆盖已打开的弹窗
- * @param isHtml - 是否为HTML内容（默认false，表示是URL）
- */
-function openInPopup(urlOrHtml, windowName = "HHA_Search_Result", isHtml = false) {
-    const windowFeatures = "width=1200,height=900,resizable=yes,scrollbars=yes,status=yes";
-    if (isHtml) {
-        // 使用 Blob URL 避免 data URL 的编码问题和长度限制
-        const blob = new Blob([urlOrHtml], { type: "text/html;charset=utf-8" });
-        const blobUrl = URL.createObjectURL(blob);
-        const popup = window.open(blobUrl, windowName, windowFeatures);
-        // 在新窗口加载后释放 Blob URL 以避免内存泄漏
-        if (popup) {
-            popup.addEventListener("load", () => {
-                URL.revokeObjectURL(blobUrl);
-            });
-            // 备用清理：如果 load 事件未触发，5秒后自动清理
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-        }
-        else {
-            // 如果弹窗被阻止，立即清理
-            URL.revokeObjectURL(blobUrl);
-            console.warn("弹窗被浏览器阻止，请允许弹窗后重试");
-        }
-    }
-    else {
-        window.open(urlOrHtml, windowName, windowFeatures);
-    }
-}
+// ==================== 结果解析 ====================
 /**
  * 解析 Aide (护工) 的搜索结果
- * @param html - HHAeXchange返回的Aide搜索结果页HTML字符串
- * @returns 一个包含搜索结果信息的对象
  */
 function handleAideSearchResult(html) {
     const doc = new DOMParser().parseFromString(html, "text/html");
@@ -20118,7 +20053,6 @@ function handleAideSearchResult(html) {
             resultCount = parseInt(match[1], 10);
     }
     if (resultCount === -1) {
-        // Fallback
         resultCount = resultsTable.querySelectorAll("tbody tr").length;
     }
     if (resultCount === 1) {
@@ -20139,15 +20073,6 @@ function handleAideSearchResult(html) {
 }
 /**
  * 解析 Patient (病人) 的搜索结果
- *
- * 核心逻辑 (基于 ADR-005):
- * 1. 统计 Active 状态 (Active, Hospitalized) 的结果数量
- * 2. 如果 activeCount === 1 → 返回该 Active 结果的 profile URL
- * 3. 如果 activeCount === 0 且 totalCount === 1 → 返回唯一结果的 profile URL
- * 4. 其他情况 → 返回原始 HTML 让用户判断
- *
- * @param html - HHAeXchange返回的Patient搜索结果页HTML字符串
- * @returns 一个包含搜索结果信息的对象
  */
 function handlePatientSearchResult(html) {
     const doc = new DOMParser().parseFromString(html, "text/html");
@@ -20155,7 +20080,6 @@ function handlePatientSearchResult(html) {
     if (!resultsTable) {
         return { count: 0, activeCount: 0, rawHtml: html };
     }
-    // 获取结果总数
     let resultCount = -1;
     const heading = doc.querySelector("h2");
     if (heading) {
@@ -20167,24 +20091,19 @@ function handlePatientSearchResult(html) {
     if (resultCount === -1) {
         resultCount = resultRows.length;
     }
-    // 无结果
     if (resultCount === 0) {
         return { count: 0, activeCount: 0, rawHtml: html };
     }
     const rowInfos = Array.from(resultRows).map((row) => {
-        // 获取 Status（通常在特定列，通过检查行内容获取）
         const statusText = row.textContent || "";
         let status = "Unknown";
-        // 检查所有已知状态
         for (const s of [...ACTIVE_STATUSES, ...NON_ACTIVE_STATUSES]) {
-            // 使用单词边界匹配，避免部分匹配
             const regex = new RegExp(`\\b${s}\\b`, "i");
             if (regex.test(statusText)) {
                 status = s;
                 break;
             }
         }
-        // 获取 profile ID
         const link = row.querySelector('a[onclick*="RedirectToPatientPage"]');
         const match = link
             ?.getAttribute("onclick")
@@ -20192,12 +20111,9 @@ function handlePatientSearchResult(html) {
         const profileId = match ? match[1] : null;
         return { row, status, profileId };
     });
-    // 筛选 Active 状态的行
     const activeRows = rowInfos.filter((info) => isActiveStatus(info.status));
     const activeCount = activeRows.length;
     console.log(`[Patient Search] Total: ${resultCount}, Active: ${activeCount}`, rowInfos.map((r) => ({ status: r.status, id: r.profileId })));
-    // 核心决策逻辑
-    // Case 1: 恰好 1 个 Active 结果 → 跳转
     if (activeCount === 1 && activeRows[0].profileId) {
         return {
             count: resultCount,
@@ -20206,7 +20122,6 @@ function handlePatientSearchResult(html) {
             rawHtml: html,
         };
     }
-    // Case 2: 0 个 Active 结果，但总共只有 1 个结果 → 跳转
     if (activeCount === 0 && resultCount === 1 && rowInfos[0].profileId) {
         return {
             count: 1,
@@ -20215,144 +20130,175 @@ function handlePatientSearchResult(html) {
             rawHtml: html,
         };
     }
-    // Case 3: 其他情况 → 返回原始 HTML 让用户判断
     return { count: resultCount, activeCount, rawHtml: html };
 }
+// ==================== 内容提取 ====================
 /**
- * 创建一个上下分栏的HTML页面来同时显示两个搜索结果
- * 不使用 iframe，直接将内容嵌入到可滚动的 div 中
- * @param aideResult - Aide的搜索结果对象
- * @param patientResult - Patient的搜索结果对象
+ * 为搜索结果 HTML 注入 Status 列的颜色 badge
+ *
+ * Caregiver badge 规则：
+ *   green → Active
+ *   gray  → Terminated
+ *   yellow → 其余全部（容错未来新状态）
+ *
+ * Patient badge 规则：
+ *   green → Active / Hospitalized
+ *   gray  → Discharged
+ *   yellow → 其余全部
+ *
+ * @param html - 原始 HTML（已经过 extractAndCleanContent 处理）
+ * @param type - 搜索类型
+ * @returns 注入 badge 后的 HTML
  */
-function displayCombinedResults(aideResult, patientResult, phoneNumber = currentSearchPhone) {
-    console.log("两边都有结果，创建合并视图...");
-    /**
-     * 使用 DOMParser 从原始 HTML 提取搜索结果表格及相关内容
-     * 这是最稳定可靠的方法，不依赖字符串正则替换
-     */
-    const extractAndCleanContent = (html, type) => {
-        const doc = new DOMParser().parseFromString(html, "text/html");
-        // 找到搜索结果表格 - 尝试多种选择器
-        let table = doc.querySelector("#tdSearchResults");
-        if (!table) {
-            // 备选：查找包含数据的表格
-            table = doc.querySelector("table[id*='Search']");
+function injectStatusBadges(html, type) {
+    // Green / gray keyword sets per type
+    const greenWords = type === "aide" ? ["Active"] : ["Active", "Hospitalized"];
+    const grayWords = type === "aide" ? ["Terminated"] : ["Discharged"];
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const table = doc.querySelector("table");
+    if (!table)
+        return html;
+    // Find Status column index (handle both thead th and plain th/first-row)
+    const headerRow = table.querySelector("thead tr") ?? table.querySelector("tr");
+    const headers = headerRow
+        ? Array.from(headerRow.querySelectorAll("th, td"))
+        : [];
+    let statusColIndex = -1;
+    for (let i = 0; i < headers.length; i++) {
+        const text = headers[i].textContent?.toLowerCase().trim() ?? "";
+        if (text.includes("status") || text.includes("状态")) {
+            statusColIndex = i;
+            break;
         }
-        if (!table) {
-            // 再备选：查找 tbody 有内容的表格
-            const tables = doc.querySelectorAll("table");
-            for (const t of tables) {
-                if (t.querySelector("tbody tr")) {
-                    table = t;
-                    break;
-                }
-            }
+    }
+    if (statusColIndex === -1)
+        return html;
+    table.querySelectorAll("tbody tr").forEach((row) => {
+        const cells = row.querySelectorAll("td");
+        const cell = cells[statusColIndex];
+        if (!cell)
+            return;
+        // Use first line of text only (some cells have dates on second line)
+        const fullText = (cell.textContent ?? "").trim();
+        const firstWord = fullText.split(/[\s\n(]/)[0].trim();
+        const matchText = firstWord || fullText;
+        let cls = "status-yellow";
+        if (greenWords.some((w) => matchText.toLowerCase() === w.toLowerCase())) {
+            cls = "status-green";
         }
-        if (!table) {
-            console.warn(`[${type}] 未找到搜索结果表格，HTML 长度: ${html.length}`);
-            console.warn(`[${type}] HTML 前500字符:`, html.substring(0, 500));
-            return `<p style="color: #666; padding: 20px;">未找到搜索结果</p>`;
+        else if (grayWords.some((w) => matchText.toLowerCase() === w.toLowerCase())) {
+            cls = "status-gray";
         }
-        // 在表格内移除不需要的元素（包括屏幕阅读器专用元素）
-        const unwantedSelectors = [
-            'a[id*="uxfrmSearchXSLT"]',
-            'a[href*="uxfrmSearchXSLT"]',
-            'form[id*="uxfrmSearch"]',
-            'input[type="hidden"]',
-            "script",
-            ".show-for-sr", // 屏幕阅读器专用文字（如 "View Patient Details", "Patient Id"）
-            '[class*="show-for-sr"]', // 匹配任何包含此类的元素
-        ];
-        unwantedSelectors.forEach((sel) => {
-            table.querySelectorAll(sel).forEach((el) => el.remove());
+        else if (!fullText) {
+            return; // skip empty cells
+        }
+        cell.innerHTML = `<span class="status-badge ${cls}">${fullText}</span>`;
+    });
+    return table.outerHTML;
+}
+/**
+ * 从表格中按表头文字移除若干列（降序处理避免 index shift）
+ */
+function removeColumnsByHeader(table, headerNames) {
+    const headerCells = Array.from(table.querySelectorAll("th, thead td"));
+    if (!headerCells.length)
+        return;
+    const indicesToRemove = headerNames
+        .map((name) => headerCells.findIndex((cell) => (cell.textContent?.trim() ?? "").toLowerCase() === name.toLowerCase()))
+        .filter((idx) => idx >= 0)
+        .sort((a, b) => b - a); // descending to avoid index shift
+    indicesToRemove.forEach((colIdx) => {
+        headerCells[colIdx].remove();
+        table.querySelectorAll("tbody tr").forEach((row) => {
+            const cells = row.querySelectorAll("td");
+            if (cells[colIdx])
+                cells[colIdx].remove();
         });
-        // 移除原始页面的标题行（如 "Caregiver search results (1)"）
-        const captionRow = table.querySelector('caption, tr.title-row, [class*="title"]');
-        if (captionRow)
-            captionRow.remove();
-        // 清理表头：移除 "sortable column head" 等多余文字
-        table.querySelectorAll("th, thead td").forEach((th) => {
-            const link = th.querySelector("a");
-            if (link) {
-                // 只保留链接的文字内容
-                th.textContent = link.textContent?.trim() || "";
-            }
-            else {
-                // 清理多余的空白、换行符和 "sortable column head"
-                let text = th.textContent || "";
-                text = text.replace(/sortable\s*column\s*head/gi, ""); // 移除这段文字
-                text = text.replace(/[\r\n\t]+/g, " "); // 换行变空格
-                text = text.replace(/\s+/g, " ").trim(); // 多空格变单空格
-                th.textContent = text;
-            }
-        });
-        // 清理数据单元格
-        table.querySelectorAll("tbody td, tr td").forEach((td) => {
-            // 已经通过 unwantedSelectors 移除了 .show-for-sr 元素
-            // 现在清理文本节点中的多余空白
-            td.childNodes.forEach((node) => {
-                if (node.nodeType === Node.TEXT_NODE) {
-                    let text = node.textContent || "";
-                    text = text
-                        .replace(/[\r\n\t]+/g, " ")
-                        .replace(/\s+/g, " ")
-                        .trim();
-                    node.textContent = text;
-                }
-            });
-            // 移除空的 <br> 和多余换行
-            td.querySelectorAll("br").forEach((br) => {
-                if (!br.nextSibling || !br.nextSibling.textContent?.trim()) {
-                    br.remove();
-                }
-            });
-        });
-        // Aide 表格：移除空的 Action 列（最后一列）
-        if (type === "aide") {
-            const headerCells = table.querySelectorAll("thead tr th, thead tr td");
-            const lastHeaderIndex = headerCells.length - 1;
-            const lastHeader = headerCells[lastHeaderIndex];
-            // 检查最后一列是否是 Action 且内容为空
-            if (lastHeader &&
-                lastHeader.textContent?.trim().toLowerCase() === "action") {
-                // 检查所有数据行的最后一列是否都为空
-                const rows = table.querySelectorAll("tbody tr");
-                let allEmpty = true;
-                rows.forEach((row) => {
-                    const cells = row.querySelectorAll("td");
-                    const lastCell = cells[cells.length - 1];
-                    if (lastCell && lastCell.textContent?.trim()) {
-                        allEmpty = false;
-                    }
-                });
-                if (allEmpty) {
-                    // 移除表头的 Action 列
-                    lastHeader.remove();
-                    // 移除每行的最后一列
-                    rows.forEach((row) => {
-                        const cells = row.querySelectorAll("td");
-                        const lastCell = cells[cells.length - 1];
-                        if (lastCell)
-                            lastCell.remove();
-                    });
-                }
+    });
+}
+/**
+ * 使用 DOMParser 从原始 HTML 提取并清理搜索结果表格
+ * 供 displayCombinedResults 和 displaySingleResult 共用
+ */
+function extractAndCleanContent(html, type) {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    let table = doc.querySelector("#tdSearchResults");
+    if (!table) {
+        table = doc.querySelector("table[id*='Search']");
+    }
+    if (!table) {
+        const tables = doc.querySelectorAll("table");
+        for (const t of tables) {
+            if (t.querySelector("tbody tr")) {
+                table = t;
+                break;
             }
         }
-        // 构建输出（不再需要额外标题，因为 panel-header 已经显示了）
-        return table.outerHTML;
-    };
-    // 直接从原始 HTML 提取内容（不做字符串级别的清理，避免破坏 DOM）
-    let aideBody = extractAndCleanContent(aideResult.rawHtml, "aide");
-    let patientBody = extractAndCleanContent(patientResult.rawHtml, "patient");
-    // 高亮电话号码
-    aideBody = highlightPhoneNumber(aideBody, phoneNumber);
-    patientBody = highlightPhoneNumber(patientBody, phoneNumber);
-    const combinedHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>HHA Combined Search Results</title>
-  <style>
+    }
+    if (!table) {
+        console.warn(`[${type}] 未找到搜索结果表格，HTML 长度: ${html.length}`);
+        return `<p style="color: #666; padding: 20px;">未找到搜索结果</p>`;
+    }
+    const unwantedSelectors = [
+        'a[id*="uxfrmSearchXSLT"]',
+        'a[href*="uxfrmSearchXSLT"]',
+        'form[id*="uxfrmSearch"]',
+        'input[type="hidden"]',
+        "script",
+        ".show-for-sr",
+        '[class*="show-for-sr"]',
+    ];
+    unwantedSelectors.forEach((sel) => {
+        table.querySelectorAll(sel).forEach((el) => el.remove());
+    });
+    const captionRow = table.querySelector('caption, tr.title-row, [class*="title"]');
+    if (captionRow)
+        captionRow.remove();
+    table.querySelectorAll("th, thead td").forEach((th) => {
+        const link = th.querySelector("a");
+        if (link) {
+            th.textContent = link.textContent?.trim() || "";
+        }
+        else {
+            let text = th.textContent || "";
+            text = text.replace(/sortable\s*column\s*head/gi, "");
+            text = text.replace(/[\r\n\t]+/g, " ");
+            text = text.replace(/\s+/g, " ").trim();
+            th.textContent = text;
+        }
+    });
+    table.querySelectorAll("tbody td, tr td").forEach((td) => {
+        td.childNodes.forEach((node) => {
+            if (node.nodeType === Node.TEXT_NODE) {
+                let text = node.textContent || "";
+                text = text
+                    .replace(/[\r\n\t]+/g, " ")
+                    .replace(/\s+/g, " ")
+                    .trim();
+                node.textContent = text;
+            }
+        });
+        td.querySelectorAll("br").forEach((br) => {
+            if (!br.nextSibling || !br.nextSibling.textContent?.trim()) {
+                br.remove();
+            }
+        });
+    });
+    if (type === "aide") {
+        removeColumnsByHeader(table, ["Alt. Caregiver Code", "Action"]);
+    }
+    else if (type === "patient") {
+        removeColumnsByHeader(table, ["Team"]);
+    }
+    return table.outerHTML;
+}
+// ==================== 显示函数 ====================
+/** Combined View 内联样式块（供 displayCombinedResults 和 displaySingleResult 共用）*/
+const PANEL_STYLE_BLOCK = `
+    .status-badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; white-space:nowrap; }
+    .status-green  { background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; }
+    .status-gray   { background:#f3f4f6; color:#6b7280; border:1px solid #d1d5db; }
+    .status-yellow { background:#fef9c3; color:#854d0e; border:1px solid #fde68a; }
     body, html { 
       margin: 0; 
       padding: 0; 
@@ -20387,11 +20333,14 @@ function displayCombinedResults(aideResult, patientResult, phoneNumber = current
     }
     .panel-content { 
       flex: 1;
-      overflow: auto; 
+      overflow: auto;
+      min-height: 0;
       padding: 10px;
       background-color: #fff;
     }
-    /* 在 panel-content 内部应用的样式 */
+    .panel-footer {
+      flex-shrink: 0;
+    }
     .panel-content table {
       width: 100%;
       border-collapse: collapse;
@@ -20415,7 +20364,6 @@ function displayCombinedResults(aideResult, patientResult, phoneNumber = current
       color: #fff !important;
       font-weight: 600;
     }
-    /* 确保表头内的链接也是白色 */
     .panel-content table th a,
     .panel-content table thead a {
       color: #fff !important;
@@ -20433,13 +20381,11 @@ function displayCombinedResults(aideResult, patientResult, phoneNumber = current
     .panel-content a:hover {
       text-decoration: underline;
     }
-    /* 隐藏不需要的元素 */
     .panel-content a[href*="uxfrmSearchXSLT"],
     .panel-content a[id*="uxfrmSearchXSLT"],
     .panel-content form[id*="uxfrmSearch"] {
       display: none !important;
     }
-    /* 分页样式 */
     .panel-content ul {
       list-style: none;
       padding: 5px 10px;
@@ -20462,14 +20408,15 @@ function displayCombinedResults(aideResult, patientResult, phoneNumber = current
       border-radius: 3px;
       background-color: #fff;
     }
-    /* 电话高亮 */
     .panel-content span[style*="background-color: #ffff00"] {
       background-color: #ffff00 !important;
       padding: 1px 3px !important;
       border-radius: 2px !important;
       font-weight: bold !important;
     }
-  </style>
+`;
+/** 共用的重定向脚本块 */
+const REDIRECT_SCRIPT_BLOCK = `
   <script>
     function RedirectToAidePage(id) {
       window.open('${AIDE_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
@@ -20478,32 +20425,151 @@ function displayCombinedResults(aideResult, patientResult, phoneNumber = current
       window.open('${PATIENT_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
     }
   </script>
+`;
+// ==================== 客户端分页脚本构建器 ====================
+/**
+ * 构建分页 JS 脚本，供 Combined View（pageSize=15）和 Single View（pageSize=20）共用
+ *
+ * 约定：
+ * - 每个 side 的 tbody tr 需要 data-row-index="0" ... 属性
+ * - side 为 "aide" 或 "patient"（Combined）或 "single"（Single View）
+ *
+ * @param pageSizes - 各 side 的每页行数，对象格式 { aide: 15, patient: 15 }
+ */
+function buildPaginationScript(pageSizes) {
+    return `
+<script>
+(function() {
+  var pageSizes = ${JSON.stringify(pageSizes)};
+  var currentPages = {};
+  Object.keys(pageSizes).forEach(function(side) { currentPages[side] = 1; });
+
+  function showPage(side, pageNum) {
+    var ps = pageSizes[side] || 15;
+    var rows = document.querySelectorAll('[data-side="' + side + '"] tbody tr[data-row-index]');
+    if (!rows.length) return;
+    var total = rows.length;
+    var totalPages = Math.ceil(total / ps);
+    if (pageNum < 1) pageNum = 1;
+    if (pageNum > totalPages) pageNum = totalPages;
+    currentPages[side] = pageNum;
+    rows.forEach(function(tr) {
+      var idx = parseInt(tr.getAttribute('data-row-index'), 10);
+      var show = idx >= (pageNum - 1) * ps && idx < pageNum * ps;
+      tr.style.display = show ? '' : 'none';
+    });
+    // Update pagination bar
+    var pageInfo = document.querySelector('[data-pagination-side="' + side + '"] .pg-info');
+    var prevBtn = document.querySelector('[data-pagination-side="' + side + '"] .pg-prev');
+    var nextBtn = document.querySelector('[data-pagination-side="' + side + '"] .pg-next');
+    if (pageInfo) pageInfo.textContent = '第 ' + pageNum + ' / ' + totalPages + ' 页';
+    if (prevBtn) prevBtn.disabled = pageNum <= 1;
+    if (nextBtn) nextBtn.disabled = pageNum >= totalPages;
+  }
+
+  window.showPage = showPage;
+  window.prevPage = function(side) { showPage(side, (currentPages[side] || 1) - 1); };
+  window.nextPage = function(side) { showPage(side, (currentPages[side] || 1) + 1); };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      Object.keys(pageSizes).forEach(function(side) { showPage(side, 1); });
+    });
+  } else {
+    Object.keys(pageSizes).forEach(function(side) { showPage(side, 1); });
+  }
+})();
+</script>`;
+}
+/**
+ * 为 HTML table outerHTML 中的 tbody tr 加上 data-row-index 属性，
+ * 并在 HTML 末尾追加分页控制栏
+ *
+ * @param tableHtml - 来自 extractAndCleanContent 的 table outerHTML
+ * @param side - data-side 标记，用于 JS showPage 定位
+ * @param pageSize - 每页行数
+ * @returns 加上标注和分页栏的 HTML 片段
+ */
+function injectRowIndexes(tableHtml, side, pageSize) {
+    // Use DOMParser to add data-row-index and data-side, count rows
+    const doc = new DOMParser().parseFromString(tableHtml, "text/html");
+    const table = doc.querySelector("table");
+    if (!table)
+        return { tableHtml, paginationBarHtml: "" };
+    table.setAttribute("data-side", side);
+    const rows = Array.from(table.querySelectorAll("tbody tr"));
+    rows.forEach((tr, idx) => tr.setAttribute("data-row-index", String(idx)));
+    const totalRows = rows.length;
+    const needPagination = totalRows > pageSize;
+    const tableOut = table.outerHTML;
+    if (!needPagination)
+        return { tableHtml: tableOut, paginationBarHtml: "" };
+    const totalPages = Math.ceil(totalRows / pageSize);
+    const paginationBarHtml = `<div data-pagination-side="${side}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#0d3e61;">
+  <button class="pg-prev" disabled
+    onclick="prevPage('${side}')"
+    style="background:#1a5276;color:#fff;border:none;padding:4px 10px;border-radius:3px;cursor:pointer;font-size:12px;">
+    上一页
+  </button>
+  <span class="pg-info" style="color:#fff;font-size:12px;flex:1;text-align:center;">第 1 / ${totalPages} 页</span>
+  <button class="pg-next" ${totalPages <= 1 ? "disabled" : ""}
+    onclick="nextPage('${side}')"
+    style="background:#1a5276;color:#fff;border:none;padding:4px 10px;border-radius:3px;cursor:pointer;font-size:12px;">
+    下一页
+  </button>
+</div>`;
+    return { tableHtml: tableOut, paginationBarHtml };
+}
+/**
+ * 创建一个上下分栏的HTML页面来同时显示两个搜索结果
+ * 支持客户端分页：每侧 15 行/页
+ */
+function displayCombinedResults(aideResult, patientResult, phoneNumber = "") {
+    console.log("两边都有结果，创建合并视图...");
+    let aideBody = extractAndCleanContent(aideResult.rawHtml, "aide");
+    let patientBody = extractAndCleanContent(patientResult.rawHtml, "patient");
+    aideBody = injectStatusBadges(aideBody, "aide");
+    patientBody = injectStatusBadges(patientBody, "patient");
+    aideBody = highlightPhoneNumber(aideBody, phoneNumber);
+    patientBody = highlightPhoneNumber(patientBody, phoneNumber);
+    const aideContent = injectRowIndexes(aideBody, "aide", 15);
+    const patientContent = injectRowIndexes(patientBody, "patient", 15);
+    const paginationScript = buildPaginationScript({ aide: 15, patient: 15 });
+    const combinedHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HHA Combined Search Results</title>
+  <style>${PANEL_STYLE_BLOCK}</style>
+  ${REDIRECT_SCRIPT_BLOCK}
 </head>
 <body>
   <div class="container">
     <div class="panel">
       <h2 class="panel-header">Caregiver (护工) 搜索结果 (${aideResult.count} 条)</h2>
-      <div class="panel-content">${aideBody}</div>
+      <div class="panel-content">${aideContent.tableHtml}</div>
+      ${aideContent.paginationBarHtml
+        ? `<div class="panel-footer">${aideContent.paginationBarHtml}</div>`
+        : ""}
     </div>
     <div class="panel">
       <h2 class="panel-header">Patient (病人) 搜索结果 (${patientResult.count} 条${patientResult.activeCount !== undefined
         ? `, Active: ${patientResult.activeCount}`
         : ""})</h2>
-      <div class="panel-content">${patientBody}</div>
+      <div class="panel-content">${patientContent.tableHtml}</div>
+      ${patientContent.paginationBarHtml
+        ? `<div class="panel-footer">${patientContent.paginationBarHtml}</div>`
+        : ""}
     </div>
   </div>
+  ${paginationScript}
 </body>
 </html>`;
     openInPopup(combinedHtml, "HHA_Combined_Result", true);
 }
 /**
  * 以单面板形式展示单一数据源的多结果
- * 复用 displayCombinedResults 的 extractAndCleanContent 清理逻辑和 CSS 面板设计
- * 替代 processHtmlForDisplay，解决"sortable column head"残留和样式不一致问题
- *
- * @param result - 搜索结果对象
- * @param type - 数据源类型 'aide' 或 'patient'
- * @param phoneNumber - 要高亮的电话号码
+ * 支持客户端分页：20 行/页
  */
 function displaySingleResult(result, type, phoneNumber) {
     const isAide = type === "aide";
@@ -20511,159 +20577,37 @@ function displaySingleResult(result, type, phoneNumber) {
     const countLabel = !isAide && result.activeCount !== undefined
         ? `${result.count} 条, Active: ${result.activeCount}`
         : `${result.count} 条`;
-    // 复用 displayCombinedResults 里的 extractAndCleanContent 逻辑
-    const doc = new DOMParser().parseFromString(result.rawHtml, "text/html");
-    let table = doc.querySelector("#tdSearchResults");
-    if (!table) {
-        table = doc.querySelector("table[id*='Search']");
-    }
-    if (!table) {
-        const tables = doc.querySelectorAll("table");
-        for (const t of tables) {
-            if (t.querySelector("tbody tr")) {
-                table = t;
-                break;
-            }
-        }
-    }
-    let bodyContent;
-    if (!table) {
-        bodyContent = `<p style="color:#666;padding:20px;">未找到搜索结果</p>`;
-    }
-    else {
-        // 清理不需要的元素
-        [
-            'a[id*="uxfrmSearchXSLT"]',
-            'a[href*="uxfrmSearchXSLT"]',
-            'form[id*="uxfrmSearch"]',
-            'input[type="hidden"]',
-            "script",
-            ".show-for-sr",
-            '[class*="show-for-sr"]',
-        ].forEach((sel) => table.querySelectorAll(sel).forEach((el) => el.remove()));
-        // 清理表头文字（移除 "sortable column head" 等残留）
-        table.querySelectorAll("th, thead td").forEach((th) => {
-            const link = th.querySelector("a");
-            if (link) {
-                th.textContent = link.textContent?.trim() || "";
-            }
-            else {
-                let text = th.textContent || "";
-                text = text.replace(/sortable\s*column\s*head/gi, "");
-                text = text
-                    .replace(/[\r\n\t]+/g, " ")
-                    .replace(/\s+/g, " ")
-                    .trim();
-                th.textContent = text;
-            }
-        });
-        // Aide 特殊处理：移除空 Action 列
-        if (isAide) {
-            const headerCells = table.querySelectorAll("thead tr th, thead tr td");
-            const lastHeader = headerCells[headerCells.length - 1];
-            if (lastHeader?.textContent?.trim().toLowerCase() === "action") {
-                const rows = table.querySelectorAll("tbody tr");
-                const allEmpty = Array.from(rows).every((row) => {
-                    const cells = row.querySelectorAll("td");
-                    const lastCell = cells[cells.length - 1];
-                    return !lastCell?.textContent?.trim();
-                });
-                if (allEmpty) {
-                    lastHeader.remove();
-                    rows.forEach((row) => {
-                        const cells = row.querySelectorAll("td");
-                        cells[cells.length - 1]?.remove();
-                    });
-                }
-            }
-        }
-        bodyContent = table.outerHTML;
-    }
-    // 高亮电话号码
+    let bodyContent = extractAndCleanContent(result.rawHtml, type);
+    bodyContent = injectStatusBadges(bodyContent, type);
     bodyContent = highlightPhoneNumber(bodyContent, phoneNumber);
+    const singleContent = injectRowIndexes(bodyContent, "single", 20);
+    const paginationScript = buildPaginationScript({ single: 20 });
     const singleHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>HHA ${label} 搜索结果</title>
-  <style>
-    body, html {
-      margin: 0; padding: 0; height: 100%;
-      overflow: hidden;
-      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    }
-    .container { display: flex; flex-direction: column; height: 100%; }
-    .panel {
-      flex: 1; overflow: hidden;
-      display: flex; flex-direction: column; min-height: 0;
-    }
-    .panel-header {
-      margin: 0; padding: 10px 15px;
-      background-color: #0d3e61; color: #fff;
-      font-size: 16px; font-weight: 600; flex-shrink: 0;
-    }
-    .panel-content { flex: 1; overflow: auto; padding: 10px; background-color: #fff; }
-    .panel-content table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-    .panel-content table th,
-    .panel-content table td { padding: 8px; border: 1px solid #dee2e6; text-align: left; }
-    .panel-content table thead tr,
-    .panel-content table tr:first-child:has(th) {
-      background-color: #0d3e61 !important; color: #fff !important;
-    }
-    .panel-content table th,
-    .panel-content table thead th,
-    .panel-content table thead td {
-      background-color: #0d3e61 !important; color: #fff !important; font-weight: 600;
-    }
-    .panel-content table th a,
-    .panel-content table thead a { color: #fff !important; }
-    .panel-content table tbody tr:nth-child(even) { background-color: #f8f9fa; }
-    .panel-content table tbody tr:hover { background-color: #e9ecef; }
-    .panel-content a { color: #0d6efd; text-decoration: none; }
-    .panel-content a:hover { text-decoration: underline; }
-    .panel-content ul {
-      list-style: none; padding: 5px 10px; margin: 10px 0;
-      display: flex; flex-wrap: wrap; gap: 8px;
-      background-color: #f5f5f5; border-radius: 4px;
-    }
-    .panel-content ul li { display: inline; }
-    .panel-content ul li::before { content: none; }
-    .panel-content ul li a {
-      padding: 4px 8px; border: 1px solid #ddd;
-      border-radius: 3px; background-color: #fff;
-    }
-    .panel-content span[style*="background-color: #ffff00"] {
-      background-color: #ffff00 !important;
-      padding: 1px 3px !important;
-      border-radius: 2px !important;
-      font-weight: bold !important;
-    }
-  </style>
-  <script>
-    function RedirectToAidePage(id) {
-      window.open('${AIDE_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
-    }
-    function RedirectToPatientPage(id) {
-      window.open('${PATIENT_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
-    }
-  </script>
+  <style>${PANEL_STYLE_BLOCK}</style>
+  ${REDIRECT_SCRIPT_BLOCK}
 </head>
 <body>
   <div class="container">
     <div class="panel">
       <h2 class="panel-header">${label} 搜索结果 (${countLabel})</h2>
-      <div class="panel-content">${bodyContent}</div>
+      <div class="panel-content">${singleContent.tableHtml}</div>
+      ${singleContent.paginationBarHtml
+        ? `<div class="panel-footer">${singleContent.paginationBarHtml}</div>`
+        : ""}
     </div>
   </div>
+  ${paginationScript}
 </body>
 </html>`;
     openInPopup(singleHtml, "HHA_Search_Result", true);
 }
+// ==================== 数据获取 ====================
 /**
  * 通用的后台搜索函数, 使用 GM_fetch
- * @param type - 搜索类型, 'aide' 或 'patient'
- * @param formattedNumber - 格式化后的电话号码
- * @returns 一个解析后的搜索结果对象的 Promise
  */
 async function fetchHhaData(type, formattedNumber) {
     let baseUrl, params, handler;
@@ -20687,7 +20631,7 @@ async function fetchHhaData(type, formattedNumber) {
         if (r.status >= 200 && r.status < 400) {
             const html = await r.rawBody.text();
             const result = handler(html);
-            result.searchUrl = searchUrl; // 保存原始搜索URL
+            result.searchUrl = searchUrl;
             return result;
         }
         console.error(`HHA ${type} search failed with status: ${r.status}`);
@@ -20698,6 +20642,146 @@ async function fetchHhaData(type, formattedNumber) {
         return { count: 0, rawHtml: "Network Error" };
     }
 }
+// ==================== 多字段搜索 + 多页全量获取 ====================
+/**
+ * 根据 HhaQuickSearchParams 和页码构建搜索 URL
+ * @param type - 搜索类型 'aide' 或 'patient'
+ * @param params - 快速搜索参数
+ * @param page - 页码（对应 URL 中的 pg= 字段）
+ */
+function buildSearchUrl(type, params, page) {
+    if (type === "aide") {
+        const baseUrl = `${_TENANT_BASE_URL}/Aide/AideSearchXSLT_ns.aspx`;
+        const qp = new URLSearchParams({
+            FirstName: params.firstName ?? "",
+            Phone: params.phone ?? "",
+            LastName: params.lastName ?? "",
+            Type: "-1",
+            Discipline: "-1",
+            CaregiverCode: params.id ?? "",
+            ALtCaregiverCode: "",
+            Status: "-1",
+            SSN: params.ssn ?? "",
+            CaregiverTeamID: "-1",
+            FromVisitEdit: "0",
+            CaregiverLocationID: "-1",
+            CaregiverBranchID: "-1",
+            VisitDate: "",
+            office: "469,5137,5139,6475,14849",
+            DOB: "",
+            pg: String(page),
+            sort: "",
+            ord: "ASC",
+            FromPage: "",
+        });
+        return `${baseUrl}?${qp.toString()}`;
+    }
+    else {
+        const baseUrl = `${_TENANT_BASE_URL}/Patient/PatientSearchXSLT_ns.aspx`;
+        const qp = new URLSearchParams({
+            FirstName: params.firstName ?? "",
+            LastName: params.lastName ?? "",
+            StatusID: "-1",
+            PatientID: params.patientId ?? "",
+            MRNumber: "",
+            CoordinatorId: "-1",
+            Source: "-1",
+            PatientNumber: params.id ?? "",
+            HomePhone: params.phone ?? "",
+            AltPatientID: "",
+            TeamID: "-1",
+            LocationID: "-1",
+            BranchID: "-1",
+            DisciplineID: "0",
+            Default: "false",
+            pg: String(page),
+            sort: "",
+            ord: "ASC",
+            OfficeIds: "469,5137,5139,6475,14849",
+            MedicaidID: params.medicaidId ?? "",
+        });
+        return `${baseUrl}?${qp.toString()}`;
+    }
+}
+/**
+ * 获取指定类型搜索的所有页面结果，返回合并后的完整 HhaSearchResult
+ * 1. 获取第 1 页
+ * 2. 从 h2 解析总数
+ * 3. 若总数 > 10，并行请求其余页并合并 tbody 行
+ *
+ * @param type - 搜索类型
+ * @param params - 快速搜索参数
+ */
+async function fetchAllPages(type, params) {
+    // 获取第 1 页
+    const url1 = buildSearchUrl(type, params, 1);
+    let page1Html = "";
+    try {
+        const r = (await GM_fetch(url1));
+        if (r.status >= 200 && r.status < 400) {
+            page1Html = await r.rawBody.text();
+        }
+        else {
+            return { count: 0, rawHtml: `Request Failed: ${r.status}` };
+        }
+    }
+    catch (error) {
+        console.error(`[fetchAllPages] Page 1 error:`, error);
+        return { count: 0, rawHtml: "Network Error" };
+    }
+    const handler = type === "aide" ? handleAideSearchResult : handlePatientSearchResult;
+    const page1Result = handler(page1Html);
+    const totalCount = page1Result.count;
+    if (totalCount <= 10) {
+        // 单页结果，直接返回
+        return page1Result;
+    }
+    // 多页：并行获取剩余页
+    const totalPages = Math.ceil(totalCount / 10);
+    const pagePromises = [];
+    for (let pg = 2; pg <= totalPages; pg++) {
+        const url = buildSearchUrl(type, params, pg);
+        pagePromises.push(GM_fetch(url)
+            .then((r) => r.rawBody.text())
+            .catch(() => ""));
+    }
+    const extraPages = await Promise.all(pagePromises);
+    // 合并：将所有页的 <tbody> 行追加到第 1 页的 #tdSearchResults 中
+    const doc1 = new DOMParser().parseFromString(page1Html, "text/html");
+    const tbody1 = doc1.querySelector("#tdSearchResults tbody");
+    if (tbody1) {
+        for (const pageHtml of extraPages) {
+            if (!pageHtml)
+                continue;
+            const docN = new DOMParser().parseFromString(pageHtml, "text/html");
+            const tbodyN = docN.querySelector("#tdSearchResults tbody");
+            if (tbodyN) {
+                Array.from(tbodyN.querySelectorAll("tr")).forEach((tr) => {
+                    tbody1.appendChild(document.adoptNode(tr));
+                });
+            }
+        }
+    }
+    // 序列化合并后的 #tdSearchResults 为新的 rawHtml
+    const mergedTable = doc1.querySelector("#tdSearchResults");
+    const mergedRawHtml = mergedTable ? mergedTable.outerHTML : page1Html;
+    const result = {
+        count: totalCount,
+        rawHtml: mergedRawHtml,
+    };
+    if (type === "patient" && page1Result.activeCount !== undefined) {
+        result.activeCount = page1Result.activeCount;
+    }
+    return result;
+}
+
+;// ./src/js/IncomingCallHandler.ts
+
+
+// ==================== 状态变量 ====================
+let lastCallWasIncoming = false;
+/** 当前搜索的电话号码（用于高亮显示） */
+let currentSearchPhone = "";
 /**
  * 核心调度函数：提取号码并发起并行搜索, 然后根据结果决定如何显示
  * @param callInfoPanel - 包含电话号码信息的DOM元素
@@ -33977,6 +34061,407 @@ class MailBuilderTab extends BaseTab {
     }
 }
 
+;// ./src/js/tabs/QuickSearchTab.ts
+
+
+class QuickSearchTab extends BaseTab {
+    constructor() {
+        super(...arguments);
+        this.id = "quick-search";
+        this.label = "\u5feb\u901f\u641c\u7d22";
+        this.icon = "\uD83D\uDD0D";
+        this.isSearching = false;
+    }
+    async init() {
+        this.initialized = true;
+    }
+    render(container) {
+        this.container = container;
+        container.innerHTML = "";
+        container.style.cssText =
+            "height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0;box-sizing:border-box;";
+        // ── Styles ─────────────────────────────────────────────────────────────────────────────────
+        const style = document.createElement("style");
+        style.textContent = `
+      .qs-wrapper {
+        flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      }
+      .qs-header {
+        display: flex; align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e0e0e0;
+        background: #fafbfc;
+        flex-shrink: 0;
+      }
+      .qs-title {
+        margin: 0; font-size: 15px; font-weight: 600; color: #333;
+      }
+      .qs-body {
+        flex: 1; overflow-y: auto; overflow-x: hidden; position: relative;
+        overscroll-behavior: contain; padding: 12px 14px;
+      }
+      /* 2-col row */
+      .qs-row-2col {
+        display: flex; gap: 10px; margin-bottom: 8px;
+      }
+      .qs-col {
+        display: flex; align-items: center; gap: 5px; min-width: 0;
+      }
+      .qs-col.wide   { flex: 3; }
+      .qs-col.narrow { flex: 2; }
+      .qs-col.half   { flex: 1; }
+      .qs-col > label {
+        width: 26px; font-size: 12px; color: #555;
+        white-space: nowrap; flex-shrink: 0;
+        margin: 0 !important; padding: 0 !important;
+      }
+      /* input wrap */
+      .qs-input-wrap {
+        position: relative; flex: 1; min-width: 0;
+        display: flex; align-items: center;
+      }
+      .qs-input-wrap input {
+        flex: 1; min-width: 0; box-sizing: border-box;
+        margin: 0 !important;
+        padding: 5px 26px 5px 7px;
+        border: 1px solid #ccc; border-radius: 4px; font-size: 12px;
+      }
+      .qs-input-wrap input:focus {
+        outline: none; border-color: #0d3e61;
+      }
+      .qs-clear-btn {
+        all: unset; box-sizing: border-box;
+        position: absolute; right: 0; top: 0; bottom: 0;
+        display: flex; align-items: center; justify-content: center;
+        width: 22px; cursor: pointer;
+        color: #bbb; font-size: 12px;
+      }
+      .qs-clear-btn:hover { color: #555; }
+      /* info icon */
+      .qs-info-icon {
+        cursor: help; font-size: 13px; flex-shrink: 0; margin-left: 2px;
+      }
+      /* tooltip rendered via fixed position JS */
+      .qs-tooltip-popup {
+        position: fixed; background: #333; color: #fff;
+        font-size: 11px; padding: 5px 8px; border-radius: 4px;
+        z-index: 2147483647; white-space: normal; line-height: 1.4;
+        width: 200px; pointer-events: none; display: none;
+      }
+      /* advanced section */
+      .qs-advanced-section {
+        margin-bottom: 8px; border: 1px solid #e0e0e0;
+        border-radius: 4px; overflow: hidden;
+      }
+      .qs-advanced-summary {
+        padding: 6px 10px; background: #f5f7fa;
+        cursor: pointer; font-size: 12px; color: #444;
+        user-select: none; list-style: none;
+      }
+      .qs-advanced-summary::-webkit-details-marker { display: none; }
+      .qs-advanced-content {
+        padding: 8px 10px; border-top: 1px solid #e0e0e0;
+      }
+      .qs-group-label {
+        font-size: 11px; font-weight: 600; color: #0d3e61;
+        text-transform: uppercase; letter-spacing: 0.5px; margin: 4px 0 6px;
+      }
+      .qs-adv-row {
+        display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+      }
+      .qs-adv-row > label {
+        width: 58px; font-size: 12px; color: #555;
+        white-space: nowrap; overflow: hidden;
+        text-overflow: ellipsis; flex-shrink: 0;
+      }
+      /* conflict / buttons / states */
+      .qs-conflict-warning {
+        color: #c0392b; font-size: 12px; margin-bottom: 6px; display: none;
+      }
+      .qs-btn-row { display: flex; gap: 8px; }
+      .qs-btn-row .hha-smart-btn { flex: 1; }
+      .qs-footer {
+        flex-shrink: 0; padding: 8px 14px 12px;
+        border-top: 1px solid #e0e0e0; background: #fafbfc;
+      }
+      .qs-no-result {
+        color: #666; font-size: 13px; margin-top: 8px; padding: 8px;
+        background: #fef9e7; border-radius: 4px;
+        border-left: 3px solid #f39c12; display: none;
+      }
+      .qs-loading {
+        display: none; position: absolute; inset: 0; z-index: 10;
+        background: rgba(255,255,255,0.85);
+        align-items: center; justify-content: center;
+      }
+      .qs-spinner {
+        width: 26px; height: 26px; border: 3px solid #e0e0e0;
+        border-top-color: #0d3e61; border-radius: 50%;
+        animation: qs-spin 0.8s linear infinite; margin: 0 auto;
+      }
+      @keyframes qs-spin { to { transform: rotate(360deg); } }
+    `;
+        container.appendChild(style);
+        // ── Tooltip popup (singleton on document.body) ────────────────────────────────────────────
+        const TOOLTIP_ID = "qs-global-tooltip";
+        let tooltipPopup = document.getElementById(TOOLTIP_ID);
+        if (!tooltipPopup) {
+            tooltipPopup = document.createElement("div");
+            tooltipPopup.id = TOOLTIP_ID;
+            tooltipPopup.className = "qs-tooltip-popup";
+            tooltipPopup.textContent =
+                "Caregiver: Caregiver Code；Patient: Admission ID (MR Number)";
+            document.body.appendChild(tooltipPopup);
+        }
+        // ── Wrapper + Header ────────────────────────────────────────────────────────────────────────
+        const wrapper = document.createElement("div");
+        wrapper.className = "qs-wrapper";
+        const header = document.createElement("div");
+        header.className = "qs-header";
+        const title = document.createElement("h3");
+        title.className = "qs-title";
+        title.textContent = "🔍 快速搜索";
+        header.appendChild(title);
+        wrapper.appendChild(header);
+        const body = document.createElement("div");
+        body.className = "qs-body";
+        wrapper.appendChild(body);
+        const footer = document.createElement("div");
+        footer.className = "qs-footer";
+        wrapper.appendChild(footer);
+        container.appendChild(wrapper);
+        // ── Helpers ───────────────────────────────────────────────────────────────────────────────────
+        const makeInputWrap = (input) => {
+            const wrap = document.createElement("div");
+            wrap.className = "qs-input-wrap";
+            wrap.appendChild(input);
+            const clear = document.createElement("button");
+            clear.className = "qs-clear-btn";
+            clear.type = "button";
+            clear.textContent = "✕";
+            clear.title = "清空";
+            clear.addEventListener("click", () => {
+                input.value = "";
+                input.focus();
+                validateConflict();
+            });
+            wrap.appendChild(clear);
+            return wrap;
+        };
+        const makeInput = (placeholder) => {
+            const inp = document.createElement("input");
+            inp.type = "text";
+            inp.placeholder = placeholder;
+            inp.addEventListener("input", () => validateConflict());
+            inp.addEventListener("keydown", (e) => {
+                if (e.key === "Enter")
+                    doSearch();
+            });
+            return inp;
+        };
+        const makeCol = (labelText, input, colClass = "half") => {
+            const col = document.createElement("div");
+            col.className = `qs-col ${colClass}`;
+            const lbl = document.createElement("label");
+            lbl.textContent = labelText;
+            col.appendChild(lbl);
+            col.appendChild(makeInputWrap(input));
+            return col;
+        };
+        // ── Row 1: 姓 + 名 ──────────────────────────────────────────────────────────────────────────
+        const lastNameInput = makeInput("请输入 Last name");
+        const firstNameInput = makeInput("请输入 First name");
+        const row1 = document.createElement("div");
+        row1.className = "qs-row-2col";
+        row1.appendChild(makeCol("姓", lastNameInput));
+        row1.appendChild(makeCol("名", firstNameInput));
+        body.appendChild(row1);
+        // ── Row 2: 电话(wide) + ID(narrow) + ℹ️ ────────────────────────────────────────────────────
+        const phoneInput = makeInput("请输入电话");
+        const idInput = makeInput("请输入 ID");
+        const row2 = document.createElement("div");
+        row2.className = "qs-row-2col";
+        const colId = document.createElement("div");
+        colId.className = "qs-col narrow";
+        const lblId = document.createElement("label");
+        lblId.textContent = "ID";
+        colId.appendChild(lblId);
+        colId.appendChild(makeInputWrap(idInput));
+        const infoIcon = document.createElement("span");
+        infoIcon.className = "qs-info-icon";
+        infoIcon.textContent = "ℹ️";
+        infoIcon.addEventListener("mouseenter", () => {
+            const r = infoIcon.getBoundingClientRect();
+            tooltipPopup.style.left = `${r.right + 6}px`;
+            tooltipPopup.style.top = `${r.top - 4}px`;
+            tooltipPopup.style.display = "block";
+        });
+        infoIcon.addEventListener("mouseleave", () => {
+            tooltipPopup.style.display = "none";
+        });
+        colId.appendChild(infoIcon);
+        row2.appendChild(colId);
+        row2.appendChild(makeCol("电话", phoneInput, "wide"));
+        body.appendChild(row2);
+        // ── Advanced section ──────────────────────────────────────────────────────────────────────────
+        const details = document.createElement("details");
+        details.className = "qs-advanced-section";
+        const summary = document.createElement("summary");
+        summary.className = "qs-advanced-summary";
+        summary.textContent = "▶ 高级搜索";
+        details.addEventListener("toggle", () => {
+            summary.textContent = details.open ? "▼ 高级搜索" : "▶ 高级搜索";
+        });
+        details.appendChild(summary);
+        const advContent = document.createElement("div");
+        advContent.className = "qs-advanced-content";
+        const makeAdvRow = (labelText, input) => {
+            const row = document.createElement("div");
+            row.className = "qs-adv-row";
+            const lbl = document.createElement("label");
+            lbl.textContent = labelText;
+            row.appendChild(lbl);
+            row.appendChild(makeInputWrap(input));
+            return row;
+        };
+        const cgLbl = document.createElement("div");
+        cgLbl.className = "qs-group-label";
+        cgLbl.textContent = "Caregiver 独占";
+        advContent.appendChild(cgLbl);
+        const ssnInput = makeInput("SSN");
+        advContent.appendChild(makeAdvRow("SSN", ssnInput));
+        const ptLbl = document.createElement("div");
+        ptLbl.className = "qs-group-label";
+        ptLbl.textContent = "Patient 独占";
+        advContent.appendChild(ptLbl);
+        const patientIdInput = makeInput("Patient ID");
+        const medicaidIdInput = makeInput("Medicaid ID");
+        advContent.appendChild(makeAdvRow("PatientID", patientIdInput));
+        advContent.appendChild(makeAdvRow("Medicaid", medicaidIdInput));
+        details.appendChild(advContent);
+        body.appendChild(details);
+        // ── Conflict warning ──────────────────────────────────────────────────────────────────────────
+        const conflictWarn = document.createElement("div");
+        conflictWarn.className = "qs-conflict-warning";
+        conflictWarn.textContent = "不能同时输入 Caregiver 和 Patient 的独占字段";
+        footer.appendChild(conflictWarn);
+        // ── Buttons ───────────────────────────────────────────────────────────────────────────────────
+        const btnRow = document.createElement("div");
+        btnRow.className = "qs-btn-row";
+        const searchBtn = document.createElement("button");
+        searchBtn.className = "hha-smart-btn hha-smart-btn-primary";
+        searchBtn.textContent = "搜索";
+        searchBtn.addEventListener("click", () => doSearch());
+        const clearAllBtn = document.createElement("button");
+        clearAllBtn.className = "hha-smart-btn hha-smart-btn-secondary";
+        clearAllBtn.textContent = "清空";
+        clearAllBtn.addEventListener("click", () => {
+            [
+                lastNameInput,
+                firstNameInput,
+                phoneInput,
+                idInput,
+                ssnInput,
+                patientIdInput,
+                medicaidIdInput,
+            ].forEach((inp) => (inp.value = ""));
+            conflictWarn.style.display = "none";
+            searchBtn.disabled = false;
+            noResultDiv.style.display = "none";
+        });
+        btnRow.appendChild(searchBtn);
+        btnRow.appendChild(clearAllBtn);
+        footer.appendChild(btnRow);
+        // ── Loading ───────────────────────────────────────────────────────────────────────────────────
+        const loadingDiv = document.createElement("div");
+        loadingDiv.className = "qs-loading";
+        const spinner = document.createElement("div");
+        spinner.className = "qs-spinner";
+        loadingDiv.appendChild(spinner);
+        body.appendChild(loadingDiv);
+        // ── No-result ────────────────────────────────────────────────────────────────────────────────────
+        const noResultDiv = document.createElement("div");
+        noResultDiv.className = "qs-no-result";
+        noResultDiv.textContent = "未找到匹配的护理员或病人";
+        body.appendChild(noResultDiv);
+        // ── Validation ────────────────────────────────────────────────────────────────────────────────
+        const validateConflict = () => {
+            const hasCg = !!ssnInput.value.trim();
+            const hasPt = !!(patientIdInput.value.trim() || medicaidIdInput.value.trim());
+            const conflict = hasCg && hasPt;
+            conflictWarn.style.display = conflict ? "block" : "none";
+            searchBtn.disabled = conflict;
+        };
+        [ssnInput, patientIdInput, medicaidIdInput].forEach((inp) => {
+            inp.addEventListener("input", validateConflict);
+            inp.addEventListener("keydown", (e) => {
+                if (e.key === "Enter")
+                    doSearch();
+            });
+        });
+        // ── Search logic ──────────────────────────────────────────────────────────────────────────────
+        const doSearch = async () => {
+            if (this.isSearching || searchBtn.disabled)
+                return;
+            const params = {
+                lastName: lastNameInput.value.trim() || undefined,
+                firstName: firstNameInput.value.trim() || undefined,
+                phone: phoneInput.value.trim() || undefined,
+                id: idInput.value.trim() || undefined,
+                ssn: ssnInput.value.trim() || undefined,
+                patientId: patientIdInput.value.trim() || undefined,
+                medicaidId: medicaidIdInput.value.trim() || undefined,
+            };
+            const anyFilled = Object.values(params).some((v) => v !== undefined);
+            if (!anyFilled)
+                return;
+            this.isSearching = true;
+            searchBtn.disabled = true;
+            searchBtn.textContent = "⏳ 搜索中…";
+            loadingDiv.style.display = "flex";
+            noResultDiv.style.display = "none";
+            try {
+                const hasCg = !!params.ssn;
+                const hasPt = !!(params.patientId || params.medicaidId);
+                let aideResult = null;
+                let patientResult = null;
+                if (hasCg && !hasPt) {
+                    aideResult = await fetchAllPages("aide", params);
+                }
+                else if (!hasCg && hasPt) {
+                    patientResult = await fetchAllPages("patient", params);
+                }
+                else {
+                    [aideResult, patientResult] = await Promise.all([
+                        fetchAllPages("aide", params),
+                        fetchAllPages("patient", params),
+                    ]);
+                }
+                const hasAide = aideResult && aideResult.count > 0;
+                const hasPatient = patientResult && patientResult.count > 0;
+                if (hasAide && hasPatient && aideResult && patientResult) {
+                    displayCombinedResults(aideResult, patientResult, "");
+                }
+                else if (hasAide && aideResult) {
+                    displaySingleResult(aideResult, "aide", "");
+                }
+                else if (hasPatient && patientResult) {
+                    displaySingleResult(patientResult, "patient", "");
+                }
+                else {
+                    noResultDiv.style.display = "block";
+                }
+            }
+            finally {
+                this.isSearching = false;
+                searchBtn.disabled = false;
+                searchBtn.textContent = "搜索";
+                loadingDiv.style.display = "none";
+            }
+        };
+    }
+}
+
 ;// ./src/js/services/OutlookDOMControllerPayload.ts
 const OUTLOOK_DOM_CONTROLLER_ID = "hha-outlook-dom-controller";
 const OutlookDOMControllerPayload = `
@@ -35214,7 +35699,7 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.17.1"};
+const package_namespaceObject = {"rE":"3.17.2"};
 ;// ./src/index.ts
 // Only inject styles on HHA pages — Outlook's strict CSP blocks style-loader injection
 if (!window.location.hostname.includes("outlook") &&
@@ -35222,6 +35707,7 @@ if (!window.location.hostname.includes("outlook") &&
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     __webpack_require__("./src/style/main.less");
 }
+
 
 
 
@@ -35467,6 +35953,7 @@ function embedMultiTabPanel(trackerContainer, dragHandle, trackerPanel) {
     panel.registerTab(new QAReportTab());
     panel.registerTab(new CleanerTab());
     panel.registerTab(new MailBuilderTab());
+    panel.registerTab(new QuickSearchTab());
     // Initialize panel
     panel
         .init()
