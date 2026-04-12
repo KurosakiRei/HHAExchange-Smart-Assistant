@@ -71,6 +71,7 @@ interface BuiltinTemplateService {
 | 16.1     | Timesheet 提交通知    | Prebilling Review     | ✅ 已完成  | [epic-16-story-1-timesheet-notification.md](epic-16-story-1-timesheet-notification.md) |
 | 16.2     | Patient Vacation 通知 | Patient Profile       | 📝 计划中  | [epic-16-story-2-patient-vacation.md](epic-16-story-2-patient-vacation.md)              |
 | 16.3     | End of Day Report     | 任意页面              | 📋 待开发  | [epic-16-story-3-end-of-day-report.md](epic-16-story-3-end-of-day-report.md)            |
+| 16.4     | Employment Activation Request | 任意页面    | 📋 待开发  | [epic-16-story-4-employment-activation-request.md](epic-16-story-4-employment-activation-request.md) |
 
 ---
 
