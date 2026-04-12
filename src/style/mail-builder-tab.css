@@ -175,6 +175,7 @@
   flex: 1;
   padding: 16px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .template-placeholder {
   display: flex;
@@ -825,6 +826,7 @@
 .timesheet-visit-list {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   max-height: 300px;
   border: 1px solid #e4e4e4;
   border-radius: 10px;
@@ -997,6 +999,7 @@
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   max-height: calc(90vh - 160px);
 }
 /* Config Section */
@@ -1169,6 +1172,7 @@
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   max-height: calc(90vh - 160px);
 }
 .eod-config-section {

@@ -34,6 +34,7 @@ import { StatusTrackingTab } from "./js/tabs/StatusTrackingTab";
 import { QAReportTab } from "./js/tabs/QAReportTab";
 import { CleanerTab } from "./js/tabs/CleanerTab";
 import { MailBuilderTab } from "./js/tabs/MailBuilderTab";
+import { QuickSearchTab } from "./js/tabs/QuickSearchTab";
 import { CleaningController } from "./js/services/CleaningController";
 import { CleaningOverlay } from "./js/services/CleaningOverlay";
 import { OutlookAdapter } from "./js/services/OutlookAdapter";
@@ -367,6 +368,7 @@ function embedMultiTabPanel(
   panel.registerTab(new QAReportTab());
   panel.registerTab(new CleanerTab());
   panel.registerTab(new MailBuilderTab());
+  panel.registerTab(new QuickSearchTab());
 
   // Initialize panel
   panel

@@ -113,7 +113,7 @@
   box-shadow: 0 0 0 2px #a29bfe;
 }
 .qa-coordinator-select:disabled {
-  background: #fafafa;
+  background: #f7f8fa;
   cursor: not-allowed;
 }
 .qa-load-btn {
@@ -132,7 +132,7 @@
 .qa-export-btn {
   padding: 0 12px;
   font-size: 13px;
-  background: #fafafa;
+  background: #f7f8fa;
   border: 1px solid #e0e0e0;
   border-radius: 2px;
   color: #333333;
@@ -144,7 +144,7 @@
   justify-content: center;
 }
 .qa-export-btn:hover:not(:disabled) {
-  background: #f5f5f5;
+  background: #f0f2f5;
   border-color: #667eea;
 }
 .qa-export-btn:disabled {
@@ -180,7 +180,7 @@
   border-right: 1px solid #e0e0e0;
 }
 .qa-view-btn:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   color: #667eea;
 }
 .qa-view-btn.active {
@@ -190,8 +190,9 @@
 .qa-report-content-body {
   flex: 1;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: 8px;
-  background: #fafafa;
+  background: #f7f8fa;
 }
 .qa-empty-state {
   display: flex;
@@ -226,7 +227,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 .qa-report-table thead {
-  background: #fafafa;
+  background: #f7f8fa;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -245,7 +246,7 @@
   transition: background 0.15s;
 }
 .qa-report-table thead th.sortable:hover {
-  background: #ededed;
+  background: #e7eaf0;
 }
 .qa-report-table thead th.sortable .sort-icon {
   margin-left: 4px;
@@ -264,7 +265,7 @@
   transition: background 0.15s;
 }
 .qa-report-table tbody tr:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
 }
 .qa-report-table tbody tr:last-child {
   border-bottom: none;
@@ -362,7 +363,7 @@
   transition: background 0.15s;
 }
 .qa-report-table .phone-dropdown .phone-item:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   color: #667eea;
 }
 .qa-report-table .col-qa {
@@ -396,7 +397,7 @@
   transition: all 0.2s;
 }
 .qa-action-btn:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   color: #667eea;
 }
 .qa-report-grid {
@@ -448,7 +449,7 @@
   user-select: none;
 }
 .card-action-btn:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   color: #667eea;
 }
 .card-id {
@@ -517,7 +518,7 @@
   transition: background 0.15s;
 }
 .export-menu-item:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   color: #667eea;
 }
 .export-menu-item + .export-menu-item {
@@ -542,7 +543,7 @@
   transition: background 0.15s;
 }
 .action-menu-item:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   color: #667eea;
 }
 .action-menu-item + .action-menu-item {
@@ -632,6 +633,7 @@
 .qa-note-modal-body {
   padding: 16px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   flex: 1;
 }
 .qa-note-section {
@@ -649,7 +651,7 @@
 }
 .qa-note-template {
   padding: 8px 16px;
-  background: #f5f5f5;
+  background: #f0f2f5;
   border: 1px solid #e0e0e0;
   border-radius: 2px;
   font-size: 13px;
@@ -680,7 +682,7 @@
   gap: 8px;
   padding: 16px;
   border-top: 1px solid #e0e0e0;
-  background: #f5f5f5;
+  background: #f0f2f5;
 }
 .qa-note-btn {
   padding: 4px 16px;
@@ -695,7 +697,7 @@
   color: #666666;
 }
 .qa-note-btn.qa-note-btn-cancel:hover {
-  background: #f5f5f5;
+  background: #f0f2f5;
   border-color: #666666;
 }
 .qa-note-btn.qa-note-btn-submit {
