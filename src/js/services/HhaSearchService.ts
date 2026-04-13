@@ -1327,6 +1327,260 @@ export function buildSearchUrl(
  * @param type - 搜索类型
  * @param params - 快速搜索参数
  */
+
+// ==================== 向导搜索行解析（Employment Activation Template）====================
+
+/** Aide（护理员）行记录——供向导步骤1使用 */
+export interface AideRecord {
+  fullName: string;
+  caregiverCode: string;
+  lastName: string;
+  firstName: string;
+  dob: string;
+  phone: string;
+  discipline: string;
+  status: string;
+  ssn: string;
+  team: string;
+  type: string;
+  altCaregiverCode: string;
+}
+
+/** Patient（患者）行记录——供向导步骤2使用 */
+export interface PatientRecord {
+  fullName: string;
+  patientId: string;
+  admissionId: string;
+  dob: string;
+  status: string;
+  phone: string;
+  coordinators: string;
+  startDate: string;
+  active: string;
+  contract: string;
+  location: string;
+  branch: string;
+  disciplines: string;
+}
+
+/**
+ * 从搜索结果 HTML 解析 Aide 行数据，供向导步骤1使用。
+ * 使用动态列索引定位，不硬编码列号。
+ */
+export function parseAideRows(rawHtml: string): AideRecord[] {
+  const doc = new DOMParser().parseFromString(rawHtml, "text/html");
+  const table =
+    doc.querySelector<HTMLTableElement>("#tdSearchResults") ??
+    doc.querySelector<HTMLTableElement>("table");
+  if (!table) return [];
+
+  const headerRow =
+    table.querySelector("thead tr") ?? table.querySelector("tr");
+  if (!headerRow) return [];
+
+  const headers = Array.from(headerRow.querySelectorAll("th, td")).map((th) =>
+    (th.textContent?.trim() ?? "").toLowerCase()
+  );
+
+  const findCol = (keywords: string[]): number =>
+    headers.findIndex((h) => keywords.some((kw) => h.includes(kw)));
+
+  const nameIdx = Math.max(findCol(["name"]), 0);
+  const dobIdx = findCol(["dob", "birth"]);
+  const phoneIdx = findCol(["phone"]);
+  const disciplineIdx = findCol(["discipline"]);
+  const statusIdx = findCol(["status"]);
+  const ssnIdx = findCol(["ssn", "social security"]);
+  const teamIdx = findCol(["team"]);
+  const typeIdx = findCol(["type", "caregiver type"]);
+  const altCodeIdx = findCol(["alt caregiver", "alt code"]);
+
+  const records: AideRecord[] = [];
+
+  table.querySelectorAll<HTMLTableRowElement>("tbody tr").forEach((row) => {
+    const cells = row.querySelectorAll("td");
+    if (cells.length === 0) return;
+
+    const nameCell = cells[nameIdx];
+    if (!nameCell) return;
+
+    const nameLink = nameCell.querySelector<HTMLAnchorElement>("a");
+    const fullName = (
+      nameLink?.textContent ??
+      nameCell.childNodes[0]?.textContent ??
+      nameCell.textContent ??
+      ""
+    )
+      .trim()
+      .replace(/\s+/g, " ");
+    if (!fullName) return;
+
+    // Caregiver Code: second text node or span after the name link in the same cell
+    let caregiverCode = "";
+    const cellText = (nameCell.textContent ?? "").replace(/\s+/g, " ").trim();
+    const cleaned = cellText.replace(fullName, "").trim();
+    const codeMatch = cleaned.match(/[A-Z]{2,5}-\d+/);
+    if (codeMatch) caregiverCode = codeMatch[0];
+
+    const nameParts = fullName.split(/\s+/);
+    const lastName = nameParts[0] ?? "";
+    const firstName = nameParts.slice(1).join(" ");
+
+    const dob = dobIdx >= 0 ? cells[dobIdx]?.textContent?.trim() ?? "" : "";
+    const phone =
+      phoneIdx >= 0 ? cells[phoneIdx]?.textContent?.trim() ?? "" : "";
+    const discipline =
+      disciplineIdx >= 0 ? cells[disciplineIdx]?.textContent?.trim() ?? "" : "";
+
+    let status = "";
+    if (statusIdx >= 0 && cells[statusIdx]) {
+      const statusBadge = cells[statusIdx].querySelector(".status-badge");
+      status = (
+        statusBadge?.textContent ??
+        cells[statusIdx].textContent ??
+        ""
+      ).trim();
+    }
+
+    const ssn = ssnIdx >= 0 ? cells[ssnIdx]?.textContent?.trim() ?? "" : "";
+    const team = teamIdx >= 0 ? cells[teamIdx]?.textContent?.trim() ?? "" : "";
+    const type = typeIdx >= 0 ? cells[typeIdx]?.textContent?.trim() ?? "" : "";
+    const altCaregiverCode =
+      altCodeIdx >= 0 ? cells[altCodeIdx]?.textContent?.trim() ?? "" : "";
+    records.push({
+      fullName,
+      caregiverCode,
+      lastName,
+      firstName,
+      dob,
+      phone,
+      discipline,
+      status,
+      ssn,
+      team,
+      type,
+      altCaregiverCode,
+    });
+  });
+
+  return records;
+}
+
+/**
+ * 从搜索结果 HTML 解析 Patient 行数据，供向导步骤2使用。
+ * 使用动态列索引定位，不硬编码列号。
+ */
+export function parsePatientRows(rawHtml: string): PatientRecord[] {
+  const doc = new DOMParser().parseFromString(rawHtml, "text/html");
+  const table =
+    doc.querySelector<HTMLTableElement>("#tdSearchResults") ??
+    doc.querySelector<HTMLTableElement>("table");
+  if (!table) return [];
+
+  const headerRow =
+    table.querySelector("thead tr") ?? table.querySelector("tr");
+  if (!headerRow) return [];
+
+  const headers = Array.from(headerRow.querySelectorAll("th, td")).map((th) =>
+    (th.textContent?.trim() ?? "").toLowerCase()
+  );
+
+  const findCol = (keywords: string[]): number =>
+    headers.findIndex((h) => keywords.some((kw) => h.includes(kw)));
+
+  const nameIdx = Math.max(findCol(["name"]), 0);
+  const patientIdIdx = findCol(["patient id", "patient number", "patientid"]);
+  const admissionIdx = findCol(["admission", "mr number", "mrnumber"]);
+  const dobIdx = findCol(["dob", "birth"]);
+  const statusIdx = findCol(["status"]);
+  const phoneIdx = findCol(["phone"]);
+  const coordinatorsIdx = findCol(["coordinator", "case manager"]);
+  const startDateIdx = findCol(["start date", "start"]);
+  const activeIdx = findCol(["active"]);
+  const contractIdx = findCol(["contract"]);
+  const locationIdx = findCol(["location"]);
+  const branchIdx = findCol(["branch"]);
+  const disciplinesIdx = findCol(["discipline"]);
+
+  const records: PatientRecord[] = [];
+
+  table.querySelectorAll<HTMLTableRowElement>("tbody tr").forEach((row) => {
+    const cells = row.querySelectorAll("td");
+    if (cells.length === 0) return;
+
+    const nameCell = cells[nameIdx];
+    if (!nameCell) return;
+
+    const nameLink = nameCell.querySelector<HTMLAnchorElement>("a");
+    const rawName = (nameLink?.textContent ?? nameCell.textContent ?? "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .replace(/\s*View\s+Patient\s+Details\b.*/i, "")
+      .trim();
+    const fullName = rawName;
+    if (!fullName) return;
+
+    const patientId =
+      patientIdIdx >= 0
+        ? (cells[patientIdIdx]?.textContent?.trim() ?? "")
+            .replace(/\s*Patient\s+Id\b.*/i, "")
+            .trim()
+        : "";
+    const admissionId =
+      admissionIdx >= 0 ? cells[admissionIdx]?.textContent?.trim() ?? "" : "";
+    const dob = dobIdx >= 0 ? cells[dobIdx]?.textContent?.trim() ?? "" : "";
+
+    let status = "";
+    if (statusIdx >= 0 && cells[statusIdx]) {
+      const statusBadge = cells[statusIdx].querySelector(".status-badge");
+      status = (
+        statusBadge?.textContent ??
+        cells[statusIdx].textContent ??
+        ""
+      ).trim();
+    }
+
+    const phone =
+      phoneIdx >= 0 ? cells[phoneIdx]?.textContent?.trim() ?? "" : "";
+
+    const coordinators =
+      coordinatorsIdx >= 0
+        ? cells[coordinatorsIdx]?.textContent?.trim() ?? ""
+        : "";
+    const startDate =
+      startDateIdx >= 0 ? cells[startDateIdx]?.textContent?.trim() ?? "" : "";
+    const active =
+      activeIdx >= 0 ? cells[activeIdx]?.textContent?.trim() ?? "" : "";
+    const contract =
+      contractIdx >= 0 ? cells[contractIdx]?.textContent?.trim() ?? "" : "";
+    const location =
+      locationIdx >= 0 ? cells[locationIdx]?.textContent?.trim() ?? "" : "";
+    const branch =
+      branchIdx >= 0 ? cells[branchIdx]?.textContent?.trim() ?? "" : "";
+    const disciplines =
+      disciplinesIdx >= 0
+        ? cells[disciplinesIdx]?.textContent?.trim() ?? ""
+        : "";
+    records.push({
+      fullName,
+      patientId,
+      admissionId,
+      dob,
+      status,
+      phone,
+      coordinators,
+      startDate,
+      active,
+      contract,
+      location,
+      branch,
+      disciplines,
+    });
+  });
+
+  return records;
+}
+
 export async function fetchAllPages(
   type: "aide" | "patient",
   params: HhaQuickSearchParams

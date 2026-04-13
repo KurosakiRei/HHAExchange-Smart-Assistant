@@ -189,31 +189,23 @@ export class EodReportTemplate {
     overlay.innerHTML = `
       <div class="template-modal eod-modal">
         <div class="template-modal-header eod-modal-header">
-          <h3 class="template-modal-title">📧 End of Day Report</h3>
+          <h3 class="template-modal-title">📧 每日报告</h3>
           <button class="template-modal-close" id="eod-modal-close">&times;</button>
         </div>
         <div class="template-modal-body eod-modal-body">
 
-          <!-- Config Section -->
-          <div class="eod-config-section">
-            <div class="eod-config-row">
-              <label class="eod-config-label">收件人名:</label>
-              <input type="text" class="eod-config-input" id="eod-recipient-name"
-                value="${this.escapeHtml(config.recipientName)}"
-                placeholder="Reggie">
-            </div>
-            <div class="eod-config-row">
-              <label class="eod-config-label">收件邮箱:</label>
-              <input type="text" class="eod-config-input" id="eod-recipient-email"
-                value="${this.escapeHtml(config.recipientEmail)}"
-                placeholder="email@example.com">
-            </div>
-          </div>
-
-          <!-- Subject -->
-          <div class="eod-subject-row">
-            <label class="eod-config-label">Subject:</label>
-            <input type="text" class="eod-subject-input" id="eod-subject"
+          <!-- Fields Grid: all 3 rows in one grid so inputs share the same width -->
+          <div class="eod-fields-grid">
+            <label class="eod-field-label">称呼 (Greeting):</label>
+            <input type="text" class="eod-field-input" id="eod-recipient-name"
+              value="${this.escapeHtml(config.recipientName)}"
+              placeholder="Reggie">
+            <label class="eod-field-label">收件人(To):</label>
+            <input type="text" class="eod-field-input" id="eod-recipient-email"
+              value="${this.escapeHtml(config.recipientEmail)}"
+              placeholder="email@example.com">
+            <label class="eod-field-label">主题(Subject):</label>
+            <input type="text" class="eod-field-input eod-field-input--subject" id="eod-subject"
               value="${this.escapeHtml(subject)}">
           </div>
 

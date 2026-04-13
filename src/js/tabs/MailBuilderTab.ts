@@ -11,10 +11,10 @@ import {
   getBuiltinTemplates,
   isBuiltinTemplate,
 } from "../services/BuiltinTemplates";
-import { TinyMCEBundler } from "../services/TinyMCEBundler";
 import { TimesheetNotificationTemplate } from "../services/builtin/TimesheetNotificationTemplate";
 import { PatientVacationTemplate } from "../services/builtin/PatientVacationTemplate";
 import { EodReportTemplate } from "../services/builtin/EodReportTemplate";
+import { EmploymentActivationTemplate } from "../services/builtin/EmploymentActivationTemplate";
 import { matchInsurance } from "../utils/InsuranceMatcher";
 import { FaxPreviewModal } from "../components/FaxPreviewModal";
 
@@ -49,6 +49,8 @@ export class MailBuilderTab extends BaseTab {
   private timesheetTemplate: TimesheetNotificationTemplate | null = null;
   private patientVacationTemplate: PatientVacationTemplate | null = null;
   private eodReportTemplate: EodReportTemplate | null = null;
+  private employmentActivationTemplate: EmploymentActivationTemplate | null =
+    null;
 
   async init(): Promise<void> {
     this.initialized = true;
@@ -447,6 +449,11 @@ export class MailBuilderTab extends BaseTab {
         this.eodReportTemplate = new EodReportTemplate();
       }
       this.eodReportTemplate.renderEntryCard(list);
+
+      if (!this.employmentActivationTemplate) {
+        this.employmentActivationTemplate = new EmploymentActivationTemplate();
+      }
+      this.employmentActivationTemplate.renderEntryCard(list);
       return list;
     }
 
@@ -564,7 +571,7 @@ export class MailBuilderTab extends BaseTab {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>收件人 (To)</label>
+                    <label>收件人(To)</label>
                     <input type="text" id="tpl-to" value="${this.escapeHtml(
                       template?.to || ""
                     )}" placeholder="email@example.com">
@@ -576,7 +583,7 @@ export class MailBuilderTab extends BaseTab {
                     )}" placeholder="可选">
                 </div>
                 <div class="form-group">
-                    <label>主题 *</label>
+                    <label>主题(Subject) *</label>
                     <input type="text" id="tpl-subject" value="${this.escapeHtml(
                       template?.subject || ""
                     )}" placeholder="使用 {{变量名}} 插入动态内容">
@@ -742,7 +749,7 @@ export class MailBuilderTab extends BaseTab {
                             placeholder="例：护理员请假通知">
                     </div>
                     <div class="template-form-group">
-                        <label class="template-form-label">收件人 (To)</label>
+                        <label class="template-form-label">收件人(To)</label>
                         <input type="text" class="template-form-input" id="modal-tpl-to" 
                             value="${this.escapeHtml(template?.to || "")}" 
                             placeholder="email@example.com">
@@ -755,7 +762,7 @@ export class MailBuilderTab extends BaseTab {
                     </div>
                     <div class="template-form-row">
                         <div class="template-form-group">
-                            <label class="template-form-label">主题 *</label>
+                            <label class="template-form-label">主题(Subject) *</label>
                             <input type="text" class="template-form-input" id="modal-tpl-subject" 
                                 value="${this.escapeHtml(
                                   template?.subject || ""
@@ -784,7 +791,7 @@ export class MailBuilderTab extends BaseTab {
                         </div>
                     </div>
                     <div class="template-form-group">
-                        <label class="template-form-label">正文 (富文本编辑器) *</label>
+                        <label class="template-form-label">邮件正文 *</label>
                         <div class="template-placeholder-hint" style="font-size: 12px; color: #666; margin-bottom: 8px; padding: 8px; background: #f5f5f5; border-radius: 4px;">
                             <strong>💡 可用占位符:</strong> 
                             <span style="font-family: monospace; color: #0066cc;">{{aide_name}}</span>, 
@@ -794,9 +801,17 @@ export class MailBuilderTab extends BaseTab {
                             <br><small style="color: #999;">在下方"数据字段"区域可以添加自定义占位符</small>
                         </div>
                         <div class="template-body-editor">
-                            <textarea id="modal-tpl-body">${this.escapeHtml(
-                              template?.body || ""
-                            )}</textarea>
+                            <div class="modal-editor-toolbar" id="modal-tpl-toolbar">
+                                <button type="button" data-cmd="bold" title="粗体"><b>B</b></button>
+                                <button type="button" data-cmd="italic" title="斜体"><i>I</i></button>
+                                <button type="button" data-cmd="underline" title="下划线"><u>U</u></button>
+                                <button type="button" data-cmd="strikeThrough" title="删除线"><s>S</s></button>
+                                <button type="button" data-cmd="insertUnorderedList" title="无序列表">≡</button>
+                                <button type="button" data-cmd="insertOrderedList" title="有序列表">⒈</button>
+                                <button type="button" id="modal-tpl-link-btn" title="插入链接">🔗</button>
+                                <button type="button" data-cmd="removeFormat" title="清除格式">✕</button>
+                            </div>
+                            <div id="modal-tpl-body" class="modal-rich-editor" contenteditable="true"></div>
                         </div>
                     </div>
                     
@@ -836,9 +851,6 @@ export class MailBuilderTab extends BaseTab {
 
     // 设置事件处理
     this.setupModalHandlers(overlay);
-
-    // 初始化 TinyMCE
-    this.initTinyMCE();
   }
 
   /**
@@ -923,47 +935,6 @@ export class MailBuilderTab extends BaseTab {
   }
 
   /**
-   * 初始化 TinyMCE 编辑器
-   */
-  private async initTinyMCE(): Promise<void> {
-    try {
-      // 先清理任何现有的 TinyMCE 实例（防止重复初始化导致的问题）
-      this.cleanupTinyMCE();
-
-      // 使用 TinyMCEBundler 加载并初始化 TinyMCE
-      await TinyMCEBundler.init("#modal-tpl-body", {
-        height: 350,
-      });
-      console.log("[MailBuilderTab] TinyMCE initialized successfully");
-    } catch (error) {
-      console.warn(
-        "[MailBuilderTab] TinyMCE failed to load, using textarea fallback",
-        error
-      );
-    }
-  }
-
-  /**
-   * 清理 TinyMCE 实例
-   */
-  private cleanupTinyMCE(): void {
-    try {
-      // TinyMCE 在 unsafeWindow（页面主世界）中，不是在 window 中
-      const pageWindow =
-        typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
-      if (typeof (pageWindow as any).tinymce !== "undefined") {
-        const editor = (pageWindow as any).tinymce.get("modal-tpl-body");
-        if (editor) {
-          editor.remove();
-          console.log("[MailBuilderTab] Cleaned up existing TinyMCE instance");
-        }
-      }
-    } catch (e) {
-      console.warn("[MailBuilderTab] Failed to cleanup TinyMCE:", e);
-    }
-  }
-
-  /**
    * 设置模态框事件处理
    */
   private setupModalHandlers(overlay: HTMLElement): void {
@@ -1001,18 +972,42 @@ export class MailBuilderTab extends BaseTab {
     };
     document.addEventListener("keydown", escHandler);
 
-    // 脏状态追踪
-    this.editorDirty = false;
-    overlay
-      .querySelectorAll<HTMLElement>("input, textarea, select")
-      .forEach((el) => {
-        el.addEventListener("change", () => {
-          this.editorDirty = true;
-        });
-        el.addEventListener("input", () => {
-          this.editorDirty = true;
+    // 编辑器工具栏和初始内容
+    const bodyEditor = overlay.querySelector<HTMLElement>("#modal-tpl-body");
+    if (bodyEditor && this.editingTemplate?.body) {
+      bodyEditor.innerHTML = this.editingTemplate.body;
+    }
+    const toolbar = overlay.querySelector<HTMLElement>("#modal-tpl-toolbar");
+    toolbar
+      ?.querySelectorAll<HTMLButtonElement>("[data-cmd]")
+      .forEach((btn) => {
+        btn.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          document.execCommand(btn.dataset.cmd!, false);
         });
       });
+    overlay
+      .querySelector("#modal-tpl-link-btn")
+      ?.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        const url = prompt("请输入链接 URL:");
+        if (url) document.execCommand("createLink", false, url);
+        bodyEditor?.focus();
+      });
+    bodyEditor?.addEventListener("input", () => {
+      this.editorDirty = true;
+    });
+
+    // 脏状态追踪
+    this.editorDirty = false;
+    overlay.querySelectorAll<HTMLElement>("input, select").forEach((el) => {
+      el.addEventListener("change", () => {
+        this.editorDirty = true;
+      });
+      el.addEventListener("input", () => {
+        this.editorDirty = true;
+      });
+    });
   }
 
   /**
@@ -1023,8 +1018,6 @@ export class MailBuilderTab extends BaseTab {
       if (!window.confirm("有未保存的修改，确认丢弃并关闭吗？")) return;
     }
     this.editorDirty = false;
-    // 销毁 TinyMCE 实例（使用 unsafeWindow 因为 TinyMCE 在页面主世界）
-    this.cleanupTinyMCE();
 
     // 移除模态框
     const overlay = document.querySelector("#template-modal-overlay");
@@ -1055,23 +1048,10 @@ export class MailBuilderTab extends BaseTab {
       "#modal-tpl-subject"
     ) as HTMLInputElement;
 
-    // 获取 TinyMCE 内容，如果 TinyMCE 不存在则使用 textarea
-    // TinyMCE 在 unsafeWindow（页面主世界）中
+    // 从 contenteditable 编辑器读取 HTML 内容
     let body = "";
-    const pageWindow =
-      typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
-    if (typeof (pageWindow as any).tinymce !== "undefined") {
-      const editor = (pageWindow as any).tinymce.get("modal-tpl-body");
-      if (editor) {
-        body = editor.getContent({ format: "html" }); // 获取 HTML 格式
-      }
-    }
-    if (!body) {
-      const bodyInput = document.querySelector(
-        "#modal-tpl-body"
-      ) as HTMLTextAreaElement;
-      body = bodyInput?.value.trim() || "";
-    }
+    const bodyEl = document.querySelector<HTMLElement>("#modal-tpl-body");
+    body = bodyEl?.innerHTML.trim() || "";
 
     const name = nameInput?.value.trim();
     const subject = subjectInput?.value.trim();

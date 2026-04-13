@@ -190,6 +190,7 @@ export class QuickSearchTab extends BaseTab {
       clear.type = "button";
       clear.textContent = "✕";
       clear.title = "清空";
+      clear.tabIndex = -1;
       clear.addEventListener("click", () => {
         input.value = "";
         input.focus();

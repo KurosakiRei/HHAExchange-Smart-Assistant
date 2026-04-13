@@ -5,7 +5,7 @@
 | **Story ID**   | EPIC-016-STORY-004                                                                   |
 | **标题**       | Employment Activation Request — 四步向导内置模板                                    |
 | **优先级**     | P1 - 高                                                                              |
-| **状态**       | 📋 待开发                                                                             |
+| **状态**       | ✅ 已完成（review）                                                                   |
 | **目标页面**   | 任意页面（无限制）                                                                   |
 | **关联 Epic**  | Epic 16（内置模板体系）、Epic 18（快速搜索 Tab）                                    |
 | **依赖服务**   | `HhaSearchService`, `MailService`, `MailBuilderTab`                                 |
@@ -18,11 +18,11 @@
 ## 子 Story 索引
 | 子 Story | 标题 | 状态 |
 |---|---|---|
-| 16.4a | 四步向导框架 + 步骤条 + 入口卡片 + 脏状态检测 | 📋 待开发 |
-| 16.4b | 第一/二步：嵌入式 Caregiver & Patient 搜索选择 | 📋 待开发 |
-| 16.4c | 第三步：日期选择器 | 📋 待开发 |
-| 16.4d | 收件组配置系统（CRUD + localStorage + 管理弹窗） | 📋 待开发 |
-| 16.4e | 第四步：预览编辑器 + 收件组选择 + Outlook 发送 | 📋 待开发 |
+| 16.4a | 四步向导框架 + 步骤条 + 入口卡片 + 脏状态检测 | ✅ 已完成 |
+| 16.4b | 第一/二步：嵌入式 Caregiver & Patient 搜索选择 | ✅ 已完成 |
+| 16.4c | 第三步：日期选择器 | ✅ 已完成 |
+| 16.4d | 收件组配置系统（CRUD + localStorage + 管理弹窗） | ✅ 已完成 |
+| 16.4e | 第四步：预览编辑器 + 收件组选择 + Outlook 发送 | ✅ 已完成 |
 ---
 ## 邮件规格（总览）
 | 字段    | 内容                                                                                   |
@@ -261,6 +261,51 @@ interface RecipientGroup {
 ---
 ## Dev Agent Record
 ### 实现计划执行情况
-（待实现后填写）
+
+**实现日期：** 2026-04-12  
+**开发者：** Amelia (Dev Agent)  
+
+**完成内容：**
+
+1. **`HhaSearchService.ts` 扩展（16.4b AC — `parseAideRows` / `parsePatientRows`）**
+   - 新增 `AideRecord` / `PatientRecord` interface 导出
+   - `parseAideRows(rawHtml)`: 动态解析 `<thead>` 列标题定位列索引，提取姓名、CaregiverCode（正则匹配 `[A-Z]{2,5}-\d+`）、lastName/firstName、DOB、Phone、Discipline、Status；静默跳过空行
+   - `parsePatientRows(rawHtml)`: 同样动态列索引，提取姓名、patientId、admissionId、DOB、Status、Phone；静默跳过空行
+
+2. **`EmploymentActivationTemplate.ts` 新建（16.4a/b/c/d/e 全量实现）**
+   - `renderEntryCard()`: 入口卡片，无页面限制，始终可点击
+   - `openModal()`: 向导 Modal 960×760，半透明遮罩，`isDirty` 脏状态检测，`×` 关闭 + 遮罩点击关闭均走 `tryClose()` 确认流
+   - 步骤条：4步，done/active/未到达三态，done 步骤可点击跳回
+   - 摘要栏：步骤≥2时显示，每块可点击跳回，步骤≥3/4时累加显示
+   - 16.4b: `renderSearchStep()` — 姓/名/电话/ID 4字段（+Aide专属 SSN，Patient专属 PatientID/Medicaid），Clear 按钮，Enter 触发，搜索中 spinner，已选栏持久显示
+   - 16.4b: `renderResultCards()` — 三行卡片（第三行显示 SSN/Team/Type/Alt code 或 PatientID/StartDate/Contract/Location 等辅助信息），首字母头像（6色哈希），Status Badge 三档色，选中高亮 + 保持跨搜索
+   - 16.4c: `renderDateStep()` — 今天/明天快捷按钮，原生 `<input type="date">`，MM/DD/YYYY 内部存储转换
+   - 16.4d: `openManageGroupsModal()` — 480px 管理弹窗，CRUD，Accordion 内联编辑表单，inline 删除确认，10组上限，GM_getValue/GM_setValue 持久化
+   - 16.4e: `renderPreviewStep()` — 收件组 chip 选择，**To/CC 可编辑输入框**（允许用户在发送前临时修改地址），subject 单行输入，`contenteditable` 正文编辑器，跨 rerender 内容保留，无收件组警告确认，`MailService.sendMailTask()` 发送，发送后 Toast
+   - CSS: 700+ 行内联 `<style>` 一次性注入，无外部依赖
+
+3. **`MailBuilderTab.ts` 修改（注册入口卡片）**
+   - import `EmploymentActivationTemplate`
+   - `employmentActivationTemplate` 私有成员
+   - `renderTemplateList()` 内置 Tab 末尾追加 `employmentActivationTemplate.renderEntryCard(list)`
+
+**构建验证：** `npx tsc --noEmit` 无错误；`npm run build` exit:0，5 warnings（均为项目原有 warning）
+
+### 与 Story 规格的偏差记录
+
+| 条目 | 规格 | 实际实现 | 原因 |
+|---|---|---|---|
+| Modal 最小高度 | `min-height: 680px` | `min-height: 760px` | 步骤1/2的搜索区 + 三行卡片需要更多空间，实测 680px 会出现结果列表过矮的问题 |
+| Modal 标题 | 「雇佣激活请求」 | 「护理激活请求」 | 更直观，与入口卡片名（Employment Activation Request）语义对应 |
+| 摘要栏「患者」 | 「患者：」 | 「病人：」 | 与 HHA 系统界面用词一致 |
+| 搜索字段（Aide） | 姓/名/电话/ID 共 4 个 | +额外一行：SSN | 支持按 SSN 搜索的高频需求 |
+| 搜索字段（Patient） | 姓/名/电话/ID 共 4 个 | +额外一行：PatientID、Medicaid ID | 支持按患者 ID 和 Medicaid 搜索 |
+| 结果卡片布局 | 双行 | 三行（第三行显示辅助信息） | 第三行展示 SSN/Team/Type/Alt code（Aide）或 PatientID/StartDate/Contract/Location/Branch（Patient），供核对身份 |
+| Patient 卡片第二行 | DOB / Admission ID / Phone | +Coordinators 字段 | Coordinators 是日常核对常用信息 |
+| To / CC 展示方式 | 只读展示，不可编辑 | **可编辑输入框** | 允许用户在不改收件组配置的前提下临时调整发送地址 |
+| 正文预填格式 | 全大写英文规范 | 首字母大写英文（可读性更好）| 全大写在 Outlook 显示较突兀，实际邮件发送后与收件人沟通时首字母大写更常见 |
+| 发送按钮文字 | 「发送到 Outlook」 | 「Outlook」（带 ▶ 前缀） | Footer 空间有限，文字截断；图标+短文字更清晰 |
+| WizardState 字段 | 5个字段 | +`bodyHtml`, +`skipBodySave` | 修复收件组切换时正文被 `renderBody()` 覆盖的 Bug（见 TD-007） |
+
 ### 修复记录
-（待实现后填写）
+（Bug 修复详情见 [TD-007](../technical-debt/TD-007-epic16-builtin-templates-bugfixes.md)）

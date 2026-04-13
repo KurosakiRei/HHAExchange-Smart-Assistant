@@ -140,20 +140,20 @@ export class TimesheetNotificationTemplate {
           <div class="timesheet-config-section">
             <div class="timesheet-config-row">
               <div class="timesheet-config-col-left">
-                <span class="timesheet-config-label">收件人:</span>
+                <span class="timesheet-config-label">称呼 (Greeting):</span>
                 <input type="text" class="timesheet-config-input" id="ts-recipient-name"
                   value="${this.escapeHtml(savedConfig.recipientName)}"
                   placeholder="Enter Name">
               </div>
               <div class="timesheet-config-col-mid">
                 <div class="timesheet-config-inline">
-                  <label class="timesheet-config-label ts-short-label">To:</label>
+                  <label class="timesheet-config-label ts-short-label">收件人(To):</label>
                   <input type="text" class="timesheet-config-input" id="ts-to"
                     value="${this.escapeHtml(savedConfig.to)}"
                     placeholder="Enter Address">
                 </div>
                 <div class="timesheet-config-inline">
-                  <label class="timesheet-config-label ts-short-label">CC:</label>
+                  <label class="timesheet-config-label ts-short-label">抄送(CC):</label>
                   <input type="text" class="timesheet-config-input" id="ts-cc"
                     value="${this.escapeHtml(savedConfig.cc)}"
                     placeholder="Enter CC Address">

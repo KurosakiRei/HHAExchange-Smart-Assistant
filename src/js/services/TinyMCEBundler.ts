@@ -18,12 +18,11 @@ declare const GM: {
 declare const GM_addStyle: (css: string) => void;
 declare const unsafeWindow: Window;
 
-const TINYMCE_BASE_URL = "https://unpkg.com/tinymce@6/";
+const TINYMCE_BASE_URL = "https://unpkg.com/tinymce@5.10.9/";
 
-// JS components to bundle (simplified list for basic functionality)
+// JS components to bundle (TinyMCE 5.x — no model file needed)
 const TINYMCE_JS_COMPONENTS = [
   "tinymce.min.js",
-  "models/dom/model.min.js",
   "themes/silver/theme.min.js",
   "icons/default/icons.min.js",
   "plugins/lists/plugin.min.js",
@@ -262,14 +261,30 @@ export const TinyMCEBundler = {
       typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
     const tinymce = (pageWindow as any).tinymce;
 
+    // Set baseURL explicitly so TinyMCE doesn't auto-detect it from the inline
+    // script tag (which has no src attribute), which can produce incorrect URLs
+    // that cause the editor to hang during initialization.
+    try {
+      (tinymce as any).baseURL = "https://unpkg.com/tinymce@5.10.9";
+    } catch (_) {
+      /* noop */
+    }
+    try {
+      (tinymce as any).suffix = ".min";
+    } catch (_) {
+      /* noop */
+    }
+
     return tinymce.init({
       selector,
       skin: false,
       content_css: false,
-      content_style: tinyMceCss?.content || "",
+      content_style:
+        (tinyMceCss?.content || "") +
+        " body { font-size: 13px; font-family: Arial, sans-serif; }",
       plugins: "lists link",
       toolbar:
-        "undo redo | bold italic underline strikethrough | bullist numlist | link | removeformat",
+        "bold italic underline strikethrough | bullist numlist | link | removeformat",
       menubar: false,
       statusbar: false,
       branding: false,
@@ -283,13 +298,19 @@ export const TinyMCEBundler = {
    * Remove TinyMCE instance by selector
    */
   remove(selector: string): void {
-    const pageWindow =
-      typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
-    if (typeof (pageWindow as any).tinymce !== "undefined") {
-      const editor = (pageWindow as any).tinymce.get(selector.replace("#", ""));
-      if (editor) {
-        editor.remove();
+    try {
+      const pageWindow =
+        typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+      if (typeof (pageWindow as any).tinymce !== "undefined") {
+        const editor = (pageWindow as any).tinymce.get(
+          selector.replace("#", "")
+        );
+        if (editor) {
+          editor.remove();
+        }
       }
+    } catch (e) {
+      console.warn("[TinyMCEBundler] Error removing editor:", e);
     }
   },
 
@@ -297,13 +318,19 @@ export const TinyMCEBundler = {
    * Get content from TinyMCE editor
    */
   getContent(selector: string, format: string = "html"): string {
-    const pageWindow =
-      typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
-    if (typeof (pageWindow as any).tinymce !== "undefined") {
-      const editor = (pageWindow as any).tinymce.get(selector.replace("#", ""));
-      if (editor) {
-        return editor.getContent({ format });
+    try {
+      const pageWindow =
+        typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+      if (typeof (pageWindow as any).tinymce !== "undefined") {
+        const editor = (pageWindow as any).tinymce.get(
+          selector.replace("#", "")
+        );
+        if (editor) {
+          return editor.getContent({ format });
+        }
       }
+    } catch (e) {
+      console.warn("[TinyMCEBundler] Error getting content:", e);
     }
     return "";
   },

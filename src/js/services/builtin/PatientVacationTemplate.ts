@@ -186,10 +186,12 @@ export class PatientVacationTemplate {
   // ─── DOM Data Extraction ───────────────────────────────────────────────────
 
   private extractPatientName(): string {
-    // From h1 on Patient Profile page, strip trailing status words
+    // From h1 on Patient Profile page
     const h1 = document.querySelector("h1");
     if (!h1) return "[无法获取]";
     let text = h1.textContent?.trim() ?? "";
+    // Strip "LINK WITH - [...]" linked account text (e.g. "Wong Lingyun LINK WITH - [ WONG TICKWAH() ]")
+    text = text.replace(/\s+LINK\s+WITH\s*-\s*\[.*?\]/gi, "").trim();
     // Remove trailing status words like "Active", "Inactive", "Discharged"
     text = text
       .replace(/\s*(Active|Inactive|Discharged|Pending)\s*$/i, "")
@@ -206,8 +208,13 @@ export class PatientVacationTemplate {
           el.nextElementSibling ||
           el.parentElement?.nextElementSibling?.querySelector("span, td");
         if (next) {
-          const val = next.textContent?.trim();
-          if (val) return val;
+          const raw = next.textContent?.trim() ?? "";
+          // Extract just the AHC-xxxxx or numeric portion from any surrounding text
+          const ahcMatch = raw.match(/\b(AHC-\d+)\b/);
+          if (ahcMatch) return ahcMatch[1];
+          const numMatch = raw.match(/\b(\d{6,})\b/);
+          if (numMatch) return numMatch[1];
+          if (raw) return raw;
         }
       }
     }
@@ -629,10 +636,19 @@ export class PatientVacationTemplate {
 
     const config = this.loadConfig();
 
+    const statusWordRe = /\b(Active|Inactive|Discharged|Pending)\b/gi;
+    const cleanName = data.patientName
+      .replace(statusWordRe, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const cleanAdmId = data.admissionId
+      .replace(statusWordRe, "")
+      .replace(/\s+/g, " ")
+      .trim();
     const subjectPreFill =
       data.vacationStart !== "[无法获取]" && data.vacationEnd !== "[无法获取]"
-        ? `PT: ${data.patientName} ${data.admissionId} Vacation ${data.vacationStart} - ${data.vacationEnd}`
-        : `PT: ${data.patientName} ${data.admissionId} Vacation`;
+        ? `PT: ${cleanName} ${cleanAdmId} Vacation ${data.vacationStart} - ${data.vacationEnd}`
+        : `PT: ${cleanName} ${cleanAdmId} Vacation`;
 
     const bodyPreFill = this.buildBodyHtml(data);
 
@@ -651,14 +667,14 @@ export class PatientVacationTemplate {
           <!-- Config Section -->
           <div class="pv-config-section">
             <div class="pv-config-row">
-              <label class="pv-config-label">To:</label>
+              <label class="pv-config-label">收件人(To):</label>
               <input type="text" class="pv-config-input" id="pv-to"
                 value="${this.escapeHtml(
                   config.to
                 )}" placeholder="收件人地址，逗号或分号分隔">
             </div>
             <div class="pv-config-row">
-              <label class="pv-config-label">CC:</label>
+              <label class="pv-config-label">抄送(CC):</label>
               <input type="text" class="pv-config-input" id="pv-cc"
                 value="${this.escapeHtml(
                   config.cc
@@ -668,7 +684,7 @@ export class PatientVacationTemplate {
 
           <!-- Subject -->
           <div class="pv-subject-row">
-            <label class="pv-config-label">Subject:</label>
+            <label class="pv-config-label">主题(Subject):</label>
             <input type="text" class="pv-subject-input" id="pv-subject"
               value="${this.escapeHtml(subjectPreFill)}">
           </div>
@@ -697,7 +713,7 @@ export class PatientVacationTemplate {
             <button class="template-modal-btn btn-save pv-copy-main" id="pv-copy-body">复制正文</button>
             <button class="template-modal-btn btn-save pv-copy-chevron" id="pv-copy-chevron">▾</button>
             <div class="pv-split-dropdown" id="pv-split-dropdown" style="display:none;">
-              <button id="pv-copy-subject">复制 Subject</button>
+              <button id="pv-copy-subject">复制主题</button>
             </div>
           </div>
           <button class="template-modal-btn btn-save pv-outlook-btn" id="pv-outlook">▶ Outlook</button>
