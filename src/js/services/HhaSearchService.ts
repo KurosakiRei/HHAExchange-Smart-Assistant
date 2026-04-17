@@ -511,7 +511,87 @@ function RedirectToPatientPage(id) {
 }
 
 /**
- * 处理 HTML: 注入样式 + 高亮电话号码 + 注入重定向脚本
+ * 在 HTML 中注入划词拨号功能脚本（适用于 blob: 结果弹窗，不依赖 GM API）
+ */
+export function injectHighlight2CallScript(html: string): string {
+  const script = `
+<script>
+(function () {
+  var PHONE_REGEX = /(?:\\+?1[\\s.-]?)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}/;
+
+  function normalize(s) {
+    var d = s.replace(/\\D/g, "");
+    if (d.length === 11 && d.charAt(0) === "1") d = d.substring(1);
+    return d;
+  }
+
+  var popup = null;
+
+  function removePopup() {
+    if (popup) { popup.remove(); popup = null; }
+  }
+
+  function createPopup(phoneNumber, evt) {
+    removePopup();
+    var clean = normalize(phoneNumber);
+    if (clean.length !== 10) return;
+    popup = document.createElement("div");
+    popup.id = "_h2c_popup";
+    popup.style.cssText = "position:fixed;z-index:2147483647;background:#fff;" +
+      "border:1px solid #ccc;border-radius:8px;padding:12px 28px 12px 14px;" +
+      "box-shadow:0 4px 20px rgba(0,0,0,.2);min-width:180px;font-family:sans-serif";
+    popup.innerHTML =
+      "<div style='font-weight:600;font-size:13px;color:#333;margin-bottom:4px'>\u8bf7\u9009\u62e9\u64cd\u4f5c</div>" +
+      "<div style='color:#555;font-size:12px;margin-bottom:10px'>" + phoneNumber + "</div>" +
+      "<div style='display:flex;gap:6px'>" +
+        "<a href='tel:" + clean + "' style='flex:1;background:#4a90d9;color:#fff;border-radius:5px;" +
+        "padding:6px 8px;text-align:center;text-decoration:none;font-size:12px'>\ud83d\udcde \u6253\u7535\u8bdd</a>" +
+        "<a href='sms:" + clean + "' style='flex:1;background:#4a90d9;color:#fff;border-radius:5px;" +
+        "padding:6px 8px;text-align:center;text-decoration:none;font-size:12px'>\ud83d\udcac \u53d1\u77ed\u4fe1</a>" +
+      "</div>" +
+      "<button id='_h2c_x' style='position:absolute;top:5px;right:8px;background:none;border:none;" +
+      "font-size:15px;cursor:pointer;color:#aaa;line-height:1'>\u00d7</button>";
+    document.body.appendChild(popup);
+    var rect = popup.getBoundingClientRect();
+    var top = evt.clientY + 15;
+    var left = evt.clientX;
+    if (top + rect.height > window.innerHeight) top = evt.clientY - rect.height - 15;
+    if (left + rect.width > window.innerWidth) left = window.innerWidth - rect.width - 10;
+    popup.style.top = top + "px";
+    popup.style.left = left + "px";
+    var xBtn = document.getElementById("_h2c_x");
+    if (xBtn) xBtn.addEventListener("click", removePopup);
+    popup.querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", function () { setTimeout(removePopup, 100); });
+    });
+  }
+
+  document.addEventListener("mouseup", function (e) {
+    if (popup && popup.contains(e.target)) return;
+    var sel = window.getSelection();
+    var text = sel ? sel.toString().trim() : "";
+    if (text) {
+      var m = text.match(PHONE_REGEX);
+      if (m) { createPopup(m[0], e); } else { removePopup(); }
+    } else {
+      removePopup();
+    }
+  });
+
+  document.addEventListener("mousedown", function (e) {
+    if (popup && !popup.contains(e.target)) removePopup();
+  });
+})();
+<\/script>`;
+
+  if (html.includes("</body>")) {
+    return html.replace("</body>", script + "</body>");
+  }
+  return html + script;
+}
+
+/**
+ * 处理 HTML: 注入样式 + 高亮电话号码 + 注入重定向脚本 + 注入划词拨号脚本
  */
 export function processHtmlForDisplay(
   html: string,
@@ -523,6 +603,7 @@ export function processHtmlForDisplay(
   processed = injectHhaStyles(processed);
   processed = highlightPhoneNumber(processed, phoneNumber);
   processed = injectRedirectScript(processed, type);
+  processed = injectHighlight2CallScript(processed);
   return processed;
 }
 
@@ -986,6 +1067,151 @@ const REDIRECT_SCRIPT_BLOCK = `
   </script>
 `;
 
+/** 划词拨号脚本块（自包含 IIFE，不依赖 GM API，注入 blob: 弹窗页） */
+const H2C_SCRIPT_BLOCK = `
+  <style>
+    #highlight-caller-popup {
+      position: fixed;
+      z-index: 999999;
+      background-color: #ffffff;
+      border: 1px solid #dcdcdc;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      color: #333;
+      padding: 12px;
+      min-width: 200px;
+    }
+    #highlight-caller-popup .hcp-title {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    #highlight-caller-popup .hcp-number {
+      background-color: #f0f0f0;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      text-align: center;
+      font-weight: 500;
+    }
+    #highlight-caller-popup .hcp-actions {
+      display: flex;
+      justify-content: space-around;
+      gap: 10px;
+    }
+    #highlight-caller-popup .hcp-button {
+      display: inline-block;
+      text-decoration: none;
+      color: #fff;
+      background-color: #007bff;
+      padding: 8px 12px;
+      border-radius: 5px;
+      transition: background-color 0.2s;
+      flex-grow: 1;
+      text-align: center;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #highlight-caller-popup .hcp-button:hover {
+      background-color: #0056b3;
+    }
+    #highlight-caller-popup .hcp-close-btn {
+      position: absolute;
+      top: 5px;
+      right: 8px;
+      font-size: 20px;
+      color: #aaa;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #highlight-caller-popup .hcp-close-btn:hover {
+      color: #333;
+    }
+    #highlight-caller-popup .hcp-actions-full {
+      margin-top: 10px;
+    }
+    #highlight-caller-popup .hcp-copy-btn {
+      width: 100%;
+      background-color: #f0f0f0;
+      border: 1px solid #dcdcdc;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      padding: 8px 12px;
+      border-radius: 5px;
+      transition: background-color 0.2s;
+    }
+    #highlight-caller-popup .hcp-copy-btn:hover {
+      background-color: #e0e0e0;
+    }
+  </style>
+  <script>
+  (function () {
+    var PHONE_REGEX = /(?:\\+?1[\\s.-]?)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}/;
+    function normalize(s) {
+      var d = s.replace(/\\D/g, '');
+      if (d.length === 11 && d.charAt(0) === '1') d = d.substring(1);
+      return d;
+    }
+    var popup = null;
+    function removePopup() { if (popup) { popup.remove(); popup = null; } }
+    function createPopup(phoneNumber, evt) {
+      removePopup();
+      var clean = normalize(phoneNumber);
+      if (clean.length !== 10) return;
+      popup = document.createElement('div');
+      popup.id = 'highlight-caller-popup';
+      popup.innerHTML =
+        '<div class="hcp-title">\u8bf7\u9009\u62e9\u64cd\u4f5c</div>' +
+        '<div class="hcp-number">' + phoneNumber + '</div>' +
+        '<div class="hcp-actions">' +
+          '<a href="tel:' + clean + '" class="hcp-button" target="_blank">\ud83d\udcde \u6253\u7535\u8bdd</a>' +
+          '<a href="sms:' + clean + '" class="hcp-button" target="_blank">\ud83d\udcac \u53d1\u77ed\u4fe1</a>' +
+        '</div>' +
+        '<div class="hcp-actions-full">' +
+          '<button class="hcp-copy-btn">\ud83d\udccb \u590d\u5236\u53f7\u7801</button>' +
+        '</div>' +
+        '<div class="hcp-close-btn" title="\u5173\u95ed">\u00d7</div>';
+      document.body.appendChild(popup);
+      var rect = popup.getBoundingClientRect();
+      var top = evt.clientY + 15;
+      var left = evt.clientX;
+      if (top + rect.height > window.innerHeight) top = evt.clientY - rect.height - 15;
+      if (left + rect.width > window.innerWidth) left = window.innerWidth - rect.width - 10;
+      popup.style.top = top + 'px';
+      popup.style.left = left + 'px';
+      var closeBtn = popup.querySelector('.hcp-close-btn');
+      if (closeBtn) closeBtn.addEventListener('click', removePopup);
+      var copyBtn = popup.querySelector('.hcp-copy-btn');
+      if (copyBtn) copyBtn.addEventListener('click', function() {
+        navigator.clipboard.writeText(clean).then(function() {
+          copyBtn.textContent = '\u2705 \u5df2\u590d\u5236';
+          setTimeout(function() { if (copyBtn) copyBtn.textContent = '\ud83d\udccb \u590d\u5236\u53f7\u7801'; }, 1500);
+        });
+      });
+      popup.querySelectorAll('a.hcp-button').forEach(function(a) {
+        a.addEventListener('click', function() { setTimeout(removePopup, 100); });
+      });
+    }
+    document.addEventListener('mouseup', function(e) {
+      if (popup && popup.contains(e.target)) return;
+      var sel = window.getSelection();
+      var text = sel ? sel.toString().trim() : '';
+      if (text) {
+        var m = text.match(PHONE_REGEX);
+        if (m) { createPopup(m[0], e); } else { removePopup(); }
+      } else { removePopup(); }
+    });
+    document.addEventListener('mousedown', function(e) {
+      if (popup && !popup.contains(e.target)) removePopup();
+    });
+  })();
+  </script>
+`;
+
 // ==================== 客户端分页脚本构建器 ====================
 
 /**
@@ -1153,6 +1379,7 @@ export function displayCombinedResults(
     </div>
   </div>
   ${paginationScript}
+  ${H2C_SCRIPT_BLOCK}
 </body>
 </html>`;
 
@@ -1203,6 +1430,7 @@ export function displaySingleResult(
     </div>
   </div>
   ${paginationScript}
+  ${H2C_SCRIPT_BLOCK}
 </body>
 </html>`;
 
