@@ -1607,6 +1607,79 @@ export class QAReportTab extends BaseTab {
   }
 
   /**
+   * Story 9.6: Submit QA note via API directly
+   * Endpoint: POST /Patient/PatientGeneralNotesIFrame.aspx/PatientSaveNote2
+   * ReasonID 2289535 = "Quality Assurance"
+   */
+  private async submitQANote(
+    item: QAReportItem,
+    noteMessage: string
+  ): Promise<void> {
+    // 1. Get API params
+    const params = await this.apiProvider.getParams();
+
+    // 2. Get patient's profile ID (required as PatientID in the API)
+    const details = await this.getPatientDetails(item.admissionId);
+    if (!details.profileId) {
+      throw new Error("无法获取病人 Profile ID");
+    }
+
+    const baseUrl = ApiParamProvider.getTenantBaseUrl();
+    const url = `${baseUrl}/Patient/PatientGeneralNotesIFrame.aspx/PatientSaveNote2`;
+
+    // All numeric fields must be actual numbers (not strings) — server expects Int32
+    const officeId = parseInt(params.vendorID, 10) || 469;
+    const patientId = parseInt(details.profileId!, 10);
+
+    const payload = {
+      UserID: params.userID,
+      PatientNoteId: -1, // -1 = new note
+      Message: encodeURIComponent(noteMessage),
+      ReasonID: 2289535, // Quality Assurance
+      ReasonText: encodeURIComponent("Quality Assurance"),
+      Priority: "Normal",
+      Status: "Open",
+      FromDate: "",
+      VendorText: "-1",
+      RoleName: "",
+      PatientID: patientId,
+      InternalNote: "Yes",
+      ReplyPatientNoteId: -1,
+      ThreadID: -1,
+      EmailTo: "",
+      ProviderOfficeID: officeId,
+      Type: 0, // required Int32, 0 = standard note
+      FromDateChangeInService: "",
+      ToDateChangeInService: "",
+      ReplacementCaregiver: -1,
+      CaregiverID: -1,
+      PayerID: -1,
+      ProviderID: officeId,
+      CaregiverReasonID: -1,
+      NoteType: -1,
+      RecipientType: "",
+      RecipientGlobalID: "",
+      RecipientName: "",
+      FormId: "",
+      FormSubmissionId: "",
+      FormName: "",
+    };
+
+    console.log("[QAReportTab] Submitting QA note payload:", payload);
+
+    const result = await this.gmPost(url, payload);
+
+    // Parse inner JSON (ASP.NET PageMethod returns { d: "[...]" })
+    const inner =
+      typeof result.d === "string" ? JSON.parse(result.d) : result.d;
+    if (Array.isArray(inner) && inner.length > 0 && inner[0].ErrorDetail) {
+      throw new Error(inner[0].ErrorDetail);
+    }
+
+    console.log("[QAReportTab] QA note submitted successfully:", inner);
+  }
+
+  /**
    * Story 9.5: Open patient profile in new tab using Profile ID
    */
   private async openPatientProfile(item: QAReportItem): Promise<void> {
@@ -1659,7 +1732,7 @@ export class QAReportTab extends BaseTab {
     document.querySelector(".qa-note-modal-overlay")?.remove();
 
     // Default QA note template
-    const defaultNote = `Quality call made to pt, confirmed pt has not been admitted to hospital or rehab within the last 30 days. Pt is satisfied with current aide and or hours`;
+    const defaultNote = `Quality assurance call made to patient. Pt confirmed no hospitalizations, rehab admissions, or falls within the past 30 days. Address and contact information remain unchanged. Pt expressed satisfaction with current services, aide, and hours, and has no further questions at this time.`;
 
     // Create modal overlay
     const overlay = document.createElement("div");
@@ -1711,18 +1784,30 @@ export class QAReportTab extends BaseTab {
     // Submit button
     overlay
       .querySelector(".qa-note-btn-submit")
-      ?.addEventListener("click", () => {
+      ?.addEventListener("click", async () => {
         const additionalNote = (
           overlay.querySelector("#qa-additional-note") as HTMLTextAreaElement
         )?.value?.trim();
-        console.log("[QAReportTab] Submit QA Note:", {
-          admissionId: item.admissionId,
-          patientName: item.patientName,
-          defaultNote,
-          additionalNote,
-        });
-        closeModal();
-        this.showInfo("功能开发中 - QA Note 创建将在后续版本实现");
+        const fullNote = additionalNote
+          ? `${defaultNote}\n\n${additionalNote}`
+          : defaultNote;
+
+        const submitBtn = overlay.querySelector(
+          ".qa-note-btn-submit"
+        ) as HTMLButtonElement;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "提交中...";
+
+        try {
+          await this.submitQANote(item, fullNote);
+          closeModal();
+          this.showSuccess(`QA Note 已成功提交 - ${item.patientName}`);
+        } catch (e) {
+          console.error("[QAReportTab] Failed to submit QA note:", e);
+          submitBtn.disabled = false;
+          submitBtn.textContent = "提交并关闭";
+          this.showError("提交失败: " + (e as Error).message);
+        }
       });
 
     // ESC key to close

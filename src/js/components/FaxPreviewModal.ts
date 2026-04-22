@@ -197,6 +197,19 @@ export class FaxPreviewModal {
     const signature_block =
       this.overlay.querySelector<HTMLTextAreaElement>("#fax-sig")!.value;
     GM_setValue(CONFIG_KEY, { from_line, signature_block });
+    this.showToast("配置已保存", "success");
+  }
+
+  private showToast(message: string, type: "success" | "error" | "info"): void {
+    const toast = document.createElement("div");
+    toast.className = `qa-toast qa-toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add("show"), 10);
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
   }
 
   private loadConfig(): FaxConfig {

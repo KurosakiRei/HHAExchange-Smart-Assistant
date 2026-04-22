@@ -1070,6 +1070,7 @@ function renderDateStep(
     } else {
       state.activationDate = null;
     }
+    state.bodyHtml = null; // date changed — regenerate body on next step 4 visit
     rerenderShell();
   });
 
@@ -1084,6 +1085,7 @@ function renderDateStep(
       dateInput.value = toDateInputValue(d);
       state.activationDate = toDisplayDate(d);
       state.isDirty = true;
+      state.bodyHtml = null; // date changed — regenerate body on next step 4 visit
       rerenderShell();
     });
     return btn;

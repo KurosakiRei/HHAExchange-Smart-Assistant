@@ -18,19 +18,32 @@ const insurances = insurancesData as InsuranceRecord[];
  * 匹配顺序：
  *  1. company_name 精确匹配（忽略大小写）
  *  2. aliases 数组任一精确匹配（忽略大小写）
- *  3. 返回 null
+ *  3. displayName 以 alias 开头（处理如 "(AHC)"、"MJHS"、"RN" 等后缀变体）
+ *  4. displayName 以 company_name 开头
+ *  5. 返回 null
  */
 export function matchInsurance(displayName: string): InsuranceRecord | null {
   if (!displayName) return null;
   const needle = displayName.trim().toLowerCase();
 
+  // Pass 1: exact match
   for (const record of insurances) {
-    if (record.company_name.toLowerCase() === needle) {
+    if (record.company_name.toLowerCase() === needle) return record;
+    if (record.aliases.some((alias) => alias.toLowerCase() === needle))
       return record;
-    }
-    if (record.aliases.some((alias) => alias.toLowerCase() === needle)) {
+  }
+
+  // Pass 2: prefix match — needle starts with "<alias> " or "<company_name> "
+  // This handles location/contract suffixes like " (AHC)", " RN", " MJHS", etc.
+  for (const record of insurances) {
+    if (
+      record.aliases.some((alias) =>
+        needle.startsWith(alias.toLowerCase() + " ")
+      )
+    )
       return record;
-    }
+    if (needle.startsWith(record.company_name.toLowerCase() + " "))
+      return record;
   }
 
   return null;

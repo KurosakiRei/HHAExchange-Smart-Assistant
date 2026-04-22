@@ -30,6 +30,8 @@ import {
   initHomePageConfigCardUI,
 } from "./js/HomePage";
 import { MultiTabPanel } from "./js/MultiTabPanel";
+import { ProfileDataExtractor } from "./js/services/ProfileDataExtractor";
+import { initSearchPageEnhancements } from "./js/SearchPageEnhancements";
 import { StatusTrackingTab } from "./js/tabs/StatusTrackingTab";
 import { QAReportTab } from "./js/tabs/QAReportTab";
 import { CleanerTab } from "./js/tabs/CleanerTab";
@@ -263,6 +265,13 @@ async function main() {
 
   visitMonitor(); // Create floating button and background tracking
   highlight2Call();
+
+  // Epic 18: Profile page enhancements
+  ProfileDataExtractor.enhanceCaregiverSearchPanel();
+  ProfileDataExtractor.enhancePatientAddressLink();
+
+  // Epic 18: Search page Clear Filters buttons
+  initSearchPageEnhancements();
 
   // Initialize Multi-Tab Panel (Epic 7: Story 7.1, 7.2, 7.3)
   // This will be shown when clicking the floating button

@@ -4,6 +4,7 @@ import {
   displayCombinedResults,
   displaySingleResult,
   HhaQuickSearchParams,
+  formatPhoneNumber,
 } from "../services/HhaSearchService";
 
 export class QuickSearchTab extends BaseTab {
@@ -128,9 +129,11 @@ export class QuickSearchTab extends BaseTab {
         border-top: 1px solid #e0e0e0; background: #fafbfc;
       }
       .qs-no-result {
-        color: #666; font-size: 13px; margin-top: 8px; padding: 8px;
-        background: #fef9e7; border-radius: 4px;
-        border-left: 3px solid #f39c12; display: none;
+        margin-left: auto; padding: 3px 10px;
+        background: #fef9e7; border-radius: 12px;
+        border: 1px solid #f39c12; color: #a0522d;
+        font-size: 12px; white-space: nowrap; display: none;
+        flex-shrink: 0;
       }
       .qs-loading {
         display: none; position: absolute; inset: 0; z-index: 10;
@@ -156,7 +159,7 @@ export class QuickSearchTab extends BaseTab {
       tooltipPopup.id = TOOLTIP_ID;
       tooltipPopup.className = "qs-tooltip-popup";
       tooltipPopup.textContent =
-        "Caregiver: Caregiver Code；Patient: Admission ID (MR Number)";
+        "Caregiver: Caregiver Code；Patient: Admission ID";
       document.body.appendChild(tooltipPopup);
     }
 
@@ -168,7 +171,7 @@ export class QuickSearchTab extends BaseTab {
     header.className = "qs-header";
     const title = document.createElement("h3");
     title.className = "qs-title";
-    title.textContent = "🔍 快速搜索";
+    title.textContent = "🔍 病人/护理员快速搜索";
     header.appendChild(title);
     wrapper.appendChild(header);
 
@@ -355,11 +358,11 @@ export class QuickSearchTab extends BaseTab {
     loadingDiv.appendChild(spinner);
     body.appendChild(loadingDiv);
 
-    // ── No-result ────────────────────────────────────────────────────────────────────────────────────
+    // ── No-result (固定在 header 右侧，始终可见) ──────────────────────────────────────────────
     const noResultDiv = document.createElement("div");
     noResultDiv.className = "qs-no-result";
     noResultDiv.textContent = "未找到匹配的护理员或病人";
-    body.appendChild(noResultDiv);
+    header.appendChild(noResultDiv);
 
     // ── Validation ────────────────────────────────────────────────────────────────────────────────
     const validateConflict = () => {
@@ -383,10 +386,11 @@ export class QuickSearchTab extends BaseTab {
     const doSearch = async () => {
       if (this.isSearching || searchBtn.disabled) return;
 
+      const rawPhone = phoneInput.value.trim();
       const params: HhaQuickSearchParams = {
         lastName: lastNameInput.value.trim() || undefined,
         firstName: firstNameInput.value.trim() || undefined,
-        phone: phoneInput.value.trim() || undefined,
+        phone: rawPhone ? formatPhoneNumber(rawPhone) ?? rawPhone : undefined,
         id: idInput.value.trim() || undefined,
         ssn: ssnInput.value.trim() || undefined,
         patientId: patientIdInput.value.trim() || undefined,

@@ -1,7 +1,16 @@
 [
   {
     "company_name": "Aetna Better Health",
-    "aliases": ["Aetna Better Health of NY", "Aetna"],
+    "aliases": [
+      "Aetna Better Health of NY",
+      "Aetna Better Health of NY (AHC)",
+      "Aetna Better Health of NY (MTN)",
+      "Aetna Better Health of NY (PDE)",
+      "Aetna Better Health of NY (STI)",
+      "Aetna Better Health RN",
+      "Aetna CDPAP",
+      "Aetna"
+    ],
     "phone": "855-456-9126",
     "fax": "855-863-6421"
   },
@@ -29,7 +38,17 @@
   },
   {
     "company_name": "Elderplan/HomeFirst",
-    "aliases": ["Elderplan", "HomeFirst", "Elder Plan"],
+    "aliases": [
+      "Elderplan",
+      "Elderplan MJHS (AHC)",
+      "Elderplan MJHS (MTN)",
+      "Elderplan MJHS (PDE)",
+      "Elderplan MJHS (STI)",
+      "Elderplan CDPAS PMPM",
+      "Elderplan RN",
+      "HomeFirst",
+      "Elder Plan"
+    ],
     "phone": "718-921-7772",
     "fax": "718-759-4161"
   },

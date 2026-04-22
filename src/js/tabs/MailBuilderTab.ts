@@ -15,6 +15,7 @@ import { TimesheetNotificationTemplate } from "../services/builtin/TimesheetNoti
 import { PatientVacationTemplate } from "../services/builtin/PatientVacationTemplate";
 import { EodReportTemplate } from "../services/builtin/EodReportTemplate";
 import { EmploymentActivationTemplate } from "../services/builtin/EmploymentActivationTemplate";
+import { PageDetector } from "../services/PageDetector";
 import { matchInsurance } from "../utils/InsuranceMatcher";
 import { FaxPreviewModal } from "../components/FaxPreviewModal";
 
@@ -433,27 +434,50 @@ export class MailBuilderTab extends BaseTab {
     const list = document.createElement("div");
     list.className = "template-list";
 
-    // 内置模板 Tab：由 TimesheetNotificationTemplate 和 PatientVacationTemplate 独立渲染入口卡片
+    // 内置模板 Tab：动态排序，当前页面可用的排在前面
     if (this.activeTemplateTab === "builtin") {
       if (!this.timesheetTemplate) {
         this.timesheetTemplate = new TimesheetNotificationTemplate();
       }
-      this.timesheetTemplate.renderEntryCard(list);
-
       if (!this.patientVacationTemplate) {
         this.patientVacationTemplate = new PatientVacationTemplate();
       }
-      this.patientVacationTemplate.renderEntryCard(list);
-
       if (!this.eodReportTemplate) {
         this.eodReportTemplate = new EodReportTemplate();
       }
-      this.eodReportTemplate.renderEntryCard(list);
-
       if (!this.employmentActivationTemplate) {
         this.employmentActivationTemplate = new EmploymentActivationTemplate();
       }
-      this.employmentActivationTemplate.renderEntryCard(list);
+
+      const pageType = PageDetector.getCurrentPageType();
+
+      // 每条记录包含「当前页可用」标志和渲染函数
+      const entries: Array<{
+        isActive: boolean;
+        render: (container: HTMLElement) => void;
+      }> = [
+        {
+          isActive: pageType === "PREBILLING",
+          render: (c) => this.timesheetTemplate!.renderEntryCard(c),
+        },
+        {
+          isActive: pageType === "PATIENT_PROFILE",
+          render: (c) => this.patientVacationTemplate!.renderEntryCard(c),
+        },
+        {
+          isActive: true, // 任意页面
+          render: (c) => this.eodReportTemplate!.renderEntryCard(c),
+        },
+        {
+          isActive: true, // 任意页面
+          render: (c) => this.employmentActivationTemplate!.renderEntryCard(c),
+        },
+      ];
+
+      // 先渲染当前页可用的模板，再渲染不可用的（移到底部）
+      entries.filter((e) => e.isActive).forEach((e) => e.render(list));
+      entries.filter((e) => !e.isActive).forEach((e) => e.render(list));
+
       return list;
     }
 
