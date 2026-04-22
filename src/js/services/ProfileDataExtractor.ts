@@ -373,6 +373,114 @@ export class ProfileDataExtractor {
   }
 
   /**
+   * Epic 18: 将 Aide_ns.aspx 搜索面板移到侧边栏顶部（sideNav Tab 列表之前），
+   * 并重排字段为 Last Name → First Name → Caregiver Code
+   */
+  static enhanceCaregiverSearchPanel(): void {
+    if (!window.location.href.includes("Aide_ns.aspx")) return;
+
+    const tryEnhance = (): boolean => {
+      const leftNav = document.querySelector(
+        ".hhax-left-nav"
+      ) as HTMLElement | null;
+      const sideNav = leftNav?.querySelector(".sideNav") as HTMLElement | null;
+      const formDiv = document.getElementById("formDiv");
+      if (!leftNav || !sideNav || !formDiv) return false;
+
+      // Move search panel to top of sidebar (before the tab navigation)
+      if (leftNav.firstElementChild !== formDiv) {
+        leftNav.insertBefore(formDiv, sideNav);
+      }
+
+      // Reorder search fields: Last Name → First Name → Caregiver Code
+      const firstNameInput = document.getElementById(
+        "ctl00_ContentPlaceHolder1_uxtxtFirstName"
+      );
+      const lastNameInput = document.getElementById(
+        "ctl00_ContentPlaceHolder1_uxtxtLastName"
+      );
+      const firstNameLabel = firstNameInput?.closest("label");
+      const lastNameLabel = lastNameInput?.closest("label");
+
+      if (
+        firstNameLabel &&
+        lastNameLabel &&
+        firstNameLabel.parentElement === lastNameLabel.parentElement
+      ) {
+        const parent = firstNameLabel.parentElement!;
+        const children = Array.from(parent.children);
+        const fnIdx = children.indexOf(firstNameLabel);
+        const lnIdx = children.indexOf(lastNameLabel);
+        if (lnIdx > fnIdx) {
+          parent.insertBefore(lastNameLabel, firstNameLabel);
+        }
+      }
+
+      return true;
+    };
+
+    if (!tryEnhance()) {
+      const interval = window.setInterval(() => {
+        if (tryEnhance()) window.clearInterval(interval);
+      }, 300);
+      window.setTimeout(() => window.clearInterval(interval), 15000);
+    }
+  }
+
+  /**
+   * Epic 18: 让 InternalPatientInfo_ns.aspx 页面的地址文字可点击打开 Google Maps。
+   * 修复：userscript 沙箱无法调用页面全局函数 OpenMapPatient()，
+   * 改为直接触发同行的地图图标 anchor 元素的 click()，该元素的 onclick HTML 属性
+   * 在页面上下文中执行，可以正常调用 OpenMapPatient()。
+   */
+  static enhancePatientAddressLink(): void {
+    if (!window.location.href.includes("InternalPatientInfo_ns.aspx")) return;
+
+    const tryEnhance = (): boolean => {
+      const addressEl = document.getElementById(
+        "ctl00_ContentPlaceHolder1_PatientInfo1_uxLblAddress"
+      ) as HTMLAnchorElement | null;
+      if (!addressEl) return false;
+
+      // Idempotent guard
+      if (addressEl.dataset.hhaMapEnhanced) return true;
+      addressEl.dataset.hhaMapEnhanced = "1";
+
+      addressEl.style.cursor = "pointer";
+      addressEl.addEventListener("click", (e) => {
+        e.preventDefault();
+        // Find the map icon anchor whose onclick attribute calls OpenMapPatient()
+        // in the page context (works around the userscript sandbox restriction)
+        const mapIconAnchor =
+          addressEl
+            .closest(".activelink")
+            ?.querySelector<HTMLAnchorElement>('a[aria-label*="Map"]') ??
+          document.querySelector<HTMLAnchorElement>("#IDuxLblAddress a");
+        if (mapIconAnchor) {
+          mapIconAnchor.click();
+        } else {
+          // Fallback: open Google Maps search URL directly
+          const addr = addressEl.textContent?.trim();
+          if (addr) {
+            window.open(
+              `https://www.google.com/maps/search/${encodeURIComponent(addr)}`,
+              "_blank"
+            );
+          }
+        }
+      });
+      return true;
+    };
+
+    if (!tryEnhance()) {
+      const interval = window.setInterval(() => {
+        if (tryEnhance()) window.clearInterval(interval);
+      }, 300);
+      window.setTimeout(() => window.clearInterval(interval), 15000);
+    }
+  }
+
+  /**
    * 清理资源
    */
   static cleanup(): void {

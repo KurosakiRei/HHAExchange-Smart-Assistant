@@ -78,7 +78,7 @@ async function extractAndInitiateSearch(
 }
 
 // 按钮文本常量
-const SEARCH_BTN_TEXT_DEFAULT = "在HHA中搜索此号码 (Aide & Patient)";
+const SEARCH_BTN_TEXT_DEFAULT = "在HHA中搜索此号码";
 const SEARCH_BTN_TEXT_SEARCHING = "⏳ 正在HHA中搜索...";
 
 /**

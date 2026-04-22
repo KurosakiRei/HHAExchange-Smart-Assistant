@@ -8,7 +8,7 @@ import {
 export const createNewQA = async () =>
   await messageHandler(
     "Quality Assurance",
-    "Quality call made to pt, confirmed pt has not been admitted to hospital or rehab within the last 30 days. Pt is satisfied with current aide and or hours"
+    "Quality assurance call made to patient. Pt confirmed no hospitalizations, rehab admissions, or falls within the past 30 days. Address and contact information remain unchanged. Pt expressed satisfaction with current services, aide, and hours, and has no further questions at this time."
   );
 
 export const createWelcomeCall = async () => {
