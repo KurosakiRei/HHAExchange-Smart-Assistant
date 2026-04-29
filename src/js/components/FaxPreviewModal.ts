@@ -14,6 +14,8 @@ export interface FaxPreviewModalOptions {
   profileData: ProfileData;
   insuranceName: string;
   insuranceRecord: InsuranceRecord | null;
+  initialCommand?: string;
+  initialBody?: string;
   onClose?: () => void;
 }
 
@@ -37,6 +39,8 @@ export class FaxPreviewModal {
   open(): void {
     const config = this.loadConfig();
     const { profileData, insuranceName, insuranceRecord } = this.options;
+    const initialCommand = this.options.initialCommand || "";
+    const initialBody = this.options.initialBody || "";
 
     const faxNumber = insuranceRecord?.fax || "—";
     const phoneNumber = insuranceRecord?.phone || "—";
@@ -84,11 +88,15 @@ export class FaxPreviewModal {
             </div>
             <div class="fax-field-row">
               <label class="fax-field-label" for="fax-command">简述</label>
-              <input id="fax-command" class="template-form-input" type="text" placeholder="例：请更新患者电话" />
+              <input id="fax-command" class="template-form-input" type="text" placeholder="例：请更新患者电话" value="${this.esc(
+                initialCommand
+              )}" />
             </div>
             <div class="fax-field-row">
               <label class="fax-field-label" for="fax-body">正文</label>
-              <textarea id="fax-body" class="template-form-input fax-field-textarea" placeholder="正文内容..."></textarea>
+              <textarea id="fax-body" class="template-form-input fax-field-textarea" placeholder="正文内容...">${this.esc(
+                initialBody
+              )}</textarea>
             </div>
           </div>
           <div class="fax-config-section">

@@ -1290,10 +1290,27 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     padding: 12px 20px;
     border-top: 1px solid #e0e0e0;
     background: #f9f9f9;
     gap: 10px;
+}
+
+.pv-footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pv-secondary-btn {
+    white-space: nowrap;
+}
+
+.pv-outlook-btn {
+    margin-left: auto;
 }
 
 /* Split Button */
@@ -1373,6 +1390,10 @@
         background: #856404;
         color: #fff8e1;
     }
+}
+
+.pv-note-modal-overlay {
+    z-index: 100003;
 }
 
 // ============================================================================

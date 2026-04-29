@@ -15,10 +15,13 @@ import GM_fetch from "@trim21/gm-fetch";
 import { PageDetector, PageType } from "../PageDetector";
 import { MailService } from "../MailService";
 import { ApiParamProvider } from "../ApiParamProvider";
+import { ProfileDataExtractor } from "../ProfileDataExtractor";
 import {
   PatientCalendarApiProvider,
   CalendarApiParams,
 } from "../PatientCalendarApiProvider";
+import { matchInsurance } from "../../utils/InsuranceMatcher";
+import { FaxPreviewModal } from "../../components/FaxPreviewModal";
 
 declare function GM_getValue<T>(key: string, defaultValue: T): T;
 declare function GM_setValue(key: string, value: string): void;
@@ -225,7 +228,20 @@ export class PatientVacationTemplate {
 
   private extractPatientId(): string {
     const params = new URLSearchParams(window.location.search);
-    return params.get("PatientId") || params.get("PatientID") || "[无法获取]";
+    const direct =
+      params.get("PatientID") ||
+      params.get("PatientId") ||
+      params.get("Patientid");
+    if (direct) return direct;
+
+    // HHA 页面参数大小写不稳定，兜底按 key 小写匹配
+    for (const [key, value] of params.entries()) {
+      if (key.toLowerCase() === "patientid" && value) {
+        return value;
+      }
+    }
+
+    return "[无法获取]";
   }
 
   // ─── API Calls ─────────────────────────────────────────────────────────────
@@ -366,10 +382,6 @@ export class PatientVacationTemplate {
       callerInfo: params.callerInfo,
     };
 
-    const baseUrl = ApiParamProvider.getTenantBaseUrl().replace(
-      /https:\/\/app\.hhaexchange\.com/,
-      "https://app.hhaexchange.com"
-    );
     const url = `https://app.hhaexchange.com${params.hhwsPath}Calender.asmx/GetCalendarVacationInfo`;
 
     const r = (await GM_fetch(url, {
@@ -379,10 +391,9 @@ export class PatientVacationTemplate {
     })) as Response & { rawBody: Blob };
 
     const text = await r.rawBody.text();
-    const outer = JSON.parse(text) as { d: string };
-    const inner = JSON.parse(outer.d) as {
+    const inner = this.parseCalendarApiResponse<{
       PatientVacationInfo: VacationInfoRecord[];
-    };
+    }>(text, "GetCalendarVacationInfo");
     return inner.PatientVacationInfo || [];
   }
 
@@ -412,9 +423,54 @@ export class PatientVacationTemplate {
     })) as Response & { rawBody: Blob };
 
     const text = await r.rawBody.text();
-    const outer = JSON.parse(text) as { d: string };
-    const inner = JSON.parse(outer.d) as { VisitInfo: VisitInfoRecord[] };
+    const inner = this.parseCalendarApiResponse<{
+      VisitInfo: VisitInfoRecord[];
+    }>(text, "GetCalendarVisitInfo");
     return inner.VisitInfo || [];
+  }
+
+  private parseCalendarApiResponse<T>(text: string, apiName: string): T {
+    const body = text?.trim() ?? "";
+    if (!body) {
+      throw new Error(`[PVTemplate] ${apiName} returned empty response body`);
+    }
+
+    let outer: { d?: string | T };
+    try {
+      outer = JSON.parse(body) as { d?: string | T };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      throw new Error(
+        `[PVTemplate] ${apiName} outer JSON parse failed: ${msg}; body=${body.slice(
+          0,
+          120
+        )}`
+      );
+    }
+
+    if (typeof outer.d === "string") {
+      const innerText = outer.d.trim();
+      if (!innerText) {
+        throw new Error(`[PVTemplate] ${apiName} returned empty response.d`);
+      }
+      try {
+        return JSON.parse(innerText) as T;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        throw new Error(
+          `[PVTemplate] ${apiName} inner JSON parse failed: ${msg}; d=${innerText.slice(
+            0,
+            120
+          )}`
+        );
+      }
+    }
+
+    if (outer.d && typeof outer.d === "object") {
+      return outer.d;
+    }
+
+    throw new Error(`[PVTemplate] ${apiName} invalid response payload shape`);
   }
 
   // ─── Last Service Date ─────────────────────────────────────────────────────
@@ -709,12 +765,16 @@ export class PatientVacationTemplate {
         <!-- Footer Actions -->
         <div class="pv-modal-footer">
           <button class="template-modal-btn btn-save pv-save-config-btn" id="pv-save-config" disabled>保存配置</button>
-          <div class="pv-split-btn" id="pv-copy-split">
-            <button class="template-modal-btn btn-save pv-copy-main" id="pv-copy-body">复制正文</button>
-            <button class="template-modal-btn btn-save pv-copy-chevron" id="pv-copy-chevron">▾</button>
-            <div class="pv-split-dropdown" id="pv-split-dropdown" style="display:none;">
-              <button id="pv-copy-subject">复制主题</button>
+          <div class="pv-footer-actions">
+            <div class="pv-split-btn" id="pv-copy-split">
+              <button class="template-modal-btn btn-save pv-copy-main" id="pv-copy-body">复制正文</button>
+              <button class="template-modal-btn btn-save pv-copy-chevron" id="pv-copy-chevron">▾</button>
+              <div class="pv-split-dropdown" id="pv-split-dropdown" style="display:none;">
+                <button id="pv-copy-subject">复制主题</button>
+              </div>
             </div>
+            <button class="template-modal-btn btn-save pv-secondary-btn" id="pv-open-fax">创建传真模板</button>
+            <button class="template-modal-btn btn-save pv-secondary-btn" id="pv-open-note">创建General Notes</button>
           </div>
           <button class="template-modal-btn btn-save pv-outlook-btn" id="pv-outlook">▶ Outlook</button>
         </div>
@@ -731,15 +791,15 @@ export class PatientVacationTemplate {
   }
 
   private buildBodyHtml(data: VacationData): string {
-    return `Hello,<br><br>The patient will be on vacation from ${this.escapeHtml(
-      data.vacationStart
-    )} to ${this.escapeHtml(
-      data.vacationEnd
-    )}. The last day of service will be ${this.escapeHtml(
-      data.lastServiceDate
-    )} and the resumption of service will be ${this.escapeHtml(
-      data.resumptionDate
-    )}.`;
+    return `Hello,<br><br>${this.escapeHtml(this.buildCoreBodyText(data))}`;
+  }
+
+  private buildCoreBodyText(data: VacationData): string {
+    return `The patient will be on vacation from ${data.vacationStart} to ${data.vacationEnd}. The last day of service will be ${data.lastServiceDate} and the resumption of service will be ${data.resumptionDate}.`;
+  }
+
+  private buildFaxSummaryText(data: VacationData): string {
+    return `The patient will be on vacation from ${data.vacationStart} to ${data.vacationEnd}.`;
   }
 
   private setupModalHandlers(
@@ -804,8 +864,7 @@ export class PatientVacationTemplate {
     const dropdown = overlay.querySelector("#pv-split-dropdown") as HTMLElement;
 
     overlay.querySelector("#pv-copy-body")?.addEventListener("click", () => {
-      const html = bodyEditor.innerHTML;
-      this.copyHtml(html);
+      this.copyText(this.buildCoreBodyText(data));
       this.showToast("✅ 已复制", "success");
     });
 
@@ -830,6 +889,14 @@ export class PatientVacationTemplate {
       this.showToast("✅ 已复制", "success");
     });
 
+    overlay.querySelector("#pv-open-fax")?.addEventListener("click", () => {
+      this.openVacationFaxModal(data);
+    });
+
+    overlay.querySelector("#pv-open-note")?.addEventListener("click", () => {
+      this.openCalendarNoteModal(data);
+    });
+
     // Close dropdown when clicking elsewhere
     document.addEventListener(
       "click",
@@ -844,11 +911,9 @@ export class PatientVacationTemplate {
       if (checkDirty()) {
         this.showUnsavedConfirm(() => {
           this.doSendOutlook(subjectInput, bodyEditor, currentSaved);
-          this.closeModal(overlay);
         });
       } else {
         this.doSendOutlook(subjectInput, bodyEditor, currentSaved);
-        this.closeModal(overlay);
       }
     });
 
@@ -859,36 +924,15 @@ export class PatientVacationTemplate {
     });
   }
 
-  private copyHtml(html: string): void {
-    // Use Clipboard API with text/html support
-    const blob = new Blob([html], { type: "text/html" });
-    const plainBlob = new Blob([this.htmlToText(html)], { type: "text/plain" });
-    const item = new ClipboardItem({
-      "text/html": blob,
-      "text/plain": plainBlob,
-    });
-    navigator.clipboard?.write([item]).catch(() => {
-      // Fallback: execCommand
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = html;
-      tempDiv.style.position = "absolute";
-      tempDiv.style.left = "-99999px";
-      document.body.appendChild(tempDiv);
-      const sel = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(tempDiv);
-      sel?.removeAllRanges();
-      sel?.addRange(range);
+  private copyText(text: string): void {
+    navigator.clipboard?.writeText(text).catch(() => {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
       document.execCommand("copy");
-      sel?.removeAllRanges();
-      tempDiv.remove();
+      ta.remove();
     });
-  }
-
-  private htmlToText(html: string): string {
-    const div = document.createElement("div");
-    div.innerHTML = html;
-    return div.innerText || div.textContent || "";
   }
 
   private doSendOutlook(
@@ -909,6 +953,384 @@ export class PatientVacationTemplate {
       subject: subjectInput.value,
       body: bodyEditor.innerHTML,
     });
+  }
+
+  private openVacationFaxModal(data: VacationData): void {
+    const profileData = ProfileDataExtractor.extract();
+    if (!profileData || profileData.type !== "PATIENT") {
+      this.showToast(
+        "⚠️ 当前页面无法提取病人信息，不能创建传真模板",
+        "warning"
+      );
+      return;
+    }
+
+    const insuranceName =
+      profileData.insurances?.[0] || profileData.insurance || "";
+    if (!insuranceName) {
+      this.showToast("⚠️ 未找到保险信息，不能创建传真模板", "warning");
+      return;
+    }
+
+    const insuranceRecord = matchInsurance(insuranceName);
+    const modal = new FaxPreviewModal({
+      profileData,
+      insuranceName,
+      insuranceRecord,
+      initialCommand: this.buildFaxSummaryText(data),
+      initialBody: this.buildCoreBodyText(data),
+    });
+    modal.open();
+  }
+
+  private openCalendarNoteModal(data: VacationData): void {
+    document.querySelector(".pv-note-modal-overlay")?.remove();
+
+    const defaultNote = this.buildCoreBodyText(data);
+    const noteHtml = this.escapeHtml(defaultNote).replace(/\n/g, "<br>");
+    const safePatient = this.escapeHtml(data.patientName || "Patient");
+    const safeAdmission = this.escapeHtml(data.admissionId || "-");
+
+    const overlay = document.createElement("div");
+    overlay.className = "qa-note-modal-overlay pv-note-modal-overlay";
+    overlay.innerHTML = `
+      <div class="qa-note-modal">
+        <div class="qa-note-modal-header">
+          <div class="qa-note-modal-title">📝 创建 General Notes - ${safePatient} (${safeAdmission})</div>
+          <button class="qa-note-modal-close" type="button">&times;</button>
+        </div>
+        <div class="qa-note-modal-body">
+          <div class="qa-note-section">
+            <label class="qa-note-label">将提交以下 Calendar Note:</label>
+            <div class="qa-note-template">${noteHtml}</div>
+          </div>
+          <div class="qa-note-section">
+            <label class="qa-note-label" for="pv-note-extra">附加备注 (可选):</label>
+            <textarea
+              id="pv-note-extra"
+              class="qa-note-textarea"
+              placeholder="在此输入附加信息..."
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+        <div class="qa-note-modal-footer">
+          <button class="qa-note-btn qa-note-btn-cancel" type="button">取消</button>
+          <button class="qa-note-btn qa-note-btn-submit" type="button">提交并关闭</button>
+        </div>
+      </div>
+    `;
+
+    const closeModal = () => {
+      overlay.remove();
+      document.removeEventListener("keydown", escHandler);
+    };
+
+    const escHandler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeModal();
+      }
+    };
+
+    overlay
+      .querySelector(".qa-note-modal-close")
+      ?.addEventListener("click", closeModal);
+    overlay
+      .querySelector(".qa-note-btn-cancel")
+      ?.addEventListener("click", closeModal);
+
+    overlay
+      .querySelector(".qa-note-btn-submit")
+      ?.addEventListener("click", async () => {
+        const submitBtn = overlay.querySelector(
+          ".qa-note-btn-submit"
+        ) as HTMLButtonElement;
+        const extra = (
+          overlay.querySelector("#pv-note-extra") as HTMLTextAreaElement
+        )?.value?.trim();
+        const fullNote = extra ? `${defaultNote}\n\n${extra}` : defaultNote;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "提交中...";
+
+        try {
+          await this.submitCalendarNote(data, fullNote);
+          closeModal();
+          this.showToast("✅ General Notes 已创建", "success");
+        } catch (e) {
+          console.error("[PVTemplate] Failed to submit Calendar Note:", e);
+          submitBtn.disabled = false;
+          submitBtn.textContent = "提交并关闭";
+          this.showToast(`⚠️ 创建失败: ${(e as Error).message}`, "warning");
+        }
+      });
+
+    document.addEventListener("keydown", escHandler);
+    document.body.appendChild(overlay);
+
+    setTimeout(() => {
+      (overlay.querySelector("#pv-note-extra") as HTMLTextAreaElement)?.focus();
+    }, 50);
+  }
+
+  private async submitCalendarNote(
+    data: VacationData,
+    noteMessage: string
+  ): Promise<void> {
+    const rawPatientId =
+      data.patientId && data.patientId !== "[无法获取]"
+        ? data.patientId
+        : this.extractPatientId();
+    const patientId = parseInt(rawPatientId, 10);
+    if (!Number.isFinite(patientId)) {
+      throw new Error("无法获取病人 Patient ID");
+    }
+
+    const params = await ApiParamProvider.getInstance().getParams();
+    const baseUrl = ApiParamProvider.getTenantBaseUrl();
+    const reason = await this.resolveCalendarNoteReason(baseUrl, patientId);
+    const officeId = parseInt(params.vendorID, 10) || 469;
+
+    const payload = {
+      UserID: params.userID,
+      PatientNoteId: -1,
+      Message: encodeURIComponent(noteMessage),
+      ReasonID: reason.id,
+      ReasonText: encodeURIComponent(reason.text),
+      Priority: "Normal",
+      Status: "Open",
+      FromDate: "",
+      VendorText: "-1",
+      RoleName: "",
+      PatientID: patientId,
+      InternalNote: "Yes",
+      ReplyPatientNoteId: -1,
+      ThreadID: -1,
+      EmailTo: "",
+      ProviderOfficeID: officeId,
+      Type: 0,
+      FromDateChangeInService: "",
+      ToDateChangeInService: "",
+      ReplacementCaregiver: -1,
+      CaregiverID: -1,
+      PayerID: -1,
+      ProviderID: officeId,
+      CaregiverReasonID: -1,
+      NoteType: -1,
+      RecipientType: "",
+      RecipientGlobalID: "",
+      RecipientName: "",
+      FormId: "",
+      FormSubmissionId: "",
+      FormName: "",
+    };
+
+    const url = `${baseUrl}/Patient/PatientGeneralNotesIFrame.aspx/PatientSaveNote2`;
+    const result = await this.postJson(url, payload);
+
+    let inner = result?.d;
+    if (typeof inner === "string") {
+      try {
+        inner = JSON.parse(inner);
+      } catch {
+        throw new Error("创建 Note 返回格式异常");
+      }
+    }
+
+    if (Array.isArray(inner) && inner.length > 0 && inner[0]?.ErrorDetail) {
+      throw new Error(inner[0].ErrorDetail);
+    }
+  }
+
+  private async resolveCalendarNoteReason(
+    baseUrl: string,
+    patientId: number
+  ): Promise<{ id: number; text: string }> {
+    const url = `${baseUrl}/Patient/PatientGeneralNotesIFrame.aspx?PatientID=${patientId}`;
+    const r = (await GM_fetch(url, {
+      method: "GET",
+      credentials: "include",
+    })) as Response & { rawBody: Blob };
+    const html = await r.rawBody.text();
+
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const target = Array.from(doc.querySelectorAll("option")).find((opt) =>
+      /calendar\s*note/i.test((opt.textContent || "").trim())
+    );
+
+    if (target) {
+      const reasonId = parseInt(target.getAttribute("value") || "", 10);
+      if (Number.isFinite(reasonId)) {
+        return {
+          id: reasonId,
+          text: (target.textContent || "Calendar Note").trim(),
+        };
+      }
+    }
+
+    const fromApi = await this.resolveCalendarNoteReasonFromNotificationApi();
+    if (fromApi) return fromApi;
+
+    throw new Error(
+      "未找到 Calendar Note 的 ReasonID，请确认当前租户已配置该 Note 类型"
+    );
+  }
+
+  private async resolveCalendarNoteReasonFromNotificationApi(): Promise<{
+    id: number;
+    text: string;
+  } | null> {
+    const params = await ApiParamProvider.getInstance().getParams();
+    const messageApiBase = `https://app.hhaexchange.com/ENTP${params.version.replace(
+      ".",
+      ""
+    )}010000`;
+
+    const authHeaders = {
+      appsecret: params.appSecret,
+      appname: params.appName,
+    };
+
+    const offices = await this.postJsonWithHeaders(
+      `${messageApiBase}/api/Common/GetAllOffices`,
+      {
+        appVersion: params.appVersion,
+        version: params.version,
+        minorVersion: params.minorVersion,
+        userID: params.userID,
+        SelectionType: "filter",
+        PermissionName: "Smart Map Beta",
+      },
+      authHeaders
+    );
+
+    const officeIds = Array.isArray(offices)
+      ? offices
+          .filter(
+            (o: { OfficeID: number; Type: string }) =>
+              o.OfficeID > 0 && o.Type === "1"
+          )
+          .map((o: { OfficeID: number }) => o.OfficeID)
+      : [];
+
+    if (officeIds.length === 0) {
+      return null;
+    }
+
+    const payerData = await this.postJsonWithHeaders(
+      `${messageApiBase}/api/PayerNotification/GetContractPayersList`,
+      {
+        appVersion: params.appVersion,
+        version: params.version,
+        minorVersion: params.minorVersion,
+        userID: params.userID,
+        vendorId: "469",
+        listOfficeId: officeIds,
+        internalNote: "Both",
+      },
+      authHeaders
+    );
+
+    const payerList = Array.isArray(payerData?.ListPayers)
+      ? payerData.ListPayers
+      : [];
+    const payerIds = payerList
+      .map((p: { PayerId: number }) => p.PayerId)
+      .filter((n: number) => Number.isFinite(n));
+    const payerMap = payerList.map(
+      (p: { PayerId: number; LinkedContractChhaId: number }) => ({
+        key: p.PayerId,
+        value: p.LinkedContractChhaId || 0,
+      })
+    );
+
+    const reasons = await this.postJsonWithHeaders(
+      `${messageApiBase}/api/PayerNotification/GetNotificationReasonsNewLook`,
+      {
+        appVersion: params.appVersion,
+        version: params.version,
+        minorVersion: params.minorVersion,
+        userID: params.userID,
+        ListPayerId: payerIds,
+        InternalID: -1,
+        ListPayerIdWithContractChhaId: payerMap,
+        PayerCount: payerIds.length,
+        CommunicationType: 2,
+      },
+      authHeaders
+    );
+
+    if (!Array.isArray(reasons)) {
+      return null;
+    }
+
+    const normalized = reasons
+      .map((r: { ReasonId?: number; Reason?: string }) => ({
+        id: Number(r.ReasonId),
+        text: String(r.Reason || "").trim(),
+      }))
+      .filter((r: { id: number; text: string }) => Number.isFinite(r.id));
+
+    const exact = normalized.find(
+      (r: { id: number; text: string }) =>
+        r.text.toLowerCase() === "calendar note"
+    );
+    if (exact) return exact;
+
+    const fuzzy = normalized.find((r: { id: number; text: string }) =>
+      /calendar\s*note/i.test(r.text)
+    );
+    return fuzzy || null;
+  }
+
+  private async postJson(url: string, payload: unknown): Promise<any> {
+    const r = (await GM_fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    })) as Response & { rawBody: Blob };
+
+    if (!r.ok) {
+      throw new Error(`HTTP ${r.status}`);
+    }
+
+    const text = await r.rawBody.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+
+  private async postJsonWithHeaders(
+    url: string,
+    payload: unknown,
+    extraHeaders: Record<string, string>
+  ): Promise<any> {
+    const r = (await GM_fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...extraHeaders,
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    })) as Response & { rawBody: Blob };
+
+    if (!r.ok) {
+      throw new Error(`HTTP ${r.status}`);
+    }
+
+    const text = await r.rawBody.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
   }
 
   private showUnsavedConfirm(onConfirm: () => void): void {
