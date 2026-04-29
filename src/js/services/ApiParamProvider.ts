@@ -202,12 +202,17 @@ export class ApiParamProvider {
    * @returns Session info for reports API calls
    */
   public getReportsSessionInfo(): ReportsSessionInfo | null {
-    // Return cached params if available
-    if (this.reportsParams) {
+    // Return cached params if still valid
+    if (this.reportsParams && !this.isCacheExpired()) {
       return this.reportsParams;
     }
 
-    // Try to extract from current page
+    // Cache expired or not set — re-extract from current page
+    if (this.reportsParams) {
+      console.log(
+        "[ApiParamProvider] Reports session cache expired, re-extracting"
+      );
+    }
     this.reportsParams = this.extractFromReportsPage();
     return this.reportsParams;
   }
@@ -290,6 +295,14 @@ export class ApiParamProvider {
     this.reportsParams = null;
     this.cacheTimestamp = 0;
     console.log("[ApiParamProvider] Cache cleared");
+  }
+
+  /**
+   * Clear only the reports session cache, preserving app params
+   */
+  public clearReportsCache(): void {
+    this.reportsParams = null;
+    console.log("[ApiParamProvider] Reports session cache cleared");
   }
 
   /**

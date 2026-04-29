@@ -1944,10 +1944,16 @@ export class QAReportTab extends BaseTab {
    * @see Similar to VisitMonitor's apiParamProvider.get() which fetches CallMaintenance page
    */
   private reportsSessionInitialized = false;
+  private reportsSessionTimestamp = 0;
+  private static readonly REPORTS_SESSION_TTL_MS = 25 * 60 * 1000; // 25 min
 
   private async initializeReportsSession(): Promise<void> {
-    // Only initialize once per page load
-    if (this.reportsSessionInitialized) {
+    // Re-initialize if session has expired (use a shorter TTL than backend to be safe)
+    const sessionAge = Date.now() - this.reportsSessionTimestamp;
+    if (
+      this.reportsSessionInitialized &&
+      sessionAge < QAReportTab.REPORTS_SESSION_TTL_MS
+    ) {
       return;
     }
 
@@ -1970,8 +1976,11 @@ export class QAReportTab extends BaseTab {
         );
       }
 
-      // Mark as initialized
+      // Mark as initialized with timestamp
       this.reportsSessionInitialized = true;
+      this.reportsSessionTimestamp = Date.now();
+      // Also clear the ApiParamProvider reports cache so it re-extracts fresh session
+      this.apiProvider.clearReportsCache();
       console.log("[QAReportTab] Reports session initialized successfully");
     } catch (e) {
       console.error("[QAReportTab] Failed to initialize reports session:", e);
