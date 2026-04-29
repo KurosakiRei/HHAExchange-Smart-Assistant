@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.21.0
+// @version             3.21.1
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -26268,11 +26268,14 @@ class ApiParamProvider {
      * @returns Session info for reports API calls
      */
     getReportsSessionInfo() {
-        // Return cached params if available
-        if (this.reportsParams) {
+        // Return cached params if still valid
+        if (this.reportsParams && !this.isCacheExpired()) {
             return this.reportsParams;
         }
-        // Try to extract from current page
+        // Cache expired or not set — re-extract from current page
+        if (this.reportsParams) {
+            console.log("[ApiParamProvider] Reports session cache expired, re-extracting");
+        }
         this.reportsParams = this.extractFromReportsPage();
         return this.reportsParams;
     }
@@ -26341,6 +26344,13 @@ class ApiParamProvider {
         this.reportsParams = null;
         this.cacheTimestamp = 0;
         console.log("[ApiParamProvider] Cache cleared");
+    }
+    /**
+     * Clear only the reports session cache, preserving app params
+     */
+    clearReportsCache() {
+        this.reportsParams = null;
+        console.log("[ApiParamProvider] Reports session cache cleared");
     }
     /**
      * Get office IDs from JWT token
@@ -26557,6 +26567,7 @@ class QAReportTab extends BaseTab {
          * @see Similar to VisitMonitor's apiParamProvider.get() which fetches CallMaintenance page
          */
         this.reportsSessionInitialized = false;
+        this.reportsSessionTimestamp = 0;
         this.apiProvider = ApiParamProvider.getInstance();
         this.loadState();
     }
@@ -27929,8 +27940,10 @@ class QAReportTab extends BaseTab {
         return session;
     }
     async initializeReportsSession() {
-        // Only initialize once per page load
-        if (this.reportsSessionInitialized) {
+        // Re-initialize if session has expired (use a shorter TTL than backend to be safe)
+        const sessionAge = Date.now() - this.reportsSessionTimestamp;
+        if (this.reportsSessionInitialized &&
+            sessionAge < QAReportTab.REPORTS_SESSION_TTL_MS) {
             return;
         }
         try {
@@ -27945,8 +27958,11 @@ class QAReportTab extends BaseTab {
             if (!response.ok) {
                 console.warn(`[QAReportTab] Session init returned HTTP ${response.status}`);
             }
-            // Mark as initialized
+            // Mark as initialized with timestamp
             this.reportsSessionInitialized = true;
+            this.reportsSessionTimestamp = Date.now();
+            // Also clear the ApiParamProvider reports cache so it re-extracts fresh session
+            this.apiProvider.clearReportsCache();
             console.log("[QAReportTab] Reports session initialized successfully");
         }
         catch (e) {
@@ -28403,6 +28419,7 @@ class QAReportTab extends BaseTab {
         return await response.rawBody.text();
     }
 }
+QAReportTab.REPORTS_SESSION_TTL_MS = 25 * 60 * 1000; // 25 min
 
 ;// ./src/js/services/PageDetector.ts
 /**
@@ -38127,7 +38144,7 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.21.0"};
+const package_namespaceObject = {"rE":"3.21.1"};
 ;// ./src/index.ts
 // Only inject styles on HHA pages — Outlook's strict CSP blocks style-loader injection
 if (!window.location.hostname.includes("outlook") &&
