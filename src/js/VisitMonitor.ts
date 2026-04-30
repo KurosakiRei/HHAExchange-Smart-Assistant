@@ -1,11 +1,17 @@
 import GM_fetch from "@trim21/gm-fetch";
 
+const FALLBACK_TENANT_BASE_URL = "https://app.hhaexchange.com/ENT2603010000";
+let hasWarnedTenantFallback = false;
+
 /**
  * 动态检测当前 HHAExchange 租户路径前缀
  * 支持所有已知 URL 格式：ENT / HHANotification / ENTP
  * 并在同源 iframe 中尝试从父窗口推导，避免版本升级触发强制登出
  */
 function detectTenantBaseUrl(): string {
+  const host = window.location.hostname.toLowerCase();
+  const isHhaHost = host.endsWith("hhaexchange.com");
+
   // 从 URL 字符串中提取版本号（纯数字部分），支持多种前缀格式
   function extractVersion(url: string): string | null {
     // /ENT2603010000/ 直接匹配
@@ -43,10 +49,14 @@ function detectTenantBaseUrl(): string {
     /* 跨域父窗口，跳过 */
   }
 
-  console.warn(
-    "[VisitMonitor] Could not detect tenant prefix from URL, using fallback"
-  );
-  return "https://app.hhaexchange.com/ENT2603010000";
+  if (isHhaHost && !hasWarnedTenantFallback) {
+    hasWarnedTenantFallback = true;
+    console.warn(
+      "[VisitMonitor] Could not detect tenant prefix from URL, using fallback"
+    );
+  }
+
+  return FALLBACK_TENANT_BASE_URL;
 }
 
 // --- 1. TYPES & INTERFACES ---

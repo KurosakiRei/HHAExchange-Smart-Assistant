@@ -14,6 +14,9 @@
 
 import GM_fetch from "@trim21/gm-fetch";
 
+const FALLBACK_TENANT_BASE_URL = "https://app.hhaexchange.com/ENT2603010000";
+let hasWarnedTenantFallback = false;
+
 // ============================================================================
 // Types & Interfaces
 // ============================================================================
@@ -69,6 +72,9 @@ export type ParamSource = "app" | "reports" | "auto";
  * 避免因服务器版本升级导致的硬编码路径失效
  */
 function detectTenantBaseUrl(): string {
+  const host = window.location.hostname.toLowerCase();
+  const isHhaHost = host.endsWith("hhaexchange.com");
+
   // 从 URL 字符串中提取版本号（纯数字部分），支持多种前缀格式
   function extractVersion(url: string): string | null {
     // /ENT2603010000/ 直接匹配
@@ -106,10 +112,14 @@ function detectTenantBaseUrl(): string {
     /* 跨域父窗口，跳过 */
   }
 
-  console.warn(
-    "[ApiParamProvider] Could not detect tenant prefix from URL, using fallback"
-  );
-  return "https://app.hhaexchange.com/ENT2603010000";
+  if (isHhaHost && !hasWarnedTenantFallback) {
+    hasWarnedTenantFallback = true;
+    console.warn(
+      "[ApiParamProvider] Could not detect tenant prefix from URL, using fallback"
+    );
+  }
+
+  return FALLBACK_TENANT_BASE_URL;
 }
 
 const CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes cache

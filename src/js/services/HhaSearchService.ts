@@ -1,5 +1,8 @@
 import GM_fetch from "@trim21/gm-fetch";
 
+const FALLBACK_TENANT_BASE_URL = "https://app.hhaexchange.com/ENT2603010000";
+let hasWarnedTenantFallback = false;
+
 // ==================== 动态 Tenant URL 检测 ====================
 
 /**
@@ -8,6 +11,9 @@ import GM_fetch from "@trim21/gm-fetch";
  * 并在同源 iframe 中尝试从父窗口推导，避免版本升级触发强制登出
  */
 export function detectTenantBaseUrl(): string {
+  const host = window.location.hostname.toLowerCase();
+  const isHhaHost = host.endsWith("hhaexchange.com");
+
   function extractVersion(url: string): string | null {
     const m1 = url.match(/\/ENT(\d+)\//);
     if (m1) return m1[1];
@@ -38,10 +44,14 @@ export function detectTenantBaseUrl(): string {
     /* 跨域父窗口，跳过 */
   }
 
-  console.warn(
-    "[HhaSearchService] Could not detect tenant prefix from URL, using fallback"
-  );
-  return "https://app.hhaexchange.com/ENT2603010000";
+  if (isHhaHost && !hasWarnedTenantFallback) {
+    hasWarnedTenantFallback = true;
+    console.warn(
+      "[HhaSearchService] Could not detect tenant prefix from URL, using fallback"
+    );
+  }
+
+  return FALLBACK_TENANT_BASE_URL;
 }
 
 // ==================== URL 常量 ====================

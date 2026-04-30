@@ -46,6 +46,18 @@ import { initScheduledVisitsConfigCardUI } from "./js/ScheduledVisitsFilter";
 
 import { version } from "../package.json";
 
+const HOST = window.location.hostname.toLowerCase();
+const IS_HHA_APP_HOST = HOST === "app.hhaexchange.com";
+const IS_HHA_REPORTS_HOST = HOST === "reports.hhaexchange.com";
+const IS_VOICE_TECH_HOST = HOST === "mt3.1voicetech.com";
+const EPIC11_DEBUG_ENABLED = (window as any).__HHA_EPIC11_DEBUG__ === true;
+
+function epic11Debug(...args: unknown[]): void {
+  if (EPIC11_DEBUG_ENABLED) {
+    console.debug(...args);
+  }
+}
+
 async function main() {
   console.log("HHA Exchange Smart Assistant " + version + " : script start");
 
@@ -56,6 +68,24 @@ async function main() {
   // Initialize OutlookAdapter if on Outlook page
   OutlookAdapter.init();
 
+  // Domain-mode bootstrap:
+  // - VoiceTech page: only incoming call assistant
+  // - HHA app page: full feature set
+  // - Other matched domains (Outlook/Office/Reports): avoid starting HHA-heavy watchers
+  if (IS_VOICE_TECH_HOST) {
+    await incomingCallHandler();
+    return;
+  }
+
+  if (!IS_HHA_APP_HOST) {
+    if (IS_HHA_REPORTS_HOST) {
+      console.log(
+        "[main] Reports domain detected, skipping app-only bootstrap"
+      );
+    }
+    return;
+  }
+
   // Preload TinyMCE in the background (fire and forget)
   // This gives it time to load before user opens the mail template editor
   TinyMCEBundler.load().catch((err) => {
@@ -64,8 +94,6 @@ async function main() {
       err
     );
   });
-
-  incomingCallHandler();
 
   async function FetchTester() {
     try {
@@ -583,12 +611,13 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
   if (pageType === "DETAIL") {
     // 获取待处理的任务队列
     const queue = CleaningController.getQueue();
-    console.warn(
-      "[Epic 11 DEBUG] Page is DETAIL. Queue object:",
-      queue,
-      "Stringified:",
-      JSON.stringify(queue)
-    );
+    epic11Debug("[Epic 11] DETAIL queue snapshot", {
+      hasQueue: !!queue,
+      status: queue?.status,
+      pageType: queue?.pageType,
+      currentIndex: queue?.currentIndex,
+      totalTasks: queue?.tasks?.length ?? 0,
+    });
 
     if (
       queue &&
@@ -598,10 +627,13 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
       // ★ 防误触判断：检查这个详情页是否由脚本刚刚点击打开（300秒内有效）
       const clickTime = GM_getValue<number>("hha_cleaner_poc_click_time", 0);
       if (Date.now() - clickTime > 300000) {
-        console.warn(
-          `[Epic 11 DEBUG] Visit detail page opened manually (or timestamp expired). clickTime: ${clickTime}, Date.now: ${Date.now()}, diff: ${
-            Date.now() - clickTime
-          }`
+        epic11Debug(
+          "[Epic 11] Skip DETAIL auto-run due to stale click timestamp",
+          {
+            clickTime,
+            now: Date.now(),
+            ageMs: Date.now() - clickTime,
+          }
         );
         return;
       }
@@ -716,11 +748,11 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
 
       return;
     } else {
-      console.warn(
-        `[Epic 11 DEBUG] Skipping DETAIL page logic. queue exists: ${!!queue}, status: ${
-          queue?.status
-        }, pageType: ${queue?.pageType}`
-      );
+      epic11Debug("[Epic 11] Skip DETAIL page logic", {
+        hasQueue: !!queue,
+        status: queue?.status,
+        pageType: queue?.pageType,
+      });
     }
   } else if (pageType === "LIST" || pageType === "CALL_MAINTENANCE") {
     // 在 Prebilling 或 Call Maintenance 列表页，检查是否有待恢复的任务
@@ -738,9 +770,11 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
     // UNKNOWN or Timeout
     const queue = CleaningController.getQueue();
     if (queue && queue.status === "IN_PROGRESS") {
-      console.warn(
-        "[Epic 11] Could not detect page type, but tasks are pending."
-      );
+      epic11Debug("[Epic 11] Page type unknown while tasks pending", {
+        status: queue.status,
+        pageType: queue.pageType,
+        currentIndex: queue.currentIndex,
+      });
     }
   }
 }
