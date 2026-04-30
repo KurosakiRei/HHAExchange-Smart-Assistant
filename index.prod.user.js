@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.21.1
+// @version             3.21.2
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -19600,6 +19600,8 @@ function getScheduleTime(ctx = document) {
 
 ;// ./src/js/services/HhaSearchService.ts
 
+const FALLBACK_TENANT_BASE_URL = "https://app.hhaexchange.com/ENT2603010000";
+let hasWarnedTenantFallback = false;
 // ==================== 动态 Tenant URL 检测 ====================
 /**
  * 动态检测当前 HHAExchange 租户路径前缀
@@ -19607,6 +19609,8 @@ function getScheduleTime(ctx = document) {
  * 并在同源 iframe 中尝试从父窗口推导，避免版本升级触发强制登出
  */
 function detectTenantBaseUrl() {
+    const host = window.location.hostname.toLowerCase();
+    const isHhaHost = host.endsWith("hhaexchange.com");
     function extractVersion(url) {
         const m1 = url.match(/\/ENT(\d+)\//);
         if (m1)
@@ -19639,8 +19643,11 @@ function detectTenantBaseUrl() {
     catch (_) {
         /* 跨域父窗口，跳过 */
     }
-    console.warn("[HhaSearchService] Could not detect tenant prefix from URL, using fallback");
-    return "https://app.hhaexchange.com/ENT2603010000";
+    if (isHhaHost && !hasWarnedTenantFallback) {
+        hasWarnedTenantFallback = true;
+        console.warn("[HhaSearchService] Could not detect tenant prefix from URL, using fallback");
+    }
+    return FALLBACK_TENANT_BASE_URL;
 }
 // ==================== URL 常量 ====================
 const _TENANT_BASE_URL = detectTenantBaseUrl();
@@ -21436,12 +21443,16 @@ const highlight2Call = () => {
 
 ;// ./src/js/VisitMonitor.ts
 
+const VisitMonitor_FALLBACK_TENANT_BASE_URL = "https://app.hhaexchange.com/ENT2603010000";
+let VisitMonitor_hasWarnedTenantFallback = false;
 /**
  * 动态检测当前 HHAExchange 租户路径前缀
  * 支持所有已知 URL 格式：ENT / HHANotification / ENTP
  * 并在同源 iframe 中尝试从父窗口推导，避免版本升级触发强制登出
  */
 function VisitMonitor_detectTenantBaseUrl() {
+    const host = window.location.hostname.toLowerCase();
+    const isHhaHost = host.endsWith("hhaexchange.com");
     // 从 URL 字符串中提取版本号（纯数字部分），支持多种前缀格式
     function extractVersion(url) {
         // /ENT2603010000/ 直接匹配
@@ -21481,8 +21492,11 @@ function VisitMonitor_detectTenantBaseUrl() {
     catch (_) {
         /* 跨域父窗口，跳过 */
     }
-    console.warn("[VisitMonitor] Could not detect tenant prefix from URL, using fallback");
-    return "https://app.hhaexchange.com/ENT2603010000";
+    if (isHhaHost && !VisitMonitor_hasWarnedTenantFallback) {
+        VisitMonitor_hasWarnedTenantFallback = true;
+        console.warn("[VisitMonitor] Could not detect tenant prefix from URL, using fallback");
+    }
+    return VisitMonitor_FALLBACK_TENANT_BASE_URL;
 }
 const visitMonitor = async () => {
     // --- FIX 1: 三层防御机制，彻底杜绝脚本重复执行 ---
@@ -25702,9 +25716,9 @@ class ProfileDataExtractor {
     }
     /**
      * Epic 18: 让 InternalPatientInfo_ns.aspx 页面的地址文字可点击打开 Google Maps。
-     * 修复：userscript 沙箱无法调用页面全局函数 OpenMapPatient()，
-     * 改为直接触发同行的地图图标 anchor 元素的 click()，该元素的 onclick HTML 属性
-     * 在页面上下文中执行，可以正常调用 OpenMapPatient()。
+     * 修复：部分页面结构下 OpenMapPatient() 会把辅助文案
+     * （如 "View on Google Maps. Opens in a new window."）拼进查询词。
+     * 这里优先使用清洗后的地址直接打开 Google Maps，避免脏文本污染。
      */
     static enhancePatientAddressLink() {
         if (!window.location.href.includes("InternalPatientInfo_ns.aspx"))
@@ -25720,21 +25734,18 @@ class ProfileDataExtractor {
             addressEl.style.cursor = "pointer";
             addressEl.addEventListener("click", (e) => {
                 e.preventDefault();
-                // Find the map icon anchor whose onclick attribute calls OpenMapPatient()
-                // in the page context (works around the userscript sandbox restriction)
+                const cleanAddress = this.extractCleanAddressText(addressEl);
+                if (cleanAddress) {
+                    window.open(`https://www.google.com/maps/search/${encodeURIComponent(cleanAddress)}`, "_blank", "noopener,noreferrer");
+                    return;
+                }
+                // Fallback: trigger map icon anchor in page context
                 const mapIconAnchor = addressEl
                     .closest(".activelink")
                     ?.querySelector('a[aria-label*="Map"]') ??
                     document.querySelector("#IDuxLblAddress a");
                 if (mapIconAnchor) {
                     mapIconAnchor.click();
-                }
-                else {
-                    // Fallback: open Google Maps search URL directly
-                    const addr = addressEl.textContent?.trim();
-                    if (addr) {
-                        window.open(`https://www.google.com/maps/search/${encodeURIComponent(addr)}`, "_blank");
-                    }
                 }
             });
             return true;
@@ -25746,6 +25757,25 @@ class ProfileDataExtractor {
             }, 300);
             window.setTimeout(() => window.clearInterval(interval), 15000);
         }
+    }
+    static extractCleanAddressText(addressEl) {
+        const directText = Array.from(addressEl.childNodes)
+            .filter((n) => n.nodeType === Node.TEXT_NODE)
+            .map((n) => n.textContent || "")
+            .join(" ");
+        const raw = directText || addressEl.textContent || "";
+        return this.sanitizeAddressText(raw);
+    }
+    static sanitizeAddressText(raw) {
+        return raw
+            .replace(/\u00a0/g, " ")
+            .replace(/view\s+on\s+google\s+maps\.?/gi, " ")
+            .replace(/opens\s+in\s+a\s+new\s+window\.?/gi, " ")
+            .replace(/^\s*address\s*[:：-]?\s*/i, "")
+            .replace(/\s+/g, " ")
+            .replace(/\s+,/g, ",")
+            .replace(/,{2,}/g, ",")
+            .trim();
     }
     /**
      * 清理资源
@@ -26142,6 +26172,8 @@ class StatusTrackingTab extends BaseTab {
  * @see docs/adr/008-qa-report-tab-implementation.md
  */
 
+const ApiParamProvider_FALLBACK_TENANT_BASE_URL = "https://app.hhaexchange.com/ENT2603010000";
+let ApiParamProvider_hasWarnedTenantFallback = false;
 // ============================================================================
 // Constants
 // ============================================================================
@@ -26151,6 +26183,8 @@ class StatusTrackingTab extends BaseTab {
  * 避免因服务器版本升级导致的硬编码路径失效
  */
 function ApiParamProvider_detectTenantBaseUrl() {
+    const host = window.location.hostname.toLowerCase();
+    const isHhaHost = host.endsWith("hhaexchange.com");
     // 从 URL 字符串中提取版本号（纯数字部分），支持多种前缀格式
     function extractVersion(url) {
         // /ENT2603010000/ 直接匹配
@@ -26190,8 +26224,11 @@ function ApiParamProvider_detectTenantBaseUrl() {
     catch (_) {
         /* 跨域父窗口，跳过 */
     }
-    console.warn("[ApiParamProvider] Could not detect tenant prefix from URL, using fallback");
-    return "https://app.hhaexchange.com/ENT2603010000";
+    if (isHhaHost && !ApiParamProvider_hasWarnedTenantFallback) {
+        ApiParamProvider_hasWarnedTenantFallback = true;
+        console.warn("[ApiParamProvider] Could not detect tenant prefix from URL, using fallback");
+    }
+    return ApiParamProvider_FALLBACK_TENANT_BASE_URL;
 }
 const CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes cache
 // ============================================================================
@@ -32319,28 +32356,126 @@ class PatientVacationTemplate {
         };
     }
     async getVacationInfo(params) {
-        const now = new Date();
-        const body = {
-            appName: params.appName,
-            appSecret: params.appSecret,
-            userID: params.userID,
-            patientID: params.patientID,
-            calendarMonth: String(now.getMonth() + 1),
-            calendarYear: String(now.getFullYear()),
-            appVersion: params.appVersion,
-            version: params.version,
-            minorVersion: params.minorVersion,
-            callerInfo: params.callerInfo,
-        };
+        const baseMonthYear = this.resolveCalendarQueryMonthYear();
+        const candidates = this.buildVacationQueryCandidates(baseMonthYear.month, baseMonthYear.year);
         const url = `https://app.hhaexchange.com${params.hhwsPath}Calender.asmx/GetCalendarVacationInfo`;
-        const r = (await GM_fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        }));
-        const text = await r.rawBody.text();
-        const inner = this.parseCalendarApiResponse(text, "GetCalendarVacationInfo");
-        return inner.PatientVacationInfo || [];
+        for (const candidate of candidates) {
+            const body = {
+                appName: params.appName,
+                appSecret: params.appSecret,
+                userID: params.userID,
+                patientID: params.patientID,
+                calendarMonth: String(candidate.month),
+                calendarYear: String(candidate.year),
+                appVersion: params.appVersion,
+                version: params.version,
+                minorVersion: params.minorVersion,
+                callerInfo: params.callerInfo,
+            };
+            const r = (await GM_fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            }));
+            const text = await r.rawBody.text();
+            const inner = this.parseCalendarApiResponse(text, "GetCalendarVacationInfo");
+            const list = inner.PatientVacationInfo || [];
+            if (list.length > 0) {
+                if (candidate.month !== baseMonthYear.month ||
+                    candidate.year !== baseMonthYear.year) {
+                    console.log(`[PVTemplate] Vacation found via fallback month ${candidate.month}/${candidate.year}; base=${baseMonthYear.month}/${baseMonthYear.year} (${baseMonthYear.source})`);
+                }
+                return list;
+            }
+        }
+        return [];
+    }
+    resolveCalendarQueryMonthYear() {
+        const now = new Date();
+        const fallback = {
+            month: now.getMonth() + 1,
+            year: now.getFullYear(),
+            source: "system-now",
+        };
+        try {
+            const iframe = document.querySelector("#iframefrmRightSide");
+            const doc = iframe?.contentDocument;
+            if (!doc)
+                return fallback;
+            const monthSelect = doc.querySelector('select[id*="ddlMonth"], select[name*="ddlMonth"], select[id*="month" i], select[name*="month" i]');
+            const yearSelect = doc.querySelector('select[id*="ddlYear"], select[name*="ddlYear"], select[id*="year" i], select[name*="year" i]');
+            if (!monthSelect || !yearSelect)
+                return fallback;
+            const year = parseInt(yearSelect.value, 10);
+            const month = this.parseCalendarMonthValue(monthSelect.value, monthSelect.selectedOptions?.[0]?.textContent ?? "");
+            if (Number.isNaN(year) ||
+                Number.isNaN(month) ||
+                year < 2000 ||
+                month < 1 ||
+                month > 12) {
+                return fallback;
+            }
+            return {
+                month,
+                year,
+                source: "calendar-ui",
+            };
+        }
+        catch (e) {
+            console.warn("[PVTemplate] Failed to resolve calendar month/year:", e);
+            return fallback;
+        }
+    }
+    parseCalendarMonthValue(rawValue, selectedText) {
+        const monthMap = {
+            january: 1,
+            february: 2,
+            march: 3,
+            april: 4,
+            may: 5,
+            june: 6,
+            july: 7,
+            august: 8,
+            september: 9,
+            october: 10,
+            november: 11,
+            december: 12,
+        };
+        const normalizedText = selectedText.trim().toLowerCase();
+        if (normalizedText && monthMap[normalizedText] !== undefined) {
+            return monthMap[normalizedText];
+        }
+        const rawNum = parseInt(rawValue, 10);
+        if (!Number.isNaN(rawNum)) {
+            // Some HHA month dropdowns are zero-based (0=Jan).
+            if (rawNum >= 0 && rawNum <= 11)
+                return rawNum + 1;
+            if (rawNum >= 1 && rawNum <= 12)
+                return rawNum;
+        }
+        const textNum = parseInt(normalizedText, 10);
+        if (!Number.isNaN(textNum) && textNum >= 1 && textNum <= 12) {
+            return textNum;
+        }
+        return Number.NaN;
+    }
+    buildVacationQueryCandidates(month, year) {
+        const candidates = [];
+        const seen = new Set();
+        // Priority: current calendar month, near-future months, then previous month.
+        for (const offset of [0, 1, 2, -1]) {
+            const d = new Date(year, month - 1 + offset, 1);
+            const candidate = {
+                month: d.getMonth() + 1,
+                year: d.getFullYear(),
+            };
+            const key = `${candidate.year}-${candidate.month}`;
+            if (seen.has(key))
+                continue;
+            seen.add(key);
+            candidates.push(candidate);
+        }
+        return candidates;
     }
     async getVisitInfo(params, month, year) {
         const url = `https://app.hhaexchange.com${params.hhwsPath}Calender.asmx/GetCalendarVisitInfo`;
@@ -38144,7 +38279,7 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.21.1"};
+const package_namespaceObject = {"rE":"3.21.2"};
 ;// ./src/index.ts
 // Only inject styles on HHA pages — Outlook's strict CSP blocks style-loader injection
 if (!window.location.hostname.includes("outlook") &&
@@ -38179,6 +38314,16 @@ if (!window.location.hostname.includes("outlook") &&
 
 
 
+const HOST = window.location.hostname.toLowerCase();
+const IS_HHA_APP_HOST = HOST === "app.hhaexchange.com";
+const IS_HHA_REPORTS_HOST = HOST === "reports.hhaexchange.com";
+const IS_VOICE_TECH_HOST = HOST === "mt3.1voicetech.com";
+const EPIC11_DEBUG_ENABLED = window.__HHA_EPIC11_DEBUG__ === true;
+function epic11Debug(...args) {
+    if (EPIC11_DEBUG_ENABLED) {
+        console.debug(...args);
+    }
+}
 async function main() {
     console.log("HHA Exchange Smart Assistant " + package_namespaceObject.rE + " : script start");
     // Set a global flag to indicate script is running (for debugging)
@@ -38186,12 +38331,25 @@ async function main() {
     window.HHA_SMART_ASSISTANT_VERSION = package_namespaceObject.rE;
     // Initialize OutlookAdapter if on Outlook page
     OutlookAdapter.init();
+    // Domain-mode bootstrap:
+    // - VoiceTech page: only incoming call assistant
+    // - HHA app page: full feature set
+    // - Other matched domains (Outlook/Office/Reports): avoid starting HHA-heavy watchers
+    if (IS_VOICE_TECH_HOST) {
+        await incomingCallHandler();
+        return;
+    }
+    if (!IS_HHA_APP_HOST) {
+        if (IS_HHA_REPORTS_HOST) {
+            console.log("[main] Reports domain detected, skipping app-only bootstrap");
+        }
+        return;
+    }
     // Preload TinyMCE in the background (fire and forget)
     // This gives it time to load before user opens the mail template editor
     TinyMCEBundler.load().catch((err) => {
         console.warn("[main] TinyMCE preload failed (will retry on modal open):", err);
     });
-    incomingCallHandler();
     async function FetchTester() {
         try {
             // 构造目标网站的搜索URL
@@ -38571,14 +38729,24 @@ async function checkAndResumeCleaningTasks() {
     if (pageType === "DETAIL") {
         // 获取待处理的任务队列
         const queue = CleaningController.getQueue();
-        console.warn("[Epic 11 DEBUG] Page is DETAIL. Queue object:", queue, "Stringified:", JSON.stringify(queue));
+        epic11Debug("[Epic 11] DETAIL queue snapshot", {
+            hasQueue: !!queue,
+            status: queue?.status,
+            pageType: queue?.pageType,
+            currentIndex: queue?.currentIndex,
+            totalTasks: queue?.tasks?.length ?? 0,
+        });
         if (queue &&
             queue.status === "IN_PROGRESS" &&
             queue.pageType === "PREBILLING") {
             // ★ 防误触判断：检查这个详情页是否由脚本刚刚点击打开（300秒内有效）
             const clickTime = GM_getValue("hha_cleaner_poc_click_time", 0);
             if (Date.now() - clickTime > 300000) {
-                console.warn(`[Epic 11 DEBUG] Visit detail page opened manually (or timestamp expired). clickTime: ${clickTime}, Date.now: ${Date.now()}, diff: ${Date.now() - clickTime}`);
+                epic11Debug("[Epic 11] Skip DETAIL auto-run due to stale click timestamp", {
+                    clickTime,
+                    now: Date.now(),
+                    ageMs: Date.now() - clickTime,
+                });
                 return;
             }
             const currentTask = queue.tasks[queue.currentIndex];
@@ -38664,7 +38832,11 @@ async function checkAndResumeCleaningTasks() {
             return;
         }
         else {
-            console.warn(`[Epic 11 DEBUG] Skipping DETAIL page logic. queue exists: ${!!queue}, status: ${queue?.status}, pageType: ${queue?.pageType}`);
+            epic11Debug("[Epic 11] Skip DETAIL page logic", {
+                hasQueue: !!queue,
+                status: queue?.status,
+                pageType: queue?.pageType,
+            });
         }
     }
     else if (pageType === "LIST" || pageType === "CALL_MAINTENANCE") {
@@ -38679,7 +38851,11 @@ async function checkAndResumeCleaningTasks() {
         // UNKNOWN or Timeout
         const queue = CleaningController.getQueue();
         if (queue && queue.status === "IN_PROGRESS") {
-            console.warn("[Epic 11] Could not detect page type, but tasks are pending.");
+            epic11Debug("[Epic 11] Page type unknown while tasks pending", {
+                status: queue.status,
+                pageType: queue.pageType,
+                currentIndex: queue.currentIndex,
+            });
         }
     }
 }
