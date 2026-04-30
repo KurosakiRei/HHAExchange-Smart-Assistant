@@ -429,9 +429,9 @@ export class ProfileDataExtractor {
 
   /**
    * Epic 18: 让 InternalPatientInfo_ns.aspx 页面的地址文字可点击打开 Google Maps。
-   * 修复：userscript 沙箱无法调用页面全局函数 OpenMapPatient()，
-   * 改为直接触发同行的地图图标 anchor 元素的 click()，该元素的 onclick HTML 属性
-   * 在页面上下文中执行，可以正常调用 OpenMapPatient()。
+   * 修复：部分页面结构下 OpenMapPatient() 会把辅助文案
+   * （如 "View on Google Maps. Opens in a new window."）拼进查询词。
+   * 这里优先使用清洗后的地址直接打开 Google Maps，避免脏文本污染。
    */
   static enhancePatientAddressLink(): void {
     if (!window.location.href.includes("InternalPatientInfo_ns.aspx")) return;
@@ -449,8 +449,20 @@ export class ProfileDataExtractor {
       addressEl.style.cursor = "pointer";
       addressEl.addEventListener("click", (e) => {
         e.preventDefault();
-        // Find the map icon anchor whose onclick attribute calls OpenMapPatient()
-        // in the page context (works around the userscript sandbox restriction)
+
+        const cleanAddress = this.extractCleanAddressText(addressEl);
+        if (cleanAddress) {
+          window.open(
+            `https://www.google.com/maps/search/${encodeURIComponent(
+              cleanAddress
+            )}`,
+            "_blank",
+            "noopener,noreferrer"
+          );
+          return;
+        }
+
+        // Fallback: trigger map icon anchor in page context
         const mapIconAnchor =
           addressEl
             .closest(".activelink")
@@ -458,15 +470,6 @@ export class ProfileDataExtractor {
           document.querySelector<HTMLAnchorElement>("#IDuxLblAddress a");
         if (mapIconAnchor) {
           mapIconAnchor.click();
-        } else {
-          // Fallback: open Google Maps search URL directly
-          const addr = addressEl.textContent?.trim();
-          if (addr) {
-            window.open(
-              `https://www.google.com/maps/search/${encodeURIComponent(addr)}`,
-              "_blank"
-            );
-          }
         }
       });
       return true;
@@ -478,6 +481,29 @@ export class ProfileDataExtractor {
       }, 300);
       window.setTimeout(() => window.clearInterval(interval), 15000);
     }
+  }
+
+  private static extractCleanAddressText(addressEl: HTMLElement): string {
+    const directText = Array.from(addressEl.childNodes)
+      .filter((n) => n.nodeType === Node.TEXT_NODE)
+      .map((n) => n.textContent || "")
+      .join(" ");
+
+    const raw = directText || addressEl.textContent || "";
+
+    return this.sanitizeAddressText(raw);
+  }
+
+  private static sanitizeAddressText(raw: string): string {
+    return raw
+      .replace(/\u00a0/g, " ")
+      .replace(/view\s+on\s+google\s+maps\.?/gi, " ")
+      .replace(/opens\s+in\s+a\s+new\s+window\.?/gi, " ")
+      .replace(/^\s*address\s*[:：-]?\s*/i, "")
+      .replace(/\s+/g, " ")
+      .replace(/\s+,/g, ",")
+      .replace(/,{2,}/g, ",")
+      .trim();
   }
 
   /**

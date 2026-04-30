@@ -68,6 +68,12 @@ interface VisitInfoRecord {
   ScheduledTime?: string;
 }
 
+interface CalendarMonthYear {
+  month: number;
+  year: number;
+  source: "calendar-ui" | "system-now";
+}
+
 // ─── Main Class ──────────────────────────────────────────────────────────────
 
 export class PatientVacationTemplate {
@@ -368,33 +374,165 @@ export class PatientVacationTemplate {
   private async getVacationInfo(
     params: CalendarApiParams
   ): Promise<VacationInfoRecord[]> {
-    const now = new Date();
-    const body = {
-      appName: params.appName,
-      appSecret: params.appSecret,
-      userID: params.userID,
-      patientID: params.patientID,
-      calendarMonth: String(now.getMonth() + 1),
-      calendarYear: String(now.getFullYear()),
-      appVersion: params.appVersion,
-      version: params.version,
-      minorVersion: params.minorVersion,
-      callerInfo: params.callerInfo,
-    };
-
+    const baseMonthYear = this.resolveCalendarQueryMonthYear();
+    const candidates = this.buildVacationQueryCandidates(
+      baseMonthYear.month,
+      baseMonthYear.year
+    );
     const url = `https://app.hhaexchange.com${params.hhwsPath}Calender.asmx/GetCalendarVacationInfo`;
 
-    const r = (await GM_fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    })) as Response & { rawBody: Blob };
+    for (const candidate of candidates) {
+      const body = {
+        appName: params.appName,
+        appSecret: params.appSecret,
+        userID: params.userID,
+        patientID: params.patientID,
+        calendarMonth: String(candidate.month),
+        calendarYear: String(candidate.year),
+        appVersion: params.appVersion,
+        version: params.version,
+        minorVersion: params.minorVersion,
+        callerInfo: params.callerInfo,
+      };
 
-    const text = await r.rawBody.text();
-    const inner = this.parseCalendarApiResponse<{
-      PatientVacationInfo: VacationInfoRecord[];
-    }>(text, "GetCalendarVacationInfo");
-    return inner.PatientVacationInfo || [];
+      const r = (await GM_fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })) as Response & { rawBody: Blob };
+
+      const text = await r.rawBody.text();
+      const inner = this.parseCalendarApiResponse<{
+        PatientVacationInfo: VacationInfoRecord[];
+      }>(text, "GetCalendarVacationInfo");
+      const list = inner.PatientVacationInfo || [];
+      if (list.length > 0) {
+        if (
+          candidate.month !== baseMonthYear.month ||
+          candidate.year !== baseMonthYear.year
+        ) {
+          console.log(
+            `[PVTemplate] Vacation found via fallback month ${candidate.month}/${candidate.year}; base=${baseMonthYear.month}/${baseMonthYear.year} (${baseMonthYear.source})`
+          );
+        }
+        return list;
+      }
+    }
+
+    return [];
+  }
+
+  private resolveCalendarQueryMonthYear(): CalendarMonthYear {
+    const now = new Date();
+    const fallback: CalendarMonthYear = {
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      source: "system-now",
+    };
+
+    try {
+      const iframe = document.querySelector<HTMLIFrameElement>(
+        "#iframefrmRightSide"
+      );
+      const doc = iframe?.contentDocument;
+      if (!doc) return fallback;
+
+      const monthSelect = doc.querySelector<HTMLSelectElement>(
+        'select[id*="ddlMonth"], select[name*="ddlMonth"], select[id*="month" i], select[name*="month" i]'
+      );
+      const yearSelect = doc.querySelector<HTMLSelectElement>(
+        'select[id*="ddlYear"], select[name*="ddlYear"], select[id*="year" i], select[name*="year" i]'
+      );
+
+      if (!monthSelect || !yearSelect) return fallback;
+
+      const year = parseInt(yearSelect.value, 10);
+      const month = this.parseCalendarMonthValue(
+        monthSelect.value,
+        monthSelect.selectedOptions?.[0]?.textContent ?? ""
+      );
+
+      if (
+        Number.isNaN(year) ||
+        Number.isNaN(month) ||
+        year < 2000 ||
+        month < 1 ||
+        month > 12
+      ) {
+        return fallback;
+      }
+
+      return {
+        month,
+        year,
+        source: "calendar-ui",
+      };
+    } catch (e) {
+      console.warn("[PVTemplate] Failed to resolve calendar month/year:", e);
+      return fallback;
+    }
+  }
+
+  private parseCalendarMonthValue(
+    rawValue: string,
+    selectedText: string
+  ): number {
+    const monthMap: Record<string, number> = {
+      january: 1,
+      february: 2,
+      march: 3,
+      april: 4,
+      may: 5,
+      june: 6,
+      july: 7,
+      august: 8,
+      september: 9,
+      october: 10,
+      november: 11,
+      december: 12,
+    };
+
+    const normalizedText = selectedText.trim().toLowerCase();
+    if (normalizedText && monthMap[normalizedText] !== undefined) {
+      return monthMap[normalizedText];
+    }
+
+    const rawNum = parseInt(rawValue, 10);
+    if (!Number.isNaN(rawNum)) {
+      // Some HHA month dropdowns are zero-based (0=Jan).
+      if (rawNum >= 0 && rawNum <= 11) return rawNum + 1;
+      if (rawNum >= 1 && rawNum <= 12) return rawNum;
+    }
+
+    const textNum = parseInt(normalizedText, 10);
+    if (!Number.isNaN(textNum) && textNum >= 1 && textNum <= 12) {
+      return textNum;
+    }
+
+    return Number.NaN;
+  }
+
+  private buildVacationQueryCandidates(
+    month: number,
+    year: number
+  ): Array<{ month: number; year: number }> {
+    const candidates: Array<{ month: number; year: number }> = [];
+    const seen = new Set<string>();
+
+    // Priority: current calendar month, near-future months, then previous month.
+    for (const offset of [0, 1, 2, -1]) {
+      const d = new Date(year, month - 1 + offset, 1);
+      const candidate = {
+        month: d.getMonth() + 1,
+        year: d.getFullYear(),
+      };
+      const key = `${candidate.year}-${candidate.month}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      candidates.push(candidate);
+    }
+
+    return candidates;
   }
 
   private async getVisitInfo(
