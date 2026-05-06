@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.21.2
+// @version             3.21.3
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -19445,8 +19445,78 @@ export const missedInOutResolver = async() => {
 } */
 function getAideName(ctx = document) {
     let aideName, flag = false;
-    // 2 Windows: 0-topWindow, 1-popupWindow
-    let topWidow = window.parent;
+    const visitDateText = $(visitDateSelector, ctx).text();
+    const tryGetParentDoc = () => {
+        try {
+            return window.parent?.document ?? null;
+        }
+        catch {
+            return null;
+        }
+    };
+    const tryGetTopDoc = () => {
+        try {
+            return window.top?.document ?? null;
+        }
+        catch {
+            return null;
+        }
+    };
+    const readInputValue = (selector) => {
+        const el = ctx.querySelector(selector);
+        const value = el?.value?.trim();
+        return value ? value : null;
+    };
+    const getAideNameFromCallReportsRow = () => {
+        const topDoc = tryGetTopDoc();
+        if (!topDoc)
+            return null;
+        const frame = topDoc.getElementById("frmCallResults");
+        const frameDoc = frame?.contentDocument;
+        if (!frameDoc)
+            return null;
+        let visitId = null;
+        try {
+            visitId = new URL(ctx.location.href).searchParams.get("VisitID");
+        }
+        catch {
+            visitId = null;
+        }
+        if (!visitId) {
+            visitId =
+                readInputValue("#hdnVisitID") ||
+                    readInputValue("input[name='VisitID']") ||
+                    null;
+        }
+        if (!visitId)
+            return null;
+        const editButtons = Array.from(frameDoc.querySelectorAll("button[title='View/Edit'], button[id$='Visitinfo']"));
+        const matchedEditButton = editButtons.find((btn) => {
+            const onclick = btn.getAttribute("onclick") || "";
+            return (onclick.includes(`,${visitId},`) ||
+                onclick.includes(`VisitID=',${visitId}`) ||
+                onclick.includes(`VisitID=${visitId}`));
+        });
+        if (!matchedEditButton)
+            return null;
+        const row = matchedEditButton.closest("tr");
+        if (!row)
+            return null;
+        const aideLink = row.querySelector("td:nth-child(4) a");
+        const aideText = aideLink?.innerText?.trim() ||
+            row.querySelector("td:nth-child(4)")?.innerText?.trim() ||
+            "";
+        return aideText || null;
+    };
+    const directCaregiverName = readInputValue("#hdnCaregiverName") ||
+        readInputValue("#hdnAideName") ||
+        readInputValue("#hidAideName") ||
+        readInputValue("#hidCaregiverName");
+    if (directCaregiverName)
+        return directCaregiverName;
+    const rowMappedAideName = getAideNameFromCallReportsRow();
+    if (rowMappedAideName)
+        return rowMappedAideName;
     // 0. Direct read from popup hidden field (NonskilledVisitInfo_ns popup, Call/Patient page)
     const hdnCGName = ctx.querySelector("#hdnCaregiverName")
         ?.value;
@@ -19454,11 +19524,10 @@ function getAideName(ctx = document) {
         return hdnCGName;
     // 1. On patient page
     if (!flag) {
-        let aideLinks = topWidow[0]?.document?.querySelectorAll("#aidelink") ?? [];
+        const parentDoc = tryGetParentDoc();
+        let aideLinks = parentDoc?.querySelectorAll("#aidelink") ?? [];
         for (const aideLink of aideLinks) {
-            if (aideLink
-                .getAttribute("onClick")
-                ?.includes($(visitDateSelector, ctx).text())) {
+            if (aideLink.getAttribute("onClick")?.includes(visitDateText)) {
                 aideName = aideLink.innerHTML.trim();
                 flag = true;
                 break;
@@ -19475,11 +19544,10 @@ function getAideName(ctx = document) {
     }
     // 3. On CHHA Patient page
     if (!flag) {
-        let hhaxLinks = topWidow[0]?.document?.querySelectorAll(".hhax-link") ?? [];
+        const parentDoc = tryGetParentDoc();
+        let hhaxLinks = parentDoc?.querySelectorAll(".hhax-link") ?? [];
         for (const hhaxLink of hhaxLinks) {
-            if (hhaxLink
-                .getAttribute("onClick")
-                ?.includes($(visitDateSelector, ctx).text())) {
+            if (hhaxLink.getAttribute("onClick")?.includes(visitDateText)) {
                 const aideProfileLink = $(hhaxLink)
                     .parent()
                     .find("a[onclick^='OpenAideProfileMax']")[0];
@@ -19517,7 +19585,7 @@ function getAideName(ctx = document) {
     }
     if (!flag) {
         aideName = "AideNotFound";
-        alert("AideNotFound");
+        console.warn("[MissedCall] Aide name not found in current context");
     }
     return aideName;
 }
@@ -21530,6 +21598,8 @@ const visitMonitor = async () => {
         "anomaly",
         "message",
     ];
+    const TRACKING_REQUEST_TIMEOUT_MS = 25000;
+    const OFFICE_IDS_TIMEOUT_MS = 12000;
     // 动态检测当前 HHAExchange 租户路径前缀，避免因服务器版本升级导致旧路径失效触发强制登出
     const TENANT_BASE_URL = VisitMonitor_detectTenantBaseUrl();
     const CALL_MAINTENANCE_URL = `${TENANT_BASE_URL}/Call/CallMaintenance_ns.aspx`;
@@ -22880,16 +22950,66 @@ const visitMonitor = async () => {
             };
         }
     }
+    function withTimeout(promise, timeoutMs, label) {
+        return new Promise((resolve, reject) => {
+            const timerId = window.setTimeout(() => {
+                reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+            }, timeoutMs);
+            promise.then((value) => {
+                window.clearTimeout(timerId);
+                resolve(value);
+            }, (error) => {
+                window.clearTimeout(timerId);
+                reject(error);
+            });
+        });
+    }
+    function normalizeOfficeIds(raw) {
+        if (!raw)
+            return null;
+        const ids = raw
+            .split(",")
+            .map((id) => Number(id.trim()))
+            .filter((id) => Number.isFinite(id) && id > 0);
+        if (ids.length === 0)
+            return null;
+        return Array.from(new Set(ids)).join(",");
+    }
+    function getOfficeIdsFromSearchResultsFrame() {
+        const frame = document.getElementById("frmCallResults");
+        const src = frame?.getAttribute("src") || frame?.src;
+        if (!src)
+            return null;
+        try {
+            const resolved = new URL(src, window.location.href);
+            return normalizeOfficeIds(resolved.searchParams.get("OfficeId"));
+        }
+        catch {
+            const match = src.match(/[?&]OfficeId=([^&]+)/i);
+            if (!match)
+                return null;
+            return normalizeOfficeIds(decodeURIComponent(match[1]));
+        }
+    }
     /**
      * 获取并缓存所有 Office IDs
      */
     async function getOfficeIds() {
         if (officeIdString)
             return officeIdString;
-        const r = (await GM_fetch(CALL_MAINTENANCE_URL, {
+        const officeIdsFromFrame = getOfficeIdsFromSearchResultsFrame();
+        if (officeIdsFromFrame) {
+            officeIdString = officeIdsFromFrame;
+            return officeIdString;
+        }
+        const maintenanceRes = await withTimeout(fetch(CALL_MAINTENANCE_URL, {
             method: "GET",
-        }));
-        const textResult = await r.rawBody.text();
+            credentials: "include",
+        }), OFFICE_IDS_TIMEOUT_MS, "CallMaintenance request");
+        if (!maintenanceRes.ok) {
+            throw new Error(`Failed to load CallMaintenance page: ${maintenanceRes.status} ${maintenanceRes.statusText}`);
+        }
+        const textResult = await maintenanceRes.text();
         const getParam = (name) => textResult.match(new RegExp(`var\\s+${name}\\s*=\\s*['"]([^'"]+)['"];`))?.[1];
         const apiParams = {
             userID: getParam("gnUserID"),
@@ -22899,6 +23019,9 @@ const visitMonitor = async () => {
             minorVersion: getParam("gnMinorVersion"),
             appName: getParam("gnApNm"),
         };
+        if (!apiParams.userID || !apiParams.appVersion || !apiParams.version) {
+            throw new Error("Failed to extract office API parameters from page");
+        }
         const officeUrl = `https://app.hhaexchange.com/HHAWS${apiParams.appVersion}${apiParams.version.replace(".", "")}010000/Office.asmx/GetAllOffices`;
         const officePayload = {
             ...apiParams,
@@ -22908,19 +23031,31 @@ const visitMonitor = async () => {
             selectedOfficeID: "-1",
             selectionType: "Filter",
         };
-        // FIXED: Corrected the GM_fetch call and response handling
-        const officeRes = (await GM_fetch(officeUrl, {
+        const officeRes = await withTimeout(fetch(officeUrl, {
             method: "POST",
+            credentials: "include",
             headers: { "Content-Type": "application/json; charset=UTF-8" },
             body: JSON.stringify(officePayload),
-        }));
-        const officeText = await officeRes.rawBody.text();
+        }), OFFICE_IDS_TIMEOUT_MS, "GetAllOffices request");
+        if (!officeRes.ok) {
+            throw new Error(`Failed to fetch office list: ${officeRes.status} ${officeRes.statusText}`);
+        }
+        const officeText = await officeRes.text();
         const officeData = JSON.parse(officeText);
-        const offices = JSON.parse(officeData.d);
-        const officeIDs = offices
+        const offices = JSON.parse(officeData.d || "[]");
+        const typedOfficeIDs = offices
+            .filter((o) => Number(o?.OfficeID) > 0 &&
+            (o?.Type === undefined || o?.Type === "1" || o?.Type === 1))
             .map((o) => o.OfficeID)
             .filter((id) => id > 0);
-        officeIdString = officeIDs.join(",");
+        const fallbackOfficeIDs = offices
+            .map((o) => o.OfficeID)
+            .filter((id) => Number(id) > 0);
+        const normalized = normalizeOfficeIds((typedOfficeIDs.length > 0 ? typedOfficeIDs : fallbackOfficeIDs).join(","));
+        if (!normalized) {
+            throw new Error("No valid office IDs returned by office API");
+        }
+        officeIdString = normalized;
         return officeIdString;
     }
     /**
@@ -23007,8 +23142,14 @@ const visitMonitor = async () => {
         params.set("CaregiverLocationID", "-1");
         params.set("CaregiverBranchID", "-1");
         params.set("DisciplineIDs", "0");
-        const response = await GM_fetch(url.toString(), { method: "GET" });
-        const htmlText = await response.rawBody.text();
+        const response = await withTimeout(fetch(url.toString(), {
+            method: "GET",
+            credentials: "include",
+        }), TRACKING_REQUEST_TIMEOUT_MS, `Call report (${callType}) coordinator ${coordinatorId}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch status report: ${response.status} ${response.statusText}`);
+        }
+        const htmlText = await response.text();
         const parsedData = parseCallReport(htmlText);
         return { ...parsedData, timestamp: Date.now() };
     }
@@ -23201,15 +23342,16 @@ const visitMonitor = async () => {
         formData.append("ctl00$ContentPlaceHolder1$hdnMessageSource", "3");
         formData.append("ctl00$ContentPlaceHolder1$hdnAllowLinkingUnrecognizedFOB", "True");
         formData.append("ctl00$ContentPlaceHolder1$hdnAllowLinkingUnrecognizedGPS", "True");
-        const response = await GM_fetch(url, {
+        const response = await withTimeout(fetch(url, {
             method: "POST",
+            credentials: "include",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: formData.toString(),
-        });
+        }), TRACKING_REQUEST_TIMEOUT_MS, `Anomaly report coordinator ${coordinatorId}`);
         if (!response.ok) {
             throw new Error(`Failed to fetch anomaly report: ${response.status} ${response.statusText}`);
         }
-        const htmlText = await response.rawBody.text();
+        const htmlText = await response.text();
         return { ...parseAnomalyReport(htmlText), timestamp: Date.now() };
     }
     /**
@@ -23398,14 +23540,14 @@ const visitMonitor = async () => {
         }
         // --- 原有的 API 调用逻辑 (Epic 11: 按过滤配置决定请求) ---
         try {
-            const officeIds = await getOfficeIds();
+            const officeIds = await withTimeout(getOfficeIds(), OFFICE_IDS_TIMEOUT_MS, "Resolve office IDs");
             const promises = [];
             for (const coordinator of trackedCoordinators) {
                 // Epic 11: 获取该辅导员的启用列
                 const enabledCols = getEnabledColumns(coordinator.id);
                 // 上班钟 (CallType=2)
                 if (enabledCols.has("clockIn")) {
-                    promises.push(fetchStatusReport(coordinator.id, 2, officeIds)
+                    promises.push(withTimeout(fetchStatusReport(coordinator.id, 2, officeIds), TRACKING_REQUEST_TIMEOUT_MS, `Clock-in coordinator ${coordinator.id}`)
                         .then((data) => {
                         statusDataCache.set(`${coordinator.id}-2`, data);
                     })
@@ -23416,7 +23558,7 @@ const visitMonitor = async () => {
                 }
                 // 下班钟 (CallType=3)
                 if (enabledCols.has("clockOut")) {
-                    promises.push(fetchStatusReport(coordinator.id, 3, officeIds)
+                    promises.push(withTimeout(fetchStatusReport(coordinator.id, 3, officeIds), TRACKING_REQUEST_TIMEOUT_MS, `Clock-out coordinator ${coordinator.id}`)
                         .then((data) => {
                         statusDataCache.set(`${coordinator.id}-3`, data);
                     })
@@ -23427,7 +23569,7 @@ const visitMonitor = async () => {
                 }
                 // 异常打钟
                 if (enabledCols.has("anomaly")) {
-                    promises.push(fetchAnomalyReport(coordinator.id)
+                    promises.push(withTimeout(fetchAnomalyReport(coordinator.id), TRACKING_REQUEST_TIMEOUT_MS, `Anomaly coordinator ${coordinator.id}`)
                         .then((data) => {
                         statusDataCache.set(`${coordinator.id}-anomaly`, data);
                     })
@@ -23438,7 +23580,7 @@ const visitMonitor = async () => {
                 }
                 // 消息监控
                 if (enabledCols.has("message")) {
-                    promises.push(fetchMessageReport(coordinator.id)
+                    promises.push(withTimeout(fetchMessageReport(coordinator.id), TRACKING_REQUEST_TIMEOUT_MS, `Message coordinator ${coordinator.id}`)
                         .then((data) => {
                         statusDataCache.set(`${coordinator.id}-message`, data);
                     })
@@ -24370,29 +24512,62 @@ function getOfficeIDsFromPage() {
         ],
     };
 }
+function getCoordinatorApiUrl() {
+    const entpMatch = window.location.pathname.match(/\/(ENTP\d+)\//i);
+    if (entpMatch?.[1]) {
+        return `/${entpMatch[1]}/api/Common/GetAllCoordinators`;
+    }
+    try {
+        const topPath = window.top?.location?.pathname || "";
+        const entMatch = topPath.match(/\/(ENT\d+)\//i);
+        if (entMatch?.[1]) {
+            const entpPrefix = entMatch[1].replace(/^ENT/i, "ENTP");
+            return `/${entpPrefix}/api/Common/GetAllCoordinators`;
+        }
+    }
+    catch (error) {
+        console.warn("[HomePage] Cannot read top window path for API URL:", error);
+    }
+    // Final fallback keeps relative API resolution if tenant prefix is unavailable.
+    return "/api/Common/GetAllCoordinators";
+}
+function getRuntimeVersionInfo() {
+    const params = new URLSearchParams(window.location.search);
+    const appVersion = params.get("AppVersion") || params.get("appVersion") || "ENT";
+    const version = params.get("Version") || params.get("version") || "26.03";
+    const minorVersion = params.get("MinorVersion") || params.get("minorVersion") || "1.0";
+    return {
+        appVersion,
+        version,
+        minorVersion,
+    };
+}
 /**
  * 从 API 获取所有 Coordinators
  * API: POST /api/Common/GetAllCoordinators
  * 实测返回: 26 个 coordinator 对象
  */
 async function fetchCoordinatorsFromAPI() {
-    const apiUrl = "/ENTP2507010000//api/Common//GetAllCoordinators";
+    const apiUrl = getCoordinatorApiUrl();
     try {
         const appSecret = getAppSecretFromPage();
         const userID = getUserIDFromPage();
         const officeData = getOfficeIDsFromPage();
+        const runtimeVersion = getRuntimeVersionInfo();
         // 构建完整的请求体（与成功请求一致）
         const requestBody = {
-            appVersion: "ENT",
-            version: "25.07",
-            minorVersion: "1.0",
+            appVersion: runtimeVersion.appVersion,
+            version: runtimeVersion.version,
+            minorVersion: runtimeVersion.minorVersion,
             userID: userID,
             OfficeIDs: officeData.OfficeIDs,
             OfficeXML: officeData.OfficeXML,
         };
+        console.log("[HomePage] Fetching coordinators from:", apiUrl);
         console.log("[HomePage] Fetching coordinators with body:", requestBody);
         const response = await fetch(apiUrl, {
             method: "POST",
+            credentials: "include",
             headers: {
                 "Content-Type": "application/json",
                 AppSecret: appSecret,
@@ -25731,8 +25906,14 @@ class ProfileDataExtractor {
             if (addressEl.dataset.hhaMapEnhanced)
                 return true;
             addressEl.dataset.hhaMapEnhanced = "1";
+            // Disable legacy inline handler (OpenMapPatient) to avoid duplicate tabs.
+            addressEl.removeAttribute("onclick");
+            addressEl.onclick = null;
+            addressEl.setAttribute("href", "#");
             addressEl.style.cursor = "pointer";
             addressEl.addEventListener("click", (e) => {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
                 e.preventDefault();
                 const cleanAddress = this.extractCleanAddressText(addressEl);
                 if (cleanAddress) {
@@ -25747,7 +25928,7 @@ class ProfileDataExtractor {
                 if (mapIconAnchor) {
                     mapIconAnchor.click();
                 }
-            });
+            }, true);
             return true;
         };
         if (!tryEnhance()) {
@@ -32021,7 +32202,8 @@ class FaxPreviewModal {
         const toast = document.createElement("div");
         toast.className = `qa-toast qa-toast-${type}`;
         toast.textContent = message;
-        document.body.appendChild(toast);
+        toast.style.zIndex = "100010";
+        (this.overlay || document.body).appendChild(toast);
         setTimeout(() => toast.classList.add("show"), 10);
         setTimeout(() => {
             toast.classList.remove("show");
@@ -38279,7 +38461,7 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.21.2"};
+const package_namespaceObject = {"rE":"3.21.3"};
 ;// ./src/index.ts
 // Only inject styles on HHA pages — Outlook's strict CSP blocks style-loader injection
 if (!window.location.hostname.includes("outlook") &&
@@ -38336,12 +38518,17 @@ async function main() {
     // - HHA app page: full feature set
     // - Other matched domains (Outlook/Office/Reports): avoid starting HHA-heavy watchers
     if (IS_VOICE_TECH_HOST) {
-        await incomingCallHandler();
+        highlight2Call();
+        void incomingCallHandler().catch((err) => {
+            console.error("[main] incomingCallHandler init failed on mt3:", err);
+        });
         return;
     }
     if (!IS_HHA_APP_HOST) {
         if (IS_HHA_REPORTS_HOST) {
-            console.log("[main] Reports domain detected, skipping app-only bootstrap");
+            console.log("[main] Reports domain detected, bootstrapping report-specific features");
+            // Epic 15: reports domain still needs Scheduled Visits coordinator filter UI.
+            initScheduledVisitsConfigCardUI();
         }
         return;
     }
