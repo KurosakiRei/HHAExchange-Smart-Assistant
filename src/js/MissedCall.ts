@@ -104,8 +104,94 @@ export const missedInOutResolver = async() => {
 function getAideName(ctx: Document = document): string {
   let aideName: string,
     flag = false;
-  // 2 Windows: 0-topWindow, 1-popupWindow
-  let topWidow = window.parent;
+  const visitDateText = $(visitDateSelector, ctx).text();
+
+  const tryGetParentDoc = (): Document | null => {
+    try {
+      return window.parent?.document ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  const tryGetTopDoc = (): Document | null => {
+    try {
+      return window.top?.document ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  const readInputValue = (selector: string): string | null => {
+    const el = ctx.querySelector(selector) as HTMLInputElement | null;
+    const value = el?.value?.trim();
+    return value ? value : null;
+  };
+
+  const getAideNameFromCallReportsRow = (): string | null => {
+    const topDoc = tryGetTopDoc();
+    if (!topDoc) return null;
+
+    const frame = topDoc.getElementById(
+      "frmCallResults"
+    ) as HTMLIFrameElement | null;
+    const frameDoc = frame?.contentDocument;
+    if (!frameDoc) return null;
+
+    let visitId: string | null = null;
+    try {
+      visitId = new URL(ctx.location.href).searchParams.get("VisitID");
+    } catch {
+      visitId = null;
+    }
+    if (!visitId) {
+      visitId =
+        readInputValue("#hdnVisitID") ||
+        readInputValue("input[name='VisitID']") ||
+        null;
+    }
+    if (!visitId) return null;
+
+    const editButtons = Array.from(
+      frameDoc.querySelectorAll(
+        "button[title='View/Edit'], button[id$='Visitinfo']"
+      )
+    ) as HTMLButtonElement[];
+    const matchedEditButton = editButtons.find((btn) => {
+      const onclick = btn.getAttribute("onclick") || "";
+      return (
+        onclick.includes(`,${visitId},`) ||
+        onclick.includes(`VisitID=',${visitId}`) ||
+        onclick.includes(`VisitID=${visitId}`)
+      );
+    });
+
+    if (!matchedEditButton) return null;
+    const row = matchedEditButton.closest("tr");
+    if (!row) return null;
+
+    const aideLink = row.querySelector(
+      "td:nth-child(4) a"
+    ) as HTMLElement | null;
+    const aideText =
+      aideLink?.innerText?.trim() ||
+      (
+        row.querySelector("td:nth-child(4)") as HTMLElement | null
+      )?.innerText?.trim() ||
+      "";
+
+    return aideText || null;
+  };
+
+  const directCaregiverName =
+    readInputValue("#hdnCaregiverName") ||
+    readInputValue("#hdnAideName") ||
+    readInputValue("#hidAideName") ||
+    readInputValue("#hidCaregiverName");
+  if (directCaregiverName) return directCaregiverName;
+
+  const rowMappedAideName = getAideNameFromCallReportsRow();
+  if (rowMappedAideName) return rowMappedAideName;
 
   // 0. Direct read from popup hidden field (NonskilledVisitInfo_ns popup, Call/Patient page)
   const hdnCGName = (ctx.querySelector("#hdnCaregiverName") as HTMLInputElement)
@@ -114,13 +200,10 @@ function getAideName(ctx: Document = document): string {
 
   // 1. On patient page
   if (!flag) {
-    let aideLinks = topWidow[0]?.document?.querySelectorAll("#aidelink") ?? [];
+    const parentDoc = tryGetParentDoc();
+    let aideLinks = parentDoc?.querySelectorAll("#aidelink") ?? [];
     for (const aideLink of aideLinks) {
-      if (
-        aideLink
-          .getAttribute("onClick")
-          ?.includes($(visitDateSelector, ctx).text())
-      ) {
+      if (aideLink.getAttribute("onClick")?.includes(visitDateText)) {
         aideName = (aideLink as HTMLElement).innerHTML.trim();
         flag = true;
         break;
@@ -141,13 +224,10 @@ function getAideName(ctx: Document = document): string {
 
   // 3. On CHHA Patient page
   if (!flag) {
-    let hhaxLinks = topWidow[0]?.document?.querySelectorAll(".hhax-link") ?? [];
+    const parentDoc = tryGetParentDoc();
+    let hhaxLinks = parentDoc?.querySelectorAll(".hhax-link") ?? [];
     for (const hhaxLink of hhaxLinks) {
-      if (
-        hhaxLink
-          .getAttribute("onClick")
-          ?.includes($(visitDateSelector, ctx).text())
-      ) {
+      if (hhaxLink.getAttribute("onClick")?.includes(visitDateText)) {
         const aideProfileLink = $(hhaxLink)
           .parent()
           .find("a[onclick^='OpenAideProfileMax']")[0] as
@@ -196,7 +276,7 @@ function getAideName(ctx: Document = document): string {
 
   if (!flag) {
     aideName = "AideNotFound";
-    alert("AideNotFound");
+    console.warn("[MissedCall] Aide name not found in current context");
   }
   return aideName;
 }

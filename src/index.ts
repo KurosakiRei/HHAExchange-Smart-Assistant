@@ -73,15 +73,21 @@ async function main() {
   // - HHA app page: full feature set
   // - Other matched domains (Outlook/Office/Reports): avoid starting HHA-heavy watchers
   if (IS_VOICE_TECH_HOST) {
-    await incomingCallHandler();
+    highlight2Call();
+    void incomingCallHandler().catch((err) => {
+      console.error("[main] incomingCallHandler init failed on mt3:", err);
+    });
     return;
   }
 
   if (!IS_HHA_APP_HOST) {
     if (IS_HHA_REPORTS_HOST) {
       console.log(
-        "[main] Reports domain detected, skipping app-only bootstrap"
+        "[main] Reports domain detected, bootstrapping report-specific features"
       );
+
+      // Epic 15: reports domain still needs Scheduled Visits coordinator filter UI.
+      initScheduledVisitsConfigCardUI();
     }
     return;
   }

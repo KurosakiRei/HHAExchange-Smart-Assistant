@@ -446,32 +446,43 @@ export class ProfileDataExtractor {
       if (addressEl.dataset.hhaMapEnhanced) return true;
       addressEl.dataset.hhaMapEnhanced = "1";
 
+      // Disable legacy inline handler (OpenMapPatient) to avoid duplicate tabs.
+      addressEl.removeAttribute("onclick");
+      addressEl.onclick = null;
+      addressEl.setAttribute("href", "#");
+
       addressEl.style.cursor = "pointer";
-      addressEl.addEventListener("click", (e) => {
-        e.preventDefault();
+      addressEl.addEventListener(
+        "click",
+        (e) => {
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          e.preventDefault();
 
-        const cleanAddress = this.extractCleanAddressText(addressEl);
-        if (cleanAddress) {
-          window.open(
-            `https://www.google.com/maps/search/${encodeURIComponent(
-              cleanAddress
-            )}`,
-            "_blank",
-            "noopener,noreferrer"
-          );
-          return;
-        }
+          const cleanAddress = this.extractCleanAddressText(addressEl);
+          if (cleanAddress) {
+            window.open(
+              `https://www.google.com/maps/search/${encodeURIComponent(
+                cleanAddress
+              )}`,
+              "_blank",
+              "noopener,noreferrer"
+            );
+            return;
+          }
 
-        // Fallback: trigger map icon anchor in page context
-        const mapIconAnchor =
-          addressEl
-            .closest(".activelink")
-            ?.querySelector<HTMLAnchorElement>('a[aria-label*="Map"]') ??
-          document.querySelector<HTMLAnchorElement>("#IDuxLblAddress a");
-        if (mapIconAnchor) {
-          mapIconAnchor.click();
-        }
-      });
+          // Fallback: trigger map icon anchor in page context
+          const mapIconAnchor =
+            addressEl
+              .closest(".activelink")
+              ?.querySelector<HTMLAnchorElement>('a[aria-label*="Map"]') ??
+            document.querySelector<HTMLAnchorElement>("#IDuxLblAddress a");
+          if (mapIconAnchor) {
+            mapIconAnchor.click();
+          }
+        },
+        true
+      );
       return true;
     };
 

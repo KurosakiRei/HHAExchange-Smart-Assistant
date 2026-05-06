@@ -229,33 +229,76 @@ function getOfficeIDsFromPage(): {
   };
 }
 
+function getCoordinatorApiUrl(): string {
+  const entpMatch = window.location.pathname.match(/\/(ENTP\d+)\//i);
+  if (entpMatch?.[1]) {
+    return `/${entpMatch[1]}/api/Common/GetAllCoordinators`;
+  }
+
+  try {
+    const topPath = window.top?.location?.pathname || "";
+    const entMatch = topPath.match(/\/(ENT\d+)\//i);
+    if (entMatch?.[1]) {
+      const entpPrefix = entMatch[1].replace(/^ENT/i, "ENTP");
+      return `/${entpPrefix}/api/Common/GetAllCoordinators`;
+    }
+  } catch (error) {
+    console.warn("[HomePage] Cannot read top window path for API URL:", error);
+  }
+
+  // Final fallback keeps relative API resolution if tenant prefix is unavailable.
+  return "/api/Common/GetAllCoordinators";
+}
+
+function getRuntimeVersionInfo(): {
+  appVersion: string;
+  version: string;
+  minorVersion: string;
+} {
+  const params = new URLSearchParams(window.location.search);
+  const appVersion =
+    params.get("AppVersion") || params.get("appVersion") || "ENT";
+  const version = params.get("Version") || params.get("version") || "26.03";
+  const minorVersion =
+    params.get("MinorVersion") || params.get("minorVersion") || "1.0";
+
+  return {
+    appVersion,
+    version,
+    minorVersion,
+  };
+}
+
 /**
  * 从 API 获取所有 Coordinators
  * API: POST /api/Common/GetAllCoordinators
  * 实测返回: 26 个 coordinator 对象
  */
 async function fetchCoordinatorsFromAPI(): Promise<CoordinatorOption[]> {
-  const apiUrl = "/ENTP2507010000//api/Common//GetAllCoordinators";
+  const apiUrl = getCoordinatorApiUrl();
 
   try {
     const appSecret = getAppSecretFromPage();
     const userID = getUserIDFromPage();
     const officeData = getOfficeIDsFromPage();
+    const runtimeVersion = getRuntimeVersionInfo();
 
     // 构建完整的请求体（与成功请求一致）
     const requestBody = {
-      appVersion: "ENT",
-      version: "25.07",
-      minorVersion: "1.0",
+      appVersion: runtimeVersion.appVersion,
+      version: runtimeVersion.version,
+      minorVersion: runtimeVersion.minorVersion,
       userID: userID,
       OfficeIDs: officeData.OfficeIDs,
       OfficeXML: officeData.OfficeXML,
     };
 
+    console.log("[HomePage] Fetching coordinators from:", apiUrl);
     console.log("[HomePage] Fetching coordinators with body:", requestBody);
 
     const response = await fetch(apiUrl, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         AppSecret: appSecret,

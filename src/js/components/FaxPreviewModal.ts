@@ -212,7 +212,8 @@ export class FaxPreviewModal {
     const toast = document.createElement("div");
     toast.className = `qa-toast qa-toast-${type}`;
     toast.textContent = message;
-    document.body.appendChild(toast);
+    toast.style.zIndex = "100010";
+    (this.overlay || document.body).appendChild(toast);
     setTimeout(() => toast.classList.add("show"), 10);
     setTimeout(() => {
       toast.classList.remove("show");
