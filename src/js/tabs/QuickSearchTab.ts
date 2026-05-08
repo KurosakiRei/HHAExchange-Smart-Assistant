@@ -5,28 +5,27 @@ import {
   displaySingleResult,
   HhaQuickSearchParams,
   formatPhoneNumber,
+  getQuickSearchTenantState,
 } from "../services/HhaSearchService";
+import { CSPBypassInjector } from "../services/CSPBypassInjector";
 
-export class QuickSearchTab extends BaseTab {
-  id = "quick-search";
-  label = "\u5feb\u901f\u641c\u7d22";
-  icon = "\uD83D\uDD0D";
+const QUICK_SEARCH_STYLE_ID = "hha-quick-search-tab-style";
 
-  private isSearching = false;
+function isOutlookHost(): boolean {
+  const host = window.location.hostname.toLowerCase();
+  return (
+    host === "outlook.office.com" ||
+    host === "outlook.cloud.microsoft" ||
+    host === "webshell.suite.office.com"
+  );
+}
 
-  async init(): Promise<void> {
-    this.initialized = true;
+function ensureStyles(): void {
+  if (document.getElementById(QUICK_SEARCH_STYLE_ID)) {
+    return;
   }
 
-  render(container: HTMLElement): void {
-    this.container = container;
-    container.innerHTML = "";
-    container.style.cssText =
-      "height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0;box-sizing:border-box;";
-
-    // ── Styles ─────────────────────────────────────────────────────────────────────────────────
-    const style = document.createElement("style");
-    style.textContent = `
+  const css = `
       .qs-wrapper {
         flex: 1; display: flex; flex-direction: column; overflow: hidden;
       }
@@ -36,6 +35,16 @@ export class QuickSearchTab extends BaseTab {
         border-bottom: 1px solid #e0e0e0;
         background: #fafbfc;
         flex-shrink: 0;
+      }
+      .qs-tenant-warning {
+        margin: 0;
+        padding: 8px 14px;
+        border-bottom: 1px solid #f2d7cb;
+        background: #fff5ef;
+        color: #943e1e;
+        font-size: 12px;
+        line-height: 1.4;
+        display: none;
       }
       .qs-title {
         margin: 0; font-size: 15px; font-weight: 600; color: #333;
@@ -147,7 +156,36 @@ export class QuickSearchTab extends BaseTab {
       }
       @keyframes qs-spin { to { transform: rotate(360deg); } }
     `;
-    container.appendChild(style);
+
+  if (isOutlookHost() && CSPBypassInjector.isAvailable()) {
+    CSPBypassInjector.injectStyle(css, QUICK_SEARCH_STYLE_ID);
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = QUICK_SEARCH_STYLE_ID;
+  style.textContent = css;
+  document.head.appendChild(style);
+}
+
+export class QuickSearchTab extends BaseTab {
+  id = "quick-search";
+  label = "\u5feb\u901f\u641c\u7d22";
+  icon = "\uD83D\uDD0D";
+
+  private isSearching = false;
+
+  async init(): Promise<void> {
+    this.initialized = true;
+  }
+
+  render(container: HTMLElement): void {
+    ensureStyles();
+
+    this.container = container;
+    container.innerHTML = "";
+    container.style.cssText =
+      "height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0;box-sizing:border-box;";
 
     // ── Tooltip popup (singleton on document.body) ────────────────────────────────────────────
     const TOOLTIP_ID = "qs-global-tooltip";
@@ -174,6 +212,10 @@ export class QuickSearchTab extends BaseTab {
     title.textContent = "🔍 病人/护理员快速搜索";
     header.appendChild(title);
     wrapper.appendChild(header);
+
+    const tenantWarning = document.createElement("p");
+    tenantWarning.className = "qs-tenant-warning";
+    wrapper.appendChild(tenantWarning);
 
     const body = document.createElement("div");
     body.className = "qs-body";
@@ -342,8 +384,9 @@ export class QuickSearchTab extends BaseTab {
         medicaidIdInput,
       ].forEach((inp) => (inp.value = ""));
       conflictWarn.style.display = "none";
-      searchBtn.disabled = false;
       noResultDiv.style.display = "none";
+      applyTenantState();
+      validateConflict();
     });
 
     btnRow.appendChild(searchBtn);
@@ -365,6 +408,29 @@ export class QuickSearchTab extends BaseTab {
     header.appendChild(noResultDiv);
 
     // ── Validation ────────────────────────────────────────────────────────────────────────────────
+    let tenantUnavailable = false;
+    const isOutlookHost =
+      window.location.hostname === "outlook.office.com" ||
+      window.location.hostname === "outlook.cloud.microsoft" ||
+      window.location.hostname === "webshell.suite.office.com";
+
+    const applyTenantState = (): void => {
+      const state = getQuickSearchTenantState();
+      tenantUnavailable = !state.baseUrl;
+
+      if (tenantUnavailable) {
+        tenantWarning.textContent =
+          state.message ||
+          "Quick Search 无法确定租户，请先打开一次 HHA 页面同步租户信息。";
+        tenantWarning.style.display = "block";
+      } else if (isOutlookHost && state.source === "cache" && state.message) {
+        tenantWarning.textContent = state.message;
+        tenantWarning.style.display = "block";
+      } else {
+        tenantWarning.style.display = "none";
+      }
+    };
+
     const validateConflict = () => {
       const hasCg = !!ssnInput.value.trim();
       const hasPt = !!(
@@ -372,7 +438,7 @@ export class QuickSearchTab extends BaseTab {
       );
       const conflict = hasCg && hasPt;
       conflictWarn.style.display = conflict ? "block" : "none";
-      searchBtn.disabled = conflict;
+      searchBtn.disabled = conflict || tenantUnavailable;
     };
 
     [ssnInput, patientIdInput, medicaidIdInput].forEach((inp) => {
@@ -384,6 +450,13 @@ export class QuickSearchTab extends BaseTab {
 
     // ── Search logic ──────────────────────────────────────────────────────────────────────────────
     const doSearch = async () => {
+      applyTenantState();
+      validateConflict();
+
+      if (tenantUnavailable) {
+        return;
+      }
+
       if (this.isSearching || searchBtn.disabled) return;
 
       const rawPhone = phoneInput.value.trim();
@@ -435,12 +508,20 @@ export class QuickSearchTab extends BaseTab {
         } else {
           noResultDiv.style.display = "block";
         }
+      } catch (error) {
+        const message = (error as Error)?.message || "搜索失败，请稍后重试";
+        tenantWarning.textContent = message;
+        tenantWarning.style.display = "block";
       } finally {
         this.isSearching = false;
         searchBtn.disabled = false;
         searchBtn.textContent = "搜索";
         loadingDiv.style.display = "none";
+        validateConflict();
       }
     };
+
+    applyTenantState();
+    validateConflict();
   }
 }

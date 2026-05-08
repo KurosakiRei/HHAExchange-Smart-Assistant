@@ -1,9 +1,199 @@
 import GM_fetch from "@trim21/gm-fetch";
 
 const FALLBACK_TENANT_BASE_URL = "https://app.hhaexchange.com/ENT2603010000";
+const TENANT_CACHE_KEY = "hha_smart_assistant_tenant_base_url";
 let hasWarnedTenantFallback = false;
 
 // ==================== 动态 Tenant URL 检测 ====================
+
+export interface TenantBaseUrlResolution {
+  baseUrl: string | null;
+  source: "detected" | "cache" | "fallback" | "missing";
+  message?: string;
+}
+
+function isOutlookLikeHost(): boolean {
+  const host = window.location.hostname.toLowerCase();
+  return (
+    host === "outlook.office.com" ||
+    host === "outlook.cloud.microsoft" ||
+    host === "webshell.suite.office.com"
+  );
+}
+
+function isHhaHost(): boolean {
+  return window.location.hostname.toLowerCase().endsWith("hhaexchange.com");
+}
+
+function extractTenantVersion(url: string): string | null {
+  const m1 = url.match(/\/ENT(\d+)\//);
+  if (m1) return m1[1];
+  const m2 = url.match(/\/(?:HHANotification|ENTP)(\d+)\//);
+  if (m2) return m2[1];
+  return null;
+}
+
+function detectTenantBaseUrlStrict(): string | null {
+  const pathnameVersion = extractTenantVersion(window.location.pathname);
+  if (pathnameVersion) {
+    return `https://app.hhaexchange.com/ENT${pathnameVersion}`;
+  }
+
+  for (const script of Array.from(document.scripts)) {
+    if (!script.src) {
+      continue;
+    }
+    const scriptVersion = extractTenantVersion(script.src);
+    if (scriptVersion) {
+      return `https://app.hhaexchange.com/ENT${scriptVersion}`;
+    }
+  }
+
+  const hrefVersion = extractTenantVersion(window.location.href);
+  if (hrefVersion) {
+    return `https://app.hhaexchange.com/ENT${hrefVersion}`;
+  }
+
+  try {
+    if (window.parent !== window) {
+      const parentVersion = extractTenantVersion(window.parent.location.href);
+      if (parentVersion) {
+        return `https://app.hhaexchange.com/ENT${parentVersion}`;
+      }
+    }
+  } catch (_) {
+    /* 跨域父窗口，跳过 */
+  }
+
+  return null;
+}
+
+function saveTenantBaseUrlToCache(baseUrl: string): void {
+  if (!baseUrl) {
+    return;
+  }
+
+  try {
+    GM_setValue(TENANT_CACHE_KEY, baseUrl);
+  } catch (_) {
+    /* ignore */
+  }
+
+  try {
+    localStorage.setItem(TENANT_CACHE_KEY, baseUrl);
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+function readTenantBaseUrlFromCache(): string | null {
+  try {
+    const fromGM = GM_getValue<string>(TENANT_CACHE_KEY, "");
+    if (
+      typeof fromGM === "string" &&
+      fromGM.startsWith("https://app.hhaexchange.com/ENT")
+    ) {
+      return fromGM;
+    }
+  } catch (_) {
+    /* ignore */
+  }
+
+  try {
+    const fromStorage = localStorage.getItem(TENANT_CACHE_KEY);
+    if (
+      fromStorage &&
+      fromStorage.startsWith("https://app.hhaexchange.com/ENT")
+    ) {
+      return fromStorage;
+    }
+  } catch (_) {
+    /* ignore */
+  }
+
+  return null;
+}
+
+function getDefaultMissingMessage(): string {
+  if (isOutlookLikeHost()) {
+    return "Quick Search 无法确定租户。请先打开一次 HHA 页面以同步租户信息。";
+  }
+  return "无法自动解析当前租户，请确认页面已完成加载。";
+}
+
+/**
+ * 优先租户策略：当前环境解析 -> 租户缓存 ->（可选）fallback。
+ */
+export function getPreferredTenantBaseUrl(options?: {
+  allowFallback?: boolean;
+}): TenantBaseUrlResolution {
+  const allowFallback = options?.allowFallback === true;
+
+  const detected = detectTenantBaseUrlStrict();
+  if (detected) {
+    if (isHhaHost()) {
+      saveTenantBaseUrlToCache(detected);
+    }
+    return {
+      baseUrl: detected,
+      source: "detected",
+    };
+  }
+
+  const cached = readTenantBaseUrlFromCache();
+  if (cached) {
+    return {
+      baseUrl: cached,
+      source: "cache",
+      message: isOutlookLikeHost()
+        ? "当前在 Outlook 环境，Quick Search 使用缓存租户。"
+        : undefined,
+    };
+  }
+
+  if (allowFallback) {
+    if (!hasWarnedTenantFallback) {
+      hasWarnedTenantFallback = true;
+      console.warn(
+        "[HhaSearchService] Could not detect tenant prefix from URL and cache; using fallback"
+      );
+    }
+    return {
+      baseUrl: FALLBACK_TENANT_BASE_URL,
+      source: "fallback",
+      message: "未检测到租户信息，已使用默认租户。",
+    };
+  }
+
+  return {
+    baseUrl: null,
+    source: "missing",
+    message: getDefaultMissingMessage(),
+  };
+}
+
+export function getQuickSearchTenantState(): TenantBaseUrlResolution {
+  return getPreferredTenantBaseUrl({ allowFallback: !isOutlookLikeHost() });
+}
+
+function getTenantBaseUrlForSearchOrThrow(): string {
+  const allowFallback = !isOutlookLikeHost();
+  const resolution = getPreferredTenantBaseUrl({ allowFallback });
+  if (resolution.baseUrl) {
+    return resolution.baseUrl;
+  }
+  throw new Error(resolution.message || "Quick Search 无法确定租户信息");
+}
+
+function buildProfileUrlTemplate(type: "aide" | "patient"): string {
+  const baseUrl =
+    getPreferredTenantBaseUrl({ allowFallback: true }).baseUrl ||
+    FALLBACK_TENANT_BASE_URL;
+  if (type === "aide") {
+    return `${baseUrl}/Aide/Aide_ns.aspx?AideId={ID}`;
+  }
+  return `${baseUrl}/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}`;
+}
 
 /**
  * 动态检测当前 HHAExchange 租户路径前缀
@@ -11,47 +201,10 @@ let hasWarnedTenantFallback = false;
  * 并在同源 iframe 中尝试从父窗口推导，避免版本升级触发强制登出
  */
 export function detectTenantBaseUrl(): string {
-  const host = window.location.hostname.toLowerCase();
-  const isHhaHost = host.endsWith("hhaexchange.com");
-
-  function extractVersion(url: string): string | null {
-    const m1 = url.match(/\/ENT(\d+)\//);
-    if (m1) return m1[1];
-    const m2 = url.match(/\/(?:HHANotification|ENTP)(\d+)\//);
-    if (m2) return m2[1];
-    return null;
-  }
-
-  const r1 = extractVersion(window.location.pathname);
-  if (r1) return `https://app.hhaexchange.com/ENT${r1}`;
-
-  for (const script of Array.from(document.scripts)) {
-    if (script.src) {
-      const r2 = extractVersion(script.src);
-      if (r2) return `https://app.hhaexchange.com/ENT${r2}`;
-    }
-  }
-
-  const r3 = extractVersion(window.location.href);
-  if (r3) return `https://app.hhaexchange.com/ENT${r3}`;
-
-  try {
-    if (window.parent !== window) {
-      const r4 = extractVersion(window.parent.location.href);
-      if (r4) return `https://app.hhaexchange.com/ENT${r4}`;
-    }
-  } catch (_) {
-    /* 跨域父窗口，跳过 */
-  }
-
-  if (isHhaHost && !hasWarnedTenantFallback) {
-    hasWarnedTenantFallback = true;
-    console.warn(
-      "[HhaSearchService] Could not detect tenant prefix from URL, using fallback"
-    );
-  }
-
-  return FALLBACK_TENANT_BASE_URL;
+  return (
+    getPreferredTenantBaseUrl({ allowFallback: true }).baseUrl ||
+    FALLBACK_TENANT_BASE_URL
+  );
 }
 
 // ==================== URL 常量 ====================
@@ -62,13 +215,15 @@ const _TENANT_BASE_URL = detectTenantBaseUrl();
 export const AIDE_SEARCH_URL: string = `${_TENANT_BASE_URL}/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=`;
 export const AIDE_SEARCH_PARAMS: string =
   "&LastName=&Type=-1&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=";
-export const AIDE_PROFILE_URL_TEMPLATE: string = `${_TENANT_BASE_URL}/Aide/Aide_ns.aspx?AideId={ID}`;
+export const AIDE_PROFILE_URL_TEMPLATE: string =
+  buildProfileUrlTemplate("aide");
 
 /** Patient (病人) 搜索 URL - 使用动态租户前缀 */
 export const PATIENT_SEARCH_URL: string = `${_TENANT_BASE_URL}/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=`;
 export const PATIENT_SEARCH_PARAMS: string =
   "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-1&DisciplineID=0&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
-export const PATIENT_PROFILE_URL_TEMPLATE: string = `${_TENANT_BASE_URL}/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}`;
+export const PATIENT_PROFILE_URL_TEMPLATE: string =
+  buildProfileUrlTemplate("patient");
 
 // ==================== 类型定义 ====================
 
@@ -492,8 +647,9 @@ export function injectRedirectScript(
   html: string,
   type: "aide" | "patient"
 ): string {
-  const profileUrlTemplate =
-    type === "aide" ? AIDE_PROFILE_URL_TEMPLATE : PATIENT_PROFILE_URL_TEMPLATE;
+  const aideTemplate = buildProfileUrlTemplate("aide");
+  const patientTemplate = buildProfileUrlTemplate("patient");
+  const profileUrlTemplate = type === "aide" ? aideTemplate : patientTemplate;
   const functionName =
     type === "aide" ? "RedirectToAidePage" : "RedirectToPatientPage";
 
@@ -503,10 +659,10 @@ function ${functionName}(id) {
   window.open('${profileUrlTemplate}'.replace('{ID}', id), '_blank');
 }
 function RedirectToAidePage(id) {
-  window.open('${AIDE_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
+  window.open('${aideTemplate}'.replace('{ID}', id), '_blank');
 }
 function RedirectToPatientPage(id) {
-  window.open('${PATIENT_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
+  window.open('${patientTemplate}'.replace('{ID}', id), '_blank');
 }
 </script>
 `;
@@ -526,6 +682,7 @@ function RedirectToPatientPage(id) {
  * 解析 Aide (护工) 的搜索结果
  */
 export function handleAideSearchResult(html: string): HhaSearchResult {
+  const profileTemplate = buildProfileUrlTemplate("aide");
   const doc = new DOMParser().parseFromString(html, "text/html");
   const resultsTable = doc.querySelector<HTMLTableElement>("#tdSearchResults");
   if (!resultsTable) return { count: 0, rawHtml: html };
@@ -553,7 +710,7 @@ export function handleAideSearchResult(html: string): HhaSearchResult {
     if (match && match[1]) {
       return {
         count: 1,
-        finalUrl: AIDE_PROFILE_URL_TEMPLATE.replace("{ID}", match[1]),
+        finalUrl: profileTemplate.replace("{ID}", match[1]),
         rawHtml: html,
       };
     }
@@ -565,6 +722,7 @@ export function handleAideSearchResult(html: string): HhaSearchResult {
  * 解析 Patient (病人) 的搜索结果
  */
 export function handlePatientSearchResult(html: string): HhaSearchResult {
+  const profileTemplate = buildProfileUrlTemplate("patient");
   const doc = new DOMParser().parseFromString(html, "text/html");
   const resultsTable = doc.querySelector<HTMLTableElement>("#tdSearchResults");
 
@@ -629,10 +787,7 @@ export function handlePatientSearchResult(html: string): HhaSearchResult {
     return {
       count: resultCount,
       activeCount: 1,
-      finalUrl: PATIENT_PROFILE_URL_TEMPLATE.replace(
-        "{ID}",
-        activeRows[0].profileId
-      ),
+      finalUrl: profileTemplate.replace("{ID}", activeRows[0].profileId),
       rawHtml: html,
     };
   }
@@ -641,10 +796,7 @@ export function handlePatientSearchResult(html: string): HhaSearchResult {
     return {
       count: 1,
       activeCount: 0,
-      finalUrl: PATIENT_PROFILE_URL_TEMPLATE.replace(
-        "{ID}",
-        rowInfos[0].profileId
-      ),
+      finalUrl: profileTemplate.replace("{ID}", rowInfos[0].profileId),
       rawHtml: html,
     };
   }
@@ -755,6 +907,78 @@ function removeColumnsByHeader(
   });
 }
 
+function extractProfileIdFromActionText(
+  actionText: string,
+  type: "aide" | "patient"
+): string | null {
+  if (!actionText) {
+    return null;
+  }
+
+  const pattern =
+    type === "aide"
+      ? /RedirectToAidePage\(\s*['"]?(\d+)['"]?\s*\)/i
+      : /RedirectToPatientPage\(\s*['"]?(\d+)['"]?\s*\)/i;
+  const match = actionText.match(pattern);
+  return match?.[1] ?? null;
+}
+
+function extractProfileIdFromLink(
+  anchor: HTMLAnchorElement,
+  type: "aide" | "patient"
+): string | null {
+  const onclick = anchor.getAttribute("onclick") || "";
+  const fromOnclick = extractProfileIdFromActionText(onclick, type);
+  if (fromOnclick) {
+    return fromOnclick;
+  }
+
+  const href = anchor.getAttribute("href") || "";
+  const fromHrefAction = extractProfileIdFromActionText(href, type);
+  if (fromHrefAction) {
+    return fromHrefAction;
+  }
+
+  try {
+    const url = new URL(href, "https://app.hhaexchange.com");
+    if (type === "aide") {
+      return url.searchParams.get("AideId");
+    }
+
+    return (
+      url.searchParams.get("PatientId") ||
+      url.searchParams.get("PatientID") ||
+      url.searchParams.get("Patientid")
+    );
+  } catch (_) {
+    // fallback with regex if href is not URL-like
+  }
+
+  const regex =
+    type === "aide" ? /AideId=(\d+)/i : /Patient(?:Id|ID|id)=(\d+)/i;
+  const match = href.match(regex);
+  return match?.[1] ?? null;
+}
+
+function rewriteProfileLinksForPopup(
+  table: HTMLTableElement,
+  type: "aide" | "patient"
+): void {
+  const template = buildProfileUrlTemplate(type);
+  table.querySelectorAll<HTMLAnchorElement>("tbody a").forEach((anchor) => {
+    const profileId = extractProfileIdFromLink(anchor, type);
+    if (!profileId) {
+      return;
+    }
+
+    const targetUrl = template.replace("{ID}", profileId);
+    anchor.setAttribute("href", targetUrl);
+    anchor.setAttribute("target", "_blank");
+    anchor.setAttribute("rel", "noopener noreferrer");
+    anchor.removeAttribute("onclick");
+  });
+}
+
 /**
  * 使用 DOMParser 从原始 HTML 提取并清理搜索结果表格
  * 供 displayCombinedResults 和 displaySingleResult 共用
@@ -839,6 +1063,8 @@ export function extractAndCleanContent(
   } else if (type === "patient") {
     removeColumnsByHeader(table, ["Team"]);
   }
+
+  rewriteProfileLinksForPopup(table, type);
 
   return table.outerHTML;
 }
@@ -969,16 +1195,20 @@ const PANEL_STYLE_BLOCK = `
 `;
 
 /** 共用的重定向脚本块 */
-const REDIRECT_SCRIPT_BLOCK = `
+function buildRedirectScriptBlock(): string {
+  const aideTemplate = buildProfileUrlTemplate("aide");
+  const patientTemplate = buildProfileUrlTemplate("patient");
+  return `
   <script>
     function RedirectToAidePage(id) {
-      window.open('${AIDE_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
+      window.open('${aideTemplate}'.replace('{ID}', id), '_blank');
     }
     function RedirectToPatientPage(id) {
-      window.open('${PATIENT_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
+      window.open('${patientTemplate}'.replace('{ID}', id), '_blank');
     }
   </script>
 `;
+}
 
 /** 划词拨号脚本块（自包含 IIFE，不依赖 GM API，注入 blob: 弹窗页） */
 const H2C_SCRIPT_BLOCK = `
@@ -1260,7 +1490,7 @@ export function displayCombinedResults(
   <meta charset="UTF-8">
   <title>HHA Combined Search Results</title>
   <style>${PANEL_STYLE_BLOCK}</style>
-  ${REDIRECT_SCRIPT_BLOCK}
+  ${buildRedirectScriptBlock()}
 </head>
 <body>
   <div class="container">
@@ -1328,7 +1558,7 @@ export function displaySingleResult(
   <meta charset="UTF-8">
   <title>HHA ${label} 搜索结果</title>
   <style>${PANEL_STYLE_BLOCK}</style>
-  ${REDIRECT_SCRIPT_BLOCK}
+  ${buildRedirectScriptBlock()}
 </head>
 <body>
   <div class="container">
@@ -1359,18 +1589,25 @@ export async function fetchHhaData(
   type: "aide" | "patient",
   formattedNumber: string
 ): Promise<HhaSearchResult> {
+  let tenantBaseUrl = "";
+  try {
+    tenantBaseUrl = getTenantBaseUrlForSearchOrThrow();
+  } catch (error) {
+    return { count: 0, rawHtml: (error as Error).message || "Tenant missing" };
+  }
+
   let baseUrl: string,
     params: string,
     handler: (html: string) => HhaSearchResult;
   if (type === "aide") {
     [baseUrl, params, handler] = [
-      AIDE_SEARCH_URL,
+      `${tenantBaseUrl}/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=`,
       AIDE_SEARCH_PARAMS,
       handleAideSearchResult,
     ];
   } else {
     [baseUrl, params, handler] = [
-      PATIENT_SEARCH_URL,
+      `${tenantBaseUrl}/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=`,
       PATIENT_SEARCH_PARAMS,
       handlePatientSearchResult,
     ];
@@ -1406,8 +1643,10 @@ export function buildSearchUrl(
   params: HhaQuickSearchParams,
   page: number
 ): string {
+  const tenantBaseUrl = getTenantBaseUrlForSearchOrThrow();
+
   if (type === "aide") {
-    const baseUrl = `${_TENANT_BASE_URL}/Aide/AideSearchXSLT_ns.aspx`;
+    const baseUrl = `${tenantBaseUrl}/Aide/AideSearchXSLT_ns.aspx`;
     const qp = new URLSearchParams({
       FirstName: params.firstName ?? "",
       Phone: params.phone ?? "",
@@ -1432,7 +1671,7 @@ export function buildSearchUrl(
     });
     return `${baseUrl}?${qp.toString()}`;
   } else {
-    const baseUrl = `${_TENANT_BASE_URL}/Patient/PatientSearchXSLT_ns.aspx`;
+    const baseUrl = `${tenantBaseUrl}/Patient/PatientSearchXSLT_ns.aspx`;
     const qp = new URLSearchParams({
       FirstName: params.firstName ?? "",
       LastName: params.lastName ?? "",
@@ -1727,7 +1966,16 @@ export async function fetchAllPages(
   params: HhaQuickSearchParams
 ): Promise<HhaSearchResult> {
   // 获取第 1 页
-  const url1 = buildSearchUrl(type, params, 1);
+  let url1 = "";
+  try {
+    url1 = buildSearchUrl(type, params, 1);
+  } catch (error) {
+    return {
+      count: 0,
+      rawHtml: (error as Error).message || "Tenant missing",
+    };
+  }
+
   let page1Html = "";
   try {
     const r = (await GM_fetch(url1)) as Response & { rawBody: Blob };
@@ -1755,7 +2003,13 @@ export async function fetchAllPages(
   const totalPages = Math.ceil(totalCount / 10);
   const pagePromises: Promise<string>[] = [];
   for (let pg = 2; pg <= totalPages; pg++) {
-    const url = buildSearchUrl(type, params, pg);
+    let url = "";
+    try {
+      url = buildSearchUrl(type, params, pg);
+    } catch (_) {
+      continue;
+    }
+
     pagePromises.push(
       GM_fetch(url)
         .then((r) => (r as Response & { rawBody: Blob }).rawBody.text())

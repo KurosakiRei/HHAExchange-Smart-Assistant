@@ -1,7 +1,15 @@
+import { DateComposerModal } from "../components/DateComposerModal";
+import { DateFormatPreset, isDateFormatPreset } from "./DateComposerService";
+import { ProfileDataExtractor } from "./ProfileDataExtractor";
+
+const RENAME_DATE_PRESET_STORAGE_KEY =
+  "hha_document_dropzone_rename_date_preset";
+
 export class DocumentDropzone {
   private observer: MutationObserver | null = null;
   private isBound = false;
   private overlay: HTMLElement | null = null;
+  private promotedPanelElements: HTMLElement[] = [];
 
   constructor() {
     this.initObserver();
@@ -58,11 +66,60 @@ export class DocumentDropzone {
     const rect = header.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) return null;
 
-    // Return the closest modal/dialog container, falling back to a general div
-    return (
-      (header.closest(".reveal, [role='dialog'], .modal") as HTMLElement) ??
-      (header.closest("table, div") as HTMLElement)
-    );
+    const fileInput = document.querySelector(
+      'input[type="file"][name="fuUpload2"], .fileInput57'
+    ) as HTMLElement | null;
+
+    const modalRoot = header.closest(
+      ".ui-dialog, [role='dialog'], .reveal, .modal"
+    ) as HTMLElement | null;
+
+    if (modalRoot) {
+      const contentSelectors = [
+        ".ui-dialog-content",
+        ".modal-body",
+        ".reveal-content",
+        ".content",
+      ];
+
+      for (const selector of contentSelectors) {
+        const content = modalRoot.querySelector(selector) as HTMLElement | null;
+        if (
+          content &&
+          this.isElementVisible(content) &&
+          (!fileInput || content.contains(fileInput))
+        ) {
+          return content;
+        }
+      }
+
+      if (
+        fileInput &&
+        modalRoot.contains(fileInput) &&
+        this.isElementVisible(modalRoot)
+      ) {
+        return modalRoot;
+      }
+    }
+
+    if (fileInput) {
+      const inputContainer = fileInput.closest(
+        ".ui-dialog-content, .modal-body, .reveal-content, .content, form, table, td, div"
+      ) as HTMLElement | null;
+      if (inputContainer && this.isElementVisible(inputContainer)) {
+        return inputContainer;
+      }
+    }
+
+    // Return the closest modal/dialog container; avoid broad fallback that may hit title-only wrappers
+    return header.closest(
+      ".reveal, [role='dialog'], .modal"
+    ) as HTMLElement | null;
+  }
+
+  private isElementVisible(element: HTMLElement): boolean {
+    const rect = element.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
   }
 
   /**
@@ -250,6 +307,11 @@ export class DocumentDropzone {
           <input type="text" id="rename-input" value="${baseName}" />
           ${hasExtension ? `<span class="rename-ext">${extension}</span>` : ""}
         </div>
+        <div class="rename-date-tools">
+          <button class="tracker-btn-secondary rename-date-btn" id="rename-date-insert" type="button">📅 插入日期</button>
+          <button class="tracker-btn-secondary rename-date-btn" id="rename-name-id-insert" type="button">👤 插入名字+ID</button>
+          <span class="rename-date-preview" id="rename-date-preview">可将日期或名字+ID插入到文件名中</span>
+        </div>
         <div class="rename-save-local-row">
           <label class="rename-save-local-label">
             <input type="checkbox" id="save-local-check" checked />
@@ -263,6 +325,7 @@ export class DocumentDropzone {
       `;
 
       backdrop.appendChild(modal);
+      this.promoteFloatingPanels();
       document.body.appendChild(backdrop);
 
       const input = modal.querySelector("#rename-input") as HTMLInputElement;
@@ -275,12 +338,25 @@ export class DocumentDropzone {
       const saveLocalCheck = modal.querySelector(
         "#save-local-check"
       ) as HTMLInputElement;
+      const insertDateBtn = modal.querySelector(
+        "#rename-date-insert"
+      ) as HTMLButtonElement;
+      const insertNameIdBtn = modal.querySelector(
+        "#rename-name-id-insert"
+      ) as HTMLButtonElement;
+      const datePreview = modal.querySelector(
+        "#rename-date-preview"
+      ) as HTMLSpanElement;
+
+      let selectedDates: string[] = [];
+      let selectedPreset: DateFormatPreset = this.loadRenameDatePreset();
 
       // Focus and select the text for quick overtyping
       input.focus();
       input.select();
 
       const cleanup = () => {
+        this.demoteFloatingPanels();
         if (backdrop.parentNode) {
           backdrop.parentNode.removeChild(backdrop);
         }
@@ -289,8 +365,21 @@ export class DocumentDropzone {
       const submitAction = () => {
         const value = input.value.trim();
         if (value) {
+          const normalizedBase = this.sanitizeFileNameComponent(value);
+          const finalName =
+            hasExtension &&
+            !normalizedBase.toLowerCase().endsWith(extension.toLowerCase())
+              ? `${normalizedBase}${extension}`
+              : normalizedBase;
+
+          if (!finalName) {
+            resolve({ name: null, saveToLocal: false });
+            cleanup();
+            return;
+          }
+
           resolve({
-            name: value + extension,
+            name: finalName,
             saveToLocal: saveLocalCheck.checked,
           });
         } else {
@@ -298,6 +387,60 @@ export class DocumentDropzone {
         }
         cleanup();
       };
+
+      insertDateBtn.addEventListener("click", async () => {
+        const result = await DateComposerModal.open({
+          initialDates: selectedDates,
+          preset: selectedPreset,
+          showPresetSelector: true,
+        });
+
+        if (!result || !result.displayText) {
+          return;
+        }
+
+        selectedDates = result.dates;
+        selectedPreset = result.preset;
+        this.saveRenameDatePreset(selectedPreset);
+
+        const safeDateText = this.sanitizeFileNameComponent(result.displayText);
+        if (!safeDateText) {
+          return;
+        }
+
+        const currentValue = input.value.trim();
+        input.value = currentValue
+          ? `${currentValue} ${safeDateText}`
+          : safeDateText;
+
+        datePreview.textContent = `日期片段: ${result.displayText}`;
+        input.focus();
+        const endPos = input.value.length;
+        input.setSelectionRange(endPos, endPos);
+      });
+
+      insertNameIdBtn.addEventListener("click", () => {
+        const snippet = this.buildNameAndIdSnippet();
+        if (!snippet) {
+          datePreview.textContent = "未找到可插入的名字+ID";
+          return;
+        }
+
+        const safeSnippet = this.sanitizeFileNameComponent(snippet);
+        if (!safeSnippet) {
+          return;
+        }
+
+        const currentValue = input.value.trim();
+        input.value = currentValue
+          ? `${currentValue} ${safeSnippet}`
+          : safeSnippet;
+
+        datePreview.textContent = `名字+ID: ${snippet}`;
+        input.focus();
+        const endPos = input.value.length;
+        input.setSelectionRange(endPos, endPos);
+      });
 
       confirmBtn.addEventListener("click", submitAction);
 
@@ -316,6 +459,119 @@ export class DocumentDropzone {
         }
       });
     });
+  }
+
+  private loadRenameDatePreset(): DateFormatPreset {
+    const saved = localStorage.getItem(RENAME_DATE_PRESET_STORAGE_KEY);
+    if (isDateFormatPreset(saved)) {
+      return saved;
+    }
+    return "fullYear";
+  }
+
+  private promoteFloatingPanels(): void {
+    this.demoteFloatingPanels();
+
+    const candidates = [
+      document.getElementById("tracker-container"),
+      document.getElementById("hha-outlook-mini-container"),
+    ];
+
+    this.promotedPanelElements = candidates.filter(
+      (element): element is HTMLElement => element instanceof HTMLElement
+    );
+
+    this.promotedPanelElements.forEach((element) => {
+      element.classList.add("document-rename-panel-promoted");
+    });
+  }
+
+  private demoteFloatingPanels(): void {
+    this.promotedPanelElements.forEach((element) => {
+      element.classList.remove("document-rename-panel-promoted");
+    });
+    this.promotedPanelElements = [];
+  }
+
+  private saveRenameDatePreset(preset: DateFormatPreset): void {
+    localStorage.setItem(RENAME_DATE_PRESET_STORAGE_KEY, preset);
+  }
+
+  private sanitizeFileNameComponent(value: string): string {
+    return value
+      .replace(/[\\/:*?"<>|]+/g, "-")
+      .replace(/\s+/g, " ")
+      .replace(/\.+$/g, "")
+      .trim();
+  }
+
+  private buildNameAndIdSnippet(): string {
+    const profile = ProfileDataExtractor.extract();
+    const patientName = this.cleanPatientName(
+      profile?.name || document.querySelector("h1")?.textContent || ""
+    );
+    const patientId = this.extractBestPatientId(profile?.id || "");
+
+    if (!patientName && !patientId) {
+      return "";
+    }
+
+    return [patientName, patientId].filter(Boolean).join(" ");
+  }
+
+  private cleanPatientName(raw: string): string {
+    return raw
+      .replace(/\s+LINK\s+WITH\s*-\s*\[.*?\]/gi, "")
+      .replace(/\bActive\s+Alert\b/gi, "")
+      .replace(/\s*(Active|Inactive|Discharged|Pending)\s*$/i, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  private extractBestPatientId(rawId: string): string {
+    const normalized = rawId.replace(/\s+/g, " ").trim();
+    const direct = this.extractAdmissionIdFromText(normalized);
+    if (direct) {
+      return direct;
+    }
+
+    const labels = document.querySelectorAll("span, td, label");
+    for (const label of Array.from(labels)) {
+      if ((label.textContent || "").trim() !== "Admission ID") {
+        continue;
+      }
+
+      const nextElement =
+        label.nextElementSibling ||
+        label.parentElement?.nextElementSibling?.querySelector("span, td");
+      const nextText = (nextElement?.textContent || "").trim();
+      const id = this.extractAdmissionIdFromText(nextText);
+      if (id) {
+        return id;
+      }
+    }
+
+    const headingText = document.querySelector("h1")?.textContent || "";
+    return this.extractAdmissionIdFromText(headingText);
+  }
+
+  private extractAdmissionIdFromText(raw: string): string {
+    const normalized = raw.replace(/\s+/g, " ").trim();
+    if (!normalized) {
+      return "";
+    }
+
+    const ahcMatch = normalized.match(/\b(AHC-\d+)\b/i);
+    if (ahcMatch?.[1]) {
+      return ahcMatch[1].toUpperCase();
+    }
+
+    const numericMatch = normalized.match(/\b(\d{6,})\b/);
+    if (numericMatch?.[1]) {
+      return numericMatch[1];
+    }
+
+    return "";
   }
 
   /**
@@ -375,6 +631,7 @@ export class DocumentDropzone {
     if (this.observer) {
       this.observer.disconnect();
     }
+    this.demoteFloatingPanels();
     this.unbindDropzone();
   }
 }

@@ -37,9 +37,12 @@ import { QAReportTab } from "./js/tabs/QAReportTab";
 import { CleanerTab } from "./js/tabs/CleanerTab";
 import { MailBuilderTab } from "./js/tabs/MailBuilderTab";
 import { QuickSearchTab } from "./js/tabs/QuickSearchTab";
+import { DateInputTab } from "./js/tabs/DateInputTab";
 import { CleaningController } from "./js/services/CleaningController";
 import { CleaningOverlay } from "./js/services/CleaningOverlay";
+import { initPatientCalendarBulkNotes } from "./js/services/PatientCalendarBulkNotes";
 import { OutlookAdapter } from "./js/services/OutlookAdapter";
+import { OutlookMiniPanel } from "./js/services/OutlookMiniPanel";
 import { TinyMCEBundler } from "./js/services/TinyMCEBundler";
 import { initDocumentDropzone } from "./js/services/DocumentDropzone";
 import { initScheduledVisitsConfigCardUI } from "./js/ScheduledVisitsFilter";
@@ -50,6 +53,9 @@ const HOST = window.location.hostname.toLowerCase();
 const IS_HHA_APP_HOST = HOST === "app.hhaexchange.com";
 const IS_HHA_REPORTS_HOST = HOST === "reports.hhaexchange.com";
 const IS_VOICE_TECH_HOST = HOST === "mt3.1voicetech.com";
+const HHA_MAIN_PANEL_POSITION_KEY = "hha_main_panel_position";
+const HHA_MAIN_PANEL_KEY_PREFIX = "hha_main_panel";
+const HHA_MAIN_DATE_PRESET_KEY = "hha_main_date_preset";
 const EPIC11_DEBUG_ENABLED = (window as any).__HHA_EPIC11_DEBUG__ === true;
 
 function epic11Debug(...args: unknown[]): void {
@@ -67,6 +73,7 @@ async function main() {
 
   // Initialize OutlookAdapter if on Outlook page
   OutlookAdapter.init();
+  OutlookMiniPanel.init();
 
   // Domain-mode bootstrap:
   // - VoiceTech page: only incoming call assistant
@@ -303,6 +310,7 @@ async function main() {
   // Epic 18: Profile page enhancements
   ProfileDataExtractor.enhanceCaregiverSearchPanel();
   ProfileDataExtractor.enhancePatientAddressLink();
+  initPatientCalendarBulkNotes();
 
   // Epic 18: Search page Clear Filters buttons
   initSearchPageEnhancements();
@@ -382,6 +390,22 @@ function embedMultiTabPanel(
   dragHandle.parentNode?.replaceChild(newDragHandle, dragHandle);
   console.log("[Epic 7] Bell button cloned to remove VisitMonitor handlers");
 
+  // Host-level panel position persistence (HHA main panel only)
+  try {
+    const raw = localStorage.getItem(HHA_MAIN_PANEL_POSITION_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as { left: number; top: number };
+      if (typeof parsed.left === "number" && typeof parsed.top === "number") {
+        trackerContainer.style.left = `${parsed.left}px`;
+        trackerContainer.style.top = `${parsed.top}px`;
+        trackerContainer.style.right = "auto";
+        trackerContainer.style.bottom = "auto";
+      }
+    }
+  } catch (error) {
+    console.warn("[Epic 19] Failed to restore HHA panel position:", error);
+  }
+
   // Create our panel container as a SIBLING to tracker-panel inside tracker-container
   const container = document.createElement("div");
   container.id = "hha-smart-multi-tab-container";
@@ -404,6 +428,7 @@ function embedMultiTabPanel(
     defaultTabId: "status-tracking",
     initialCollapsed: false,
     showHeaderControls: false, // 不显示最小化/关闭按钮，用铃铛控制
+    storageKeyPrefix: HHA_MAIN_PANEL_KEY_PREFIX,
   });
 
   // Register tabs
@@ -412,6 +437,12 @@ function embedMultiTabPanel(
   panel.registerTab(new CleanerTab());
   panel.registerTab(new MailBuilderTab());
   panel.registerTab(new QuickSearchTab());
+  panel.registerTab(
+    new DateInputTab({
+      presetStorageKey: HHA_MAIN_DATE_PRESET_KEY,
+      showOutlookHint: false,
+    })
+  );
 
   // Initialize panel
   panel
@@ -488,6 +519,16 @@ function setupBellClickHandler(
     isDragging = false;
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
+
+    try {
+      const rect = trackerContainer.getBoundingClientRect();
+      localStorage.setItem(
+        HHA_MAIN_PANEL_POSITION_KEY,
+        JSON.stringify({ left: rect.left, top: rect.top })
+      );
+    } catch (error) {
+      console.warn("[Epic 19] Failed to save HHA panel position:", error);
+    }
   };
 
   dragHandle.addEventListener("mousedown", onMouseDown);

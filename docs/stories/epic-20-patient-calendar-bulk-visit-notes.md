@@ -95,6 +95,14 @@
 3. 该日期标记为 `skipped`，不会再发写入请求；
 4. 汇总中显示跳过数量，避免重复创建。
 
+### 流程 D：在批量弹窗中直接打开 Outlook 邮件预览
+
+1. 用户在 `快速添加 Patient Visit Notes` 弹窗中选好日期；
+2. 点击弹窗左下角 `Outlook` 按钮；
+3. 系统打开 Timesheet 邮件预览弹窗，默认加载 Timesheet 模板已保存的 `To/CC` 配置；
+4. 邮件 Subject 自动预填当前所选日期集合（同年日期仅在末尾保留年份）；
+5. 用户可在预览中编辑 Subject/Body 后发送到 Outlook。
+
 ---
 
 ## Story 20-1: 提取 AjaxPro 版 PatientVisitNotesService
@@ -104,20 +112,20 @@
 **以便** 在不依赖原生 UI 点击的情况下直接调用真实保存链路。
 
 ### 验收标准
-- [ ] 新建 `src/js/services/PatientVisitNotesService.ts`
-- [ ] 至少导出以下接口或等价能力：
+- [x] 新建 `src/js/services/PatientVisitNotesService.ts`
+- [x] 至少导出以下接口或等价能力：
   - `saveVisitNote(request): Promise<number>`
   - `fetchVisitNotesPage(patientId, visitDate, officeId): Promise<string>`
   - `parseVisitNotes(html): PatientVisitNoteRecord[]`
   - `normalizeVisitNoteText(text): string`
-- [ ] `saveVisitNote()` 使用真实 AjaxPro 保存链路：
+- [x] `saveVisitNote()` 使用真实 AjaxPro 保存链路：
   - `POST {tenantBase}/ajaxpro/CommonFunctions,HHAExchangeUI.ashx`
   - Header: `Content-Type: text/plain; charset=utf-8`
   - Header: `X-AjaxPro-Method: SavePatientVisitNotes`
   - Body: `{"PatientNoteID":-1,"PatientID":"...","Note":"Received live-in Timesheet","VisitDate":"MM/DD/YYYY"}`
-- [ ] 成功时返回正整数 `value`；失败时抛出明确错误
-- [ ] 明确禁止走 `PatientSaveNote2`
-- [ ] `npm run build` 无新增错误
+- [x] 成功时返回正整数 `value`；失败时抛出明确错误
+- [x] 明确禁止走 `PatientSaveNote2`
+- [x] `npm run build` 无新增错误
 
 ### 实现提示
 - 低层协议建议继续使用 `GM_fetch`，保持与现有 HHA 服务层一致
@@ -132,19 +140,19 @@
 **以便** 自动跳过同日同内容记录。
 
 ### 验收标准
-- [ ] `PatientVisitNotesService` 支持请求：
+- [x] `PatientVisitNotesService` 支持请求：
   - `GET /Patient/PatientVisitNotes_ns.aspx?PatientId={id}&VisitDate={MM/DD/YYYY}&office={office}&OfficeID={office}&dt={timestamp}`
-- [ ] 解析表格 `#gvPatientVisitNote`，输出结构至少包含：
+- [x] 解析表格 `#gvPatientVisitNote`，输出结构至少包含：
   - `date`
   - `noteText`
   - `createdBy`
   - `createdDate`
-- [ ] Note 解析优先读取：
+- [x] Note 解析优先读取：
   - `span[id$="_lblNote"]`
   - fallback：`textarea[id$="_txtNote"]`
-- [ ] 不允许直接拿整格 `td.innerText` 作为 note 内容来源
-- [ ] 归一化后，若某条记录与目标文本完全一致，则该日期判定为重复
-- [ ] 若读取页面失败或解析失败，该日期必须返回 `failed`，调用方不得继续盲写
+- [x] 不允许直接拿整格 `td.innerText` 作为 note 内容来源
+- [x] 归一化后，若某条记录与目标文本完全一致，则该日期判定为重复
+- [x] 若读取页面失败或解析失败，该日期必须返回 `failed`，调用方不得继续盲写
 
 ### 实现提示
 - 当前真实页面中 Note 列会同时包含可见 `span` 和隐藏 `textarea`，直接取整格文本会得到重复文本
@@ -158,25 +166,28 @@
 **以便** 快速完成高频重复性工作。
 
 ### 验收标准
-- [ ] 新建 `src/js/components/PatientCalendarBulkNotesModal.ts`
-- [ ] Modal 标题明确指向当前场景，例如：`快速添加 Patient Visit Notes`
-- [ ] Modal 中固定显示将要写入的 note：
+- [x] 新建 `src/js/components/PatientCalendarBulkNotesModal.ts`
+- [x] Modal 标题明确指向当前场景，例如：`快速添加 Patient Visit Notes`
+- [x] Modal 中固定显示将要写入的 note：
   - `Received live-in Timesheet`
-- [ ] 不提供自由输入 textarea 或附加备注字段
-- [ ] 日期选择区至少提供两种能力：
+- [x] 不提供自由输入 textarea 或附加备注字段
+- [x] 日期选择区至少提供两种能力：
   - 手动点选日期
   - 按“起止范围 + 周几”批量加入日期
-- [ ] 支持跨月选择
-- [ ] 至少提供以下快速筛选元素：
+- [x] 支持跨月选择
+- [x] 至少提供以下快速筛选元素：
   - 起始日期
   - 结束日期
   - 周一至周日多选 chip
   - `按条件加入` 按钮
   - `清空已选` 按钮
-- [ ] Modal 中实时显示：
+- [x] Modal 中实时显示：
   - 已选日期数
   - 前若干个已选日期预览
-- [ ] 用户可在执行前手动取消个别日期
+- [x] 用户可在执行前手动取消个别日期
+- [x] Modal 左下角提供 `Outlook` 按钮（不关闭当前日期选择上下文）
+- [x] 点击 `Outlook` 后弹出邮件预览，默认复用 `TimesheetNotificationTemplate` 已保存的 `To/CC` 配置
+- [x] 邮件 Subject 默认带入当前已选日期集合（同年日期仅在末尾保留年份，用户仍可手动编辑）
 
 ### 实现提示
 - 交互风格参考现有日期输入器的双月历思路，但本 Modal 是 Patient Calendar 专用工作流，不必强行复用通用日期输入器文案
@@ -190,17 +201,17 @@
 **以便** 不离开当前 Calendar 就能启动批量写入。
 
 ### 验收标准
-- [ ] 新建 `src/js/services/PatientCalendarBulkNotes.ts`
-- [ ] 仅在以下条件同时满足时注入按钮：
+- [x] 新建 `src/js/services/PatientCalendarBulkNotes.ts`
+- [x] 仅在以下条件同时满足时注入按钮：
   - 当前页面为 `PATIENT_PROFILE`
   - `#iframefrmRightSide` 已加载
   - iframe URL 包含 `InternalPatientCalendarDetails_ns.aspx`
-- [ ] 目标锚点为 iframe 内的：
+- [x] 目标锚点为 iframe 内的：
   - `button#btnVisits`
-- [ ] 新按钮插在 `Add a Visit` 左侧
-- [ ] 新按钮样式与现有 `Add a Visit` 按钮保持一致
-- [ ] month/year 切换、calendar 刷新、iframe reload 后不会重复注入多份按钮
-- [ ] 离开 Patient Profile 或 iframe 不是 Calendar 时，不显示该按钮
+- [x] 新按钮插在 `Add a Visit` 左侧
+- [x] 新按钮样式与现有 `Add a Visit` 按钮保持一致
+- [x] month/year 切换、calendar 刷新、iframe reload 后不会重复注入多份按钮
+- [x] 离开 Patient Profile 或 iframe 不是 Calendar 时，不显示该按钮
 
 ### 实现提示
 - 优先使用 iframe `load` 监听和 idempotent 检查，而不是全局无差别轮询
@@ -214,18 +225,20 @@
 **以便** 用最少的 UI 干扰完成批量写入。
 
 ### 验收标准
-- [ ] 从当前 Patient Profile URL 中大小写不敏感提取 `PatientId`
-- [ ] 从 calendar iframe URL 参数或隐藏字段中提取 `officeId`
-- [ ] 内部已选日期集合使用 canonical 格式（推荐 `YYYY-MM-DD`）
-- [ ] 发请求前统一转换为 `MM/DD/YYYY`
-- [ ] 对每个日期执行顺序固定为：
+- [x] 从当前 Patient Profile URL 中大小写不敏感提取 `PatientId`
+- [x] 从 calendar iframe URL 参数或隐藏字段中提取 `officeId`
+- [x] 内部已选日期集合使用 canonical 格式（推荐 `YYYY-MM-DD`）
+- [x] 发请求前统一转换为 `MM/DD/YYYY`
+- [x] 点击 `开始批量添加` 后先出现二次确认步骤
+- [x] 二次确认中展示将要添加 notes 的日期清单，用户确认后才真正执行批处理
+- [x] 对每个日期执行顺序固定为：
   - 读取现有 Visit Notes
   - 命中重复则 `skipped`
   - 否则调用 AjaxPro 保存
-- [ ] 默认并发度为 `3`
-- [ ] 不做失败自动重试
-- [ ] 任何单日失败不会中断整个批次，其余日期继续执行
-- [ ] 固定 note 文本写死为 `Received live-in Timesheet`
+- [x] 默认并发度为 `3`
+- [x] 不做失败自动重试
+- [x] 任何单日失败不会中断整个批次，其余日期继续执行
+- [x] 固定 note 文本写死为 `Received live-in Timesheet`
 
 ### 实现提示
 - 建议输出统一的批处理结果结构，例如 `created[] / skipped[] / failed[]`
@@ -239,16 +252,16 @@
 **以便** 快速确认结果，而不是被逐条反馈打断。
 
 ### 验收标准
-- [ ] 整个批次结束后只显示一次汇总反馈
-- [ ] 汇总至少包含：
+- [x] 整个批次结束后只显示一次汇总反馈
+- [x] 汇总至少包含：
   - 创建成功数量
   - 跳过数量
   - 失败数量
-- [ ] 若失败数量大于 0，摘要中展示前若干个失败日期
-- [ ] 不显示逐条成功 toast / confirm
-- [ ] 批次结束后只刷新一次 Calendar：
+- [x] 若失败数量大于 0，摘要中展示全部失败日期（列表可滚动）
+- [x] 不显示逐条成功 toast / confirm
+- [x] 批次结束后只刷新一次 Calendar：
   - 点击 iframe 内 `uxbtnSearch`
-- [ ] 现有 `Add a Visit` 下拉菜单和手工 `Notes` 弹窗行为不受影响
+- [x] 现有 `Add a Visit` 下拉菜单和手工 `Notes` 弹窗行为不受影响
 
 ### 实现提示
 - 若未来要做当前打开 popup 的同步刷新，可作为后续增强，不纳入本 Story 必需项
@@ -262,7 +275,7 @@
 **以便** 在不误伤现有 Patient Calendar 功能的前提下上线。
 
 ### 验收标准
-- [ ] 手动验证以下场景：
+- [x] 手动验证以下场景：
   - 仅手动点选少量日期后成功创建 notes
   - 使用跨月日期范围 + 周几批量加入后成功创建 notes
   - 已存在同日同内容时正确跳过
@@ -270,8 +283,8 @@
   - 批次结束后只刷新一次 Calendar
   - 原生 `Add a Visit` 菜单不受影响
   - 原生单日 `Notes` 弹窗不受影响
-- [ ] `npm run build` 无新增错误
-- [ ] 文档完成并互相关联：
+- [x] `npm run build` 无新增错误
+- [x] 文档完成并互相关联：
   - `docs/adr/018-patient-calendar-bulk-visit-notes-ajaxpro.md`
   - `docs/stories/epic-20-patient-calendar-bulk-visit-notes.md`
 

@@ -3,10 +3,7 @@ import { ITab } from "./tabs/BaseTab";
 /**
  * LocalStorage Keys for Multi-Tab Panel
  */
-const STORAGE_KEYS = {
-  ACTIVE_TAB: "hha_smart_assistant_active_tab",
-  TAB_BAR_COLLAPSED: "hha_smart_assistant_tab_bar_collapsed",
-} as const;
+const DEFAULT_STORAGE_KEY_PREFIX = "hha_smart_assistant";
 
 /**
  * Multi-Tab Panel Configuration
@@ -20,6 +17,8 @@ interface MultiTabPanelConfig {
   initialCollapsed?: boolean;
   /** Show header controls (minimize/close buttons) - default false */
   showHeaderControls?: boolean;
+  /** LocalStorage key prefix for panel state persistence */
+  storageKeyPrefix?: string;
 }
 
 /**
@@ -44,6 +43,10 @@ export class MultiTabPanel {
   private isCollapsed: boolean = false;
 
   private config: Required<MultiTabPanelConfig>;
+  private storageKeys: {
+    ACTIVE_TAB: string;
+    TAB_BAR_COLLAPSED: string;
+  };
 
   constructor(container: HTMLElement, config: MultiTabPanelConfig = {}) {
     this.container = container;
@@ -52,6 +55,12 @@ export class MultiTabPanel {
       defaultTabId: config.defaultTabId ?? "",
       showHeaderControls: config.showHeaderControls ?? false,
       initialCollapsed: config.initialCollapsed ?? false,
+      storageKeyPrefix: config.storageKeyPrefix ?? DEFAULT_STORAGE_KEY_PREFIX,
+    };
+
+    this.storageKeys = {
+      ACTIVE_TAB: `${this.config.storageKeyPrefix}_active_tab`,
+      TAB_BAR_COLLAPSED: `${this.config.storageKeyPrefix}_tab_bar_collapsed`,
     };
 
     this.loadState();
@@ -432,7 +441,7 @@ export class MultiTabPanel {
 
   private loadState(): void {
     // Load active tab
-    const savedTab = localStorage.getItem(STORAGE_KEYS.ACTIVE_TAB);
+    const savedTab = localStorage.getItem(this.storageKeys.ACTIVE_TAB);
     if (savedTab) {
       this.activeTabId = savedTab;
     } else if (this.config.defaultTabId) {
@@ -440,17 +449,17 @@ export class MultiTabPanel {
     }
 
     // Load collapse state
-    const collapsed = localStorage.getItem(STORAGE_KEYS.TAB_BAR_COLLAPSED);
+    const collapsed = localStorage.getItem(this.storageKeys.TAB_BAR_COLLAPSED);
     this.isCollapsed = collapsed === "true" || this.config.initialCollapsed;
   }
 
   private saveActiveTab(): void {
-    localStorage.setItem(STORAGE_KEYS.ACTIVE_TAB, this.activeTabId);
+    localStorage.setItem(this.storageKeys.ACTIVE_TAB, this.activeTabId);
   }
 
   private saveCollapseState(): void {
     localStorage.setItem(
-      STORAGE_KEYS.TAB_BAR_COLLAPSED,
+      this.storageKeys.TAB_BAR_COLLAPSED,
       String(this.isCollapsed)
     );
   }

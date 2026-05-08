@@ -47,10 +47,46 @@ export class CSPBypassInjector {
   static injectStyle(css: string, id?: string): void {
     // @ts-ignore
     const GM = window.GM || unsafeWindow?.GM;
+
+    const appendStyleElement = (): void => {
+      const style = document.createElement("style");
+      if (id) {
+        style.id = id;
+      }
+      style.textContent = css;
+
+      const target = document.head || document.documentElement || document.body;
+      if (target) {
+        target.appendChild(style);
+      }
+    };
+
     if (GM?.addElement) {
       const options: any = { textContent: css };
       if (id) options.id = id;
-      GM.addElement(document.head, "style", options);
+      const target = document.head || document.documentElement || document.body;
+      if (target) {
+        GM.addElement(target, "style", options);
+        return;
+      }
+
+      // Retry once after DOM is ready in case script runs too early.
+      window.addEventListener(
+        "DOMContentLoaded",
+        () => {
+          const delayedTarget =
+            document.head || document.documentElement || document.body;
+          if (delayedTarget) {
+            GM.addElement(delayedTarget, "style", options);
+            return;
+          }
+          appendStyleElement();
+        },
+        { once: true }
+      );
+      return;
     }
+
+    appendStyleElement();
   }
 }
