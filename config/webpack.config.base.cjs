@@ -110,6 +110,11 @@ const webpackConfig = {
         test: /\.docx$/,
         type: 'asset/inline',
       },
+      /* config.module.rule('pdf') — Epic 21: M11Q template inline */
+      {
+        test: /\.pdf$/,
+        type: 'asset/inline',
+      },
     ],
   },
   plugins: process.env.npm_config_report ? [new BundleAnalyzerPlugin()] : [new VueLoaderPlugin(),

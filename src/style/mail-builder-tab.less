@@ -46,6 +46,44 @@
     white-space: nowrap;
 }
 
+.mail-builder-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mail-builder-action-btn {
+    border: none;
+    border-radius: 14px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    &:disabled,
+    &.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+}
+
+.m11q-create-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
 /* Main Content - 35% / 65% Split */
 .mail-builder-main {
     flex: 1;
@@ -1824,4 +1862,136 @@
     justify-content: flex-end;
     gap: 10px;
     border-top: 1px solid #edf0f7;
+}
+
+/* ── Epic 21: M11Q Prefilled PDF Modal ── */
+
+.m11q-modal-overlay {
+    z-index: 100004;
+}
+
+.m11q-modal {
+    width: 680px;
+    max-width: 94vw;
+}
+
+.m11q-modal-body {
+    padding: 16px 20px 10px;
+    max-height: calc(88vh - 130px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.m11q-info-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 12px;
+    background: #f5f7ff;
+    border: 1px solid #dde3f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+}
+
+.m11q-info-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5a5f7d;
+    white-space: nowrap;
+}
+
+.m11q-info-value {
+    font-size: 13px;
+    color: #222;
+    word-break: break-word;
+}
+
+.m11q-form-section {
+    border-top: 1px dashed #e5e7ee;
+    padding-top: 12px;
+}
+
+.m11q-form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+.m11q-fax-select {
+    margin-bottom: 10px;
+}
+
+.m11q-custom-wrap {
+    margin-bottom: 10px;
+
+    &.hidden {
+        display: none;
+    }
+}
+
+.m11q-custom-input {
+    width: 100%;
+}
+
+.m11q-remember-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    user-select: none;
+
+    input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+        accent-color: #667eea;
+        cursor: pointer;
+    }
+}
+
+.m11q-modal-footer {
+    padding: 12px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #edf0f7;
+}
+
+.m11q-modal-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50px);
+    opacity: 0;
+    z-index: 100010;
+    max-width: 420px;
+    text-align: center;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+    transition: all 0.25s ease;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+    &.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    &.m11q-modal-toast--success {
+        background: #2e7d32;
+    }
+
+    &.m11q-modal-toast--warning {
+        background: #ed6c02;
+    }
+
+    &.m11q-modal-toast--error {
+        background: #d32f2f;
+    }
 }

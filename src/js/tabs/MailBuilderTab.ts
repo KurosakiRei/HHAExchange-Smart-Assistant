@@ -18,6 +18,7 @@ import { EmploymentActivationTemplate } from "../services/builtin/EmploymentActi
 import { PageDetector } from "../services/PageDetector";
 import { matchInsurance } from "../utils/InsuranceMatcher";
 import { FaxPreviewModal } from "../components/FaxPreviewModal";
+import { M11QPdfModal } from "../components/M11QPdfModal";
 
 declare const unsafeWindow: Window;
 
@@ -182,14 +183,56 @@ export class MailBuilderTab extends BaseTab {
     const header = document.createElement("div");
     header.className = "mail-builder-header";
 
+    const canCreateM11Q = this.isPatientPage(this.currentPageType);
+    const m11qTooltip = canCreateM11Q
+      ? "创建并下载预填 M11Q PDF"
+      : "仅在病人页面可用";
+
     header.innerHTML = `
       <h3 class="mail-builder-title">📧 邮件助手</h3>
-      <span class="mail-builder-page-tag">当前页面：${ProfileDataExtractor.getPageDisplayName(
-        this.currentPageType
-      )}</span>
+      <div class="mail-builder-header-right">
+        <button
+          class="mail-builder-action-btn m11q-create-btn ${
+            canCreateM11Q ? "" : "disabled"
+          }"
+          id="mail-builder-m11q-btn"
+          title="${m11qTooltip}"
+          ${canCreateM11Q ? "" : "disabled"}
+        >
+          创建 M11Q PDF
+        </button>
+        <span class="mail-builder-page-tag">当前页面：${ProfileDataExtractor.getPageDisplayName(
+          this.currentPageType
+        )}</span>
+      </div>
     `;
 
+    const m11qBtn = header.querySelector(
+      "#mail-builder-m11q-btn"
+    ) as HTMLButtonElement | null;
+    if (m11qBtn && canCreateM11Q) {
+      m11qBtn.addEventListener("click", () => this.openM11QModal());
+    }
+
     return header;
+  }
+
+  private isPatientPage(pageType: ProfilePageType): boolean {
+    return pageType === "PATIENT_INTERNAL" || pageType === "PATIENT_NS";
+  }
+
+  private openM11QModal(): void {
+    if (!this.profileData || !this.isPatientPage(this.currentPageType)) {
+      this.showToast("⚠️ 仅在病人页面可创建 M11Q PDF");
+      return;
+    }
+
+    const modal = new M11QPdfModal({
+      profileData: this.profileData,
+      onDownloaded: () => this.showToast("✅ M11Q PDF 已下载"),
+    });
+
+    modal.open();
   }
 
   /**
