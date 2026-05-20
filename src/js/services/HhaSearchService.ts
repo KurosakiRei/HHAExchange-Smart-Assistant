@@ -12,7 +12,7 @@ export interface TenantBaseUrlResolution {
   message?: string;
 }
 
-function isOutlookLikeHost(): boolean {
+function isOutlookHost(): boolean {
   const host = window.location.hostname.toLowerCase();
   return (
     host === "outlook.office.com" ||
@@ -25,7 +25,7 @@ function isHhaHost(): boolean {
   return window.location.hostname.toLowerCase().endsWith("hhaexchange.com");
 }
 
-function extractTenantVersion(url: string): string | null {
+function extractVersion(url: string): string | null {
   const m1 = url.match(/\/ENT(\d+)\//);
   if (m1) return m1[1];
   const m2 = url.match(/\/(?:HHANotification|ENTP)(\d+)\//);
@@ -34,55 +34,44 @@ function extractTenantVersion(url: string): string | null {
 }
 
 function detectTenantBaseUrlStrict(): string | null {
-  const pathnameVersion = extractTenantVersion(window.location.pathname);
-  if (pathnameVersion) {
-    return `https://app.hhaexchange.com/ENT${pathnameVersion}`;
-  }
+  const r1 = extractVersion(window.location.pathname);
+  if (r1) return `https://app.hhaexchange.com/ENT${r1}`;
 
   for (const script of Array.from(document.scripts)) {
-    if (!script.src) {
-      continue;
-    }
-    const scriptVersion = extractTenantVersion(script.src);
-    if (scriptVersion) {
-      return `https://app.hhaexchange.com/ENT${scriptVersion}`;
+    if (script.src) {
+      const r2 = extractVersion(script.src);
+      if (r2) return `https://app.hhaexchange.com/ENT${r2}`;
     }
   }
 
-  const hrefVersion = extractTenantVersion(window.location.href);
-  if (hrefVersion) {
-    return `https://app.hhaexchange.com/ENT${hrefVersion}`;
-  }
+  const r3 = extractVersion(window.location.href);
+  if (r3) return `https://app.hhaexchange.com/ENT${r3}`;
 
   try {
     if (window.parent !== window) {
-      const parentVersion = extractTenantVersion(window.parent.location.href);
-      if (parentVersion) {
-        return `https://app.hhaexchange.com/ENT${parentVersion}`;
-      }
+      const r4 = extractVersion(window.parent.location.href);
+      if (r4) return `https://app.hhaexchange.com/ENT${r4}`;
     }
-  } catch (_) {
-    /* 跨域父窗口，跳过 */
+  } catch {
+    // ignore cross-origin parent access
   }
 
   return null;
 }
 
 function saveTenantBaseUrlToCache(baseUrl: string): void {
-  if (!baseUrl) {
-    return;
-  }
+  if (!baseUrl) return;
 
   try {
     GM_setValue(TENANT_CACHE_KEY, baseUrl);
-  } catch (_) {
-    /* ignore */
+  } catch {
+    // ignore GM storage errors
   }
 
   try {
     localStorage.setItem(TENANT_CACHE_KEY, baseUrl);
-  } catch (_) {
-    /* ignore */
+  } catch {
+    // ignore localStorage errors
   }
 }
 
@@ -95,49 +84,32 @@ function readTenantBaseUrlFromCache(): string | null {
     ) {
       return fromGM;
     }
-  } catch (_) {
-    /* ignore */
+  } catch {
+    // ignore GM storage errors
   }
 
   try {
     const fromStorage = localStorage.getItem(TENANT_CACHE_KEY);
     if (
-      fromStorage &&
+      typeof fromStorage === "string" &&
       fromStorage.startsWith("https://app.hhaexchange.com/ENT")
     ) {
       return fromStorage;
     }
-  } catch (_) {
-    /* ignore */
+  } catch {
+    // ignore localStorage errors
   }
 
   return null;
 }
 
-function getDefaultMissingMessage(): string {
-  if (isOutlookLikeHost()) {
-    return "Quick Search 无法确定租户。请先打开一次 HHA 页面以同步租户信息。";
-  }
-  return "无法自动解析当前租户，请确认页面已完成加载。";
-}
-
-/**
- * 优先租户策略：当前环境解析 -> 租户缓存 ->（可选）fallback。
- */
-export function getPreferredTenantBaseUrl(options?: {
-  allowFallback?: boolean;
-}): TenantBaseUrlResolution {
-  const allowFallback = options?.allowFallback === true;
-
+export function getQuickSearchTenantState(): TenantBaseUrlResolution {
   const detected = detectTenantBaseUrlStrict();
   if (detected) {
     if (isHhaHost()) {
       saveTenantBaseUrlToCache(detected);
     }
-    return {
-      baseUrl: detected,
-      source: "detected",
-    };
+    return { baseUrl: detected, source: "detected" };
   }
 
   const cached = readTenantBaseUrlFromCache();
@@ -145,54 +117,26 @@ export function getPreferredTenantBaseUrl(options?: {
     return {
       baseUrl: cached,
       source: "cache",
-      message: isOutlookLikeHost()
+      message: isOutlookHost()
         ? "当前在 Outlook 环境，Quick Search 使用缓存租户。"
         : undefined,
     };
   }
 
-  if (allowFallback) {
-    if (!hasWarnedTenantFallback) {
-      hasWarnedTenantFallback = true;
-      console.warn(
-        "[HhaSearchService] Could not detect tenant prefix from URL and cache; using fallback"
-      );
-    }
+  if (isOutlookHost()) {
     return {
-      baseUrl: FALLBACK_TENANT_BASE_URL,
-      source: "fallback",
-      message: "未检测到租户信息，已使用默认租户。",
+      baseUrl: null,
+      source: "missing",
+      message:
+        "Quick Search 无法确定租户。请先打开一次 HHA 页面以同步租户信息。",
     };
   }
 
   return {
-    baseUrl: null,
-    source: "missing",
-    message: getDefaultMissingMessage(),
+    baseUrl: FALLBACK_TENANT_BASE_URL,
+    source: "fallback",
+    message: "未检测到租户信息，已使用默认租户。",
   };
-}
-
-export function getQuickSearchTenantState(): TenantBaseUrlResolution {
-  return getPreferredTenantBaseUrl({ allowFallback: !isOutlookLikeHost() });
-}
-
-function getTenantBaseUrlForSearchOrThrow(): string {
-  const allowFallback = !isOutlookLikeHost();
-  const resolution = getPreferredTenantBaseUrl({ allowFallback });
-  if (resolution.baseUrl) {
-    return resolution.baseUrl;
-  }
-  throw new Error(resolution.message || "Quick Search 无法确定租户信息");
-}
-
-function buildProfileUrlTemplate(type: "aide" | "patient"): string {
-  const baseUrl =
-    getPreferredTenantBaseUrl({ allowFallback: true }).baseUrl ||
-    FALLBACK_TENANT_BASE_URL;
-  if (type === "aide") {
-    return `${baseUrl}/Aide/Aide_ns.aspx?AideId={ID}`;
-  }
-  return `${baseUrl}/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}`;
 }
 
 /**
@@ -201,10 +145,29 @@ function buildProfileUrlTemplate(type: "aide" | "patient"): string {
  * 并在同源 iframe 中尝试从父窗口推导，避免版本升级触发强制登出
  */
 export function detectTenantBaseUrl(): string {
-  return (
-    getPreferredTenantBaseUrl({ allowFallback: true }).baseUrl ||
-    FALLBACK_TENANT_BASE_URL
-  );
+  const state = getQuickSearchTenantState();
+  if (state.baseUrl) {
+    if (
+      state.source === "fallback" &&
+      isHhaHost() &&
+      !hasWarnedTenantFallback
+    ) {
+      hasWarnedTenantFallback = true;
+      console.warn(
+        "[HhaSearchService] Could not detect tenant prefix from URL/cache, using fallback"
+      );
+    }
+    return state.baseUrl;
+  }
+
+  if (isHhaHost() && !hasWarnedTenantFallback) {
+    hasWarnedTenantFallback = true;
+    console.warn(
+      "[HhaSearchService] Could not detect tenant prefix from URL, using fallback"
+    );
+  }
+
+  return FALLBACK_TENANT_BASE_URL;
 }
 
 // ==================== URL 常量 ====================
@@ -215,15 +178,13 @@ const _TENANT_BASE_URL = detectTenantBaseUrl();
 export const AIDE_SEARCH_URL: string = `${_TENANT_BASE_URL}/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=`;
 export const AIDE_SEARCH_PARAMS: string =
   "&LastName=&Type=-1&Discipline=-1&CaregiverCode=&ALtCaregiverCode=&Status=-1&SSN=&CaregiverTeamID=-1&FromVisitEdit=0&CaregiverLocationID=-1&CaregiverBranchID=-1&VisitDate=&office=469,5137,5139,6475,14849&DOB=&pg=1&sort=&ord=ASC&FromPage=";
-export const AIDE_PROFILE_URL_TEMPLATE: string =
-  buildProfileUrlTemplate("aide");
+export const AIDE_PROFILE_URL_TEMPLATE: string = `${_TENANT_BASE_URL}/Aide/Aide_ns.aspx?AideId={ID}`;
 
 /** Patient (病人) 搜索 URL - 使用动态租户前缀 */
 export const PATIENT_SEARCH_URL: string = `${_TENANT_BASE_URL}/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=`;
 export const PATIENT_SEARCH_PARAMS: string =
   "&AltPatientID=&TeamID=-1&LocationID=-1&BranchID=-1&DisciplineID=0&Default=false&pg=1&sort=&ord=ASC&OfficeIds=469,5137,5139,6475,14849&MedicaidID=";
-export const PATIENT_PROFILE_URL_TEMPLATE: string =
-  buildProfileUrlTemplate("patient");
+export const PATIENT_PROFILE_URL_TEMPLATE: string = `${_TENANT_BASE_URL}/Patient/InternalPatientInfo_ns.aspx?PatientId={ID}`;
 
 // ==================== 类型定义 ====================
 
@@ -301,6 +262,55 @@ export function formatPhoneNumber(rawNumber: string | null): string | null {
   return null;
 }
 
+const POPUP_SEARCH_HANDLER_KEY = "__HHA_POPUP_SEARCH_BY_PHONE__";
+
+function ensurePopupSearchHandler(): void {
+  const hostWindow = window as Window & Record<string, unknown>;
+  if (typeof hostWindow[POPUP_SEARCH_HANDLER_KEY] === "function") {
+    return;
+  }
+
+  hostWindow[POPUP_SEARCH_HANDLER_KEY] = async (
+    phoneNumber: string
+  ): Promise<boolean> => {
+    const formattedNumber = formatPhoneNumber(phoneNumber);
+    if (!formattedNumber) {
+      alert(`无效的电话号码格式: ${phoneNumber}`);
+      return false;
+    }
+
+    const [aideResult, patientResult] = await Promise.all([
+      fetchHhaData("aide", formattedNumber),
+      fetchHhaData("patient", formattedNumber),
+    ]);
+
+    const hasAideResult = aideResult.count > 0;
+    const hasPatientResult = patientResult.count > 0;
+
+    if (hasAideResult && !hasPatientResult) {
+      if (aideResult.count === 1 && aideResult.finalUrl) {
+        openInPopup(aideResult.finalUrl);
+      } else {
+        displaySingleResult(aideResult, "aide", formattedNumber);
+      }
+    } else if (!hasAideResult && hasPatientResult) {
+      if (patientResult.finalUrl) {
+        openInPopup(patientResult.finalUrl);
+      } else {
+        displaySingleResult(patientResult, "patient", formattedNumber);
+      }
+    } else if (hasAideResult && hasPatientResult) {
+      displayCombinedResults(aideResult, patientResult, formattedNumber);
+    } else {
+      alert(
+        `电话号码 [${formattedNumber}] 在 HHAeXchange 中未找到对应的护工或病人。`
+      );
+    }
+
+    return true;
+  };
+}
+
 /**
  * 以弹窗形式打开一个URL或HTML内容
  */
@@ -315,15 +325,21 @@ export function openInPopup(
   const uniqueName = `HHA_Search_${Date.now()}`;
 
   if (isHtml) {
+    ensurePopupSearchHandler();
+
     const blob = new Blob([urlOrHtml], { type: "text/html;charset=utf-8" });
     const blobUrl = URL.createObjectURL(blob);
     const popup = window.open(blobUrl, uniqueName, windowFeatures);
 
     if (popup) {
+      schedulePopupInteractionInit(popup);
       popup.addEventListener("load", () => {
-        URL.revokeObjectURL(blobUrl);
+        initializePopupInteractions(popup);
       });
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+
+      // Keep Blob URL alive while popup is open.
+      // If revoked too early, suspended/crashed popup tabs cannot be reloaded.
+      monitorPopupAndRevokeBlobUrl(popup, blobUrl);
     } else {
       URL.revokeObjectURL(blobUrl);
       console.warn("弹窗被浏览器阻止，请允许弹窗后重试");
@@ -331,6 +347,476 @@ export function openInPopup(
   } else {
     window.open(urlOrHtml, uniqueName, windowFeatures);
   }
+}
+
+function monitorPopupAndRevokeBlobUrl(popup: Window, blobUrl: string): void {
+  let checks = 0;
+  const maxChecks = 21600; // ~12 hours @ 2s interval
+
+  const timer = window.setInterval(() => {
+    checks += 1;
+
+    if (popup.closed || checks >= maxChecks) {
+      window.clearInterval(timer);
+      URL.revokeObjectURL(blobUrl);
+    }
+  }, 2000);
+}
+
+function schedulePopupInteractionInit(popup: Window): void {
+  let attempts = 0;
+  const maxAttempts = 80;
+  const timer = window.setInterval(() => {
+    attempts += 1;
+    if (
+      popup.closed ||
+      initializePopupInteractions(popup) ||
+      attempts >= maxAttempts
+    ) {
+      window.clearInterval(timer);
+    }
+  }, 120);
+}
+
+function initializePopupInteractions(popup: Window): boolean {
+  try {
+    const popupDoc = popup.document;
+    if (!popupDoc?.body) return false;
+
+    const href = popup.location?.href || popupDoc.URL || "";
+    if (!href || href === "about:blank" || href.startsWith("chrome-error://")) {
+      return false;
+    }
+
+    const root = popupDoc.documentElement;
+    if (root?.dataset.hhaPopupInteractionsInitialized === "1") {
+      return true;
+    }
+
+    setupPopupPagination(popupDoc);
+    setupPopupHighlight2Call(popupDoc);
+
+    if (root) {
+      root.dataset.hhaPopupInteractionsInitialized = "1";
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function setupPopupPagination(popupDoc: Document): void {
+  const bars = Array.from(
+    popupDoc.querySelectorAll<HTMLElement>("[data-pagination-side]")
+  );
+  if (!bars.length) return;
+
+  const currentPages: Record<string, number> = {};
+  const pageSizes: Record<string, number> = {};
+
+  bars.forEach((bar) => {
+    const side = bar.getAttribute("data-pagination-side");
+    if (!side) return;
+    const table = popupDoc.querySelector<HTMLTableElement>(
+      `table[data-side="${side}"]`
+    );
+    const pageSize = Number.parseInt(
+      table?.getAttribute("data-page-size") || "15",
+      10
+    );
+    pageSizes[side] = Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 15;
+    currentPages[side] = 1;
+  });
+
+  const showPage = (side: string, pageNum: number): void => {
+    const rows = Array.from(
+      popupDoc.querySelectorAll<HTMLTableRowElement>(
+        `[data-side="${side}"] tbody tr[data-row-index]`
+      )
+    );
+    if (!rows.length) return;
+
+    const pageSize = pageSizes[side] || 15;
+    const totalRows = rows.length;
+    const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+    const safePage = Math.min(Math.max(pageNum, 1), totalPages);
+    currentPages[side] = safePage;
+
+    rows.forEach((row) => {
+      const idx = Number.parseInt(
+        row.getAttribute("data-row-index") || "0",
+        10
+      );
+      const shouldShow =
+        idx >= (safePage - 1) * pageSize && idx < safePage * pageSize;
+      row.style.display = shouldShow ? "" : "none";
+    });
+
+    const pageInfo = popupDoc.querySelector<HTMLElement>(
+      `[data-pagination-side="${side}"] .pg-info`
+    );
+    const prevBtn = popupDoc.querySelector<HTMLButtonElement>(
+      `[data-pagination-side="${side}"] .pg-prev`
+    );
+    const nextBtn = popupDoc.querySelector<HTMLButtonElement>(
+      `[data-pagination-side="${side}"] .pg-next`
+    );
+
+    if (pageInfo) {
+      pageInfo.textContent = `第 ${safePage} / ${totalPages} 页`;
+    }
+    if (prevBtn) prevBtn.disabled = safePage <= 1;
+    if (nextBtn) nextBtn.disabled = safePage >= totalPages;
+  };
+
+  popupDoc
+    .querySelectorAll<HTMLButtonElement>("button[data-pagination-action]")
+    .forEach((btn) => {
+      if (btn.dataset.paginationBound === "1") return;
+      btn.dataset.paginationBound = "1";
+
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const side = btn.getAttribute("data-side") || "";
+        const action = btn.getAttribute("data-pagination-action") || "";
+        if (!side || !action) return;
+
+        const current = currentPages[side] || 1;
+        showPage(side, action === "prev" ? current - 1 : current + 1);
+      });
+    });
+
+  Object.keys(pageSizes).forEach((side) => showPage(side, 1));
+}
+
+function setupPopupHighlight2Call(popupDoc: Document): void {
+  if (!popupDoc.body || popupDoc.body.dataset.hhaH2cBound === "1") return;
+  popupDoc.body.dataset.hhaH2cBound = "1";
+
+  // Allow wrapped numbers like "212-\n369-\n1248" in narrow table cells.
+  const phoneRegex =
+    /(?:\+?1[\s().-]*)?\(?\d{3}\)?[\s().-]*\d{3}[\s().-]*\d{4}/;
+  const hostWindow = window as Window & Record<string, unknown>;
+  let actionPopup: HTMLDivElement | null = null;
+  let suppressMouseUpUntil = 0;
+
+  const normalize = (raw: string): string => {
+    let digits = raw.replace(/\D/g, "");
+    if (digits.length === 11 && digits.startsWith("1")) {
+      digits = digits.substring(1);
+    }
+    return digits;
+  };
+
+  const removePopup = (): void => {
+    if (!actionPopup) return;
+    actionPopup.remove();
+    actionPopup = null;
+  };
+
+  const markPopupInteraction = (): void => {
+    suppressMouseUpUntil = Date.now() + 400;
+  };
+
+  const clearSelection = (): void => {
+    try {
+      popupDoc.defaultView?.getSelection()?.removeAllRanges();
+    } catch {
+      // ignore selection API errors
+    }
+  };
+
+  const launchProtocol = (scheme: "tel" | "sms", number: string): void => {
+    const target = `${scheme}:${number}`;
+
+    markPopupInteraction();
+    clearSelection();
+    removePopup();
+
+    try {
+      (popupDoc.defaultView ?? window).location.href = target;
+      return;
+    } catch {
+      // fallback below
+    }
+
+    try {
+      (popupDoc.defaultView ?? window).open(target, "_self");
+    } catch {
+      // ignore open failures
+    }
+  };
+
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      try {
+        const ta = popupDoc.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "true");
+        ta.style.position = "fixed";
+        ta.style.top = "-9999px";
+        popupDoc.body?.appendChild(ta);
+        ta.select();
+        const copied = popupDoc.execCommand("copy");
+        ta.remove();
+        return copied;
+      } catch {
+        return false;
+      }
+    }
+  };
+
+  const requestHhaSearch = async (phoneNumber: string): Promise<void> => {
+    markPopupInteraction();
+    clearSelection();
+    removePopup();
+
+    const handler = hostWindow[POPUP_SEARCH_HANDLER_KEY];
+    if (typeof handler === "function") {
+      await Promise.resolve(handler(phoneNumber));
+      return;
+    }
+
+    alert("当前结果页无法连接到主窗口，请回到 Outlook 面板直接搜索。");
+  };
+
+  const appendPopupButton = (
+    container: HTMLElement,
+    options:
+      | {
+          tagName: "a";
+          className: string;
+          text: string;
+          href: string;
+          dataAction: string;
+        }
+      | {
+          tagName: "button";
+          className: string;
+          text: string;
+          dataPhone?: string;
+        }
+  ): HTMLElement => {
+    const element = popupDoc.createElement(options.tagName);
+    element.className = options.className;
+    element.textContent = options.text;
+
+    if (options.tagName === "a") {
+      const anchor = element as HTMLAnchorElement;
+      anchor.href = options.href;
+      anchor.setAttribute("data-action", options.dataAction);
+    } else if (options.dataPhone) {
+      element.setAttribute("data-phone", options.dataPhone);
+    }
+
+    container.appendChild(element);
+    return element;
+  };
+
+  const buildActionPopupContent = (
+    container: HTMLDivElement,
+    phoneNumber: string,
+    clean: string
+  ): void => {
+    const title = popupDoc.createElement("div");
+    title.className = "hcp-title";
+    title.textContent = "请选择操作";
+    container.appendChild(title);
+
+    const number = popupDoc.createElement("div");
+    number.className = "hcp-number";
+    number.textContent = phoneNumber;
+    container.appendChild(number);
+
+    const actionRow = popupDoc.createElement("div");
+    actionRow.className = "hcp-actions";
+    appendPopupButton(actionRow, {
+      tagName: "a",
+      className: "hcp-button",
+      text: "📞 打电话",
+      href: `tel:${clean}`,
+      dataAction: "tel",
+    });
+    appendPopupButton(actionRow, {
+      tagName: "a",
+      className: "hcp-button",
+      text: "💬 发短信",
+      href: `sms:${clean}`,
+      dataAction: "sms",
+    });
+    container.appendChild(actionRow);
+
+    const utilityRow = popupDoc.createElement("div");
+    utilityRow.className = "hcp-actions-full";
+    appendPopupButton(utilityRow, {
+      tagName: "button",
+      className: "hcp-button hcp-search-hha",
+      text: "🔍 在HHA搜索",
+      dataPhone: clean,
+    });
+    appendPopupButton(utilityRow, {
+      tagName: "button",
+      className: "hcp-copy-btn",
+      text: "📋 复制号码",
+    });
+    container.appendChild(utilityRow);
+
+    const closeBtn = popupDoc.createElement("div");
+    closeBtn.className = "hcp-close-btn";
+    closeBtn.setAttribute("title", "关闭");
+    closeBtn.textContent = "×";
+    container.appendChild(closeBtn);
+  };
+
+  const createPopup = (phoneNumber: string, event: MouseEvent): void => {
+    removePopup();
+
+    const clean = normalize(phoneNumber);
+    if (clean.length !== 10) return;
+
+    actionPopup = popupDoc.createElement("div");
+    actionPopup.id = "highlight-caller-popup";
+    buildActionPopupContent(actionPopup, phoneNumber, clean);
+
+    popupDoc.body.appendChild(actionPopup);
+
+    ["mousedown", "mouseup", "click"].forEach((eventName) => {
+      actionPopup?.addEventListener(eventName, (evt) => {
+        markPopupInteraction();
+        evt.stopPropagation();
+      });
+    });
+
+    const rect = actionPopup.getBoundingClientRect();
+    const popupWin = popupDoc.defaultView;
+    const viewportHeight = popupWin?.innerHeight ?? window.innerHeight;
+    const viewportWidth = popupWin?.innerWidth ?? window.innerWidth;
+    let top = event.clientY + 15;
+    let left = event.clientX;
+    if (top + rect.height > viewportHeight) {
+      top = event.clientY - rect.height - 15;
+    }
+    if (left + rect.width > viewportWidth) {
+      left = viewportWidth - rect.width - 10;
+    }
+    actionPopup.style.top = `${top}px`;
+    actionPopup.style.left = `${left}px`;
+
+    const closeBtn = actionPopup.querySelector<HTMLElement>(".hcp-close-btn");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        markPopupInteraction();
+        clearSelection();
+        removePopup();
+      });
+    }
+
+    const copyBtn =
+      actionPopup.querySelector<HTMLButtonElement>(".hcp-copy-btn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        markPopupInteraction();
+        const ok = await copyToClipboard(clean);
+        copyBtn.textContent = ok ? "✅ 已复制" : "❌ 复制失败";
+        window.setTimeout(() => {
+          if (copyBtn) copyBtn.textContent = "📋 复制号码";
+        }, 1500);
+      });
+    }
+
+    const searchBtn =
+      actionPopup.querySelector<HTMLButtonElement>(".hcp-search-hha");
+    if (searchBtn) {
+      searchBtn.addEventListener("click", async () => {
+        await requestHhaSearch(clean);
+      });
+    }
+
+    actionPopup
+      .querySelectorAll<HTMLAnchorElement>("a.hcp-button")
+      .forEach((btn) => {
+        btn.addEventListener("click", (evt) => {
+          evt.preventDefault();
+          evt.stopPropagation();
+
+          const action = btn.getAttribute("data-action");
+          if (action === "tel" || action === "sms") {
+            launchProtocol(action, clean);
+            return;
+          }
+
+          window.setTimeout(removePopup, 100);
+        });
+      });
+  };
+
+  const handleSelection = (mouseSnapshot: {
+    clientX: number;
+    clientY: number;
+    target: EventTarget | null;
+  }): void => {
+    if (Date.now() < suppressMouseUpUntil) {
+      return;
+    }
+
+    if (actionPopup && mouseSnapshot.target instanceof Node) {
+      const targetNode = mouseSnapshot.target;
+      if (actionPopup.contains(targetNode)) {
+        return;
+      }
+    }
+
+    const selected =
+      popupDoc.defaultView?.getSelection()?.toString().trim() || "";
+    if (!selected) {
+      removePopup();
+      return;
+    }
+
+    const match = selected.match(phoneRegex);
+    if (!match) {
+      removePopup();
+      return;
+    }
+
+    const syntheticEvent = {
+      clientX: mouseSnapshot.clientX,
+      clientY: mouseSnapshot.clientY,
+    } as MouseEvent;
+
+    createPopup(match[0], syntheticEvent);
+  };
+
+  popupDoc.addEventListener(
+    "mouseup",
+    (e) => {
+      const mouseSnapshot = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        target: e.target,
+      };
+
+      window.setTimeout(() => handleSelection(mouseSnapshot), 0);
+    },
+    true
+  );
+
+  popupDoc.addEventListener(
+    "mousedown",
+    (e) => {
+      if (
+        actionPopup &&
+        e.target instanceof Node &&
+        !actionPopup.contains(e.target)
+      ) {
+        removePopup();
+      }
+    },
+    true
+  );
 }
 
 // ==================== HTML 处理工具 ====================
@@ -647,9 +1133,8 @@ export function injectRedirectScript(
   html: string,
   type: "aide" | "patient"
 ): string {
-  const aideTemplate = buildProfileUrlTemplate("aide");
-  const patientTemplate = buildProfileUrlTemplate("patient");
-  const profileUrlTemplate = type === "aide" ? aideTemplate : patientTemplate;
+  const profileUrlTemplate =
+    type === "aide" ? AIDE_PROFILE_URL_TEMPLATE : PATIENT_PROFILE_URL_TEMPLATE;
   const functionName =
     type === "aide" ? "RedirectToAidePage" : "RedirectToPatientPage";
 
@@ -659,10 +1144,10 @@ function ${functionName}(id) {
   window.open('${profileUrlTemplate}'.replace('{ID}', id), '_blank');
 }
 function RedirectToAidePage(id) {
-  window.open('${aideTemplate}'.replace('{ID}', id), '_blank');
+  window.open('${AIDE_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
 }
 function RedirectToPatientPage(id) {
-  window.open('${patientTemplate}'.replace('{ID}', id), '_blank');
+  window.open('${PATIENT_PROFILE_URL_TEMPLATE}'.replace('{ID}', id), '_blank');
 }
 </script>
 `;
@@ -676,13 +1161,104 @@ function RedirectToPatientPage(id) {
   }
 }
 
+function extractProfileIdFromAnchor(
+  anchor: HTMLAnchorElement | null,
+  type: "aide" | "patient"
+): string | null {
+  if (!anchor) return null;
+
+  const rawCandidates = [
+    anchor.getAttribute("onclick"),
+    anchor.getAttribute("href"),
+  ]
+    .filter((v): v is string => Boolean(v))
+    .map((v) => v.trim());
+
+  const regexes =
+    type === "aide"
+      ? [
+          /RedirectToAidePage\(\s*['"]?(\d+)/i,
+          /OpenAide[A-Za-z]*\(\s*['"]?(\d+)/i,
+          /\bAideId\s*=\s*(\d+)/i,
+        ]
+      : [
+          /RedirectToPatientPage\(\s*['"]?(\d+)/i,
+          /OpenPatient[A-Za-z]*\(\s*['"]?(\d+)/i,
+          /\bPatient(?:ID|Id|id)\s*=\s*(\d+)/i,
+        ];
+
+  for (const raw of rawCandidates) {
+    for (const regex of regexes) {
+      const match = raw.match(regex);
+      if (match && match[1]) return match[1];
+    }
+  }
+
+  const href = anchor.getAttribute("href")?.trim() || "";
+  if (!href || href === "#" || href.toLowerCase().startsWith("javascript:")) {
+    return null;
+  }
+
+  try {
+    const url = new URL(href, window.location.origin);
+    const keys =
+      type === "aide"
+        ? ["aideid", "id"]
+        : ["patientid", "patientID", "patientId", "id"];
+    for (const [key, value] of url.searchParams.entries()) {
+      if (keys.includes(key.toLowerCase()) && /^\d+$/.test(value)) {
+        return value;
+      }
+    }
+  } catch {
+    // ignore malformed href
+  }
+
+  return null;
+}
+
+function rewriteProfileLinks(
+  table: HTMLTableElement,
+  type: "aide" | "patient"
+): void {
+  const anchors = Array.from(
+    table.querySelectorAll<HTMLAnchorElement>("tbody a, tr td a")
+  );
+
+  anchors.forEach((anchor) => {
+    const href = anchor.getAttribute("href")?.trim() || "";
+    const directProfilePattern =
+      type === "aide"
+        ? /\/Aide\/Aide_ns\.aspx/i
+        : /\/Patient\/InternalPatientInfo_ns\.aspx/i;
+
+    if (/^https?:\/\//i.test(href) && directProfilePattern.test(href)) {
+      anchor.setAttribute("target", "_blank");
+      anchor.setAttribute("rel", "noopener noreferrer");
+      return;
+    }
+
+    const profileId = extractProfileIdFromAnchor(anchor, type);
+    if (!profileId) return;
+
+    const targetUrl = (
+      type === "aide" ? AIDE_PROFILE_URL_TEMPLATE : PATIENT_PROFILE_URL_TEMPLATE
+    ).replace("{ID}", profileId);
+
+    anchor.setAttribute("href", targetUrl);
+    anchor.setAttribute("target", "_blank");
+    anchor.setAttribute("rel", "noopener noreferrer");
+    anchor.removeAttribute("onclick");
+    anchor.onclick = null;
+  });
+}
+
 // ==================== 结果解析 ====================
 
 /**
  * 解析 Aide (护工) 的搜索结果
  */
 export function handleAideSearchResult(html: string): HhaSearchResult {
-  const profileTemplate = buildProfileUrlTemplate("aide");
   const doc = new DOMParser().parseFromString(html, "text/html");
   const resultsTable = doc.querySelector<HTMLTableElement>("#tdSearchResults");
   if (!resultsTable) return { count: 0, rawHtml: html };
@@ -701,16 +1277,12 @@ export function handleAideSearchResult(html: string): HhaSearchResult {
 
   if (resultCount === 1) {
     const row = resultsTable.querySelector("tbody tr");
-    const link = row?.querySelector<HTMLAnchorElement>(
-      'a[onclick*="RedirectToAidePage"]'
-    );
-    const match = link
-      ?.getAttribute("onclick")
-      ?.match(/RedirectToAidePage\((\d+)\)/);
-    if (match && match[1]) {
+    const link = row?.querySelector<HTMLAnchorElement>("a");
+    const profileId = extractProfileIdFromAnchor(link ?? null, "aide");
+    if (profileId) {
       return {
         count: 1,
-        finalUrl: profileTemplate.replace("{ID}", match[1]),
+        finalUrl: AIDE_PROFILE_URL_TEMPLATE.replace("{ID}", profileId),
         rawHtml: html,
       };
     }
@@ -722,7 +1294,6 @@ export function handleAideSearchResult(html: string): HhaSearchResult {
  * 解析 Patient (病人) 的搜索结果
  */
 export function handlePatientSearchResult(html: string): HhaSearchResult {
-  const profileTemplate = buildProfileUrlTemplate("patient");
   const doc = new DOMParser().parseFromString(html, "text/html");
   const resultsTable = doc.querySelector<HTMLTableElement>("#tdSearchResults");
 
@@ -764,13 +1335,8 @@ export function handlePatientSearchResult(html: string): HhaSearchResult {
       }
     }
 
-    const link = row.querySelector<HTMLAnchorElement>(
-      'a[onclick*="RedirectToPatientPage"]'
-    );
-    const match = link
-      ?.getAttribute("onclick")
-      ?.match(/RedirectToPatientPage\((\d+)/);
-    const profileId = match ? match[1] : null;
+    const link = row.querySelector<HTMLAnchorElement>("a");
+    const profileId = extractProfileIdFromAnchor(link, "patient");
 
     return { row, status, profileId };
   });
@@ -787,7 +1353,10 @@ export function handlePatientSearchResult(html: string): HhaSearchResult {
     return {
       count: resultCount,
       activeCount: 1,
-      finalUrl: profileTemplate.replace("{ID}", activeRows[0].profileId),
+      finalUrl: PATIENT_PROFILE_URL_TEMPLATE.replace(
+        "{ID}",
+        activeRows[0].profileId
+      ),
       rawHtml: html,
     };
   }
@@ -796,7 +1365,10 @@ export function handlePatientSearchResult(html: string): HhaSearchResult {
     return {
       count: 1,
       activeCount: 0,
-      finalUrl: profileTemplate.replace("{ID}", rowInfos[0].profileId),
+      finalUrl: PATIENT_PROFILE_URL_TEMPLATE.replace(
+        "{ID}",
+        rowInfos[0].profileId
+      ),
       rawHtml: html,
     };
   }
@@ -907,78 +1479,6 @@ function removeColumnsByHeader(
   });
 }
 
-function extractProfileIdFromActionText(
-  actionText: string,
-  type: "aide" | "patient"
-): string | null {
-  if (!actionText) {
-    return null;
-  }
-
-  const pattern =
-    type === "aide"
-      ? /RedirectToAidePage\(\s*['"]?(\d+)['"]?\s*\)/i
-      : /RedirectToPatientPage\(\s*['"]?(\d+)['"]?\s*\)/i;
-  const match = actionText.match(pattern);
-  return match?.[1] ?? null;
-}
-
-function extractProfileIdFromLink(
-  anchor: HTMLAnchorElement,
-  type: "aide" | "patient"
-): string | null {
-  const onclick = anchor.getAttribute("onclick") || "";
-  const fromOnclick = extractProfileIdFromActionText(onclick, type);
-  if (fromOnclick) {
-    return fromOnclick;
-  }
-
-  const href = anchor.getAttribute("href") || "";
-  const fromHrefAction = extractProfileIdFromActionText(href, type);
-  if (fromHrefAction) {
-    return fromHrefAction;
-  }
-
-  try {
-    const url = new URL(href, "https://app.hhaexchange.com");
-    if (type === "aide") {
-      return url.searchParams.get("AideId");
-    }
-
-    return (
-      url.searchParams.get("PatientId") ||
-      url.searchParams.get("PatientID") ||
-      url.searchParams.get("Patientid")
-    );
-  } catch (_) {
-    // fallback with regex if href is not URL-like
-  }
-
-  const regex =
-    type === "aide" ? /AideId=(\d+)/i : /Patient(?:Id|ID|id)=(\d+)/i;
-  const match = href.match(regex);
-  return match?.[1] ?? null;
-}
-
-function rewriteProfileLinksForPopup(
-  table: HTMLTableElement,
-  type: "aide" | "patient"
-): void {
-  const template = buildProfileUrlTemplate(type);
-  table.querySelectorAll<HTMLAnchorElement>("tbody a").forEach((anchor) => {
-    const profileId = extractProfileIdFromLink(anchor, type);
-    if (!profileId) {
-      return;
-    }
-
-    const targetUrl = template.replace("{ID}", profileId);
-    anchor.setAttribute("href", targetUrl);
-    anchor.setAttribute("target", "_blank");
-    anchor.setAttribute("rel", "noopener noreferrer");
-    anchor.removeAttribute("onclick");
-  });
-}
-
 /**
  * 使用 DOMParser 从原始 HTML 提取并清理搜索结果表格
  * 供 displayCombinedResults 和 displaySingleResult 共用
@@ -1064,7 +1564,7 @@ export function extractAndCleanContent(
     removeColumnsByHeader(table, ["Team"]);
   }
 
-  rewriteProfileLinksForPopup(table, type);
+  rewriteProfileLinks(table, type);
 
   return table.outerHTML;
 }
@@ -1194,24 +1694,8 @@ const PANEL_STYLE_BLOCK = `
     }
 `;
 
-/** 共用的重定向脚本块 */
-function buildRedirectScriptBlock(): string {
-  const aideTemplate = buildProfileUrlTemplate("aide");
-  const patientTemplate = buildProfileUrlTemplate("patient");
-  return `
-  <script>
-    function RedirectToAidePage(id) {
-      window.open('${aideTemplate}'.replace('{ID}', id), '_blank');
-    }
-    function RedirectToPatientPage(id) {
-      window.open('${patientTemplate}'.replace('{ID}', id), '_blank');
-    }
-  </script>
-`;
-}
-
-/** 划词拨号脚本块（自包含 IIFE，不依赖 GM API，注入 blob: 弹窗页） */
-const H2C_SCRIPT_BLOCK = `
+/** 划词拨号样式块（脚本在 popup load 后由父页面绑定） */
+const H2C_STYLE_BLOCK = `
   <style>
     #highlight-caller-popup {
       position: fixed;
@@ -1275,6 +1759,8 @@ const H2C_SCRIPT_BLOCK = `
     }
     #highlight-caller-popup .hcp-actions-full {
       margin-top: 10px;
+      display: grid;
+      gap: 8px;
     }
     #highlight-caller-popup .hcp-copy-btn {
       width: 100%;
@@ -1291,126 +1777,414 @@ const H2C_SCRIPT_BLOCK = `
       background-color: #e0e0e0;
     }
   </style>
-  <script>
-  (function () {
-    var PHONE_REGEX = /(?:\\+?1[\\s.-]?)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}/;
-    function normalize(s) {
-      var d = s.replace(/\\D/g, '');
-      if (d.length === 11 && d.charAt(0) === '1') d = d.substring(1);
-      return d;
-    }
-    var popup = null;
-    function removePopup() { if (popup) { popup.remove(); popup = null; } }
-    function createPopup(phoneNumber, evt) {
-      removePopup();
-      var clean = normalize(phoneNumber);
-      if (clean.length !== 10) return;
-      popup = document.createElement('div');
-      popup.id = 'highlight-caller-popup';
-      popup.innerHTML =
-        '<div class="hcp-title">\u8bf7\u9009\u62e9\u64cd\u4f5c</div>' +
-        '<div class="hcp-number">' + phoneNumber + '</div>' +
-        '<div class="hcp-actions">' +
-          '<a href="tel:' + clean + '" class="hcp-button" target="_blank">\ud83d\udcde \u6253\u7535\u8bdd</a>' +
-          '<a href="sms:' + clean + '" class="hcp-button" target="_blank">\ud83d\udcac \u53d1\u77ed\u4fe1</a>' +
-        '</div>' +
-        '<div class="hcp-actions-full">' +
-          '<button class="hcp-copy-btn">\ud83d\udccb \u590d\u5236\u53f7\u7801</button>' +
-        '</div>' +
-        '<div class="hcp-close-btn" title="\u5173\u95ed">\u00d7</div>';
-      document.body.appendChild(popup);
-      var rect = popup.getBoundingClientRect();
-      var top = evt.clientY + 15;
-      var left = evt.clientX;
-      if (top + rect.height > window.innerHeight) top = evt.clientY - rect.height - 15;
-      if (left + rect.width > window.innerWidth) left = window.innerWidth - rect.width - 10;
-      popup.style.top = top + 'px';
-      popup.style.left = left + 'px';
-      var closeBtn = popup.querySelector('.hcp-close-btn');
-      if (closeBtn) closeBtn.addEventListener('click', removePopup);
-      var copyBtn = popup.querySelector('.hcp-copy-btn');
-      if (copyBtn) copyBtn.addEventListener('click', function() {
-        navigator.clipboard.writeText(clean).then(function() {
-          copyBtn.textContent = '\u2705 \u5df2\u590d\u5236';
-          setTimeout(function() { if (copyBtn) copyBtn.textContent = '\ud83d\udccb \u590d\u5236\u53f7\u7801'; }, 1500);
-        });
-      });
-      popup.querySelectorAll('a.hcp-button').forEach(function(a) {
-        a.addEventListener('click', function() { setTimeout(removePopup, 100); });
-      });
-    }
-    document.addEventListener('mouseup', function(e) {
-      if (popup && popup.contains(e.target)) return;
-      var sel = window.getSelection();
-      var text = sel ? sel.toString().trim() : '';
-      if (text) {
-        var m = text.match(PHONE_REGEX);
-        if (m) { createPopup(m[0], e); } else { removePopup(); }
-      } else { removePopup(); }
-    });
-    document.addEventListener('mousedown', function(e) {
-      if (popup && !popup.contains(e.target)) removePopup();
-    });
-  })();
-  </script>
 `;
 
-// ==================== 客户端分页脚本构建器 ====================
+function popupInlineBootstrap(): void {
+  const searchHandlerKey = "__HHA_POPUP_SEARCH_BY_PHONE__";
 
-/**
- * 构建分页 JS 脚本，供 Combined View（pageSize=15）和 Single View（pageSize=20）共用
- *
- * 约定：
- * - 每个 side 的 tbody tr 需要 data-row-index="0" ... 属性
- * - side 为 "aide" 或 "patient"（Combined）或 "single"（Single View）
- *
- * @param pageSizes - 各 side 的每页行数，对象格式 { aide: 15, patient: 15 }
- */
-function buildPaginationScript(pageSizes: Record<string, number>): string {
-  return `
-<script>
-(function() {
-  var pageSizes = ${JSON.stringify(pageSizes)};
-  var currentPages = {};
-  Object.keys(pageSizes).forEach(function(side) { currentPages[side] = 1; });
+  const initialize = () => {
+    const root = document.documentElement;
+    const body = document.body;
+    if (
+      !root ||
+      !body ||
+      root.dataset.hhaPopupInteractionsInitialized === "1"
+    ) {
+      return;
+    }
 
-  function showPage(side, pageNum) {
-    var ps = pageSizes[side] || 15;
-    var rows = document.querySelectorAll('[data-side="' + side + '"] tbody tr[data-row-index]');
-    if (!rows.length) return;
-    var total = rows.length;
-    var totalPages = Math.ceil(total / ps);
-    if (pageNum < 1) pageNum = 1;
-    if (pageNum > totalPages) pageNum = totalPages;
-    currentPages[side] = pageNum;
-    rows.forEach(function(tr) {
-      var idx = parseInt(tr.getAttribute('data-row-index'), 10);
-      var show = idx >= (pageNum - 1) * ps && idx < pageNum * ps;
-      tr.style.display = show ? '' : 'none';
-    });
-    // Update pagination bar
-    var pageInfo = document.querySelector('[data-pagination-side="' + side + '"] .pg-info');
-    var prevBtn = document.querySelector('[data-pagination-side="' + side + '"] .pg-prev');
-    var nextBtn = document.querySelector('[data-pagination-side="' + side + '"] .pg-next');
-    if (pageInfo) pageInfo.textContent = '第 ' + pageNum + ' / ' + totalPages + ' 页';
-    if (prevBtn) prevBtn.disabled = pageNum <= 1;
-    if (nextBtn) nextBtn.disabled = pageNum >= totalPages;
-  }
+    const phoneRegex =
+      /(?:\+?1[\s().-]*)?\(?\d{3}\)?[\s().-]*\d{3}[\s().-]*\d{4}/;
+    let actionPopup: HTMLDivElement | null = null;
+    let suppressMouseUpUntil = 0;
 
-  window.showPage = showPage;
-  window.prevPage = function(side) { showPage(side, (currentPages[side] || 1) - 1); };
-  window.nextPage = function(side) { showPage(side, (currentPages[side] || 1) + 1); };
+    const normalize = (raw: string): string => {
+      let digits = raw.replace(/\D/g, "");
+      if (digits.length === 11 && digits.startsWith("1")) {
+        digits = digits.substring(1);
+      }
+      return digits;
+    };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      Object.keys(pageSizes).forEach(function(side) { showPage(side, 1); });
-    });
+    const removePopup = (): void => {
+      if (!actionPopup) return;
+      actionPopup.remove();
+      actionPopup = null;
+    };
+
+    const markPopupInteraction = (): void => {
+      suppressMouseUpUntil = Date.now() + 400;
+    };
+
+    const clearSelection = (): void => {
+      try {
+        window.getSelection()?.removeAllRanges();
+      } catch {
+        // ignore selection API errors
+      }
+    };
+
+    const launchProtocol = (scheme: "tel" | "sms", number: string): void => {
+      const target = `${scheme}:${number}`;
+
+      markPopupInteraction();
+      clearSelection();
+      removePopup();
+
+      try {
+        window.location.href = target;
+        return;
+      } catch {
+        // fallback below
+      }
+
+      try {
+        window.open(target, "_self");
+      } catch {
+        // ignore open failures
+      }
+    };
+
+    const copyToClipboard = async (text: string): Promise<boolean> => {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        try {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.setAttribute("readonly", "true");
+          ta.style.position = "fixed";
+          ta.style.top = "-9999px";
+          body.appendChild(ta);
+          ta.select();
+          const copied = document.execCommand("copy");
+          ta.remove();
+          return copied;
+        } catch {
+          return false;
+        }
+      }
+    };
+
+    const requestHhaSearch = async (phoneNumber: string): Promise<void> => {
+      markPopupInteraction();
+      clearSelection();
+      removePopup();
+
+      try {
+        const openerWindow = window.opener as
+          | (Window & Record<string, unknown>)
+          | null;
+        const handler = openerWindow?.[searchHandlerKey];
+        if (typeof handler === "function") {
+          await Promise.resolve(handler(phoneNumber));
+          return;
+        }
+      } catch {
+        // opener may be unavailable or cross-context
+      }
+
+      alert("当前结果页无法连接到主窗口，请回到 Outlook 面板直接搜索。");
+    };
+
+    const appendPopupButton = (container, options) => {
+      const element = document.createElement(options.tagName);
+      element.className = options.className;
+      element.textContent = options.text;
+
+      if (options.tagName === "a") {
+        element.href = options.href;
+        element.setAttribute("data-action", options.dataAction);
+      } else if (options.dataPhone) {
+        element.setAttribute("data-phone", options.dataPhone);
+      }
+
+      container.appendChild(element);
+      return element;
+    };
+
+    const buildActionPopupContent = (container, phoneNumber, clean) => {
+      const title = document.createElement("div");
+      title.className = "hcp-title";
+      title.textContent = "请选择操作";
+      container.appendChild(title);
+
+      const number = document.createElement("div");
+      number.className = "hcp-number";
+      number.textContent = phoneNumber;
+      container.appendChild(number);
+
+      const actionRow = document.createElement("div");
+      actionRow.className = "hcp-actions";
+      appendPopupButton(actionRow, {
+        tagName: "a",
+        className: "hcp-button",
+        text: "📞 打电话",
+        href: `tel:${clean}`,
+        dataAction: "tel",
+      });
+      appendPopupButton(actionRow, {
+        tagName: "a",
+        className: "hcp-button",
+        text: "💬 发短信",
+        href: `sms:${clean}`,
+        dataAction: "sms",
+      });
+      container.appendChild(actionRow);
+
+      const utilityRow = document.createElement("div");
+      utilityRow.className = "hcp-actions-full";
+      appendPopupButton(utilityRow, {
+        tagName: "button",
+        className: "hcp-button hcp-search-hha",
+        text: "🔍 在HHA搜索",
+        dataPhone: clean,
+      });
+      appendPopupButton(utilityRow, {
+        tagName: "button",
+        className: "hcp-copy-btn",
+        text: "📋 复制号码",
+      });
+      container.appendChild(utilityRow);
+
+      const closeBtn = document.createElement("div");
+      closeBtn.className = "hcp-close-btn";
+      closeBtn.setAttribute("title", "关闭");
+      closeBtn.textContent = "×";
+      container.appendChild(closeBtn);
+    };
+
+    const createPopup = (
+      phoneNumber: string,
+      mousePosition: { clientX: number; clientY: number }
+    ): void => {
+      removePopup();
+
+      const clean = normalize(phoneNumber);
+      if (clean.length !== 10) return;
+
+      actionPopup = document.createElement("div");
+      actionPopup.id = "highlight-caller-popup";
+      buildActionPopupContent(actionPopup, phoneNumber, clean);
+
+      body.appendChild(actionPopup);
+
+      ["mousedown", "mouseup", "click"].forEach((eventName) => {
+        actionPopup?.addEventListener(eventName, (evt) => {
+          markPopupInteraction();
+          evt.stopPropagation();
+        });
+      });
+
+      const rect = actionPopup.getBoundingClientRect();
+      let top = mousePosition.clientY + 15;
+      let left = mousePosition.clientX;
+
+      if (top + rect.height > window.innerHeight) {
+        top = mousePosition.clientY - rect.height - 15;
+      }
+      if (left + rect.width > window.innerWidth) {
+        left = window.innerWidth - rect.width - 10;
+      }
+
+      actionPopup.style.top = `${top}px`;
+      actionPopup.style.left = `${left}px`;
+
+      const closeBtn = actionPopup.querySelector<HTMLElement>(".hcp-close-btn");
+      closeBtn?.addEventListener("click", () => {
+        markPopupInteraction();
+        clearSelection();
+        removePopup();
+      });
+
+      const copyBtn =
+        actionPopup.querySelector<HTMLButtonElement>(".hcp-copy-btn");
+      copyBtn?.addEventListener("click", async () => {
+        markPopupInteraction();
+        const ok = await copyToClipboard(clean);
+        copyBtn.textContent = ok ? "✅ 已复制" : "❌ 复制失败";
+        window.setTimeout(() => {
+          if (copyBtn) copyBtn.textContent = "📋 复制号码";
+        }, 1500);
+      });
+
+      const searchBtn =
+        actionPopup.querySelector<HTMLButtonElement>(".hcp-search-hha");
+      searchBtn?.addEventListener("click", async () => {
+        await requestHhaSearch(clean);
+      });
+
+      actionPopup
+        .querySelectorAll<HTMLAnchorElement>("a.hcp-button")
+        .forEach((btn) => {
+          btn.addEventListener("click", (evt) => {
+            evt.preventDefault();
+            evt.stopPropagation();
+
+            const action = btn.getAttribute("data-action");
+            if (action === "tel" || action === "sms") {
+              launchProtocol(action, clean);
+            }
+          });
+        });
+    };
+
+    const handleSelection = (mouseSnapshot: {
+      clientX: number;
+      clientY: number;
+      target: EventTarget | null;
+    }): void => {
+      if (Date.now() < suppressMouseUpUntil) {
+        return;
+      }
+
+      if (actionPopup && mouseSnapshot.target instanceof Node) {
+        const targetNode = mouseSnapshot.target;
+        if (actionPopup.contains(targetNode)) {
+          return;
+        }
+      }
+
+      const selected = window.getSelection()?.toString().trim() || "";
+      if (!selected) {
+        removePopup();
+        return;
+      }
+
+      const match = selected.match(phoneRegex);
+      if (!match) {
+        removePopup();
+        return;
+      }
+
+      createPopup(match[0], mouseSnapshot);
+    };
+
+    document.addEventListener(
+      "mouseup",
+      (e) => {
+        const mouseSnapshot = {
+          clientX: e.clientX,
+          clientY: e.clientY,
+          target: e.target,
+        };
+        window.setTimeout(() => handleSelection(mouseSnapshot), 0);
+      },
+      true
+    );
+
+    document.addEventListener(
+      "mousedown",
+      (e) => {
+        if (
+          actionPopup &&
+          e.target instanceof Node &&
+          !actionPopup.contains(e.target)
+        ) {
+          removePopup();
+        }
+      },
+      true
+    );
+
+    const bars = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-pagination-side]")
+    );
+    if (bars.length) {
+      const currentPages: Record<string, number> = {};
+      const pageSizes: Record<string, number> = {};
+
+      bars.forEach((bar) => {
+        const side = bar.getAttribute("data-pagination-side");
+        if (!side) return;
+
+        const table = document.querySelector<HTMLTableElement>(
+          `table[data-side="${side}"]`
+        );
+        const pageSize = Number.parseInt(
+          table?.getAttribute("data-page-size") || "15",
+          10
+        );
+
+        pageSizes[side] =
+          Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 15;
+        currentPages[side] = 1;
+      });
+
+      const showPage = (side: string, pageNum: number): void => {
+        const rows = Array.from(
+          document.querySelectorAll<HTMLTableRowElement>(
+            `[data-side="${side}"] tbody tr[data-row-index]`
+          )
+        );
+        if (!rows.length) return;
+
+        const pageSize = pageSizes[side] || 15;
+        const totalRows = rows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+        const safePage = Math.min(Math.max(pageNum, 1), totalPages);
+        currentPages[side] = safePage;
+
+        rows.forEach((row) => {
+          const idx = Number.parseInt(
+            row.getAttribute("data-row-index") || "0",
+            10
+          );
+          const shouldShow =
+            idx >= (safePage - 1) * pageSize && idx < safePage * pageSize;
+          row.style.display = shouldShow ? "" : "none";
+        });
+
+        const pageInfo = document.querySelector<HTMLElement>(
+          `[data-pagination-side="${side}"] .pg-info`
+        );
+        const prevBtn = document.querySelector<HTMLButtonElement>(
+          `[data-pagination-side="${side}"] .pg-prev`
+        );
+        const nextBtn = document.querySelector<HTMLButtonElement>(
+          `[data-pagination-side="${side}"] .pg-next`
+        );
+
+        if (pageInfo) {
+          pageInfo.textContent = `第 ${safePage} / ${totalPages} 页`;
+        }
+        if (prevBtn) prevBtn.disabled = safePage <= 1;
+        if (nextBtn) nextBtn.disabled = safePage >= totalPages;
+      };
+
+      document
+        .querySelectorAll<HTMLButtonElement>("button[data-pagination-action]")
+        .forEach((btn) => {
+          if (btn.dataset.paginationBound === "1") return;
+          btn.dataset.paginationBound = "1";
+
+          btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const side = btn.getAttribute("data-side") || "";
+            const action = btn.getAttribute("data-pagination-action") || "";
+            if (!side || !action) return;
+
+            const current = currentPages[side] || 1;
+            showPage(side, action === "prev" ? current - 1 : current + 1);
+          });
+        });
+
+      Object.keys(pageSizes).forEach((side) => showPage(side, 1));
+    }
+
+    body.dataset.hhaH2cBound = "1";
+    root.dataset.hhaPopupInteractionsInitialized = "1";
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initialize, { once: true });
   } else {
-    Object.keys(pageSizes).forEach(function(side) { showPage(side, 1); });
+    initialize();
   }
-})();
-</script>`;
 }
+
+const POPUP_BOOTSTRAP_SCRIPT = `<script>(${popupInlineBootstrap.toString()})();</script>`;
 
 /**
  * 为 HTML table outerHTML 中的 tbody tr 加上 data-row-index 属性，
@@ -1432,6 +2206,7 @@ function injectRowIndexes(
   if (!table) return { tableHtml, paginationBarHtml: "" };
 
   table.setAttribute("data-side", side);
+  table.setAttribute("data-page-size", String(pageSize));
   const rows = Array.from(table.querySelectorAll("tbody tr"));
   rows.forEach((tr, idx) => tr.setAttribute("data-row-index", String(idx)));
 
@@ -1443,14 +2218,14 @@ function injectRowIndexes(
 
   const totalPages = Math.ceil(totalRows / pageSize);
   const paginationBarHtml = `<div data-pagination-side="${side}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#0d3e61;">
-  <button class="pg-prev" disabled
-    onclick="prevPage('${side}')"
+  <button class="pg-prev" disabled data-pagination-action="prev" data-side="${side}"
     style="background:#1a5276;color:#fff;border:none;padding:4px 10px;border-radius:3px;cursor:pointer;font-size:12px;">
     上一页
   </button>
   <span class="pg-info" style="color:#fff;font-size:12px;flex:1;text-align:center;">第 1 / ${totalPages} 页</span>
-  <button class="pg-next" ${totalPages <= 1 ? "disabled" : ""}
-    onclick="nextPage('${side}')"
+  <button class="pg-next" ${
+    totalPages <= 1 ? "disabled" : ""
+  } data-pagination-action="next" data-side="${side}"
     style="background:#1a5276;color:#fff;border:none;padding:4px 10px;border-radius:3px;cursor:pointer;font-size:12px;">
     下一页
   </button>
@@ -1482,15 +2257,14 @@ export function displayCombinedResults(
   const aideContent = injectRowIndexes(aideBody, "aide", 15);
   const patientContent = injectRowIndexes(patientBody, "patient", 15);
 
-  const paginationScript = buildPaginationScript({ aide: 15, patient: 15 });
-
   const combinedHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>HHA Combined Search Results</title>
   <style>${PANEL_STYLE_BLOCK}</style>
-  ${buildRedirectScriptBlock()}
+  ${H2C_STYLE_BLOCK}
+  ${POPUP_BOOTSTRAP_SCRIPT}
 </head>
 <body>
   <div class="container">
@@ -1521,8 +2295,6 @@ export function displayCombinedResults(
       }
     </div>
   </div>
-  ${paginationScript}
-  ${H2C_SCRIPT_BLOCK}
 </body>
 </html>`;
 
@@ -1550,15 +2322,14 @@ export function displaySingleResult(
   bodyContent = highlightPhoneNumber(bodyContent, phoneNumber);
   const singleContent = injectRowIndexes(bodyContent, "single", 20);
 
-  const paginationScript = buildPaginationScript({ single: 20 });
-
   const singleHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>HHA ${label} 搜索结果</title>
   <style>${PANEL_STYLE_BLOCK}</style>
-  ${buildRedirectScriptBlock()}
+  ${H2C_STYLE_BLOCK}
+  ${POPUP_BOOTSTRAP_SCRIPT}
 </head>
 <body>
   <div class="container">
@@ -1572,8 +2343,6 @@ export function displaySingleResult(
       }
     </div>
   </div>
-  ${paginationScript}
-  ${H2C_SCRIPT_BLOCK}
 </body>
 </html>`;
 
@@ -1589,25 +2358,18 @@ export async function fetchHhaData(
   type: "aide" | "patient",
   formattedNumber: string
 ): Promise<HhaSearchResult> {
-  let tenantBaseUrl = "";
-  try {
-    tenantBaseUrl = getTenantBaseUrlForSearchOrThrow();
-  } catch (error) {
-    return { count: 0, rawHtml: (error as Error).message || "Tenant missing" };
-  }
-
   let baseUrl: string,
     params: string,
     handler: (html: string) => HhaSearchResult;
   if (type === "aide") {
     [baseUrl, params, handler] = [
-      `${tenantBaseUrl}/Aide/AideSearchXSLT_ns.aspx?FirstName=&Phone=`,
+      AIDE_SEARCH_URL,
       AIDE_SEARCH_PARAMS,
       handleAideSearchResult,
     ];
   } else {
     [baseUrl, params, handler] = [
-      `${tenantBaseUrl}/Patient/PatientSearchXSLT_ns.aspx?FirstName=&LastName=&StatusID=-1&PatientID=&MRNumber=&CoordinatorId=-1&Source=-1&PatientNumber=&HomePhone=`,
+      PATIENT_SEARCH_URL,
       PATIENT_SEARCH_PARAMS,
       handlePatientSearchResult,
     ];
@@ -1643,10 +2405,8 @@ export function buildSearchUrl(
   params: HhaQuickSearchParams,
   page: number
 ): string {
-  const tenantBaseUrl = getTenantBaseUrlForSearchOrThrow();
-
   if (type === "aide") {
-    const baseUrl = `${tenantBaseUrl}/Aide/AideSearchXSLT_ns.aspx`;
+    const baseUrl = `${_TENANT_BASE_URL}/Aide/AideSearchXSLT_ns.aspx`;
     const qp = new URLSearchParams({
       FirstName: params.firstName ?? "",
       Phone: params.phone ?? "",
@@ -1671,7 +2431,7 @@ export function buildSearchUrl(
     });
     return `${baseUrl}?${qp.toString()}`;
   } else {
-    const baseUrl = `${tenantBaseUrl}/Patient/PatientSearchXSLT_ns.aspx`;
+    const baseUrl = `${_TENANT_BASE_URL}/Patient/PatientSearchXSLT_ns.aspx`;
     const qp = new URLSearchParams({
       FirstName: params.firstName ?? "",
       LastName: params.lastName ?? "",
@@ -1966,16 +2726,7 @@ export async function fetchAllPages(
   params: HhaQuickSearchParams
 ): Promise<HhaSearchResult> {
   // 获取第 1 页
-  let url1 = "";
-  try {
-    url1 = buildSearchUrl(type, params, 1);
-  } catch (error) {
-    return {
-      count: 0,
-      rawHtml: (error as Error).message || "Tenant missing",
-    };
-  }
-
+  const url1 = buildSearchUrl(type, params, 1);
   let page1Html = "";
   try {
     const r = (await GM_fetch(url1)) as Response & { rawBody: Blob };
@@ -2003,13 +2754,7 @@ export async function fetchAllPages(
   const totalPages = Math.ceil(totalCount / 10);
   const pagePromises: Promise<string>[] = [];
   for (let pg = 2; pg <= totalPages; pg++) {
-    let url = "";
-    try {
-      url = buildSearchUrl(type, params, pg);
-    } catch (_) {
-      continue;
-    }
-
+    const url = buildSearchUrl(type, params, pg);
     pagePromises.push(
       GM_fetch(url)
         .then((r) => (r as Response & { rawBody: Blob }).rawBody.text())

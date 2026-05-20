@@ -1,11 +1,39 @@
+type GMAddElementApi = {
+  addElement?: (
+    parent: Node,
+    tagName: string,
+    attributes?: Record<string, unknown>
+  ) => Element;
+};
+
+declare const GM: GMAddElementApi | undefined;
+declare const unsafeWindow:
+  | (Window & typeof globalThis & { GM?: GMAddElementApi })
+  | undefined;
+
+function resolveGMApi(): GMAddElementApi | undefined {
+  if (typeof GM !== "undefined" && GM?.addElement) {
+    return GM;
+  }
+
+  const scopedWindow = window as Window & { GM?: GMAddElementApi };
+  if (scopedWindow.GM?.addElement) {
+    return scopedWindow.GM;
+  }
+
+  if (typeof unsafeWindow !== "undefined" && unsafeWindow?.GM?.addElement) {
+    return unsafeWindow.GM;
+  }
+
+  return undefined;
+}
+
 export class CSPBypassInjector {
   /**
    * Check if GM.addElement API is available
    */
   static isAvailable(): boolean {
-    // @ts-ignore
-    const GM = window.GM || unsafeWindow?.GM;
-    return !!GM?.addElement;
+    return !!resolveGMApi()?.addElement;
   }
 
   /**
@@ -14,10 +42,9 @@ export class CSPBypassInjector {
   static injectPayloadScript(payload: string, id?: string): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        // @ts-ignore
-        const GM = window.GM || unsafeWindow?.GM;
+        const gmApi = resolveGMApi();
 
-        if (!GM?.addElement) {
+        if (!gmApi?.addElement) {
           throw new Error(
             "GM.addElement not available. Please ensure your Tampermonkey version supports it."
           );
@@ -30,7 +57,7 @@ export class CSPBypassInjector {
         if (id) options.id = id;
 
         // Use the privileged API to inject the script
-        GM.addElement(document.body, "script", options);
+        gmApi.addElement(document.body, "script", options);
 
         console.log("[CSPBypassInjector] Script injected successfully");
         resolve();
@@ -45,8 +72,7 @@ export class CSPBypassInjector {
    * Inject Styles into the main world using GM.addElement
    */
   static injectStyle(css: string, id?: string): void {
-    // @ts-ignore
-    const GM = window.GM || unsafeWindow?.GM;
+    const gmApi = resolveGMApi();
 
     const appendStyleElement = (): void => {
       const style = document.createElement("style");
@@ -61,12 +87,12 @@ export class CSPBypassInjector {
       }
     };
 
-    if (GM?.addElement) {
+    if (gmApi?.addElement) {
       const options: any = { textContent: css };
       if (id) options.id = id;
       const target = document.head || document.documentElement || document.body;
       if (target) {
-        GM.addElement(target, "style", options);
+        gmApi.addElement(target, "style", options);
         return;
       }
 
@@ -77,7 +103,7 @@ export class CSPBypassInjector {
           const delayedTarget =
             document.head || document.documentElement || document.body;
           if (delayedTarget) {
-            GM.addElement(delayedTarget, "style", options);
+            gmApi.addElement(delayedTarget, "style", options);
             return;
           }
           appendStyleElement();

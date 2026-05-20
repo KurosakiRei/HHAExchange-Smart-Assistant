@@ -8,6 +8,7 @@ const OUTLOOK_MINI_CONTAINER_ID = "hha-outlook-mini-container";
 const OUTLOOK_MINI_HANDLE_ID = "hha-outlook-mini-handle";
 const OUTLOOK_MINI_PANEL_HOST_ID = "hha-outlook-mini-panel-host";
 const OUTLOOK_MINI_BOOTSTRAP_FLAG = "__HHA_OUTLOOK_MINI_PANEL_BOOTSTRAPPED__";
+const OUTLOOK_MINI_WATCHDOG_FLAG = "__HHA_OUTLOOK_MINI_PANEL_WATCHDOG__";
 const MINI_HANDLE_SIZE = 48;
 const MINI_MARGIN = 6;
 
@@ -435,6 +436,8 @@ export class OutlookMiniPanel {
       return;
     }
 
+    this.ensureWatchdog(hostWindow);
+
     if (!hostDocument.body) {
       hostDocument.addEventListener(
         "DOMContentLoaded",
@@ -446,18 +449,55 @@ export class OutlookMiniPanel {
       return;
     }
 
-    if ((hostWindow as any)[OUTLOOK_MINI_BOOTSTRAP_FLAG]) {
+    const existingContainer = hostDocument.getElementById(
+      OUTLOOK_MINI_CONTAINER_ID
+    );
+
+    if (existingContainer) {
+      (hostWindow as any)[OUTLOOK_MINI_BOOTSTRAP_FLAG] = true;
       return;
     }
 
-    if (hostDocument.getElementById(OUTLOOK_MINI_CONTAINER_ID)) {
-      (hostWindow as any)[OUTLOOK_MINI_BOOTSTRAP_FLAG] = true;
+    if ((hostWindow as any)[OUTLOOK_MINI_BOOTSTRAP_FLAG]) {
+      console.warn(
+        "[OutlookMiniPanel] Bootstrap flag was set but container is missing. Recreating mini panel."
+      );
+      (hostWindow as any)[OUTLOOK_MINI_BOOTSTRAP_FLAG] = false;
+    }
+
+    if ((hostWindow as any)[OUTLOOK_MINI_BOOTSTRAP_FLAG]) {
       return;
     }
 
     ensureStyles(hostDocument);
     this.bootstrap(hostWindow, hostDocument);
     (hostWindow as any)[OUTLOOK_MINI_BOOTSTRAP_FLAG] = true;
+  }
+
+  private static ensureWatchdog(hostWindow: Window): void {
+    const state = hostWindow as Window & Record<string, unknown>;
+    if (state[OUTLOOK_MINI_WATCHDOG_FLAG]) {
+      return;
+    }
+
+    state[OUTLOOK_MINI_WATCHDOG_FLAG] = window.setInterval(() => {
+      try {
+        if (!isOutlookPage(hostWindow) || !hostWindow.document.body) {
+          return;
+        }
+
+        const containerMissing = !hostWindow.document.getElementById(
+          OUTLOOK_MINI_CONTAINER_ID
+        );
+
+        if (containerMissing) {
+          state[OUTLOOK_MINI_BOOTSTRAP_FLAG] = false;
+          OutlookMiniPanel.init();
+        }
+      } catch {
+        // Ignore transient access errors while Outlook is re-rendering.
+      }
+    }, 2000);
   }
 
   private static bootstrap(hostWindow: Window, hostDocument: Document): void {
