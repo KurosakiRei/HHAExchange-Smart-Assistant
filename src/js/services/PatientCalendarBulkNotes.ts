@@ -1,4 +1,5 @@
 import { PatientCalendarBulkNotesModal } from "../components/PatientCalendarBulkNotesModal";
+import { highlight2Call } from "../Highlight2Call";
 import { PageDetector, PageType } from "./PageDetector";
 import { openPatientCalendarTimesheetComposer } from "./PatientCalendarTimesheetComposer";
 import { PatientVisitNotesService } from "./PatientVisitNotesService";
@@ -65,7 +66,7 @@ export class PatientCalendarBulkNotes {
   private isRunning = false;
 
   init(): void {
-    if (window.self !== window.top || this.pageChangeHandler) {
+    if (this.pageChangeHandler) {
       return;
     }
 
@@ -145,12 +146,39 @@ export class PatientCalendarBulkNotes {
   }
 
   private handleIframeState(): void {
+    this.ensureIframeHighlight2Call();
+
     const iframeDocument = this.getCalendarIframeDocument();
     if (!iframeDocument) {
       return;
     }
 
     this.ensureBulkButton(iframeDocument);
+  }
+
+  private ensureIframeHighlight2Call(): void {
+    const iframeWindow = this.currentIframe?.contentWindow;
+    const iframeDocument = this.getCurrentIframeDocument();
+    if (!iframeWindow || !iframeDocument) {
+      return;
+    }
+
+    highlight2Call(iframeWindow, iframeDocument);
+  }
+
+  private getCurrentIframeDocument(): Document | null {
+    if (!this.currentIframe) {
+      return null;
+    }
+
+    const iframeDocument =
+      this.currentIframe.contentDocument ||
+      this.currentIframe.contentWindow?.document;
+    if (!iframeDocument || !iframeDocument.body) {
+      return null;
+    }
+
+    return iframeDocument;
   }
 
   private getCalendarIframeDocument(): Document | null {
@@ -163,14 +191,7 @@ export class PatientCalendarBulkNotes {
       return null;
     }
 
-    const iframeDocument =
-      this.currentIframe.contentDocument ||
-      this.currentIframe.contentWindow?.document;
-    if (!iframeDocument || !iframeDocument.body) {
-      return null;
-    }
-
-    return iframeDocument;
+    return this.getCurrentIframeDocument();
   }
 
   private ensureBulkButton(iframeDocument: Document): void {

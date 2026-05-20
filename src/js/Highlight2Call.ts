@@ -1,11 +1,25 @@
 import { searchHhaByPhone } from "./IncomingCallHandler";
 
-export const highlight2Call = () => {
+const HIGHLIGHT2CALL_BOOTSTRAP_FLAG = "__HHA_HIGHLIGHT2CALL_BOOTSTRAPPED__";
+
+function isNodeLike(target: EventTarget | null): target is Node {
+  return !!target && typeof (target as Node).nodeType === "number";
+}
+
+export const highlight2Call = (
+  targetWindow: Window = window,
+  targetDocument: Document = document
+) => {
+  if ((targetWindow as any)[HIGHLIGHT2CALL_BOOTSTRAP_FLAG]) {
+    return;
+  }
+  (targetWindow as any)[HIGHLIGHT2CALL_BOOTSTRAP_FLAG] = true;
+
   // --- 配置区域 ---
   // 用于匹配电话号码的正则表达式
   // 支持多种格式: 1234567890, 123-456-7890, (123) 456-7890, 123.456.7890, +1 123-456-7890 等
   const PHONE_REGEX: RegExp =
-    /(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
+    /(?:\+?1[\s().-]*)?\(?\d{3}\)?[\s().-]*\d{3}[\s().-]*\d{4}/;
 
   /**
    * 标准化电话号码：去除非数字字符，处理 11 位以 1 开头的号码
@@ -26,6 +40,35 @@ export const highlight2Call = () => {
   // 使用类型注解，明确 popup 是一个 DIV 元素或 null
   let popup: HTMLDivElement | null = null;
 
+  function getSelectedTextFromEditableTarget(
+    target: EventTarget | null
+  ): string {
+    const el = target as {
+      tagName?: string;
+      value?: string;
+      selectionStart?: number | null;
+      selectionEnd?: number | null;
+    } | null;
+    if (!el) {
+      return "";
+    }
+
+    const tagName = el.tagName?.toUpperCase();
+    if (tagName !== "INPUT" && tagName !== "TEXTAREA") {
+      return "";
+    }
+
+    const value = typeof el.value === "string" ? el.value : "";
+    const start =
+      typeof el.selectionStart === "number" ? el.selectionStart : null;
+    const end = typeof el.selectionEnd === "number" ? el.selectionEnd : null;
+    if (start === null || end === null || end <= start) {
+      return "";
+    }
+
+    return value.slice(start, end).trim();
+  }
+
   /**
    * 从 DOM 中移除已存在的弹窗
    */
@@ -45,7 +88,7 @@ export const highlight2Call = () => {
     removePopup(); // 创建前先移除旧的
 
     // 创建弹窗容器
-    popup = document.createElement("div");
+    popup = targetDocument.createElement("div");
     popup.id = "highlight-caller-popup";
 
     // 标准化电话号码（去除非数字，处理 11 位 -> 10 位）
@@ -76,7 +119,7 @@ export const highlight2Call = () => {
             <div class="hcp-close-btn" title="关闭">×</div>
         `;
 
-    document.body.appendChild(popup);
+    targetDocument.body?.appendChild(popup);
 
     // --- 智能定位弹窗 ---
     const popupRect: DOMRect = popup.getBoundingClientRect();
@@ -84,12 +127,12 @@ export const highlight2Call = () => {
     let left: number = mouseEvent.clientX;
 
     // 防止弹窗超出视窗底部
-    if (top + popupRect.height > window.innerHeight) {
+    if (top + popupRect.height > targetWindow.innerHeight) {
       top = mouseEvent.clientY - popupRect.height - 15;
     }
     // 防止弹窗超出视窗右侧
-    if (left + popupRect.width > window.innerWidth) {
-      left = window.innerWidth - popupRect.width - 10;
+    if (left + popupRect.width > targetWindow.innerWidth) {
+      left = targetWindow.innerWidth - popupRect.width - 10;
     }
 
     popup.style.top = `${top}px`;
@@ -123,35 +166,69 @@ export const highlight2Call = () => {
     }
   }
 
-  // 监听全局的 mouseup 事件
-  document.addEventListener("mouseup", (e: MouseEvent) => {
-    // 如果事件目标在弹窗内，则不处理
-    if (popup && popup.contains(e.target as Node)) {
+  function handleSelection(mouseSnapshot: {
+    clientX: number;
+    clientY: number;
+    target: EventTarget | null;
+  }): void {
+    if (
+      popup &&
+      isNodeLike(mouseSnapshot.target) &&
+      popup.contains(mouseSnapshot.target)
+    ) {
       return;
     }
 
-    const selectedText: string = window.getSelection()?.toString().trim() ?? "";
+    const selectedTextFromDocument: string =
+      targetWindow.getSelection()?.toString().trim() ?? "";
+    const selectedTextFromEditable: string = getSelectedTextFromEditableTarget(
+      mouseSnapshot.target
+    );
+    const selectedText = selectedTextFromDocument || selectedTextFromEditable;
 
-    if (selectedText) {
-      const match: RegExpMatchArray | null = selectedText.match(PHONE_REGEX);
-
-      if (match) {
-        const phoneNumber: string = match[0];
-        createPopup(phoneNumber, e);
-      } else {
-        removePopup();
-      }
-    } else {
+    if (!selectedText) {
       removePopup();
+      return;
     }
-  });
+
+    const match: RegExpMatchArray | null = selectedText.match(PHONE_REGEX);
+    if (!match) {
+      removePopup();
+      return;
+    }
+
+    const mouseEvent = {
+      clientX: mouseSnapshot.clientX,
+      clientY: mouseSnapshot.clientY,
+    } as MouseEvent;
+    createPopup(match[0], mouseEvent);
+  }
+
+  // 监听全局的 mouseup 事件
+  targetDocument.addEventListener(
+    "mouseup",
+    (e: MouseEvent) => {
+      const mouseSnapshot = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        target: e.target,
+      };
+
+      targetWindow.setTimeout(() => handleSelection(mouseSnapshot), 0);
+    },
+    true
+  );
 
   // 监听全局的 mousedown 事件，实现点击外部关闭弹窗
-  document.addEventListener("mousedown", (e: MouseEvent) => {
-    if (popup && !popup.contains(e.target as Node)) {
-      removePopup();
-    }
-  });
+  targetDocument.addEventListener(
+    "mousedown",
+    (e: MouseEvent) => {
+      if (popup && isNodeLike(e.target) && !popup.contains(e.target)) {
+        removePopup();
+      }
+    },
+    true
+  );
 
   console.log("划词拨号/发短信助手 已启动。");
 };

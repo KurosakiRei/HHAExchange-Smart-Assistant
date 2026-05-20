@@ -53,6 +53,10 @@ const HOST = window.location.hostname.toLowerCase();
 const IS_HHA_APP_HOST = HOST === "app.hhaexchange.com";
 const IS_HHA_REPORTS_HOST = HOST === "reports.hhaexchange.com";
 const IS_VOICE_TECH_HOST = HOST === "mt3.1voicetech.com";
+const IS_BLOB_PAGE = window.location.protocol === "blob:";
+const MAIN_BOOTSTRAP_FLAG = "__HHA_SMART_ASSISTANT_MAIN_BOOTSTRAPPED__";
+const VISIT_QUICK_ACTIONS_FLAG =
+  "__HHA_SMART_ASSISTANT_VISIT_QUICK_ACTIONS_BOOTSTRAPPED__";
 const HHA_MAIN_PANEL_POSITION_KEY = "hha_main_panel_position";
 const HHA_MAIN_PANEL_KEY_PREFIX = "hha_main_panel";
 const HHA_MAIN_DATE_PRESET_KEY = "hha_main_date_preset";
@@ -64,7 +68,131 @@ function epic11Debug(...args: unknown[]): void {
   }
 }
 
+function isCleanerDetailPage(url: string): boolean {
+  const normalized = url.toLowerCase();
+  return (
+    normalized.includes("nonskilledvisitinfo_ns.aspx") ||
+    normalized.includes("skilledvisitinfo_ns.aspx") ||
+    normalized.includes("nonskilledvisitinfopayer_ns.aspx") ||
+    normalized.includes("skilledvisitinfopayer_ns.aspx") ||
+    normalized.includes("calendarvisitdetailchharightsiframe_ns.aspx")
+  );
+}
+
+function isPatientProfilePage(url: string): boolean {
+  return url.toLowerCase().includes("internalpatientinfo_ns.aspx");
+}
+
+function initVisitQuickActionButtons(): void {
+  if ((window as any)[VISIT_QUICK_ACTIONS_FLAG]) {
+    return;
+  }
+  (window as any)[VISIT_QUICK_ACTIONS_FLAG] = true;
+
+  const $missedInBtn = $("<input/>").text("Missed In").attr({
+    type: "button",
+    id: "missedInBtn",
+    name: "missedInBtn",
+    class: "button hollow",
+    tabindex: "1",
+    value: "Missed In",
+  });
+
+  const $missedOutBtn = $("<input/>").text("Missed Out").attr({
+    type: "button",
+    id: "missedOutBtn",
+    name: "missedOutBtn",
+    class: "button hollow",
+    tabindex: "1",
+    value: "Missed Out",
+  });
+
+  const $missedInOutBtn = $("<input/>").text("Missed In/Out").attr({
+    type: "button",
+    id: "missedInOutBtn",
+    name: "missedInOutBtn",
+    class: "button hollow",
+    tabindex: "1",
+    value: "Missed In&Out",
+  });
+
+  const $POCBtn = $("<input/>").text("POC").attr({
+    type: "button",
+    id: "uxBtnPOC",
+    name: "uxBtnPOC",
+    class: "button hollow",
+    tabindex: "1",
+    value: "POC",
+  });
+
+  assignIntervalTimer(saveButtonSelector, $POCBtn, "#uxBtnPOC", POCResolver);
+
+  // Resolve popup iframe document at click-time, fallback to current document.
+  const getMypopupDoc = (): Document => {
+    const mypopup = document.getElementById(
+      "mypopup"
+    ) as HTMLIFrameElement | null;
+    return mypopup?.contentDocument ?? document;
+  };
+
+  assignIntervalTimer(
+    saveButtonSelector,
+    $missedInOutBtn,
+    "#missedInOutBtn",
+    (reason: string) => missedCallResolver(reason as any, getMypopupDoc()),
+    ["Attendant failed to call in and out"]
+  );
+
+  assignIntervalTimer(
+    saveButtonSelector,
+    $missedOutBtn,
+    "#missedOutBtn",
+    (reason: string) => missedCallResolver(reason as any, getMypopupDoc()),
+    ["Attendant failed to call out"]
+  );
+
+  assignIntervalTimer(
+    saveButtonSelector,
+    $missedInBtn,
+    "#missedInBtn",
+    (reason: string) => missedCallResolver(reason as any, getMypopupDoc()),
+    ["Attendant failed to call in"]
+  );
+}
+
 async function main() {
+  if ((window as any)[MAIN_BOOTSTRAP_FLAG]) {
+    return;
+  }
+  (window as any)[MAIN_BOOTSTRAP_FLAG] = true;
+
+  if (IS_BLOB_PAGE) {
+    console.log("[main] Blob page detected, skipping bootstrap");
+    return;
+  }
+
+  const currentUrl = window.location.href;
+
+  // Highest-priority safe-mode for InternalPatientInfo top page.
+  // Keep only lightweight profile features and exit before shared heavy bootstrap paths.
+  if (
+    IS_HHA_APP_HOST &&
+    window.self === window.top &&
+    isPatientProfilePage(currentUrl)
+  ) {
+    console.log(
+      "[main] InternalPatientInfo top page detected, running minimal safe bootstrap"
+    );
+    (window as any).HHA_SMART_ASSISTANT_STARTED = true;
+    (window as any).HHA_SMART_ASSISTANT_VERSION = version;
+    highlight2Call();
+    await visitMonitor();
+    initMultiTabPanel();
+    ProfileDataExtractor.enhancePatientAddressLink();
+    initPatientCalendarBulkNotes();
+    return;
+  }
+
   console.log("HHA Exchange Smart Assistant " + version + " : script start");
 
   // Set a global flag to indicate script is running (for debugging)
@@ -72,8 +200,17 @@ async function main() {
   (window as any).HHA_SMART_ASSISTANT_VERSION = version;
 
   // Initialize OutlookAdapter if on Outlook page
-  OutlookAdapter.init();
-  OutlookMiniPanel.init();
+  try {
+    OutlookAdapter.init();
+  } catch (error) {
+    console.error("[main] OutlookAdapter init failed:", error);
+  }
+
+  try {
+    OutlookMiniPanel.init();
+  } catch (error) {
+    console.error("[main] OutlookMiniPanel init failed:", error);
+  }
 
   // Domain-mode bootstrap:
   // - VoiceTech page: only incoming call assistant
@@ -97,6 +234,29 @@ async function main() {
       initScheduledVisitsConfigCardUI();
     }
     return;
+  }
+
+  // In most iframes we should not start full bootstrap.
+  // Exception: visit detail iframes need only quick-action button injection.
+  if (window.self !== window.top) {
+    if (isCleanerDetailPage(currentUrl)) {
+      console.log(
+        "[main] Detail iframe detected, running quick-action bootstrap + cleaner resume"
+      );
+      initVisitQuickActionButtons();
+      await checkAndResumeCleaningTasks();
+      return;
+    } else if (isPatientProfilePage(currentUrl)) {
+      console.log(
+        "[main] Patient profile iframe detected, running bulk-notes bootstrap"
+      );
+      highlight2Call();
+      initPatientCalendarBulkNotes();
+      return;
+    } else {
+      console.log("[main] Non-top iframe detected, skipping HHA bootstrap");
+      return;
+    }
   }
 
   // Preload TinyMCE in the background (fire and forget)
@@ -718,7 +878,8 @@ async function checkAndResumeCleaningTasks(): Promise<void> {
           CleaningOverlay.show(
             queue.currentIndex + 1,
             queue.tasks.length,
-            "正在处理 POC... (已进入详情页)"
+            "正在处理 POC... (已进入详情页)",
+            () => CleaningController.manualResetQueue("DETAIL_PAGE_OVERLAY")
           );
 
           // 执行 POC 清理
