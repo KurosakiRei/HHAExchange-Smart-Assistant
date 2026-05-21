@@ -164,7 +164,9 @@ export async function generate(params: GenerateM11QPdfParams): Promise<Blob> {
   });
 
   const outputBytes = await pdfDoc.save();
-  return new Blob([outputBytes], { type: "application/pdf" });
+  const outputBuffer = new ArrayBuffer(outputBytes.byteLength);
+  new Uint8Array(outputBuffer).set(outputBytes);
+  return new Blob([outputBuffer], { type: "application/pdf" });
 }
 
 export function buildFilename(

@@ -58,6 +58,8 @@ const IS_BLOB_PAGE = window.location.protocol === "blob:";
 const MAIN_BOOTSTRAP_FLAG = "__HHA_SMART_ASSISTANT_MAIN_BOOTSTRAPPED__";
 const VISIT_QUICK_ACTIONS_FLAG =
   "__HHA_SMART_ASSISTANT_VISIT_QUICK_ACTIONS_BOOTSTRAPPED__";
+const NEW_MESSAGE_QUICK_ACTIONS_FLAG =
+  "__HHA_SMART_ASSISTANT_NEW_MESSAGE_QUICK_ACTIONS_BOOTSTRAPPED__";
 const HHA_MAIN_PANEL_POSITION_KEY = "hha_main_panel_position";
 const HHA_MAIN_PANEL_KEY_PREFIX = "hha_main_panel";
 const HHA_MAIN_DATE_PRESET_KEY = "hha_main_date_preset";
@@ -161,6 +163,81 @@ function initVisitQuickActionButtons(): void {
   );
 }
 
+function initNewMessageQuickActionButtons(): void {
+  if ((window as any)[NEW_MESSAGE_QUICK_ACTIONS_FLAG]) {
+    return;
+  }
+  (window as any)[NEW_MESSAGE_QUICK_ACTIONS_FLAG] = true;
+
+  const $newQABtn = $("<input/>").text("").attr({
+    type: "button",
+    id: "newQABtn",
+    name: "newQABtn",
+    class: "button hollow",
+    value: "New QA",
+  });
+
+  const $newWelcomeCall = $("<input/>").text("").attr({
+    type: "button",
+    id: "newWelcomecallBtn",
+    name: "newWelcomecallBtn",
+    class: "button hollow",
+    value: "New Welcome Call",
+  });
+
+  const $newQABtnInIframe = $("<input/>").text("").attr({
+    type: "button",
+    id: "newQABtnInIframe",
+    name: "newQABtnInIframe",
+    class: "button hollow",
+    value: "New QA",
+  });
+
+  const $newWelcomeCallInIframe = $("<input/>").text("").attr({
+    type: "button",
+    id: "newWelcomecallBtnInIframe",
+    name: "newWelcomecallBtnInIframe",
+    class: "button hollow",
+    value: "New Welcome Call",
+  });
+
+  assignIntervalTimer(
+    newMessageButtonSelector,
+    $newQABtn,
+    "#newQABtn",
+    createNewQA
+  );
+
+  assignIntervalTimer(
+    newMessageButtonSelector,
+    $newWelcomeCall,
+    "#newWelcomecallBtn",
+    createWelcomeCall
+  );
+
+  assignIntervalTimer(
+    newMessageButtonSelector,
+    $newQABtnInIframe,
+    "#newQABtnInIframe",
+    createNewQA,
+    [],
+    "left",
+    null,
+    newMessageIframeSelector
+  );
+
+  assignIntervalTimer(
+    newMessageButtonSelector,
+    $newWelcomeCallInIframe,
+    "#newWelcomecallBtnInIframe",
+    createWelcomeCall,
+    [],
+    "left",
+    null,
+    newMessageIframeSelector
+  );
+}
+
 async function main() {
   if ((window as any)[MAIN_BOOTSTRAP_FLAG]) {
     return;
@@ -187,6 +264,7 @@ async function main() {
     (window as any).HHA_SMART_ASSISTANT_STARTED = true;
     (window as any).HHA_SMART_ASSISTANT_VERSION = version;
     highlight2Call();
+    initNewMessageQuickActionButtons();
     await visitMonitor();
     initMultiTabPanel();
     ProfileDataExtractor.enhancePatientAddressLink();
