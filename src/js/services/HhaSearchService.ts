@@ -262,55 +262,6 @@ export function formatPhoneNumber(rawNumber: string | null): string | null {
   return null;
 }
 
-const POPUP_SEARCH_HANDLER_KEY = "__HHA_POPUP_SEARCH_BY_PHONE__";
-
-function ensurePopupSearchHandler(): void {
-  const hostWindow = window as Window & Record<string, unknown>;
-  if (typeof hostWindow[POPUP_SEARCH_HANDLER_KEY] === "function") {
-    return;
-  }
-
-  hostWindow[POPUP_SEARCH_HANDLER_KEY] = async (
-    phoneNumber: string
-  ): Promise<boolean> => {
-    const formattedNumber = formatPhoneNumber(phoneNumber);
-    if (!formattedNumber) {
-      alert(`无效的电话号码格式: ${phoneNumber}`);
-      return false;
-    }
-
-    const [aideResult, patientResult] = await Promise.all([
-      fetchHhaData("aide", formattedNumber),
-      fetchHhaData("patient", formattedNumber),
-    ]);
-
-    const hasAideResult = aideResult.count > 0;
-    const hasPatientResult = patientResult.count > 0;
-
-    if (hasAideResult && !hasPatientResult) {
-      if (aideResult.count === 1 && aideResult.finalUrl) {
-        openInPopup(aideResult.finalUrl);
-      } else {
-        displaySingleResult(aideResult, "aide", formattedNumber);
-      }
-    } else if (!hasAideResult && hasPatientResult) {
-      if (patientResult.finalUrl) {
-        openInPopup(patientResult.finalUrl);
-      } else {
-        displaySingleResult(patientResult, "patient", formattedNumber);
-      }
-    } else if (hasAideResult && hasPatientResult) {
-      displayCombinedResults(aideResult, patientResult, formattedNumber);
-    } else {
-      alert(
-        `电话号码 [${formattedNumber}] 在 HHAeXchange 中未找到对应的护工或病人。`
-      );
-    }
-
-    return true;
-  };
-}
-
 /**
  * 以弹窗形式打开一个URL或HTML内容
  */
@@ -325,8 +276,6 @@ export function openInPopup(
   const uniqueName = `HHA_Search_${Date.now()}`;
 
   if (isHtml) {
-    ensurePopupSearchHandler();
-
     const blob = new Blob([urlOrHtml], { type: "text/html;charset=utf-8" });
     const blobUrl = URL.createObjectURL(blob);
     const popup = window.open(blobUrl, uniqueName, windowFeatures);
@@ -334,12 +283,10 @@ export function openInPopup(
     if (popup) {
       schedulePopupInteractionInit(popup);
       popup.addEventListener("load", () => {
+        URL.revokeObjectURL(blobUrl);
         initializePopupInteractions(popup);
       });
-
-      // Keep Blob URL alive while popup is open.
-      // If revoked too early, suspended/crashed popup tabs cannot be reloaded.
-      monitorPopupAndRevokeBlobUrl(popup, blobUrl);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
     } else {
       URL.revokeObjectURL(blobUrl);
       console.warn("弹窗被浏览器阻止，请允许弹窗后重试");
@@ -347,20 +294,6 @@ export function openInPopup(
   } else {
     window.open(urlOrHtml, uniqueName, windowFeatures);
   }
-}
-
-function monitorPopupAndRevokeBlobUrl(popup: Window, blobUrl: string): void {
-  let checks = 0;
-  const maxChecks = 21600; // ~12 hours @ 2s interval
-
-  const timer = window.setInterval(() => {
-    checks += 1;
-
-    if (popup.closed || checks >= maxChecks) {
-      window.clearInterval(timer);
-      URL.revokeObjectURL(blobUrl);
-    }
-  }, 2000);
 }
 
 function schedulePopupInteractionInit(popup: Window): void {
@@ -395,6 +328,7 @@ function initializePopupInteractions(popup: Window): boolean {
 
     setupPopupPagination(popupDoc);
     setupPopupHighlight2Call(popupDoc);
+    setupPopupProfileLinkFallback(popupDoc);
 
     if (root) {
       root.dataset.hhaPopupInteractionsInitialized = "1";
@@ -403,6 +337,127 @@ function initializePopupInteractions(popup: Window): boolean {
   } catch {
     return false;
   }
+}
+
+function inferProfileTypeFromAnchor(
+  anchor: HTMLAnchorElement
+): "aide" | "patient" | null {
+  const table = anchor.closest("table");
+  const side = table?.getAttribute("data-side")?.toLowerCase() || "";
+  if (side === "aide") {
+    return "aide";
+  }
+  if (side === "patient") {
+    return "patient";
+  }
+
+  const raw = `${anchor.getAttribute("href") || ""} ${
+    anchor.getAttribute("onclick") || ""
+  }`.toLowerCase();
+  if (/(?:aide|caregiver)/i.test(raw)) {
+    return "aide";
+  }
+  if (/patient/i.test(raw)) {
+    return "patient";
+  }
+
+  const panelHeaderText =
+    table
+      ?.closest(".panel")
+      ?.querySelector<HTMLElement>(".panel-header")
+      ?.textContent?.toLowerCase() || "";
+  if (
+    panelHeaderText.includes("caregiver") ||
+    panelHeaderText.includes("护工")
+  ) {
+    return "aide";
+  }
+  if (panelHeaderText.includes("patient") || panelHeaderText.includes("病人")) {
+    return "patient";
+  }
+
+  return null;
+}
+
+function openProfileInNewTab(targetUrl: string): void {
+  try {
+    GM_openInTab(targetUrl, { active: true, insert: true, setParent: true });
+    return;
+  } catch {
+    // Fall through to standard browser APIs.
+  }
+
+  const newWindow = window.open(targetUrl, "_blank", "noopener,noreferrer");
+  if (newWindow) {
+    try {
+      newWindow.opener = null;
+    } catch {
+      // ignore cross-origin opener assignment errors
+    }
+    return;
+  }
+
+  // As a last resort, force navigation in a blank tab context.
+  window.open(targetUrl, "_blank");
+}
+
+function setupPopupProfileLinkFallback(popupDoc: Document): void {
+  if (!popupDoc.body || popupDoc.body.dataset.hhaProfileLinkBound === "1") {
+    return;
+  }
+  popupDoc.body.dataset.hhaProfileLinkBound = "1";
+
+  popupDoc.addEventListener(
+    "click",
+    (event) => {
+      const target = event.target as Element | null;
+      const anchor = target?.closest?.("a");
+      if (!(anchor instanceof HTMLAnchorElement)) {
+        return;
+      }
+
+      const href = anchor.getAttribute("href")?.trim() || "";
+      if (!href || /^(?:tel|sms|mailto):/i.test(href)) {
+        return;
+      }
+
+      const directProfileMatch =
+        /^https?:\/\//i.test(href) &&
+        /\/(?:Aide\/Aide_ns\.aspx|Patient\/InternalPatientInfo_ns\.aspx)/i.test(
+          href
+        );
+
+      let targetUrl = "";
+      if (directProfileMatch) {
+        targetUrl = href;
+      }
+
+      const profileType = inferProfileTypeFromAnchor(anchor);
+      if (!targetUrl) {
+        if (!profileType) {
+          return;
+        }
+
+        const profileId =
+          extractProfileIdFromAnchor(anchor, profileType) ||
+          extractProfileIdFromRow(anchor.closest("tr"), profileType);
+        if (!profileId) {
+          return;
+        }
+
+        targetUrl = (
+          profileType === "aide"
+            ? AIDE_PROFILE_URL_TEMPLATE
+            : PATIENT_PROFILE_URL_TEMPLATE
+        ).replace("{ID}", profileId);
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      openProfileInNewTab(targetUrl);
+    },
+    true
+  );
 }
 
 function setupPopupPagination(popupDoc: Document): void {
@@ -493,10 +548,7 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
   if (!popupDoc.body || popupDoc.body.dataset.hhaH2cBound === "1") return;
   popupDoc.body.dataset.hhaH2cBound = "1";
 
-  // Allow wrapped numbers like "212-\n369-\n1248" in narrow table cells.
-  const phoneRegex =
-    /(?:\+?1[\s().-]*)?\(?\d{3}\)?[\s().-]*\d{3}[\s().-]*\d{4}/;
-  const hostWindow = window as Window & Record<string, unknown>;
+  const phoneRegex = /(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
   let actionPopup: HTMLDivElement | null = null;
   let suppressMouseUpUntil = 0;
 
@@ -569,108 +621,6 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
     }
   };
 
-  const requestHhaSearch = async (phoneNumber: string): Promise<void> => {
-    markPopupInteraction();
-    clearSelection();
-    removePopup();
-
-    const handler = hostWindow[POPUP_SEARCH_HANDLER_KEY];
-    if (typeof handler === "function") {
-      await Promise.resolve(handler(phoneNumber));
-      return;
-    }
-
-    alert("当前结果页无法连接到主窗口，请回到 Outlook 面板直接搜索。");
-  };
-
-  const appendPopupButton = (
-    container: HTMLElement,
-    options:
-      | {
-          tagName: "a";
-          className: string;
-          text: string;
-          href: string;
-          dataAction: string;
-        }
-      | {
-          tagName: "button";
-          className: string;
-          text: string;
-          dataPhone?: string;
-        }
-  ): HTMLElement => {
-    const element = popupDoc.createElement(options.tagName);
-    element.className = options.className;
-    element.textContent = options.text;
-
-    if (options.tagName === "a") {
-      const anchor = element as HTMLAnchorElement;
-      anchor.href = options.href;
-      anchor.setAttribute("data-action", options.dataAction);
-    } else if (options.dataPhone) {
-      element.setAttribute("data-phone", options.dataPhone);
-    }
-
-    container.appendChild(element);
-    return element;
-  };
-
-  const buildActionPopupContent = (
-    container: HTMLDivElement,
-    phoneNumber: string,
-    clean: string
-  ): void => {
-    const title = popupDoc.createElement("div");
-    title.className = "hcp-title";
-    title.textContent = "请选择操作";
-    container.appendChild(title);
-
-    const number = popupDoc.createElement("div");
-    number.className = "hcp-number";
-    number.textContent = phoneNumber;
-    container.appendChild(number);
-
-    const actionRow = popupDoc.createElement("div");
-    actionRow.className = "hcp-actions";
-    appendPopupButton(actionRow, {
-      tagName: "a",
-      className: "hcp-button",
-      text: "📞 打电话",
-      href: `tel:${clean}`,
-      dataAction: "tel",
-    });
-    appendPopupButton(actionRow, {
-      tagName: "a",
-      className: "hcp-button",
-      text: "💬 发短信",
-      href: `sms:${clean}`,
-      dataAction: "sms",
-    });
-    container.appendChild(actionRow);
-
-    const utilityRow = popupDoc.createElement("div");
-    utilityRow.className = "hcp-actions-full";
-    appendPopupButton(utilityRow, {
-      tagName: "button",
-      className: "hcp-button hcp-search-hha",
-      text: "🔍 在HHA搜索",
-      dataPhone: clean,
-    });
-    appendPopupButton(utilityRow, {
-      tagName: "button",
-      className: "hcp-copy-btn",
-      text: "📋 复制号码",
-    });
-    container.appendChild(utilityRow);
-
-    const closeBtn = popupDoc.createElement("div");
-    closeBtn.className = "hcp-close-btn";
-    closeBtn.setAttribute("title", "关闭");
-    closeBtn.textContent = "×";
-    container.appendChild(closeBtn);
-  };
-
   const createPopup = (phoneNumber: string, event: MouseEvent): void => {
     removePopup();
 
@@ -679,7 +629,17 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
 
     actionPopup = popupDoc.createElement("div");
     actionPopup.id = "highlight-caller-popup";
-    buildActionPopupContent(actionPopup, phoneNumber, clean);
+    actionPopup.innerHTML =
+      `<div class="hcp-title">请选择操作</div>` +
+      `<div class="hcp-number">${phoneNumber}</div>` +
+      `<div class="hcp-actions">` +
+      `<a href="tel:${clean}" class="hcp-button" data-action="tel">📞 打电话</a>` +
+      `<a href="sms:${clean}" class="hcp-button" data-action="sms">💬 发短信</a>` +
+      `</div>` +
+      `<div class="hcp-actions-full">` +
+      `<button class="hcp-copy-btn">📋 复制号码</button>` +
+      `</div>` +
+      `<div class="hcp-close-btn" title="关闭">×</div>`;
 
     popupDoc.body.appendChild(actionPopup);
 
@@ -727,14 +687,6 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
       });
     }
 
-    const searchBtn =
-      actionPopup.querySelector<HTMLButtonElement>(".hcp-search-hha");
-    if (searchBtn) {
-      searchBtn.addEventListener("click", async () => {
-        await requestHhaSearch(clean);
-      });
-    }
-
     actionPopup
       .querySelectorAll<HTMLAnchorElement>("a.hcp-button")
       .forEach((btn) => {
@@ -753,20 +705,26 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
       });
   };
 
-  const handleSelection = (mouseSnapshot: {
-    clientX: number;
-    clientY: number;
-    target: EventTarget | null;
-  }): void => {
+  popupDoc.addEventListener("mouseup", (e) => {
     if (Date.now() < suppressMouseUpUntil) {
       return;
     }
 
-    if (actionPopup && mouseSnapshot.target instanceof Node) {
-      const targetNode = mouseSnapshot.target;
-      if (actionPopup.contains(targetNode)) {
+    if (actionPopup && e.target instanceof Node) {
+      const path = (
+        typeof e.composedPath === "function" ? e.composedPath() : []
+      ) as EventTarget[];
+      if (actionPopup.contains(e.target) || path.includes(actionPopup)) {
         return;
       }
+    }
+
+    if (
+      actionPopup &&
+      popupDoc.defaultView?.getSelection()?.anchorNode instanceof Node &&
+      actionPopup.contains(popupDoc.defaultView.getSelection()!.anchorNode)
+    ) {
+      return;
     }
 
     const selected =
@@ -782,41 +740,18 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
       return;
     }
 
-    const syntheticEvent = {
-      clientX: mouseSnapshot.clientX,
-      clientY: mouseSnapshot.clientY,
-    } as MouseEvent;
+    createPopup(match[0], e);
+  });
 
-    createPopup(match[0], syntheticEvent);
-  };
-
-  popupDoc.addEventListener(
-    "mouseup",
-    (e) => {
-      const mouseSnapshot = {
-        clientX: e.clientX,
-        clientY: e.clientY,
-        target: e.target,
-      };
-
-      window.setTimeout(() => handleSelection(mouseSnapshot), 0);
-    },
-    true
-  );
-
-  popupDoc.addEventListener(
-    "mousedown",
-    (e) => {
-      if (
-        actionPopup &&
-        e.target instanceof Node &&
-        !actionPopup.contains(e.target)
-      ) {
-        removePopup();
-      }
-    },
-    true
-  );
+  popupDoc.addEventListener("mousedown", (e) => {
+    if (
+      actionPopup &&
+      e.target instanceof Node &&
+      !actionPopup.contains(e.target)
+    ) {
+      removePopup();
+    }
+  });
 }
 
 // ==================== HTML 处理工具 ====================
@@ -1161,36 +1096,112 @@ function RedirectToPatientPage(id) {
   }
 }
 
+function extractProfileIdFromRawValue(
+  rawValue: string,
+  targetType: "aide" | "patient"
+): string | null {
+  const raw = rawValue
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .trim();
+
+  if (!raw) {
+    return null;
+  }
+
+  const directRegexes =
+    targetType === "aide"
+      ? [
+          /RedirectToAidePage\(\s*['"]?(\d+)/i,
+          /\bAideId\s*=\s*(\d+)/i,
+          /\bCaregiver(?:ID|Id|id)\s*=\s*(\d+)/i,
+        ]
+      : [
+          /RedirectToPatientPage\(\s*['"]?(\d+)/i,
+          /\bPatient(?:ID|Id|id)\s*=\s*(\d+)/i,
+        ];
+
+  for (const regex of directRegexes) {
+    const match = raw.match(regex);
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+
+  const functionCallRegex =
+    targetType === "aide"
+      ? /(?:OpenAide[A-Za-z]*|RedirectToAidePage)\(([^)]*)\)/i
+      : /(?:OpenPatient[A-Za-z]*|RedirectToPatientPage)\(([^)]*)\)/i;
+
+  const functionCallMatch = raw.match(functionCallRegex);
+  if (functionCallMatch?.[1]) {
+    const numericArgs = Array.from(
+      functionCallMatch[1].matchAll(/['"]?(\d{3,})['"]?/g)
+    ).map((m) => m[1]);
+    if (numericArgs.length > 0) {
+      return numericArgs[0];
+    }
+  }
+
+  return null;
+}
+
+function collectRawCandidates(element: Element): string[] {
+  const rawValues: string[] = [];
+
+  const push = (value: string | null | undefined): void => {
+    if (!value) {
+      return;
+    }
+    const trimmed = value.trim();
+    if (trimmed) {
+      rawValues.push(trimmed);
+    }
+  };
+
+  push(element.getAttribute("onclick"));
+  push(element.getAttribute("href"));
+  push(element.getAttribute("data-id"));
+  push(element.getAttribute("data-aideid"));
+  push(element.getAttribute("data-caregiverid"));
+  push(element.getAttribute("data-patientid"));
+  push(element.getAttribute("id"));
+  push(element.getAttribute("name"));
+
+  element
+    .getAttributeNames()
+    .filter((attrName) => attrName.startsWith("data-"))
+    .forEach((attrName) => push(element.getAttribute(attrName)));
+
+  if (element instanceof HTMLInputElement) {
+    push(element.value);
+  }
+
+  if (element instanceof HTMLAnchorElement) {
+    push(element.href);
+  }
+
+  return Array.from(new Set(rawValues));
+}
+
 function extractProfileIdFromAnchor(
   anchor: HTMLAnchorElement | null,
   type: "aide" | "patient"
 ): string | null {
   if (!anchor) return null;
 
-  const rawCandidates = [
-    anchor.getAttribute("onclick"),
-    anchor.getAttribute("href"),
-  ]
-    .filter((v): v is string => Boolean(v))
-    .map((v) => v.trim());
+  const preservedProfileId =
+    anchor.getAttribute("data-hha-profile-id")?.trim() || "";
+  if (/^\d+$/.test(preservedProfileId)) {
+    return preservedProfileId;
+  }
 
-  const regexes =
-    type === "aide"
-      ? [
-          /RedirectToAidePage\(\s*['"]?(\d+)/i,
-          /OpenAide[A-Za-z]*\(\s*['"]?(\d+)/i,
-          /\bAideId\s*=\s*(\d+)/i,
-        ]
-      : [
-          /RedirectToPatientPage\(\s*['"]?(\d+)/i,
-          /OpenPatient[A-Za-z]*\(\s*['"]?(\d+)/i,
-          /\bPatient(?:ID|Id|id)\s*=\s*(\d+)/i,
-        ];
+  const rawCandidates = collectRawCandidates(anchor);
 
   for (const raw of rawCandidates) {
-    for (const regex of regexes) {
-      const match = raw.match(regex);
-      if (match && match[1]) return match[1];
+    const extracted = extractProfileIdFromRawValue(raw, type);
+    if (extracted) {
+      return extracted;
     }
   }
 
@@ -1217,6 +1228,63 @@ function extractProfileIdFromAnchor(
   return null;
 }
 
+function extractProfileIdFromRow(
+  row: Element | null,
+  type: "aide" | "patient"
+): string | null {
+  if (!row) {
+    return null;
+  }
+
+  const rowElements = Array.from(
+    row.querySelectorAll<HTMLElement>(
+      "a, button, input, [onclick], [href], [id], [name], [data-id], [data-aideid], [data-caregiverid], [data-patientid]"
+    )
+  );
+
+  const elementsToScan: Element[] = [row, ...rowElements];
+
+  for (const element of elementsToScan) {
+    const preservedProfileId =
+      element.getAttribute("data-hha-profile-id")?.trim() || "";
+    if (/^\d+$/.test(preservedProfileId)) {
+      return preservedProfileId;
+    }
+
+    const rawValues = collectRawCandidates(element);
+
+    for (const rawValue of rawValues) {
+      const id = extractProfileIdFromRawValue(rawValue, type);
+      if (id) {
+        return id;
+      }
+    }
+  }
+
+  return null;
+}
+
+function preserveProfileIdsInRawHtml(
+  html: string,
+  type: "aide" | "patient"
+): string {
+  return html.replace(/<a\b[^>]*>/gi, (anchorTag) => {
+    if (/\bdata-hha-profile-id\s*=\s*["'][^"']+["']/i.test(anchorTag)) {
+      return anchorTag;
+    }
+
+    const profileId = extractProfileIdFromRawValue(anchorTag, type);
+    if (!profileId) {
+      return anchorTag;
+    }
+
+    return anchorTag.replace(
+      />$/,
+      ` data-hha-profile-id="${profileId}" data-hha-profile-type="${type}">`
+    );
+  });
+}
+
 function rewriteProfileLinks(
   table: HTMLTableElement,
   type: "aide" | "patient"
@@ -1227,10 +1295,16 @@ function rewriteProfileLinks(
 
   anchors.forEach((anchor) => {
     const href = anchor.getAttribute("href")?.trim() || "";
+    const onclick = anchor.getAttribute("onclick")?.trim() || "";
     const directProfilePattern =
       type === "aide"
         ? /\/Aide\/Aide_ns\.aspx/i
         : /\/Patient\/InternalPatientInfo_ns\.aspx/i;
+
+    const isTelOrSms = /^(?:tel|sms|mailto):/i.test(href);
+    if (isTelOrSms) {
+      return;
+    }
 
     if (/^https?:\/\//i.test(href) && directProfilePattern.test(href)) {
       anchor.setAttribute("target", "_blank");
@@ -1238,7 +1312,9 @@ function rewriteProfileLinks(
       return;
     }
 
-    const profileId = extractProfileIdFromAnchor(anchor, type);
+    const profileId =
+      extractProfileIdFromAnchor(anchor, type) ||
+      extractProfileIdFromRow(anchor.closest("tr"), type);
     if (!profileId) return;
 
     const targetUrl = (
@@ -1259,7 +1335,8 @@ function rewriteProfileLinks(
  * 解析 Aide (护工) 的搜索结果
  */
 export function handleAideSearchResult(html: string): HhaSearchResult {
-  const doc = new DOMParser().parseFromString(html, "text/html");
+  const normalizedHtml = preserveProfileIdsInRawHtml(html, "aide");
+  const doc = new DOMParser().parseFromString(normalizedHtml, "text/html");
   const resultsTable = doc.querySelector<HTMLTableElement>("#tdSearchResults");
   if (!resultsTable) return { count: 0, rawHtml: html };
 
@@ -1294,7 +1371,8 @@ export function handleAideSearchResult(html: string): HhaSearchResult {
  * 解析 Patient (病人) 的搜索结果
  */
 export function handlePatientSearchResult(html: string): HhaSearchResult {
-  const doc = new DOMParser().parseFromString(html, "text/html");
+  const normalizedHtml = preserveProfileIdsInRawHtml(html, "patient");
+  const doc = new DOMParser().parseFromString(normalizedHtml, "text/html");
   const resultsTable = doc.querySelector<HTMLTableElement>("#tdSearchResults");
 
   if (!resultsTable) {
@@ -1487,7 +1565,8 @@ export function extractAndCleanContent(
   html: string,
   type: "aide" | "patient"
 ): string {
-  const doc = new DOMParser().parseFromString(html, "text/html");
+  const normalizedHtml = preserveProfileIdsInRawHtml(html, type);
+  const doc = new DOMParser().parseFromString(normalizedHtml, "text/html");
 
   let table = doc.querySelector<HTMLTableElement>("#tdSearchResults");
   if (!table) {
@@ -1759,8 +1838,6 @@ const H2C_STYLE_BLOCK = `
     }
     #highlight-caller-popup .hcp-actions-full {
       margin-top: 10px;
-      display: grid;
-      gap: 8px;
     }
     #highlight-caller-popup .hcp-copy-btn {
       width: 100%;
@@ -1778,413 +1855,6 @@ const H2C_STYLE_BLOCK = `
     }
   </style>
 `;
-
-function popupInlineBootstrap(): void {
-  const searchHandlerKey = "__HHA_POPUP_SEARCH_BY_PHONE__";
-
-  const initialize = () => {
-    const root = document.documentElement;
-    const body = document.body;
-    if (
-      !root ||
-      !body ||
-      root.dataset.hhaPopupInteractionsInitialized === "1"
-    ) {
-      return;
-    }
-
-    const phoneRegex =
-      /(?:\+?1[\s().-]*)?\(?\d{3}\)?[\s().-]*\d{3}[\s().-]*\d{4}/;
-    let actionPopup: HTMLDivElement | null = null;
-    let suppressMouseUpUntil = 0;
-
-    const normalize = (raw: string): string => {
-      let digits = raw.replace(/\D/g, "");
-      if (digits.length === 11 && digits.startsWith("1")) {
-        digits = digits.substring(1);
-      }
-      return digits;
-    };
-
-    const removePopup = (): void => {
-      if (!actionPopup) return;
-      actionPopup.remove();
-      actionPopup = null;
-    };
-
-    const markPopupInteraction = (): void => {
-      suppressMouseUpUntil = Date.now() + 400;
-    };
-
-    const clearSelection = (): void => {
-      try {
-        window.getSelection()?.removeAllRanges();
-      } catch {
-        // ignore selection API errors
-      }
-    };
-
-    const launchProtocol = (scheme: "tel" | "sms", number: string): void => {
-      const target = `${scheme}:${number}`;
-
-      markPopupInteraction();
-      clearSelection();
-      removePopup();
-
-      try {
-        window.location.href = target;
-        return;
-      } catch {
-        // fallback below
-      }
-
-      try {
-        window.open(target, "_self");
-      } catch {
-        // ignore open failures
-      }
-    };
-
-    const copyToClipboard = async (text: string): Promise<boolean> => {
-      try {
-        await navigator.clipboard.writeText(text);
-        return true;
-      } catch {
-        try {
-          const ta = document.createElement("textarea");
-          ta.value = text;
-          ta.setAttribute("readonly", "true");
-          ta.style.position = "fixed";
-          ta.style.top = "-9999px";
-          body.appendChild(ta);
-          ta.select();
-          const copied = document.execCommand("copy");
-          ta.remove();
-          return copied;
-        } catch {
-          return false;
-        }
-      }
-    };
-
-    const requestHhaSearch = async (phoneNumber: string): Promise<void> => {
-      markPopupInteraction();
-      clearSelection();
-      removePopup();
-
-      try {
-        const openerWindow = window.opener as
-          | (Window & Record<string, unknown>)
-          | null;
-        const handler = openerWindow?.[searchHandlerKey];
-        if (typeof handler === "function") {
-          await Promise.resolve(handler(phoneNumber));
-          return;
-        }
-      } catch {
-        // opener may be unavailable or cross-context
-      }
-
-      alert("当前结果页无法连接到主窗口，请回到 Outlook 面板直接搜索。");
-    };
-
-    const appendPopupButton = (container, options) => {
-      const element = document.createElement(options.tagName);
-      element.className = options.className;
-      element.textContent = options.text;
-
-      if (options.tagName === "a") {
-        element.href = options.href;
-        element.setAttribute("data-action", options.dataAction);
-      } else if (options.dataPhone) {
-        element.setAttribute("data-phone", options.dataPhone);
-      }
-
-      container.appendChild(element);
-      return element;
-    };
-
-    const buildActionPopupContent = (container, phoneNumber, clean) => {
-      const title = document.createElement("div");
-      title.className = "hcp-title";
-      title.textContent = "请选择操作";
-      container.appendChild(title);
-
-      const number = document.createElement("div");
-      number.className = "hcp-number";
-      number.textContent = phoneNumber;
-      container.appendChild(number);
-
-      const actionRow = document.createElement("div");
-      actionRow.className = "hcp-actions";
-      appendPopupButton(actionRow, {
-        tagName: "a",
-        className: "hcp-button",
-        text: "📞 打电话",
-        href: `tel:${clean}`,
-        dataAction: "tel",
-      });
-      appendPopupButton(actionRow, {
-        tagName: "a",
-        className: "hcp-button",
-        text: "💬 发短信",
-        href: `sms:${clean}`,
-        dataAction: "sms",
-      });
-      container.appendChild(actionRow);
-
-      const utilityRow = document.createElement("div");
-      utilityRow.className = "hcp-actions-full";
-      appendPopupButton(utilityRow, {
-        tagName: "button",
-        className: "hcp-button hcp-search-hha",
-        text: "🔍 在HHA搜索",
-        dataPhone: clean,
-      });
-      appendPopupButton(utilityRow, {
-        tagName: "button",
-        className: "hcp-copy-btn",
-        text: "📋 复制号码",
-      });
-      container.appendChild(utilityRow);
-
-      const closeBtn = document.createElement("div");
-      closeBtn.className = "hcp-close-btn";
-      closeBtn.setAttribute("title", "关闭");
-      closeBtn.textContent = "×";
-      container.appendChild(closeBtn);
-    };
-
-    const createPopup = (
-      phoneNumber: string,
-      mousePosition: { clientX: number; clientY: number }
-    ): void => {
-      removePopup();
-
-      const clean = normalize(phoneNumber);
-      if (clean.length !== 10) return;
-
-      actionPopup = document.createElement("div");
-      actionPopup.id = "highlight-caller-popup";
-      buildActionPopupContent(actionPopup, phoneNumber, clean);
-
-      body.appendChild(actionPopup);
-
-      ["mousedown", "mouseup", "click"].forEach((eventName) => {
-        actionPopup?.addEventListener(eventName, (evt) => {
-          markPopupInteraction();
-          evt.stopPropagation();
-        });
-      });
-
-      const rect = actionPopup.getBoundingClientRect();
-      let top = mousePosition.clientY + 15;
-      let left = mousePosition.clientX;
-
-      if (top + rect.height > window.innerHeight) {
-        top = mousePosition.clientY - rect.height - 15;
-      }
-      if (left + rect.width > window.innerWidth) {
-        left = window.innerWidth - rect.width - 10;
-      }
-
-      actionPopup.style.top = `${top}px`;
-      actionPopup.style.left = `${left}px`;
-
-      const closeBtn = actionPopup.querySelector<HTMLElement>(".hcp-close-btn");
-      closeBtn?.addEventListener("click", () => {
-        markPopupInteraction();
-        clearSelection();
-        removePopup();
-      });
-
-      const copyBtn =
-        actionPopup.querySelector<HTMLButtonElement>(".hcp-copy-btn");
-      copyBtn?.addEventListener("click", async () => {
-        markPopupInteraction();
-        const ok = await copyToClipboard(clean);
-        copyBtn.textContent = ok ? "✅ 已复制" : "❌ 复制失败";
-        window.setTimeout(() => {
-          if (copyBtn) copyBtn.textContent = "📋 复制号码";
-        }, 1500);
-      });
-
-      const searchBtn =
-        actionPopup.querySelector<HTMLButtonElement>(".hcp-search-hha");
-      searchBtn?.addEventListener("click", async () => {
-        await requestHhaSearch(clean);
-      });
-
-      actionPopup
-        .querySelectorAll<HTMLAnchorElement>("a.hcp-button")
-        .forEach((btn) => {
-          btn.addEventListener("click", (evt) => {
-            evt.preventDefault();
-            evt.stopPropagation();
-
-            const action = btn.getAttribute("data-action");
-            if (action === "tel" || action === "sms") {
-              launchProtocol(action, clean);
-            }
-          });
-        });
-    };
-
-    const handleSelection = (mouseSnapshot: {
-      clientX: number;
-      clientY: number;
-      target: EventTarget | null;
-    }): void => {
-      if (Date.now() < suppressMouseUpUntil) {
-        return;
-      }
-
-      if (actionPopup && mouseSnapshot.target instanceof Node) {
-        const targetNode = mouseSnapshot.target;
-        if (actionPopup.contains(targetNode)) {
-          return;
-        }
-      }
-
-      const selected = window.getSelection()?.toString().trim() || "";
-      if (!selected) {
-        removePopup();
-        return;
-      }
-
-      const match = selected.match(phoneRegex);
-      if (!match) {
-        removePopup();
-        return;
-      }
-
-      createPopup(match[0], mouseSnapshot);
-    };
-
-    document.addEventListener(
-      "mouseup",
-      (e) => {
-        const mouseSnapshot = {
-          clientX: e.clientX,
-          clientY: e.clientY,
-          target: e.target,
-        };
-        window.setTimeout(() => handleSelection(mouseSnapshot), 0);
-      },
-      true
-    );
-
-    document.addEventListener(
-      "mousedown",
-      (e) => {
-        if (
-          actionPopup &&
-          e.target instanceof Node &&
-          !actionPopup.contains(e.target)
-        ) {
-          removePopup();
-        }
-      },
-      true
-    );
-
-    const bars = Array.from(
-      document.querySelectorAll<HTMLElement>("[data-pagination-side]")
-    );
-    if (bars.length) {
-      const currentPages: Record<string, number> = {};
-      const pageSizes: Record<string, number> = {};
-
-      bars.forEach((bar) => {
-        const side = bar.getAttribute("data-pagination-side");
-        if (!side) return;
-
-        const table = document.querySelector<HTMLTableElement>(
-          `table[data-side="${side}"]`
-        );
-        const pageSize = Number.parseInt(
-          table?.getAttribute("data-page-size") || "15",
-          10
-        );
-
-        pageSizes[side] =
-          Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 15;
-        currentPages[side] = 1;
-      });
-
-      const showPage = (side: string, pageNum: number): void => {
-        const rows = Array.from(
-          document.querySelectorAll<HTMLTableRowElement>(
-            `[data-side="${side}"] tbody tr[data-row-index]`
-          )
-        );
-        if (!rows.length) return;
-
-        const pageSize = pageSizes[side] || 15;
-        const totalRows = rows.length;
-        const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
-        const safePage = Math.min(Math.max(pageNum, 1), totalPages);
-        currentPages[side] = safePage;
-
-        rows.forEach((row) => {
-          const idx = Number.parseInt(
-            row.getAttribute("data-row-index") || "0",
-            10
-          );
-          const shouldShow =
-            idx >= (safePage - 1) * pageSize && idx < safePage * pageSize;
-          row.style.display = shouldShow ? "" : "none";
-        });
-
-        const pageInfo = document.querySelector<HTMLElement>(
-          `[data-pagination-side="${side}"] .pg-info`
-        );
-        const prevBtn = document.querySelector<HTMLButtonElement>(
-          `[data-pagination-side="${side}"] .pg-prev`
-        );
-        const nextBtn = document.querySelector<HTMLButtonElement>(
-          `[data-pagination-side="${side}"] .pg-next`
-        );
-
-        if (pageInfo) {
-          pageInfo.textContent = `第 ${safePage} / ${totalPages} 页`;
-        }
-        if (prevBtn) prevBtn.disabled = safePage <= 1;
-        if (nextBtn) nextBtn.disabled = safePage >= totalPages;
-      };
-
-      document
-        .querySelectorAll<HTMLButtonElement>("button[data-pagination-action]")
-        .forEach((btn) => {
-          if (btn.dataset.paginationBound === "1") return;
-          btn.dataset.paginationBound = "1";
-
-          btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            const side = btn.getAttribute("data-side") || "";
-            const action = btn.getAttribute("data-pagination-action") || "";
-            if (!side || !action) return;
-
-            const current = currentPages[side] || 1;
-            showPage(side, action === "prev" ? current - 1 : current + 1);
-          });
-        });
-
-      Object.keys(pageSizes).forEach((side) => showPage(side, 1));
-    }
-
-    body.dataset.hhaH2cBound = "1";
-    root.dataset.hhaPopupInteractionsInitialized = "1";
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initialize, { once: true });
-  } else {
-    initialize();
-  }
-}
-
-const POPUP_BOOTSTRAP_SCRIPT = `<script>(${popupInlineBootstrap.toString()})();</script>`;
 
 /**
  * 为 HTML table outerHTML 中的 tbody tr 加上 data-row-index 属性，
@@ -2264,7 +1934,6 @@ export function displayCombinedResults(
   <title>HHA Combined Search Results</title>
   <style>${PANEL_STYLE_BLOCK}</style>
   ${H2C_STYLE_BLOCK}
-  ${POPUP_BOOTSTRAP_SCRIPT}
 </head>
 <body>
   <div class="container">
@@ -2329,7 +1998,6 @@ export function displaySingleResult(
   <title>HHA ${label} 搜索结果</title>
   <style>${PANEL_STYLE_BLOCK}</style>
   ${H2C_STYLE_BLOCK}
-  ${POPUP_BOOTSTRAP_SCRIPT}
 </head>
 <body>
   <div class="container">
@@ -2764,13 +2432,19 @@ export async function fetchAllPages(
   const extraPages = await Promise.all(pagePromises);
 
   // 合并：将所有页的 <tbody> 行追加到第 1 页的 #tdSearchResults 中
-  const doc1 = new DOMParser().parseFromString(page1Html, "text/html");
+  const doc1 = new DOMParser().parseFromString(
+    preserveProfileIdsInRawHtml(page1Html, type),
+    "text/html"
+  );
   const tbody1 = doc1.querySelector<HTMLElement>("#tdSearchResults tbody");
 
   if (tbody1) {
     for (const pageHtml of extraPages) {
       if (!pageHtml) continue;
-      const docN = new DOMParser().parseFromString(pageHtml, "text/html");
+      const docN = new DOMParser().parseFromString(
+        preserveProfileIdsInRawHtml(pageHtml, type),
+        "text/html"
+      );
       const tbodyN = docN.querySelector<HTMLElement>("#tdSearchResults tbody");
       if (tbodyN) {
         Array.from(tbodyN.querySelectorAll("tr")).forEach((tr) => {

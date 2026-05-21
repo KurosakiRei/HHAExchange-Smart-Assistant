@@ -3,6 +3,7 @@ import {
   ApiParamProvider,
   ReportsSessionInfo,
 } from "../services/ApiParamProvider";
+import { getQANoteTemplate } from "../services/GeneralNotesTemplates";
 import GM_fetch from "@trim21/gm-fetch";
 
 /**
@@ -1731,8 +1732,7 @@ export class QAReportTab extends BaseTab {
     // Remove existing modal if any
     document.querySelector(".qa-note-modal-overlay")?.remove();
 
-    // Default QA note template
-    const defaultNote = `Quality assurance call made to patient. Pt confirmed no hospitalizations, rehab admissions, or falls within the past 30 days. Address and contact information remain unchanged. Pt expressed satisfaction with current services, aide, and hours, and has no further questions at this time.`;
+    const defaultNote = getQANoteTemplate();
 
     // Create modal overlay
     const overlay = document.createElement("div");
@@ -1748,16 +1748,12 @@ export class QAReportTab extends BaseTab {
         </div>
         <div class="qa-note-modal-body">
           <div class="qa-note-section">
-            <label class="qa-note-label">将提交以下 QA 记录:</label>
-            <div class="qa-note-template">${defaultNote}</div>
-          </div>
-          <div class="qa-note-section">
-            <label class="qa-note-label" for="qa-additional-note">附加备注 (可选):</label>
+            <label class="qa-note-label" for="qa-full-note">QA 记录内容 (可编辑):</label>
             <textarea 
-              id="qa-additional-note" 
+              id="qa-full-note" 
               class="qa-note-textarea" 
-              placeholder="在此输入任何附加信息..."
-              rows="3"
+              placeholder="请输入 QA 记录内容..."
+              rows="15"
             ></textarea>
           </div>
         </div>
@@ -1785,12 +1781,14 @@ export class QAReportTab extends BaseTab {
     overlay
       .querySelector(".qa-note-btn-submit")
       ?.addEventListener("click", async () => {
-        const additionalNote = (
-          overlay.querySelector("#qa-additional-note") as HTMLTextAreaElement
+        const fullNote = (
+          overlay.querySelector("#qa-full-note") as HTMLTextAreaElement
         )?.value?.trim();
-        const fullNote = additionalNote
-          ? `${defaultNote}\n\n${additionalNote}`
-          : defaultNote;
+
+        if (!fullNote) {
+          this.showError("QA 记录内容不能为空");
+          return;
+        }
 
         const submitBtn = overlay.querySelector(
           ".qa-note-btn-submit"
@@ -1822,11 +1820,18 @@ export class QAReportTab extends BaseTab {
     // Append to body
     document.body.appendChild(overlay);
 
+    const noteTextarea = overlay.querySelector(
+      "#qa-full-note"
+    ) as HTMLTextAreaElement;
+    noteTextarea.value = defaultNote;
+
     // Focus on textarea
     setTimeout(() => {
-      (
-        overlay.querySelector("#qa-additional-note") as HTMLTextAreaElement
-      )?.focus();
+      noteTextarea.focus();
+      noteTextarea.setSelectionRange(
+        noteTextarea.value.length,
+        noteTextarea.value.length
+      );
     }, 100);
   }
 

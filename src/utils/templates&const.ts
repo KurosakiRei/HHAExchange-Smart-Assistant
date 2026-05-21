@@ -21,11 +21,14 @@ export const documentManagementDescrptionSelector =
 
 /* export const newMessageButtonSelector =
   "#nonServicePortalMessageFieldsContainer > tr.action-options > td > input:nth-child(2)"; */
-export const newMessageButtonSelector = "#htmlmodal #BtnCancel";
+export const newMessageButtonSelector =
+  "#htmlmodal #BtnCancel, #htmlmodal #BtnSave, #BtnCancel, #BtnSave";
 export const newMessageReasonSelector = "#ddlReasonList1";
 export const newMessageReasonOptionSelector = "#ddlReasonList1 > option";
 export const newMessageNoteSelector = "#txtNote";
-export const newMessagePatientNameSelecotr = "#txtMember";
+export const newMessagePatientNameSelector = "#txtMember";
+export const newMessagePatientNameSelecotr = newMessagePatientNameSelector;
+export const newMessageIframeSelector = "#ctl00_ContentPlaceHolder1_iframemsg";
 
 export const homePageSearchButtonSelector = "#btnSearch";
 export const homePageCommunicationTypeSelector = "#ddlCommunicationType";

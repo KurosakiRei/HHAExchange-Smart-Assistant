@@ -10,6 +10,7 @@ import {
   saveButtonSelector,
   documentManagementSaveButtonSelector,
   newMessageButtonSelector,
+  newMessageIframeSelector,
   prebillingSearchButtonSelector,
   homePageSearchButtonSelector,
   visitReasonSelector,
@@ -361,6 +362,23 @@ async function main() {
     value: "New Welcome Call",
   });
 
+  // Separate button instances for #msg iframe context.
+  let $newQABtnInIframe = $("<input/>").text("").attr({
+    type: "button",
+    id: "newQABtnInIframe",
+    name: "newQABtnInIframe",
+    class: "button hollow",
+    value: "New QA",
+  });
+
+  let $newWelcomeCallInIframe = $("<input/>").text("").attr({
+    type: "button",
+    id: "newWelcomecallBtnInIframe",
+    name: "newWelcomecallBtnInIframe",
+    class: "button hollow",
+    value: "New Welcome Call",
+  });
+
   let $prebillingSelector = $("<input/>").text("").attr({
     type: "button",
     id: "prebillingSelector",
@@ -385,7 +403,7 @@ async function main() {
     [],
     "left",
     () => window.location.hash === "#msg", // 只在 #msg 锚点显示
-    "#ctl00_ContentPlaceHolder1_iframemsg" // iframe 选择器
+    newMessageIframeSelector // iframe 选择器
   );
 
   assignIntervalTimer(
@@ -416,6 +434,28 @@ async function main() {
     $newWelcomeCall,
     "#newWelcomecallBtn",
     createWelcomeCall
+  );
+
+  assignIntervalTimer(
+    newMessageButtonSelector,
+    $newQABtnInIframe,
+    "#newQABtnInIframe",
+    createNewQA,
+    [],
+    "left",
+    null,
+    newMessageIframeSelector
+  );
+
+  assignIntervalTimer(
+    newMessageButtonSelector,
+    $newWelcomeCallInIframe,
+    "#newWelcomecallBtnInIframe",
+    createWelcomeCall,
+    [],
+    "left",
+    null,
+    newMessageIframeSelector
   );
 
   assignIntervalTimer(saveButtonSelector, $POCBtn, "#uxBtnPOC", POCResolver);

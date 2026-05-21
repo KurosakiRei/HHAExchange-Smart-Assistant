@@ -128,6 +128,161 @@ function getAideName(ctx: Document = document): string {
     return value ? value : null;
   };
 
+  const readTextValue = (doc: Document, selectors: string[]): string | null => {
+    for (const selector of selectors) {
+      const node = doc.querySelector(selector) as
+        | HTMLElement
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | HTMLSelectElement
+        | null;
+      if (!node) {
+        continue;
+      }
+
+      let value = "";
+      if (
+        node instanceof HTMLInputElement ||
+        node instanceof HTMLTextAreaElement ||
+        node instanceof HTMLSelectElement
+      ) {
+        value = node.value.trim();
+      } else {
+        value = (node.innerText || node.textContent || "").trim();
+      }
+
+      if (value) {
+        return value;
+      }
+    }
+
+    return null;
+  };
+
+  const getVisitIdFromContext = (): string | null => {
+    try {
+      const fromUrl = new URL(ctx.location.href).searchParams.get("VisitID");
+      if (fromUrl && fromUrl.trim()) {
+        return fromUrl.trim();
+      }
+    } catch {
+      // Ignore URL parsing errors.
+    }
+
+    return (
+      readInputValue("#hdnVisitID") ||
+      readInputValue("#hidVisitID") ||
+      readInputValue("input[name='VisitID']") ||
+      readInputValue("input[id*='VisitID']") ||
+      null
+    );
+  };
+
+  const getFrameDocuments = (): Document[] => {
+    const docs: Document[] = [];
+
+    const pushDoc = (doc: Document | null): void => {
+      if (doc && !docs.includes(doc)) {
+        docs.push(doc);
+      }
+    };
+
+    pushDoc(ctx);
+    pushDoc(tryGetParentDoc());
+    pushDoc(tryGetTopDoc());
+
+    const walkFrames = (win: Window | null): void => {
+      if (!win) {
+        return;
+      }
+
+      try {
+        pushDoc(win.document);
+      } catch {
+        return;
+      }
+
+      let frameCount = 0;
+      try {
+        frameCount = win.frames.length;
+      } catch {
+        return;
+      }
+
+      for (let i = 0; i < frameCount; i++) {
+        try {
+          walkFrames(win.frames[i]);
+        } catch {
+          // Ignore cross-origin frames.
+        }
+      }
+    };
+
+    try {
+      walkFrames(window.top);
+    } catch {
+      // Ignore inaccessible top window.
+    }
+
+    return docs;
+  };
+
+  const getAideNameFromPatientFrames = (): string | null => {
+    const visitId = getVisitIdFromContext();
+
+    const isTargetVisit = (onClick: string | null): boolean => {
+      if (!onClick) {
+        return false;
+      }
+
+      if (visitId) {
+        return onClick.includes(visitId);
+      }
+
+      if (visitDateText && onClick.includes(visitDateText)) {
+        return true;
+      }
+
+      return false;
+    };
+
+    for (const doc of getFrameDocuments()) {
+      const aideLinks = Array.from(doc.querySelectorAll("#aidelink"));
+      for (const aideLink of aideLinks) {
+        if (!isTargetVisit(aideLink.getAttribute("onClick"))) {
+          continue;
+        }
+
+        const candidate = (aideLink as HTMLElement).innerText.trim();
+        if (candidate) {
+          return candidate;
+        }
+      }
+
+      const hhaxLinks = Array.from(doc.querySelectorAll(".hhax-link"));
+      for (const hhaxLink of hhaxLinks) {
+        if (!isTargetVisit(hhaxLink.getAttribute("onClick"))) {
+          continue;
+        }
+
+        const aideProfileLink = $(hhaxLink)
+          .parent()
+          .find(
+            "a[onclick^='OpenAideProfileMax'], a[onclick*='OpenAideProfile']"
+          )[0] as HTMLElement | undefined;
+
+        const candidate =
+          aideProfileLink?.innerText?.trim() ||
+          (hhaxLink as HTMLElement).innerText.trim();
+        if (candidate) {
+          return candidate;
+        }
+      }
+    }
+
+    return null;
+  };
+
   const getAideNameFromCallReportsRow = (): string | null => {
     const topDoc = tryGetTopDoc();
     if (!topDoc) return null;
@@ -138,18 +293,7 @@ function getAideName(ctx: Document = document): string {
     const frameDoc = frame?.contentDocument;
     if (!frameDoc) return null;
 
-    let visitId: string | null = null;
-    try {
-      visitId = new URL(ctx.location.href).searchParams.get("VisitID");
-    } catch {
-      visitId = null;
-    }
-    if (!visitId) {
-      visitId =
-        readInputValue("#hdnVisitID") ||
-        readInputValue("input[name='VisitID']") ||
-        null;
-    }
+    const visitId = getVisitIdFromContext();
     if (!visitId) return null;
 
     const editButtons = Array.from(
@@ -190,8 +334,19 @@ function getAideName(ctx: Document = document): string {
     readInputValue("#hidCaregiverName");
   if (directCaregiverName) return directCaregiverName;
 
+  const popupHeaderAideName = readTextValue(ctx, [
+    "#ucVisitHeader_lblAideName",
+    "#ucVisitHeader_lblCaregiverName",
+    "span[id*='lblAideName']",
+    "span[id*='lblCaregiverName']",
+  ]);
+  if (popupHeaderAideName) return popupHeaderAideName;
+
   const rowMappedAideName = getAideNameFromCallReportsRow();
   if (rowMappedAideName) return rowMappedAideName;
+
+  const patientFrameAideName = getAideNameFromPatientFrames();
+  if (patientFrameAideName) return patientFrameAideName;
 
   // 0. Direct read from popup hidden field (NonskilledVisitInfo_ns popup, Call/Patient page)
   const hdnCGName = (ctx.querySelector("#hdnCaregiverName") as HTMLInputElement)
