@@ -199,13 +199,16 @@ export class PatientVacationTemplate {
     const h1 = document.querySelector("h1");
     if (!h1) return "[无法获取]";
     let text = h1.textContent?.trim() ?? "";
-    // Strip "LINK WITH - [...]" linked account text (e.g. "Wong Lingyun LINK WITH - [ WONG TICKWAH() ]")
-    text = text.replace(/\s+LINK\s+WITH\s*-\s*\[.*?\]/gi, "").trim();
-    // Remove trailing status words like "Active", "Inactive", "Discharged"
-    text = text
-      .replace(/\s*(Active|Inactive|Discharged|Pending)\s*$/i, "")
-      .trim();
+    text = this.sanitizePatientLabel(text);
     return text || "[无法获取]";
+  }
+
+  private sanitizePatientLabel(value: string): string {
+    return (value || "")
+      .replace(/\s+(?:LINK|MUTUAL)\s+WITH\s*-\s*\[[^\]]*\]/gi, " ")
+      .replace(/\b(Active|Inactive|Discharged|Pending)\b/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   private extractAdmissionId(): string {
@@ -830,15 +833,24 @@ export class PatientVacationTemplate {
 
     const config = this.loadConfig();
 
-    const statusWordRe = /\b(Active|Inactive|Discharged|Pending)\b/gi;
-    const cleanName = data.patientName
-      .replace(statusWordRe, "")
-      .replace(/\s+/g, " ")
-      .trim();
-    const cleanAdmId = data.admissionId
-      .replace(statusWordRe, "")
-      .replace(/\s+/g, " ")
-      .trim();
+    const profileData = ProfileDataExtractor.extract();
+    const preferredName =
+      profileData?.type === "PATIENT" && profileData.name
+        ? profileData.name
+        : data.patientName;
+    const preferredAdmissionId =
+      profileData?.type === "PATIENT" && profileData.id
+        ? profileData.id
+        : data.admissionId;
+
+    const cleanName =
+      this.sanitizePatientLabel(preferredName) ||
+      this.sanitizePatientLabel(data.patientName) ||
+      "[无法获取]";
+    const cleanAdmId =
+      this.sanitizePatientLabel(preferredAdmissionId) ||
+      this.sanitizePatientLabel(data.admissionId) ||
+      "[无法获取]";
     const subjectPreFill =
       data.vacationStart !== "[无法获取]" && data.vacationEnd !== "[无法获取]"
         ? `PT: ${cleanName} ${cleanAdmId} Vacation ${data.vacationStart} - ${data.vacationEnd}`
@@ -1057,8 +1069,7 @@ export class PatientVacationTemplate {
 
     // ── Close handlers ──────────────────────────────────────────────────
     overlay.querySelector("#pv-modal-close")?.addEventListener("click", () => {
-      if (!window.confirm("邮件尚未发送，确认关闭吗？")) return;
-      this.closeModal(overlay);
+      this.showCloseConfirm(() => this.closeModal(overlay));
     });
   }
 
@@ -1126,8 +1137,12 @@ export class PatientVacationTemplate {
 
     const defaultNote = this.buildCoreBodyText(data);
     const noteHtml = this.escapeHtml(defaultNote).replace(/\n/g, "<br>");
-    const safePatient = this.escapeHtml(data.patientName || "Patient");
-    const safeAdmission = this.escapeHtml(data.admissionId || "-");
+    const safePatient = this.escapeHtml(
+      this.sanitizePatientLabel(data.patientName) || "Patient"
+    );
+    const safeAdmission = this.escapeHtml(
+      this.sanitizePatientLabel(data.admissionId) || "-"
+    );
 
     const overlay = document.createElement("div");
     overlay.className = "qa-note-modal-overlay pv-note-modal-overlay";
@@ -1498,10 +1513,39 @@ export class PatientVacationTemplate {
     });
   }
 
+  private showCloseConfirm(onConfirm: () => void): void {
+    document.getElementById("pv-close-confirm")?.remove();
+
+    const box = document.createElement("div");
+    box.id = "pv-close-confirm";
+    box.className = "timesheet-confirm-overlay";
+    box.innerHTML = `
+      <div class="timesheet-confirm-box">
+        <p>⚠️ 你已有输入内容尚未发送，关闭将清空所有输入。确认关闭？</p>
+        <div class="timesheet-confirm-actions">
+          <button id="pv-close-cancel" class="template-modal-btn btn-cancel">取消</button>
+          <button id="pv-close-confirm-btn" class="template-modal-btn btn-save">确认关闭</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(box);
+
+    box.querySelector("#pv-close-cancel")?.addEventListener("click", () => {
+      box.remove();
+    });
+    box
+      .querySelector("#pv-close-confirm-btn")
+      ?.addEventListener("click", () => {
+        box.remove();
+        onConfirm();
+      });
+  }
+
   private closeModal(overlay: HTMLElement): void {
     overlay.remove();
     document.body.style.overflow = "";
     document.getElementById("pv-unsaved-confirm")?.remove();
+    document.getElementById("pv-close-confirm")?.remove();
   }
 
   // ─── Toast ─────────────────────────────────────────────────────────────────

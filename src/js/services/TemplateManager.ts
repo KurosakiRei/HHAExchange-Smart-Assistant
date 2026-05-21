@@ -235,10 +235,10 @@ export class TemplateManager {
     this.save({
       name: "Vacation/Sick Hours",
       targetPageType: "CAREGIVER",
-      to: "SNazarov@AlwaysNY.net",
+      to: "Fmamedova@AlwaysNY.net",
       cc: "",
       subject: "Aide: {{aide_name}} {{aide_id}} Vacation/Sick Hours",
-      body: `<div data-olk-copy-source="MessageBody">Hello Serge,</div>
+      body: `<div data-olk-copy-source="MessageBody">Hello Feruza,</div>
 <div>&nbsp;</div>
 <div>Could you please provide me the vacation and sick hours for the aide?</div>`,
       variables: [],

@@ -379,28 +379,6 @@ function inferProfileTypeFromAnchor(
   return null;
 }
 
-function openProfileInNewTab(targetUrl: string): void {
-  try {
-    GM_openInTab(targetUrl, { active: true, insert: true, setParent: true });
-    return;
-  } catch {
-    // Fall through to standard browser APIs.
-  }
-
-  const newWindow = window.open(targetUrl, "_blank", "noopener,noreferrer");
-  if (newWindow) {
-    try {
-      newWindow.opener = null;
-    } catch {
-      // ignore cross-origin opener assignment errors
-    }
-    return;
-  }
-
-  // As a last resort, force navigation in a blank tab context.
-  window.open(targetUrl, "_blank");
-}
-
 function setupPopupProfileLinkFallback(popupDoc: Document): void {
   if (!popupDoc.body || popupDoc.body.dataset.hhaProfileLinkBound === "1") {
     return;
@@ -421,40 +399,38 @@ function setupPopupProfileLinkFallback(popupDoc: Document): void {
         return;
       }
 
-      const directProfileMatch =
+      // If this is already a direct profile URL, let browser handle it naturally.
+      if (
         /^https?:\/\//i.test(href) &&
         /\/(?:Aide\/Aide_ns\.aspx|Patient\/InternalPatientInfo_ns\.aspx)/i.test(
           href
-        );
-
-      let targetUrl = "";
-      if (directProfileMatch) {
-        targetUrl = href;
+        )
+      ) {
+        return;
       }
 
       const profileType = inferProfileTypeFromAnchor(anchor);
-      if (!targetUrl) {
-        if (!profileType) {
-          return;
-        }
+      if (!profileType) {
+        return;
+      }
 
-        const profileId =
-          extractProfileIdFromAnchor(anchor, profileType) ||
-          extractProfileIdFromRow(anchor.closest("tr"), profileType);
-        if (!profileId) {
-          return;
-        }
-
-        targetUrl = (
-          profileType === "aide"
-            ? AIDE_PROFILE_URL_TEMPLATE
-            : PATIENT_PROFILE_URL_TEMPLATE
-        ).replace("{ID}", profileId);
+      const profileId =
+        extractProfileIdFromAnchor(anchor, profileType) ||
+        extractProfileIdFromRow(anchor.closest("tr"), profileType);
+      if (!profileId) {
+        return;
       }
 
       event.preventDefault();
       event.stopPropagation();
-      openProfileInNewTab(targetUrl);
+
+      const targetUrl = (
+        profileType === "aide"
+          ? AIDE_PROFILE_URL_TEMPLATE
+          : PATIENT_PROFILE_URL_TEMPLATE
+      ).replace("{ID}", profileId);
+
+      (popupDoc.defaultView ?? window).open(targetUrl, "_blank", "noopener");
     },
     true
   );

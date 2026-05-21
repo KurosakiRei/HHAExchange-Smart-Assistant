@@ -401,8 +401,7 @@ export class EodReportTemplate {
 
     // ── Close ─────────────────────────────────────────────────────────────
     overlay.querySelector("#eod-modal-close")?.addEventListener("click", () => {
-      if (!window.confirm("邮件尚未发送，确认关闭吗？")) return;
-      this.closeModal(overlay);
+      this.showCloseConfirm(() => this.closeModal(overlay));
     });
 
     // ── Send to Outlook ───────────────────────────────────────────────────
@@ -415,7 +414,10 @@ export class EodReportTemplate {
       ) as HTMLInputElement;
 
       if (currentFiles.length === 0) {
-        const ok = window.confirm("当前没有附件文件，是否确认发送到 Outlook？");
+        const ok = await this.showConfirmDialog(
+          "⚠️ 当前没有附件文件，是否确认发送到 Outlook？",
+          "确认发送"
+        );
         if (!ok) return;
       }
 
@@ -452,9 +454,58 @@ export class EodReportTemplate {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
+  private showConfirmDialog(
+    message: string,
+    confirmLabel: string
+  ): Promise<boolean> {
+    document.getElementById("eod-confirm-overlay")?.remove();
+
+    return new Promise((resolve) => {
+      const box = document.createElement("div");
+      box.id = "eod-confirm-overlay";
+      box.className = "timesheet-confirm-overlay";
+      box.innerHTML = `
+        <div class="timesheet-confirm-box">
+          <p>${this.escapeHtml(message)}</p>
+          <div class="timesheet-confirm-actions">
+            <button class="template-modal-btn btn-cancel" data-action="cancel">取消</button>
+            <button class="template-modal-btn btn-save" data-action="confirm">${this.escapeHtml(
+              confirmLabel
+            )}</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(box);
+
+      const done = (result: boolean) => {
+        box.remove();
+        resolve(result);
+      };
+
+      box
+        .querySelector('[data-action="cancel"]')
+        ?.addEventListener("click", () => done(false));
+      box
+        .querySelector('[data-action="confirm"]')
+        ?.addEventListener("click", () => done(true));
+    });
+  }
+
+  private showCloseConfirm(onConfirm: () => void): void {
+    this.showConfirmDialog(
+      "⚠️ 你已有输入内容尚未发送，关闭将清空所有输入。确认关闭？",
+      "确认关闭"
+    ).then((ok) => {
+      if (ok) {
+        onConfirm();
+      }
+    });
+  }
+
   private closeModal(overlay: HTMLElement): void {
     overlay.remove();
     document.body.style.overflow = "";
+    document.getElementById("eod-confirm-overlay")?.remove();
   }
 
   private fileToBase64(file: File): Promise<string> {

@@ -7,7 +7,7 @@
  * - 半透明蒙版（rgba(0,0,0,0.15) + blur）
  * - 进度条和当前任务信息
  * - 成功/错误状态显示
- * 
+ *
  * 注意：使用内联样式确保在任何DOM上下文下都能正确显示
  */
 
@@ -116,29 +116,58 @@ const DIALOG_BUTTONS_STYLES = `
   margin-top: 20px;
 `;
 
+const BTN_RESET_STYLES = `
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  color: #666;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+`;
+
+const BTN_DANGER_STYLES = `
+  padding: 10px 24px;
+  background: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+`;
+
 export class CleaningOverlay {
-    private static overlayId = "hha-cleaning-overlay";
+  private static overlayId = "hha-cleaning-overlay";
+  private static resetDialogId = "hha-cleaning-reset-dialog";
+  private static onReset: (() => void) | null = null;
 
-    /**
-     * 显示确认对话框
-     * @returns Promise<boolean> - 用户是否确认
-     */
-    static showConfirmDialog(
-        taskCount: number,
-        pageType: PageType
-    ): Promise<boolean> {
-        return new Promise((resolve) => {
-            // 移除可能存在的旧蒙版
-            this.hide();
+  /**
+   * 显示确认对话框
+   * @returns Promise<boolean> - 用户是否确认
+   */
+  static showConfirmDialog(
+    taskCount: number,
+    pageType: PageType
+  ): Promise<boolean> {
+    return new Promise((resolve) => {
+      // 移除可能存在的旧蒙版
+      this.hide();
 
-            const overlay = document.createElement("div");
-            overlay.id = this.overlayId;
-            overlay.style.cssText = OVERLAY_STYLES;
+      const overlay = document.createElement("div");
+      overlay.id = this.overlayId;
+      overlay.style.cssText = OVERLAY_STYLES;
 
-            const typeLabel =
-                pageType === "PREBILLING" ? "POC Compliance" : "Duplicate Call";
+      const typeLabel =
+        pageType === "PREBILLING" ? "POC Compliance" : "Duplicate Call";
 
-            overlay.innerHTML = `
+      overlay.innerHTML = `
         <div style="${MODAL_STYLES}">
           <div style="${ICON_STYLES}">⚠️</div>
           <h3 style="${TITLE_STYLES}">确认清理</h3>
@@ -151,41 +180,52 @@ export class CleaningOverlay {
         </div>
       `;
 
-            document.body.appendChild(overlay);
-            console.log("[CleaningOverlay] Confirmation dialog appended to body");
+      document.body.appendChild(overlay);
+      console.log("[CleaningOverlay] Confirmation dialog appended to body");
 
-            // 事件处理
-            document
-                .getElementById("hha-overlay-btn-cancel")
-                ?.addEventListener("click", () => {
-                    overlay.remove();
-                    resolve(false);
-                });
-
-            document
-                .getElementById("hha-overlay-btn-confirm")
-                ?.addEventListener("click", () => {
-                    overlay.remove();
-                    resolve(true);
-                });
+      // 事件处理
+      document
+        .getElementById("hha-overlay-btn-cancel")
+        ?.addEventListener("click", () => {
+          overlay.remove();
+          resolve(false);
         });
-    }
 
-    /**
-     * 显示清理进度蒙版
-     */
-    static show(current: number, total: number, taskInfo: string): void {
-        // 如果已存在，先移除
-        this.hide();
+      document
+        .getElementById("hha-overlay-btn-confirm")
+        ?.addEventListener("click", () => {
+          overlay.remove();
+          resolve(true);
+        });
+    });
+  }
 
-        const overlay = document.createElement("div");
-        overlay.id = this.overlayId;
-        overlay.style.cssText = OVERLAY_STYLES;
+  /**
+   * 显示清理进度蒙版
+   */
+  static show(
+    current: number,
+    total: number,
+    taskInfo: string,
+    onReset?: () => void
+  ): void {
+    // 如果已存在，先移除
+    this.hide();
 
-        const percentage = Math.round((current / total) * 100);
+    this.onReset = onReset ?? null;
 
-        overlay.innerHTML = `
-      <div style="${MODAL_STYLES}" id="hha-cleaning-modal">
+    const overlay = document.createElement("div");
+    overlay.id = this.overlayId;
+    overlay.style.cssText = OVERLAY_STYLES;
+
+    const percentage = Math.round((current / total) * 100);
+    const resetButton = this.onReset
+      ? `<button id="hha-cleaning-reset-btn" style="${BTN_RESET_STYLES}" title="停止并重置当前清理任务">×</button>`
+      : "";
+
+    overlay.innerHTML = `
+      <div style="${MODAL_STYLES} position: relative;" id="hha-cleaning-modal">
+      ${resetButton}
         <div style="${ICON_STYLES} animation: spin 1s linear infinite;">⏳</div>
         <h3 id="cleaning-status" style="${TITLE_STYLES}">正在执行清理中 (${current}/${total})</h3>
         <p id="cleaning-current-task" style="${TEXT_STYLES}">正在处理: ${taskInfo}</p>
@@ -202,94 +242,152 @@ export class CleaningOverlay {
       </style>
     `;
 
-        document.body.appendChild(overlay);
-        console.log("[CleaningOverlay] Progress overlay shown");
+    document.body.appendChild(overlay);
+
+    if (this.onReset) {
+      document
+        .getElementById("hha-cleaning-reset-btn")
+        ?.addEventListener("click", async () => {
+          const confirmed = await this.showResetConfirmDialog();
+          if (!confirmed || !this.onReset) return;
+
+          const resetHandler = this.onReset;
+          this.onReset = null;
+          resetHandler();
+        });
     }
 
-    /**
-     * 更新进度
-     */
-    static update(current: number, total: number, taskInfo: string): void {
-        const statusEl = document.getElementById("cleaning-status");
-        const taskEl = document.getElementById("cleaning-current-task");
-        const progressEl = document.getElementById("hha-progress-fill");
+    console.log("[CleaningOverlay] Progress overlay shown");
+  }
 
-        if (statusEl) {
-            statusEl.textContent = `正在执行清理中 (${current}/${total})`;
-        }
-        if (taskEl) {
-            taskEl.textContent = `正在处理: ${taskInfo}`;
-        }
-        if (progressEl) {
-            const percentage = Math.round((current / total) * 100);
-            progressEl.style.width = `${percentage}%`;
-        }
+  private static showResetConfirmDialog(): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.hideResetConfirmDialog();
+
+      const resetOverlay = document.createElement("div");
+      resetOverlay.id = this.resetDialogId;
+      resetOverlay.style.cssText = `${OVERLAY_STYLES} background: rgba(0, 0, 0, 0.2); z-index: 1000000;`;
+
+      resetOverlay.innerHTML = `
+      <div style="${MODAL_STYLES} min-width: 360px; padding: 24px 28px;">
+        <div style="${ICON_STYLES} font-size: 40px; color: #d32f2f;">⚠️</div>
+        <h3 style="${TITLE_STYLES}">确认重置清理任务？</h3>
+        <p style="${TEXT_STYLES}">将停止当前清理队列并清空进度，已完成项不会自动继续。</p>
+        <div style="${DIALOG_BUTTONS_STYLES}">
+        <button id="hha-reset-cancel" style="${BTN_CANCEL_STYLES}">继续等待</button>
+        <button id="hha-reset-confirm" style="${BTN_DANGER_STYLES}">确认重置</button>
+        </div>
+      </div>
+      `;
+
+      document.body.appendChild(resetOverlay);
+
+      document
+        .getElementById("hha-reset-cancel")
+        ?.addEventListener("click", () => {
+          this.hideResetConfirmDialog();
+          resolve(false);
+        });
+
+      document
+        .getElementById("hha-reset-confirm")
+        ?.addEventListener("click", () => {
+          this.hideResetConfirmDialog();
+          resolve(true);
+        });
+    });
+  }
+
+  private static hideResetConfirmDialog(): void {
+    document.getElementById(this.resetDialogId)?.remove();
+  }
+
+  /**
+   * 更新进度
+   */
+  static update(current: number, total: number, taskInfo: string): void {
+    const statusEl = document.getElementById("cleaning-status");
+    const taskEl = document.getElementById("cleaning-current-task");
+    const progressEl = document.getElementById("hha-progress-fill");
+
+    if (statusEl) {
+      statusEl.textContent = `正在执行清理中 (${current}/${total})`;
+    }
+    if (taskEl) {
+      taskEl.textContent = `正在处理: ${taskInfo}`;
+    }
+    if (progressEl) {
+      const percentage = Math.round((current / total) * 100);
+      progressEl.style.width = `${percentage}%`;
+    }
+  }
+
+  /**
+   * 显示完成状态
+   */
+  static showComplete(pageType: PageType): void {
+    const overlay = document.getElementById(this.overlayId);
+    if (!overlay) {
+      // 如果不存在，创建一个
+      this.show(1, 1, "");
     }
 
-    /**
-     * 显示完成状态
-     */
-    static showComplete(pageType: PageType): void {
-        const overlay = document.getElementById(this.overlayId);
-        if (!overlay) {
-            // 如果不存在，创建一个
-            this.show(1, 1, "");
-        }
+    const modal = document.getElementById("hha-cleaning-modal");
+    if (!modal) return;
 
-        const modal = document.getElementById("hha-cleaning-modal");
-        if (!modal) return;
+    const message =
+      pageType === "PREBILLING"
+        ? "🎉 恭喜，当前页面已清空 POC 问题！"
+        : "🎉 恭喜，当前页面已清空 Duplicate Call 问题！";
 
-        const message =
-            pageType === "PREBILLING"
-                ? "🎉 恭喜，当前页面已清空 POC 问题！"
-                : "🎉 恭喜，当前页面已清空 Duplicate Call 问题！";
-
-        modal.innerHTML = `
+    modal.innerHTML = `
       <div style="${ICON_STYLES} color: #4CAF50;">✅</div>
       <h3 style="${TITLE_STYLES}">${message}</h3>
       <p style="${TEXT_STYLES} margin-top: 10px;">所有符合条件的问题已处理完成</p>
       <button id="btn-close-overlay" style="${BTN_PRIMARY_STYLES}">关闭</button>
     `;
 
-        document
-            .getElementById("btn-close-overlay")
-            ?.addEventListener("click", () => {
-                this.hide();
-            });
-    }
+    document
+      .getElementById("btn-close-overlay")
+      ?.addEventListener("click", () => {
+        this.hide();
+      });
+  }
 
-    /**
-     * 显示错误状态
-     */
-    static showError(message: string): void {
-        const modal = document.getElementById("hha-cleaning-modal");
-        if (!modal) return;
+  /**
+   * 显示错误状态
+   */
+  static showError(message: string): void {
+    const modal = document.getElementById("hha-cleaning-modal");
+    if (!modal) return;
 
-        modal.innerHTML = `
+    modal.innerHTML = `
       <div style="${ICON_STYLES} color: #e53935;">❌</div>
       <h3 style="${TITLE_STYLES}">清理过程中出错</h3>
       <p style="${TEXT_STYLES} color: #e53935; margin-top: 10px;">${message}</p>
       <button id="btn-close-overlay" style="${BTN_PRIMARY_STYLES}">关闭</button>
     `;
 
-        document
-            .getElementById("btn-close-overlay")
-            ?.addEventListener("click", () => {
-                this.hide();
-            });
-    }
+    document
+      .getElementById("btn-close-overlay")
+      ?.addEventListener("click", () => {
+        this.hide();
+      });
+  }
 
-    /**
-     * 隐藏蒙版
-     */
-    static hide(): void {
-        document.getElementById(this.overlayId)?.remove();
-    }
+  /**
+   * 隐藏蒙版
+   */
+  static hide(): void {
+    this.onReset = null;
+    this.hideResetConfirmDialog();
+    document.getElementById(this.overlayId)?.remove();
+  }
 
-    /**
-     * 检查蒙版是否存在
-     */
-    static isVisible(): boolean {
-        return document.getElementById(this.overlayId) !== null;
-    }
+  /**
+   * 检查蒙版是否存在
+   */
+  static isVisible(): boolean {
+    return document.getElementById(this.overlayId) !== null;
+  }
 }

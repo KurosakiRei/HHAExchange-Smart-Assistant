@@ -222,8 +222,6 @@ export const visitMonitor = async () => {
     "anomaly",
     "message",
   ];
-  const TRACKING_REQUEST_TIMEOUT_MS = 25000;
-  const OFFICE_IDS_TIMEOUT_MS = 12000;
   // 动态检测当前 HHAExchange 租户路径前缀，避免因服务器版本升级导致旧路径失效触发强制登出
   const TENANT_BASE_URL = detectTenantBaseUrl();
   const CALL_MAINTENANCE_URL = `${TENANT_BASE_URL}/Call/CallMaintenance_ns.aspx`;
@@ -1935,84 +1933,16 @@ export const visitMonitor = async () => {
     }
   }
 
-  function withTimeout<T>(
-    promise: Promise<T>,
-    timeoutMs: number,
-    label: string
-  ): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-      const timerId = window.setTimeout(() => {
-        reject(new Error(`${label} timed out after ${timeoutMs}ms`));
-      }, timeoutMs);
-
-      promise.then(
-        (value) => {
-          window.clearTimeout(timerId);
-          resolve(value);
-        },
-        (error) => {
-          window.clearTimeout(timerId);
-          reject(error);
-        }
-      );
-    });
-  }
-
-  function normalizeOfficeIds(raw: string | null | undefined): string | null {
-    if (!raw) return null;
-    const ids = raw
-      .split(",")
-      .map((id) => Number(id.trim()))
-      .filter((id) => Number.isFinite(id) && id > 0);
-
-    if (ids.length === 0) return null;
-    return Array.from(new Set(ids)).join(",");
-  }
-
-  function getOfficeIdsFromSearchResultsFrame(): string | null {
-    const frame = document.getElementById(
-      "frmCallResults"
-    ) as HTMLIFrameElement | null;
-    const src = frame?.getAttribute("src") || frame?.src;
-    if (!src) return null;
-
-    try {
-      const resolved = new URL(src, window.location.href);
-      return normalizeOfficeIds(resolved.searchParams.get("OfficeId"));
-    } catch {
-      const match = src.match(/[?&]OfficeId=([^&]+)/i);
-      if (!match) return null;
-      return normalizeOfficeIds(decodeURIComponent(match[1]));
-    }
-  }
-
   /**
    * 获取并缓存所有 Office IDs
    */
   async function getOfficeIds(): Promise<string> {
     if (officeIdString) return officeIdString;
 
-    const officeIdsFromFrame = getOfficeIdsFromSearchResultsFrame();
-    if (officeIdsFromFrame) {
-      officeIdString = officeIdsFromFrame;
-      return officeIdString;
-    }
-
-    const maintenanceRes = await withTimeout(
-      fetch(CALL_MAINTENANCE_URL, {
-        method: "GET",
-        credentials: "include",
-      }),
-      OFFICE_IDS_TIMEOUT_MS,
-      "CallMaintenance request"
-    );
-    if (!maintenanceRes.ok) {
-      throw new Error(
-        `Failed to load CallMaintenance page: ${maintenanceRes.status} ${maintenanceRes.statusText}`
-      );
-    }
-
-    const textResult = await maintenanceRes.text();
+    const r = (await GM_fetch(CALL_MAINTENANCE_URL, {
+      method: "GET",
+    })) as Response & { rawBody: Blob };
+    const textResult = await r.rawBody.text();
     const getParam = (name: string) =>
       textResult.match(
         new RegExp(`var\\s+${name}\\s*=\\s*['"]([^'"]+)['"];`)
@@ -2025,10 +1955,6 @@ export const visitMonitor = async () => {
       minorVersion: getParam("gnMinorVersion")!,
       appName: getParam("gnApNm")!,
     };
-    if (!apiParams.userID || !apiParams.appVersion || !apiParams.version) {
-      throw new Error("Failed to extract office API parameters from page");
-    }
-
     const officeUrl = `https://app.hhaexchange.com/HHAWS${
       apiParams.appVersion
     }${apiParams.version.replace(".", "")}010000/Office.asmx/GetAllOffices`;
@@ -2041,46 +1967,21 @@ export const visitMonitor = async () => {
       selectionType: "Filter",
     };
 
-    const officeRes = await withTimeout(
-      fetch(officeUrl, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json; charset=UTF-8" },
-        body: JSON.stringify(officePayload),
-      }),
-      OFFICE_IDS_TIMEOUT_MS,
-      "GetAllOffices request"
-    );
-    if (!officeRes.ok) {
-      throw new Error(
-        `Failed to fetch office list: ${officeRes.status} ${officeRes.statusText}`
-      );
-    }
-
-    const officeText = await officeRes.text();
+    // FIXED: Corrected the GM_fetch call and response handling
+    const officeRes = (await GM_fetch(officeUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=UTF-8" },
+      body: JSON.stringify(officePayload),
+    })) as Response & { rawBody: Blob };
+    const officeText = await officeRes.rawBody.text();
     const officeData = JSON.parse(officeText);
 
-    const offices = JSON.parse(officeData.d || "[]");
-    const typedOfficeIDs: number[] = offices
-      .filter(
-        (o: any) =>
-          Number(o?.OfficeID) > 0 &&
-          (o?.Type === undefined || o?.Type === "1" || o?.Type === 1)
-      )
+    const offices = JSON.parse(officeData.d);
+    const officeIDs: number[] = offices
       .map((o: any) => o.OfficeID)
       .filter((id: number) => id > 0);
-    const fallbackOfficeIDs: number[] = offices
-      .map((o: any) => o.OfficeID)
-      .filter((id: number) => Number(id) > 0);
 
-    const normalized = normalizeOfficeIds(
-      (typedOfficeIDs.length > 0 ? typedOfficeIDs : fallbackOfficeIDs).join(",")
-    );
-    if (!normalized) {
-      throw new Error("No valid office IDs returned by office API");
-    }
-
-    officeIdString = normalized;
+    officeIdString = officeIDs.join(",");
     return officeIdString;
   }
 
@@ -2182,21 +2083,8 @@ export const visitMonitor = async () => {
     params.set("CaregiverBranchID", "-1");
     params.set("DisciplineIDs", "0");
 
-    const response = await withTimeout(
-      fetch(url.toString(), {
-        method: "GET",
-        credentials: "include",
-      }),
-      TRACKING_REQUEST_TIMEOUT_MS,
-      `Call report (${callType}) coordinator ${coordinatorId}`
-    );
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch status report: ${response.status} ${response.statusText}`
-      );
-    }
-
-    const htmlText = await response.text();
+    const response = await GM_fetch(url.toString(), { method: "GET" });
+    const htmlText = await (response as any).rawBody.text();
     const parsedData = parseCallReport(htmlText);
 
     return { ...parsedData, timestamp: Date.now() };
@@ -2573,16 +2461,11 @@ export const visitMonitor = async () => {
       "True"
     );
 
-    const response = await withTimeout(
-      fetch(url, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString(),
-      }),
-      TRACKING_REQUEST_TIMEOUT_MS,
-      `Anomaly report coordinator ${coordinatorId}`
-    );
+    const response = await GM_fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formData.toString(),
+    });
 
     if (!response.ok) {
       throw new Error(
@@ -2590,7 +2473,7 @@ export const visitMonitor = async () => {
       );
     }
 
-    const htmlText = await response.text();
+    const htmlText = await (response as any).rawBody.text();
     return { ...parseAnomalyReport(htmlText), timestamp: Date.now() };
   }
 
@@ -2831,11 +2714,7 @@ export const visitMonitor = async () => {
 
     // --- 原有的 API 调用逻辑 (Epic 11: 按过滤配置决定请求) ---
     try {
-      const officeIds = await withTimeout(
-        getOfficeIds(),
-        OFFICE_IDS_TIMEOUT_MS,
-        "Resolve office IDs"
-      );
+      const officeIds = await getOfficeIds();
       const promises: Promise<void>[] = [];
       for (const coordinator of trackedCoordinators) {
         // Epic 11: 获取该辅导员的启用列
@@ -2844,11 +2723,7 @@ export const visitMonitor = async () => {
         // 上班钟 (CallType=2)
         if (enabledCols.has("clockIn")) {
           promises.push(
-            withTimeout(
-              fetchStatusReport(coordinator.id, 2, officeIds),
-              TRACKING_REQUEST_TIMEOUT_MS,
-              `Clock-in coordinator ${coordinator.id}`
-            )
+            fetchStatusReport(coordinator.id, 2, officeIds)
               .then((data) => {
                 statusDataCache.set(`${coordinator.id}-2`, data);
               })
@@ -2860,11 +2735,7 @@ export const visitMonitor = async () => {
         // 下班钟 (CallType=3)
         if (enabledCols.has("clockOut")) {
           promises.push(
-            withTimeout(
-              fetchStatusReport(coordinator.id, 3, officeIds),
-              TRACKING_REQUEST_TIMEOUT_MS,
-              `Clock-out coordinator ${coordinator.id}`
-            )
+            fetchStatusReport(coordinator.id, 3, officeIds)
               .then((data) => {
                 statusDataCache.set(`${coordinator.id}-3`, data);
               })
@@ -2876,11 +2747,7 @@ export const visitMonitor = async () => {
         // 异常打钟
         if (enabledCols.has("anomaly")) {
           promises.push(
-            withTimeout(
-              fetchAnomalyReport(coordinator.id),
-              TRACKING_REQUEST_TIMEOUT_MS,
-              `Anomaly coordinator ${coordinator.id}`
-            )
+            fetchAnomalyReport(coordinator.id)
               .then((data) => {
                 statusDataCache.set(`${coordinator.id}-anomaly`, data);
               })
@@ -2892,11 +2759,7 @@ export const visitMonitor = async () => {
         // 消息监控
         if (enabledCols.has("message")) {
           promises.push(
-            withTimeout(
-              fetchMessageReport(coordinator.id),
-              TRACKING_REQUEST_TIMEOUT_MS,
-              `Message coordinator ${coordinator.id}`
-            )
+            fetchMessageReport(coordinator.id)
               .then((data) => {
                 statusDataCache.set(`${coordinator.id}-message`, data);
               })

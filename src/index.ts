@@ -251,27 +251,6 @@ async function main() {
 
   const currentUrl = window.location.href;
 
-  // Highest-priority safe-mode for InternalPatientInfo top page.
-  // Keep only lightweight profile features and exit before shared heavy bootstrap paths.
-  if (
-    IS_HHA_APP_HOST &&
-    window.self === window.top &&
-    isPatientProfilePage(currentUrl)
-  ) {
-    console.log(
-      "[main] InternalPatientInfo top page detected, running minimal safe bootstrap"
-    );
-    (window as any).HHA_SMART_ASSISTANT_STARTED = true;
-    (window as any).HHA_SMART_ASSISTANT_VERSION = version;
-    highlight2Call();
-    initNewMessageQuickActionButtons();
-    await visitMonitor();
-    initMultiTabPanel();
-    ProfileDataExtractor.enhancePatientAddressLink();
-    initPatientCalendarBulkNotes();
-    return;
-  }
-
   console.log("HHA Exchange Smart Assistant " + version + " : script start");
 
   // Set a global flag to indicate script is running (for debugging)

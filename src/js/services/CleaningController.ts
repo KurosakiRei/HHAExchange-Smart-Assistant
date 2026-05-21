@@ -61,6 +61,9 @@ export interface CleaningTaskQueue {
 
 // GM Storage Key
 const CLEANING_QUEUE_KEY = "hha_cleaner_task_queue";
+const CLEANING_POC_CLICK_TIME_KEY = "hha_cleaner_poc_click_time";
+const TABLE_WAIT_TIMEOUT_MS = 120000;
+const TABLE_POLL_INTERVAL_MS = 250;
 
 // 声明 GM 函数类型
 declare function GM_setValue(key: string, value: unknown): void;
@@ -225,7 +228,8 @@ export class CleaningController {
     CleaningOverlay.show(
       queue.currentIndex + 1,
       queue.tasks.length,
-      this.getTaskInfo(currentTask, queue.pageType)
+      this.getTaskInfo(currentTask, queue.pageType),
+      () => this.manualResetQueue("LIST_PAGE_OVERLAY")
     );
 
     // 更新蒙版状态提示
@@ -235,8 +239,8 @@ export class CleaningController {
       `${this.getTaskInfo(currentTask, queue.pageType)} (等待页面加载...)`
     );
 
-    // 智能等待表格加载，最长等待 5 分钟 (300000ms) 以防 Session Timeout 弹窗阻塞
-    this.waitForTable(queue.pageType, 300000)
+    // 智能等待表格加载，最长等待 120 秒后进入恢复逻辑
+    this.waitForTable(queue.pageType, TABLE_WAIT_TIMEOUT_MS)
       .then(() => {
         // ★ CRITICAL FIX: Re-fetch the queue! Iframe might have finished the task while we were waiting!
         const latestQueue = GM_getValue<CleaningTaskQueue | null>(
@@ -336,7 +340,7 @@ export class CleaningController {
             // Important: Add delay if using custom button to allow event propagation and async loading start
             const delayMs = isCustomBtn ? 1500 : 500;
             setTimeout(() => {
-              this.waitForTable(queue.pageType, 300000)
+              this.waitForTable(queue.pageType, TABLE_WAIT_TIMEOUT_MS)
                 .then(() => {
                   const retryQueue = GM_getValue<CleaningTaskQueue | null>(
                     CLEANING_QUEUE_KEY,
@@ -446,7 +450,12 @@ export class CleaningController {
     );
 
     // 显示蒙版
-    CleaningOverlay.show(1, tasks.length, this.getTaskInfo(tasks[0], pageType));
+    CleaningOverlay.show(
+      1,
+      tasks.length,
+      this.getTaskInfo(tasks[0], pageType),
+      () => this.manualResetQueue("START_CLEANING_OVERLAY")
+    );
 
     // 确保监控轮询正在运行 (如果用户在不刷新页面的情况下进行第二次清理，轮询可能已关闭)
     this.lastStartedIndex = -1;
@@ -705,7 +714,7 @@ export class CleaningController {
     }
 
     // 设置时间戳，用于防误触 (防止用户手动打开导致自动POC被触发)
-    GM_setValue("hha_cleaner_poc_click_time", Date.now());
+    GM_setValue(CLEANING_POC_CLICK_TIME_KEY, Date.now());
 
     // 点击 Edit 按钮，页面会导航到详情页
     editButton.click();
@@ -958,8 +967,29 @@ export class CleaningController {
    */
   static clearQueue(): void {
     GM_setValue(CLEANING_QUEUE_KEY, null);
+    GM_setValue(CLEANING_POC_CLICK_TIME_KEY, 0);
     this.lastStartedIndex = -1;
     console.log("[CleaningController] Queue cleared");
+  }
+
+  /**
+   * 手动重置当前清理流程（来自进度蒙版的 Reset）
+   */
+  static manualResetQueue(source: string = "MANUAL_RESET"): void {
+    console.warn(
+      `[CleaningController] Manual reset requested from ${source}. Clearing active queue.`
+    );
+
+    this.clearQueue();
+    this.confirmDeleteStuckSince = 0;
+
+    if (this.pollingTimer) {
+      window.clearInterval(this.pollingTimer);
+      this.pollingTimer = 0;
+      console.log("[CleaningController] Polling stopped by manual reset.");
+    }
+
+    CleaningOverlay.hide();
   }
 
   /**
@@ -996,7 +1026,9 @@ export class CleaningController {
           ? "#ctl00_ContentPlaceHolder1_divPrebillingReportInternalScroll" // Prebilling 容器
           : "#ctl00_ContentPlaceHolder1_uxGvSearch"; // Call Maintenance 表格
 
-      const check = () => {
+      let pollTimer = 0;
+
+      const isTableReady = (): boolean => {
         const element = document.querySelector(selector);
         // 确保元素不仅存在，而且有内容（行数 > 0）
         // 对于 Call Maintenance，至少应该有 header row
@@ -1013,22 +1045,36 @@ export class CleaningController {
           }
         }
 
-        if (isReady) {
-          resolve();
+        return isReady;
+      };
+
+      const finish = (done: () => void) => {
+        if (pollTimer) {
+          window.clearTimeout(pollTimer);
+          pollTimer = 0;
+        }
+        done();
+      };
+
+      const check = () => {
+        if (isTableReady()) {
+          finish(() => resolve());
           return;
         }
 
         if (Date.now() - startTime > timeoutMs) {
-          reject(new Error(`Timeout waiting for selector: ${selector}`));
+          finish(() => {
+            reject(
+              new Error(
+                `Timeout waiting for selector: ${selector} (${timeoutMs}ms)`
+              )
+            );
+          });
           return;
         }
 
-        // 使用 requestAnimationFrame 或 setTimeout 轮询
-        if (window.requestAnimationFrame) {
-          window.requestAnimationFrame(check);
-        } else {
-          setTimeout(check, 100);
-        }
+        // 使用 setTimeout 轮询，避免 requestAnimationFrame 在后台标签页被暂停导致“永不超时”
+        pollTimer = window.setTimeout(check, TABLE_POLL_INTERVAL_MS);
       };
 
       check();

@@ -66,60 +66,11 @@ export class DocumentDropzone {
     const rect = header.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) return null;
 
-    const fileInput = document.querySelector(
-      'input[type="file"][name="fuUpload2"], .fileInput57'
-    ) as HTMLElement | null;
-
-    const modalRoot = header.closest(
-      ".ui-dialog, [role='dialog'], .reveal, .modal"
-    ) as HTMLElement | null;
-
-    if (modalRoot) {
-      const contentSelectors = [
-        ".ui-dialog-content",
-        ".modal-body",
-        ".reveal-content",
-        ".content",
-      ];
-
-      for (const selector of contentSelectors) {
-        const content = modalRoot.querySelector(selector) as HTMLElement | null;
-        if (
-          content &&
-          this.isElementVisible(content) &&
-          (!fileInput || content.contains(fileInput))
-        ) {
-          return content;
-        }
-      }
-
-      if (
-        fileInput &&
-        modalRoot.contains(fileInput) &&
-        this.isElementVisible(modalRoot)
-      ) {
-        return modalRoot;
-      }
-    }
-
-    if (fileInput) {
-      const inputContainer = fileInput.closest(
-        ".ui-dialog-content, .modal-body, .reveal-content, .content, form, table, td, div"
-      ) as HTMLElement | null;
-      if (inputContainer && this.isElementVisible(inputContainer)) {
-        return inputContainer;
-      }
-    }
-
-    // Return the closest modal/dialog container; avoid broad fallback that may hit title-only wrappers
-    return header.closest(
-      ".reveal, [role='dialog'], .modal"
-    ) as HTMLElement | null;
-  }
-
-  private isElementVisible(element: HTMLElement): boolean {
-    const rect = element.getBoundingClientRect();
-    return rect.width > 0 && rect.height > 0;
+    // Return the closest modal/dialog container, falling back to a general div
+    return (
+      (header.closest(".reveal, [role='dialog'], .modal") as HTMLElement) ??
+      (header.closest("table, div") as HTMLElement)
+    );
   }
 
   /**
@@ -343,7 +294,7 @@ export class DocumentDropzone {
       ) as HTMLButtonElement;
       const insertNameIdBtn = modal.querySelector(
         "#rename-name-id-insert"
-      ) as HTMLButtonElement;
+      ) as HTMLButtonElement | null;
       const datePreview = modal.querySelector(
         "#rename-date-preview"
       ) as HTMLSpanElement;
@@ -419,28 +370,30 @@ export class DocumentDropzone {
         input.setSelectionRange(endPos, endPos);
       });
 
-      insertNameIdBtn.addEventListener("click", () => {
-        const snippet = this.buildNameAndIdSnippet();
-        if (!snippet) {
-          datePreview.textContent = "未找到可插入的名字+ID";
-          return;
-        }
+      if (insertNameIdBtn) {
+        insertNameIdBtn.addEventListener("click", () => {
+          const snippet = this.buildNameAndIdSnippet();
+          if (!snippet) {
+            datePreview.textContent = "未找到可插入的名字+ID";
+            return;
+          }
 
-        const safeSnippet = this.sanitizeFileNameComponent(snippet);
-        if (!safeSnippet) {
-          return;
-        }
+          const safeSnippet = this.sanitizeFileNameComponent(snippet);
+          if (!safeSnippet) {
+            return;
+          }
 
-        const currentValue = input.value.trim();
-        input.value = currentValue
-          ? `${currentValue} ${safeSnippet}`
-          : safeSnippet;
+          const currentValue = input.value.trim();
+          input.value = currentValue
+            ? `${currentValue} ${safeSnippet}`
+            : safeSnippet;
 
-        datePreview.textContent = `名字+ID: ${snippet}`;
-        input.focus();
-        const endPos = input.value.length;
-        input.setSelectionRange(endPos, endPos);
-      });
+          datePreview.textContent = `名字+ID: ${snippet}`;
+          input.focus();
+          const endPos = input.value.length;
+          input.setSelectionRange(endPos, endPos);
+        });
+      }
 
       confirmBtn.addEventListener("click", submitAction);
 
