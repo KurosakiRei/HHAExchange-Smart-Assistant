@@ -524,9 +524,17 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
   if (!popupDoc.body || popupDoc.body.dataset.hhaH2cBound === "1") return;
   popupDoc.body.dataset.hhaH2cBound = "1";
 
-  const phoneRegex = /(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
+  const phoneRegex =
+    /(?:\+?1[\s().-]*)?\(?\d{3}\)?[\s().-]*\d{3}[\s().-]*\d{4}/;
   let actionPopup: HTMLDivElement | null = null;
   let suppressMouseUpUntil = 0;
+
+  type MouseSnapshot = {
+    clientX: number;
+    clientY: number;
+    target: EventTarget | null;
+    withinPopup: boolean;
+  };
 
   const normalize = (raw: string): string => {
     let digits = raw.replace(/\D/g, "");
@@ -597,7 +605,40 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
     }
   };
 
-  const createPopup = (phoneNumber: string, event: MouseEvent): void => {
+  const getSelectedTextFromEditableTarget = (
+    target: EventTarget | null
+  ): string => {
+    const el = target as {
+      tagName?: string;
+      value?: string;
+      selectionStart?: number | null;
+      selectionEnd?: number | null;
+    } | null;
+
+    if (!el) {
+      return "";
+    }
+
+    const tagName = el.tagName?.toUpperCase();
+    if (tagName !== "INPUT" && tagName !== "TEXTAREA") {
+      return "";
+    }
+
+    const value = typeof el.value === "string" ? el.value : "";
+    const start =
+      typeof el.selectionStart === "number" ? el.selectionStart : null;
+    const end = typeof el.selectionEnd === "number" ? el.selectionEnd : null;
+    if (start === null || end === null || end <= start) {
+      return "";
+    }
+
+    return value.slice(start, end).trim();
+  };
+
+  const createPopup = (
+    phoneNumber: string,
+    mouseSnapshot: { clientX: number; clientY: number }
+  ): void => {
     removePopup();
 
     const clean = normalize(phoneNumber);
@@ -605,17 +646,51 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
 
     actionPopup = popupDoc.createElement("div");
     actionPopup.id = "highlight-caller-popup";
-    actionPopup.innerHTML =
-      `<div class="hcp-title">请选择操作</div>` +
-      `<div class="hcp-number">${phoneNumber}</div>` +
-      `<div class="hcp-actions">` +
-      `<a href="tel:${clean}" class="hcp-button" data-action="tel">📞 打电话</a>` +
-      `<a href="sms:${clean}" class="hcp-button" data-action="sms">💬 发短信</a>` +
-      `</div>` +
-      `<div class="hcp-actions-full">` +
-      `<button class="hcp-copy-btn">📋 复制号码</button>` +
-      `</div>` +
-      `<div class="hcp-close-btn" title="关闭">×</div>`;
+
+    const title = popupDoc.createElement("div");
+    title.className = "hcp-title";
+    title.textContent = "请选择操作";
+
+    const numberEl = popupDoc.createElement("div");
+    numberEl.className = "hcp-number";
+    numberEl.textContent = phoneNumber;
+
+    const actions = popupDoc.createElement("div");
+    actions.className = "hcp-actions";
+
+    const telBtn = popupDoc.createElement("a");
+    telBtn.href = `tel:${clean}`;
+    telBtn.className = "hcp-button";
+    telBtn.setAttribute("data-action", "tel");
+    telBtn.textContent = "📞 打电话";
+
+    const smsBtn = popupDoc.createElement("a");
+    smsBtn.href = `sms:${clean}`;
+    smsBtn.className = "hcp-button";
+    smsBtn.setAttribute("data-action", "sms");
+    smsBtn.textContent = "💬 发短信";
+
+    actions.appendChild(telBtn);
+    actions.appendChild(smsBtn);
+
+    const fullActions = popupDoc.createElement("div");
+    fullActions.className = "hcp-actions-full";
+
+    const copyBtn = popupDoc.createElement("button");
+    copyBtn.className = "hcp-copy-btn";
+    copyBtn.textContent = "📋 复制号码";
+    fullActions.appendChild(copyBtn);
+
+    const closeBtn = popupDoc.createElement("div");
+    closeBtn.className = "hcp-close-btn";
+    closeBtn.title = "关闭";
+    closeBtn.textContent = "×";
+
+    actionPopup.appendChild(title);
+    actionPopup.appendChild(numberEl);
+    actionPopup.appendChild(actions);
+    actionPopup.appendChild(fullActions);
+    actionPopup.appendChild(closeBtn);
 
     popupDoc.body.appendChild(actionPopup);
 
@@ -630,38 +705,31 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
     const popupWin = popupDoc.defaultView;
     const viewportHeight = popupWin?.innerHeight ?? window.innerHeight;
     const viewportWidth = popupWin?.innerWidth ?? window.innerWidth;
-    let top = event.clientY + 15;
-    let left = event.clientX;
+    let top = mouseSnapshot.clientY + 15;
+    let left = mouseSnapshot.clientX;
     if (top + rect.height > viewportHeight) {
-      top = event.clientY - rect.height - 15;
+      top = mouseSnapshot.clientY - rect.height - 15;
     }
     if (left + rect.width > viewportWidth) {
       left = viewportWidth - rect.width - 10;
     }
-    actionPopup.style.top = `${top}px`;
-    actionPopup.style.left = `${left}px`;
+    actionPopup.style.top = `${Math.max(8, top)}px`;
+    actionPopup.style.left = `${Math.max(8, left)}px`;
 
-    const closeBtn = actionPopup.querySelector<HTMLElement>(".hcp-close-btn");
-    if (closeBtn) {
-      closeBtn.addEventListener("click", () => {
-        markPopupInteraction();
-        clearSelection();
-        removePopup();
-      });
-    }
+    closeBtn.addEventListener("click", () => {
+      markPopupInteraction();
+      clearSelection();
+      removePopup();
+    });
 
-    const copyBtn =
-      actionPopup.querySelector<HTMLButtonElement>(".hcp-copy-btn");
-    if (copyBtn) {
-      copyBtn.addEventListener("click", async () => {
-        markPopupInteraction();
-        const ok = await copyToClipboard(clean);
-        copyBtn.textContent = ok ? "✅ 已复制" : "❌ 复制失败";
-        window.setTimeout(() => {
-          if (copyBtn) copyBtn.textContent = "📋 复制号码";
-        }, 1500);
-      });
-    }
+    copyBtn.addEventListener("click", async () => {
+      markPopupInteraction();
+      const ok = await copyToClipboard(clean);
+      copyBtn.textContent = ok ? "✅ 已复制" : "❌ 复制失败";
+      window.setTimeout(() => {
+        copyBtn.textContent = "📋 复制号码";
+      }, 1500);
+    });
 
     actionPopup
       .querySelectorAll<HTMLAnchorElement>("a.hcp-button")
@@ -681,18 +749,13 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
       });
   };
 
-  popupDoc.addEventListener("mouseup", (e) => {
+  const handleSelection = (mouseSnapshot: MouseSnapshot): void => {
     if (Date.now() < suppressMouseUpUntil) {
       return;
     }
 
-    if (actionPopup && e.target instanceof Node) {
-      const path = (
-        typeof e.composedPath === "function" ? e.composedPath() : []
-      ) as EventTarget[];
-      if (actionPopup.contains(e.target) || path.includes(actionPopup)) {
-        return;
-      }
+    if (mouseSnapshot.withinPopup) {
+      return;
     }
 
     if (
@@ -703,8 +766,13 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
       return;
     }
 
-    const selected =
+    const selectedFromDocument =
       popupDoc.defaultView?.getSelection()?.toString().trim() || "";
+    const selectedFromEditable = getSelectedTextFromEditableTarget(
+      mouseSnapshot.target
+    );
+    const selected = selectedFromDocument || selectedFromEditable;
+
     if (!selected) {
       removePopup();
       return;
@@ -716,18 +784,47 @@ function setupPopupHighlight2Call(popupDoc: Document): void {
       return;
     }
 
-    createPopup(match[0], e);
-  });
+    createPopup(match[0], mouseSnapshot);
+  };
 
-  popupDoc.addEventListener("mousedown", (e) => {
-    if (
-      actionPopup &&
-      e.target instanceof Node &&
-      !actionPopup.contains(e.target)
-    ) {
-      removePopup();
-    }
-  });
+  popupDoc.addEventListener(
+    "mouseup",
+    (e) => {
+      const withinPopup =
+        !!actionPopup &&
+        e.target instanceof Node &&
+        (actionPopup.contains(e.target) ||
+          (typeof e.composedPath === "function" &&
+            e.composedPath().includes(actionPopup)));
+
+      const mouseSnapshot: MouseSnapshot = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        target: e.target,
+        withinPopup,
+      };
+
+      const timerWindow = popupDoc.defaultView ?? window;
+      timerWindow.setTimeout(() => {
+        handleSelection(mouseSnapshot);
+      }, 0);
+    },
+    true
+  );
+
+  popupDoc.addEventListener(
+    "mousedown",
+    (e) => {
+      if (
+        actionPopup &&
+        e.target instanceof Node &&
+        !actionPopup.contains(e.target)
+      ) {
+        removePopup();
+      }
+    },
+    true
+  );
 }
 
 // ==================== HTML 处理工具 ====================
