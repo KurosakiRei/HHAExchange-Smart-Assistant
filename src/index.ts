@@ -54,6 +54,10 @@ const HOST = window.location.hostname.toLowerCase();
 const IS_HHA_APP_HOST = HOST === "app.hhaexchange.com";
 const IS_HHA_REPORTS_HOST = HOST === "reports.hhaexchange.com";
 const IS_VOICE_TECH_HOST = HOST === "mt3.1voicetech.com";
+const IS_OUTLOOK_HOST =
+  HOST === "outlook.office.com" ||
+  HOST === "outlook.cloud.microsoft" ||
+  HOST === "webshell.suite.office.com";
 const IS_BLOB_PAGE = window.location.protocol === "blob:";
 const MAIN_BOOTSTRAP_FLAG = "__HHA_SMART_ASSISTANT_MAIN_BOOTSTRAPPED__";
 const VISIT_QUICK_ACTIONS_FLAG =
@@ -84,6 +88,15 @@ function isCleanerDetailPage(url: string): boolean {
 
 function isPatientProfilePage(url: string): boolean {
   return url.toLowerCase().includes("internalpatientinfo_ns.aspx");
+}
+
+function isCallReportsPage(url: string): boolean {
+  const normalized = url.toLowerCase();
+  return (
+    normalized.includes("callreportsbeta_ns.aspx") ||
+    normalized.includes("callreportsxslt_ns.aspx") ||
+    normalized.includes("callmaintenance_ns.aspx")
+  );
 }
 
 function initVisitQuickActionButtons(): void {
@@ -283,6 +296,14 @@ async function main() {
   }
 
   if (!IS_HHA_APP_HOST) {
+    if (IS_OUTLOOK_HOST) {
+      console.log(
+        "[main] Outlook domain detected, bootstrapping highlight2call"
+      );
+      highlight2Call();
+      return;
+    }
+
     if (IS_HHA_REPORTS_HOST) {
       console.log(
         "[main] Reports domain detected, bootstrapping report-specific features"
@@ -303,6 +324,12 @@ async function main() {
       );
       initVisitQuickActionButtons();
       await checkAndResumeCleaningTasks();
+      return;
+    } else if (isCallReportsPage(currentUrl)) {
+      console.log(
+        "[main] CallReports iframe detected, running highlight2call-only bootstrap"
+      );
+      highlight2Call();
       return;
     } else if (isPatientProfilePage(currentUrl)) {
       console.log(

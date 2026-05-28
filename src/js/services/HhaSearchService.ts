@@ -385,6 +385,39 @@ function setupPopupProfileLinkFallback(popupDoc: Document): void {
   }
   popupDoc.body.dataset.hhaProfileLinkBound = "1";
 
+  const openInNewTab = (targetUrl: string): void => {
+    const popupWindow = popupDoc.defaultView ?? window;
+    const opened = popupWindow.open(targetUrl, "_blank", "noopener,noreferrer");
+    if (opened) {
+      return;
+    }
+
+    try {
+      popupWindow.location.href = targetUrl;
+    } catch {
+      // ignore navigation fallback errors
+    }
+  };
+
+  const isDirectProfileHref = (href: string): boolean => {
+    return /\/(?:Aide\/Aide_ns\.aspx|Patient\/InternalPatientInfo_ns\.aspx)/i.test(
+      href
+    );
+  };
+
+  const normalizeDirectProfileHref = (href: string): string => {
+    const trimmed = href.trim();
+    if (/^https?:\/\//i.test(trimmed)) {
+      return trimmed;
+    }
+
+    if (trimmed.startsWith("/")) {
+      return `https://app.hhaexchange.com${trimmed}`;
+    }
+
+    return `${detectTenantBaseUrl()}/${trimmed.replace(/^\/+/, "")}`;
+  };
+
   popupDoc.addEventListener(
     "click",
     (event) => {
@@ -399,13 +432,10 @@ function setupPopupProfileLinkFallback(popupDoc: Document): void {
         return;
       }
 
-      // If this is already a direct profile URL, let browser handle it naturally.
-      if (
-        /^https?:\/\//i.test(href) &&
-        /\/(?:Aide\/Aide_ns\.aspx|Patient\/InternalPatientInfo_ns\.aspx)/i.test(
-          href
-        )
-      ) {
+      if (isDirectProfileHref(href)) {
+        event.preventDefault();
+        event.stopPropagation();
+        openInNewTab(normalizeDirectProfileHref(href));
         return;
       }
 
@@ -430,7 +460,7 @@ function setupPopupProfileLinkFallback(popupDoc: Document): void {
           : PATIENT_PROFILE_URL_TEMPLATE
       ).replace("{ID}", profileId);
 
-      (popupDoc.defaultView ?? window).open(targetUrl, "_blank", "noopener");
+      openInNewTab(targetUrl);
     },
     true
   );

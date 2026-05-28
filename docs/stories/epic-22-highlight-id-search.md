@@ -7,7 +7,7 @@
 | **Epic ID** | EPIC-022 |
 | **标题** | Highlight ID Search（支持 AHC/AMD） |
 | **优先级** | P1 |
-| **状态** | Proposed |
+| **状态** | Completed (2026-05-28) |
 | **关联系统** | Highlight2Call, HhaSearchService, IncomingCallHandler, Outlook 集成入口 |
 | **依赖 Epic** | Epic 5（搜索结果处理基础）, Epic 18（HhaSearchService 多字段搜索能力）, Epic 19（Outlook Mini Panel） |
 | **ADR** | ADR-020 |
@@ -16,7 +16,7 @@
 
 用户已确认目标体验：
 
-1. 在 Outlook 与 HHA 页面高亮 `AHC-XXXXXX` 或 `AMD-XXXXXX`（6 位数字）后，出现浮层按钮“在HHAeXchange搜索”。
+1. 在 Outlook 与 HHA 页面高亮 `AHC-XXXX`~`AHC-XXXXXX` 或 `AMD-XXXX`~`AMD-XXXXXX`（4-6 位数字）后，出现浮层按钮“在HHAeXchange搜索”。
 2. 点击后直接弹出搜索结果页。
 3. 支持小写输入（如 `ahc-123456`），但不支持无连字符格式（如 `AHC123456`）。
 4. 同时命中电话与 ID 时，优先执行 ID 搜索。
@@ -35,7 +35,7 @@
 
 ### 功能标准
 
-1. 选中 `AHC-123456` / `AMD-123456`（大小写均可）时出现 ID action popup。
+1. 选中 `AHC-1234`~`AHC-123456` / `AMD-1234`~`AMD-123456`（大小写均可）时出现 ID action popup。
 2. 点击“在HHAeXchange搜索”后直接进入结果弹窗（Combined/Single View 规则与现有一致）。
 3. 同时命中电话和 ID 时，始终优先 ID。
 4. 双端无结果时显示轻提示 toast。
@@ -49,6 +49,18 @@
 
 ---
 
+## 实施完成情况（2026-05-28）
+
+- [x] Story 22-1：完成 ID 优先识别，规则调整为 4-6 位数字并保持大小写兼容。
+- [x] Story 22-2：完成 `searchHhaById` 直出结果弹窗链路（aide/patient 并行查询 + 分流展示）。
+- [x] Story 22-3：完成 ID popup 复用与点击行为统一，补齐点击后的二次触发抑制。
+- [x] Story 22-4：完成 Outlook 全页面生效，并补齐 CallReports iframe 场景触发。
+- [x] Story 22-5：完成顶部居中 toast 统一反馈与回归修复。
+- [x] Story 22-6：完成 ADR/Epic 文档同步与验收收口。
+- [x] 用户手动验收通过（Issue #25）。
+
+---
+
 ## Stories
 
 ### Story 22-1: 扩展 Highlight2Call 为 ID 优先识别
@@ -59,7 +71,7 @@
 
 #### 验收标准
 
-1. 新增 ID 正则，支持大小写匹配并强制连字符：`\b(?:AHC|AMD)-\d{6}\b`（`i`）。
+1. 新增 ID 正则，支持大小写匹配并强制连字符：`\b(?:AHC|AMD)-\d{4,6}\b`（`i`）。
 2. 命中后标准化为大写用于后续搜索。
 3. 若同一选区同时命中电话与 ID，优先按 ID 分支处理。
 4. 未命中 ID 且命中电话时，原电话分支行为保持不变。
@@ -69,6 +81,7 @@
 
 | 选中文本 | 期望 |
 |---|---|
+| `AHC-1760` | 触发 ID popup |
 | `AHC-123456` | 触发 ID popup |
 | `ahc-123456` | 触发 ID popup（内部转大写） |
 | `AMD-654321` | 触发 ID popup |
@@ -187,28 +200,27 @@ flowchart TD
 
 ---
 
-## 文件清单（计划）
+## 文件清单（实际）
 
 | 操作 | 文件路径 |
 |---|---|
-| 修改 | `src/js/Highlight2Call.ts` |
-| 修改 | `src/js/IncomingCallHandler.ts` |
-| 修改 | `src/js/services/HhaSearchService.ts` |
-| 修改 | `src/index.ts` |
-| 可选修改 | `src/style/highlight2call.less` |
-| 新建 | `docs/adr/020-highlight-id-search-popup.md` |
-| 新建 | `docs/stories/epic-22-highlight-id-search.md` |
+| 已修改 | `src/js/Highlight2Call.ts` |
+| 已修改 | `src/js/IncomingCallHandler.ts` |
+| 已修改 | `src/js/services/HhaSearchService.ts` |
+| 已修改 | `src/index.ts` |
+| 已更新 | `docs/adr/020-highlight-id-search-popup.md` |
+| 已更新 | `docs/stories/epic-22-highlight-id-search.md` |
 
 ---
 
 ## 回归测试清单（摘要）
 
-1. HHA 页面：选中 `AHC-123456` 能出 popup，点击后直出结果页。
-2. Outlook 页面：选中 `amd-123456` 能出 popup，点击后直出结果页。
-3. 选区含电话 + ID：只走 ID 搜索。
-4. 无连字符 ID：不触发 ID 搜索。
-5. 无结果：只出现 toast，不在 popup 中出现失败文案。
-6. toast 在 modal 覆盖场景下仍可见，且颜色与字体可读。
+- [x] HHA 页面：选中 `AHC-123456` 能出 popup，点击后直出结果页。
+- [x] Outlook 页面：选中 `amd-123456` 能出 popup，点击后直出结果页。
+- [x] 选区含电话 + ID：只走 ID 搜索。
+- [x] 无连字符 ID：不触发 ID 搜索。
+- [x] 无结果：只出现 toast，不在 popup 中出现失败文案。
+- [x] toast 在 modal 覆盖场景下仍可见，且颜色与字体可读。
 
 ---
 

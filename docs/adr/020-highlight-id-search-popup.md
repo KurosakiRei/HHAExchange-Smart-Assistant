@@ -1,11 +1,11 @@
 # ADR-020: Highlight ID Search（AHC/AMD）与统一 Toast 反馈
 
 ## 状态
-Proposed (2026-05-27)
+Accepted (2026-05-28)
 
 ## 背景
 
-当前 `Highlight2Call` 已支持电话号码划词弹窗与一键搜索，但针对 `AHC-XXXXXX` / `AMD-XXXXXX`（6 位数字）这类 ID，用户仍需手动复制再到 Quick Search Tab 输入，步骤冗长。
+当前 `Highlight2Call` 已支持电话号码划词弹窗与一键搜索，但针对 `AHC-XXXX`~`AHC-XXXXXX` / `AMD-XXXX`~`AMD-XXXXXX`（4-6 位数字）这类 ID，用户仍需手动复制再到 Quick Search Tab 输入，步骤冗长。
 
 已确认的产品目标如下：
 
@@ -30,19 +30,19 @@ Proposed (2026-05-27)
 - 与电话划词动作同类化，认知成本低；
 - 实现路径最短，复用代码最多。
 
-### D2：ID 识别规则严格限定（大小写不敏感 + 强制连字符）
+### D2：ID 识别规则严格限定（大小写不敏感 + 强制连字符 + 4-6 位数字）
 
 **选定**：匹配规则采用大小写不敏感正则：
 
 ```regex
-\b(?:AHC|AMD)-\d{6}\b
+\b(?:AHC|AMD)-\d{4,6}\b
 ```
 
-并在内部标准化为大写（如 `ahc-123456` -> `AHC-123456`）。
+并在内部标准化为大写（如 `ahc-1234` -> `AHC-1234`，`amd-123456` -> `AMD-123456`）。
 
 **明确不支持**：
 - `AHC123456`（无连字符）
-- 位数不为 6 的数字段
+- 位数不在 4-6 之间的数字段
 
 ### D3：匹配优先级采用“ID > 电话”
 
@@ -97,6 +97,16 @@ Proposed (2026-05-27)
 
 ---
 
+## 实施与验收结果（2026-05-28）
+
+- [x] `Highlight2Call` 已支持 AHC/AMD ID（4-6 位）高亮识别，且保持 ID 优先级高于电话。
+- [x] ID action 点击后直接走 `HhaSearchService` 结果弹窗链路，不再依赖 Quick Search Tab 中转。
+- [x] Outlook 与 CallReports 页面均已接入可用触发链路，包含复杂页面/iframe 场景兜底。
+- [x] Toast 反馈已统一为顶部居中轻提示，覆盖“无结果”和“租户缺失”场景。
+- [x] 与 Issue #25 对齐的手动验收已通过。
+
+---
+
 ## 后果
 
 ### 正面影响
@@ -128,14 +138,13 @@ Proposed (2026-05-27)
 
 ---
 
-## 相关文件（计划）
+## 相关文件（实际）
 
 1. `src/js/Highlight2Call.ts`
 2. `src/js/IncomingCallHandler.ts`
 3. `src/js/services/HhaSearchService.ts`
 4. `src/index.ts`
-5. `src/style/highlight2call.less`
-6. `docs/stories/epic-22-highlight-id-search.md`
+5. `docs/stories/epic-22-highlight-id-search.md`
 
 ---
 

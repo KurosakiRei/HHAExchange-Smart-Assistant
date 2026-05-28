@@ -1,10 +1,11 @@
 import {
-  HhaSearchResult,
   formatPhoneNumber,
   openInPopup,
   fetchHhaData,
+  fetchAllPages,
   displayCombinedResults,
   displaySingleResult,
+  getQuickSearchTenantState,
 } from "./services/HhaSearchService";
 import {
   TOAST_CONTAINER_SELECTOR,
@@ -21,6 +22,72 @@ let lastCallWasIncoming: boolean = false;
 
 /** 当前搜索的电话号码（用于高亮显示） */
 let currentSearchPhone: string = "";
+
+const HHA_HIGHLIGHT_ID_PATTERN = /^(?:AHC|AMD)-\d{4,6}$/;
+const HHA_SEARCH_TOAST_ID = "hha-highlight-search-toast";
+const HHA_SEARCH_TOAST_LIFETIME_MS = 2600;
+
+type SearchToastType = "success" | "info" | "warning" | "error";
+
+function showHighlightSearchToast(
+  message: string,
+  type: SearchToastType = "info"
+): void {
+  const existing = document.getElementById(HHA_SEARCH_TOAST_ID);
+  if (existing) {
+    existing.remove();
+  }
+
+  const colors: Record<SearchToastType, string> = {
+    success: "#1f8f4c",
+    info: "#1769aa",
+    warning: "#b66a00",
+    error: "#b3261e",
+  };
+
+  const toast = document.createElement("div");
+  toast.id = HHA_SEARCH_TOAST_ID;
+  toast.textContent = message;
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  toast.style.position = "fixed";
+  toast.style.top = "20px";
+  toast.style.left = "50%";
+  toast.style.transform = "translateX(-50%) translateY(-8px)";
+  toast.style.opacity = "0";
+  toast.style.transition = "opacity 180ms ease, transform 180ms ease";
+  toast.style.padding = "10px 14px";
+  toast.style.borderRadius = "8px";
+  toast.style.backgroundColor = colors[type];
+  toast.style.color = "#ffffff";
+  toast.style.fontSize = "13px";
+  toast.style.fontWeight = "500";
+  toast.style.boxShadow = "0 8px 22px rgba(0, 0, 0, 0.25)";
+  toast.style.zIndex = "2147483646";
+  toast.style.pointerEvents = "none";
+
+  document.body.appendChild(toast);
+
+  window.requestAnimationFrame(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateX(-50%) translateY(0)";
+  });
+
+  window.setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(-50%) translateY(-8px)";
+    window.setTimeout(() => toast.remove(), 220);
+  }, HHA_SEARCH_TOAST_LIFETIME_MS);
+}
+
+function normalizeHhaSearchId(rawId: string): string | null {
+  const normalized = rawId.trim().toUpperCase();
+  if (!HHA_HIGHLIGHT_ID_PATTERN.test(normalized)) {
+    return null;
+  }
+
+  return normalized;
+}
 
 /**
  * 核心调度函数：提取号码并发起并行搜索, 然后根据结果决定如何显示
@@ -263,6 +330,59 @@ export async function searchHhaByPhone(phoneNumber: string): Promise<boolean> {
     );
   }
   return true;
+}
+
+/**
+ * 通过 AHC/AMD ID 搜索 HHA（供 Highlight2Call 调用）
+ */
+export async function searchHhaById(rawId: string): Promise<boolean> {
+  const normalizedId = normalizeHhaSearchId(rawId);
+  if (!normalizedId) {
+    showHighlightSearchToast(
+      `ID 格式无效：${rawId}（仅支持 AHC/AMD-后4到6位数字，如 AHC-1234）`,
+      "warning"
+    );
+    return false;
+  }
+
+  const tenantState = getQuickSearchTenantState();
+  if (!tenantState.baseUrl && tenantState.source === "missing") {
+    showHighlightSearchToast(
+      tenantState.message || "请先打开一次 HHA 页面同步租户信息。",
+      "warning"
+    );
+    return false;
+  }
+
+  try {
+    console.log(`[HHA Search] 外部ID调用: ${normalizedId}, 开始并行搜索...`);
+    const [aideResult, patientResult] = await Promise.all([
+      fetchAllPages("aide", { id: normalizedId }),
+      fetchAllPages("patient", { id: normalizedId }),
+    ]);
+
+    const hasAideResult = aideResult.count > 0;
+    const hasPatientResult = patientResult.count > 0;
+
+    if (hasAideResult && hasPatientResult) {
+      displayCombinedResults(aideResult, patientResult, "");
+    } else if (hasAideResult) {
+      displaySingleResult(aideResult, "aide", "");
+    } else if (hasPatientResult) {
+      displaySingleResult(patientResult, "patient", "");
+    } else {
+      showHighlightSearchToast(
+        `ID [${normalizedId}] 在 HHAeXchange 中未找到对应的护工或病人。`,
+        "info"
+      );
+    }
+
+    return true;
+  } catch (error) {
+    console.error("[HHA Search] ID search failed:", error);
+    showHighlightSearchToast("ID 搜索失败，请稍后重试。", "error");
+    return false;
+  }
 }
 
 export const incomingCallHandler = async (): Promise<void> => {
