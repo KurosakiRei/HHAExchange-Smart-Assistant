@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.21.10
+// @version             3.21.11
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -40924,6 +40924,32 @@ function setupPopupProfileLinkFallback(popupDoc) {
         return;
     }
     popupDoc.body.dataset.hhaProfileLinkBound = "1";
+    const openInNewTab = (targetUrl) => {
+        const popupWindow = popupDoc.defaultView ?? window;
+        const opened = popupWindow.open(targetUrl, "_blank", "noopener,noreferrer");
+        if (opened) {
+            return;
+        }
+        try {
+            popupWindow.location.href = targetUrl;
+        }
+        catch {
+            // ignore navigation fallback errors
+        }
+    };
+    const isDirectProfileHref = (href) => {
+        return /\/(?:Aide\/Aide_ns\.aspx|Patient\/InternalPatientInfo_ns\.aspx)/i.test(href);
+    };
+    const normalizeDirectProfileHref = (href) => {
+        const trimmed = href.trim();
+        if (/^https?:\/\//i.test(trimmed)) {
+            return trimmed;
+        }
+        if (trimmed.startsWith("/")) {
+            return `https://app.hhaexchange.com${trimmed}`;
+        }
+        return `${detectTenantBaseUrl()}/${trimmed.replace(/^\/+/, "")}`;
+    };
     popupDoc.addEventListener("click", (event) => {
         const target = event.target;
         const anchor = target?.closest?.("a");
@@ -40934,9 +40960,10 @@ function setupPopupProfileLinkFallback(popupDoc) {
         if (!href || /^(?:tel|sms|mailto):/i.test(href)) {
             return;
         }
-        // If this is already a direct profile URL, let browser handle it naturally.
-        if (/^https?:\/\//i.test(href) &&
-            /\/(?:Aide\/Aide_ns\.aspx|Patient\/InternalPatientInfo_ns\.aspx)/i.test(href)) {
+        if (isDirectProfileHref(href)) {
+            event.preventDefault();
+            event.stopPropagation();
+            openInNewTab(normalizeDirectProfileHref(href));
             return;
         }
         const profileType = inferProfileTypeFromAnchor(anchor);
@@ -40953,7 +40980,7 @@ function setupPopupProfileLinkFallback(popupDoc) {
         const targetUrl = (profileType === "aide"
             ? AIDE_PROFILE_URL_TEMPLATE
             : PATIENT_PROFILE_URL_TEMPLATE).replace("{ID}", profileId);
-        (popupDoc.defaultView ?? window).open(targetUrl, "_blank", "noopener");
+        openInNewTab(targetUrl);
     }, true);
 }
 function setupPopupPagination(popupDoc) {
@@ -41018,7 +41045,7 @@ function setupPopupHighlight2Call(popupDoc) {
     if (!popupDoc.body || popupDoc.body.dataset.hhaH2cBound === "1")
         return;
     popupDoc.body.dataset.hhaH2cBound = "1";
-    const phoneRegex = /(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
+    const phoneRegex = /(?:\+?1[\s().-]*)?\(?\d{3}\)?[\s().-]*\d{3}[\s().-]*\d{4}/;
     let actionPopup = null;
     let suppressMouseUpUntil = 0;
     const normalize = (raw) => {
@@ -41087,24 +41114,65 @@ function setupPopupHighlight2Call(popupDoc) {
             }
         }
     };
-    const createPopup = (phoneNumber, event) => {
+    const getSelectedTextFromEditableTarget = (target) => {
+        const el = target;
+        if (!el) {
+            return "";
+        }
+        const tagName = el.tagName?.toUpperCase();
+        if (tagName !== "INPUT" && tagName !== "TEXTAREA") {
+            return "";
+        }
+        const value = typeof el.value === "string" ? el.value : "";
+        const start = typeof el.selectionStart === "number" ? el.selectionStart : null;
+        const end = typeof el.selectionEnd === "number" ? el.selectionEnd : null;
+        if (start === null || end === null || end <= start) {
+            return "";
+        }
+        return value.slice(start, end).trim();
+    };
+    const createPopup = (phoneNumber, mouseSnapshot) => {
         removePopup();
         const clean = normalize(phoneNumber);
         if (clean.length !== 10)
             return;
         actionPopup = popupDoc.createElement("div");
         actionPopup.id = "highlight-caller-popup";
-        actionPopup.innerHTML =
-            `<div class="hcp-title">请选择操作</div>` +
-                `<div class="hcp-number">${phoneNumber}</div>` +
-                `<div class="hcp-actions">` +
-                `<a href="tel:${clean}" class="hcp-button" data-action="tel">📞 打电话</a>` +
-                `<a href="sms:${clean}" class="hcp-button" data-action="sms">💬 发短信</a>` +
-                `</div>` +
-                `<div class="hcp-actions-full">` +
-                `<button class="hcp-copy-btn">📋 复制号码</button>` +
-                `</div>` +
-                `<div class="hcp-close-btn" title="关闭">×</div>`;
+        const title = popupDoc.createElement("div");
+        title.className = "hcp-title";
+        title.textContent = "请选择操作";
+        const numberEl = popupDoc.createElement("div");
+        numberEl.className = "hcp-number";
+        numberEl.textContent = phoneNumber;
+        const actions = popupDoc.createElement("div");
+        actions.className = "hcp-actions";
+        const telBtn = popupDoc.createElement("a");
+        telBtn.href = `tel:${clean}`;
+        telBtn.className = "hcp-button";
+        telBtn.setAttribute("data-action", "tel");
+        telBtn.textContent = "📞 打电话";
+        const smsBtn = popupDoc.createElement("a");
+        smsBtn.href = `sms:${clean}`;
+        smsBtn.className = "hcp-button";
+        smsBtn.setAttribute("data-action", "sms");
+        smsBtn.textContent = "💬 发短信";
+        actions.appendChild(telBtn);
+        actions.appendChild(smsBtn);
+        const fullActions = popupDoc.createElement("div");
+        fullActions.className = "hcp-actions-full";
+        const copyBtn = popupDoc.createElement("button");
+        copyBtn.className = "hcp-copy-btn";
+        copyBtn.textContent = "📋 复制号码";
+        fullActions.appendChild(copyBtn);
+        const closeBtn = popupDoc.createElement("div");
+        closeBtn.className = "hcp-close-btn";
+        closeBtn.title = "关闭";
+        closeBtn.textContent = "×";
+        actionPopup.appendChild(title);
+        actionPopup.appendChild(numberEl);
+        actionPopup.appendChild(actions);
+        actionPopup.appendChild(fullActions);
+        actionPopup.appendChild(closeBtn);
         popupDoc.body.appendChild(actionPopup);
         ["mousedown", "mouseup", "click"].forEach((eventName) => {
             actionPopup?.addEventListener(eventName, (evt) => {
@@ -41116,36 +41184,29 @@ function setupPopupHighlight2Call(popupDoc) {
         const popupWin = popupDoc.defaultView;
         const viewportHeight = popupWin?.innerHeight ?? window.innerHeight;
         const viewportWidth = popupWin?.innerWidth ?? window.innerWidth;
-        let top = event.clientY + 15;
-        let left = event.clientX;
+        let top = mouseSnapshot.clientY + 15;
+        let left = mouseSnapshot.clientX;
         if (top + rect.height > viewportHeight) {
-            top = event.clientY - rect.height - 15;
+            top = mouseSnapshot.clientY - rect.height - 15;
         }
         if (left + rect.width > viewportWidth) {
             left = viewportWidth - rect.width - 10;
         }
-        actionPopup.style.top = `${top}px`;
-        actionPopup.style.left = `${left}px`;
-        const closeBtn = actionPopup.querySelector(".hcp-close-btn");
-        if (closeBtn) {
-            closeBtn.addEventListener("click", () => {
-                markPopupInteraction();
-                clearSelection();
-                removePopup();
-            });
-        }
-        const copyBtn = actionPopup.querySelector(".hcp-copy-btn");
-        if (copyBtn) {
-            copyBtn.addEventListener("click", async () => {
-                markPopupInteraction();
-                const ok = await copyToClipboard(clean);
-                copyBtn.textContent = ok ? "✅ 已复制" : "❌ 复制失败";
-                window.setTimeout(() => {
-                    if (copyBtn)
-                        copyBtn.textContent = "📋 复制号码";
-                }, 1500);
-            });
-        }
+        actionPopup.style.top = `${Math.max(8, top)}px`;
+        actionPopup.style.left = `${Math.max(8, left)}px`;
+        closeBtn.addEventListener("click", () => {
+            markPopupInteraction();
+            clearSelection();
+            removePopup();
+        });
+        copyBtn.addEventListener("click", async () => {
+            markPopupInteraction();
+            const ok = await copyToClipboard(clean);
+            copyBtn.textContent = ok ? "✅ 已复制" : "❌ 复制失败";
+            window.setTimeout(() => {
+                copyBtn.textContent = "📋 复制号码";
+            }, 1500);
+        });
         actionPopup
             .querySelectorAll("a.hcp-button")
             .forEach((btn) => {
@@ -41161,22 +41222,21 @@ function setupPopupHighlight2Call(popupDoc) {
             });
         });
     };
-    popupDoc.addEventListener("mouseup", (e) => {
+    const handleSelection = (mouseSnapshot) => {
         if (Date.now() < suppressMouseUpUntil) {
             return;
         }
-        if (actionPopup && e.target instanceof Node) {
-            const path = (typeof e.composedPath === "function" ? e.composedPath() : []);
-            if (actionPopup.contains(e.target) || path.includes(actionPopup)) {
-                return;
-            }
+        if (mouseSnapshot.withinPopup) {
+            return;
         }
         if (actionPopup &&
             popupDoc.defaultView?.getSelection()?.anchorNode instanceof Node &&
             actionPopup.contains(popupDoc.defaultView.getSelection().anchorNode)) {
             return;
         }
-        const selected = popupDoc.defaultView?.getSelection()?.toString().trim() || "";
+        const selectedFromDocument = popupDoc.defaultView?.getSelection()?.toString().trim() || "";
+        const selectedFromEditable = getSelectedTextFromEditableTarget(mouseSnapshot.target);
+        const selected = selectedFromDocument || selectedFromEditable;
         if (!selected) {
             removePopup();
             return;
@@ -41186,15 +41246,32 @@ function setupPopupHighlight2Call(popupDoc) {
             removePopup();
             return;
         }
-        createPopup(match[0], e);
-    });
+        createPopup(match[0], mouseSnapshot);
+    };
+    popupDoc.addEventListener("mouseup", (e) => {
+        const withinPopup = !!actionPopup &&
+            e.target instanceof Node &&
+            (actionPopup.contains(e.target) ||
+                (typeof e.composedPath === "function" &&
+                    e.composedPath().includes(actionPopup)));
+        const mouseSnapshot = {
+            clientX: e.clientX,
+            clientY: e.clientY,
+            target: e.target,
+            withinPopup,
+        };
+        const timerWindow = popupDoc.defaultView ?? window;
+        timerWindow.setTimeout(() => {
+            handleSelection(mouseSnapshot);
+        }, 0);
+    }, true);
     popupDoc.addEventListener("mousedown", (e) => {
         if (actionPopup &&
             e.target instanceof Node &&
             !actionPopup.contains(e.target)) {
             removePopup();
         }
-    });
+    }, true);
 }
 // ==================== HTML 处理工具 ====================
 /**
@@ -42591,6 +42668,58 @@ async function fetchAllPages(type, params) {
 let lastCallWasIncoming = false;
 /** 当前搜索的电话号码（用于高亮显示） */
 let currentSearchPhone = "";
+const HHA_HIGHLIGHT_ID_PATTERN = /^(?:AHC|AMD)-\d{4,6}$/;
+const HHA_SEARCH_TOAST_ID = "hha-highlight-search-toast";
+const HHA_SEARCH_TOAST_LIFETIME_MS = 2600;
+function showHighlightSearchToast(message, type = "info") {
+    const existing = document.getElementById(HHA_SEARCH_TOAST_ID);
+    if (existing) {
+        existing.remove();
+    }
+    const colors = {
+        success: "#1f8f4c",
+        info: "#1769aa",
+        warning: "#b66a00",
+        error: "#b3261e",
+    };
+    const toast = document.createElement("div");
+    toast.id = HHA_SEARCH_TOAST_ID;
+    toast.textContent = message;
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    toast.style.position = "fixed";
+    toast.style.top = "20px";
+    toast.style.left = "50%";
+    toast.style.transform = "translateX(-50%) translateY(-8px)";
+    toast.style.opacity = "0";
+    toast.style.transition = "opacity 180ms ease, transform 180ms ease";
+    toast.style.padding = "10px 14px";
+    toast.style.borderRadius = "8px";
+    toast.style.backgroundColor = colors[type];
+    toast.style.color = "#ffffff";
+    toast.style.fontSize = "13px";
+    toast.style.fontWeight = "500";
+    toast.style.boxShadow = "0 8px 22px rgba(0, 0, 0, 0.25)";
+    toast.style.zIndex = "2147483646";
+    toast.style.pointerEvents = "none";
+    document.body.appendChild(toast);
+    window.requestAnimationFrame(() => {
+        toast.style.opacity = "1";
+        toast.style.transform = "translateX(-50%) translateY(0)";
+    });
+    window.setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(-50%) translateY(-8px)";
+        window.setTimeout(() => toast.remove(), 220);
+    }, HHA_SEARCH_TOAST_LIFETIME_MS);
+}
+function normalizeHhaSearchId(rawId) {
+    const normalized = rawId.trim().toUpperCase();
+    if (!HHA_HIGHLIGHT_ID_PATTERN.test(normalized)) {
+        return null;
+    }
+    return normalized;
+}
 /**
  * 核心调度函数：提取号码并发起并行搜索, 然后根据结果决定如何显示
  * @param callInfoPanel - 包含电话号码信息的DOM元素
@@ -42807,6 +42936,48 @@ async function searchHhaByPhone(phoneNumber) {
     }
     return true;
 }
+/**
+ * 通过 AHC/AMD ID 搜索 HHA（供 Highlight2Call 调用）
+ */
+async function searchHhaById(rawId) {
+    const normalizedId = normalizeHhaSearchId(rawId);
+    if (!normalizedId) {
+        showHighlightSearchToast(`ID 格式无效：${rawId}（仅支持 AHC/AMD-后4到6位数字，如 AHC-1234）`, "warning");
+        return false;
+    }
+    const tenantState = getQuickSearchTenantState();
+    if (!tenantState.baseUrl && tenantState.source === "missing") {
+        showHighlightSearchToast(tenantState.message || "请先打开一次 HHA 页面同步租户信息。", "warning");
+        return false;
+    }
+    try {
+        console.log(`[HHA Search] 外部ID调用: ${normalizedId}, 开始并行搜索...`);
+        const [aideResult, patientResult] = await Promise.all([
+            fetchAllPages("aide", { id: normalizedId }),
+            fetchAllPages("patient", { id: normalizedId }),
+        ]);
+        const hasAideResult = aideResult.count > 0;
+        const hasPatientResult = patientResult.count > 0;
+        if (hasAideResult && hasPatientResult) {
+            displayCombinedResults(aideResult, patientResult, "");
+        }
+        else if (hasAideResult) {
+            displaySingleResult(aideResult, "aide", "");
+        }
+        else if (hasPatientResult) {
+            displaySingleResult(patientResult, "patient", "");
+        }
+        else {
+            showHighlightSearchToast(`ID [${normalizedId}] 在 HHAeXchange 中未找到对应的护工或病人。`, "info");
+        }
+        return true;
+    }
+    catch (error) {
+        console.error("[HHA Search] ID search failed:", error);
+        showHighlightSearchToast("ID 搜索失败，请稍后重试。", "error");
+        return false;
+    }
+}
 const incomingCallHandler = async () => {
     console.log("HHAeXchange 电话助手 v5.5 (HTML清理+分页样式优化) 已启动。");
     const toastContainer = await waitForElement(TOAST_CONTAINER_SELECTOR);
@@ -42822,6 +42993,14 @@ const HIGHLIGHT2CALL_BOOTSTRAP_FLAG = "__HHA_HIGHLIGHT2CALL_BOOTSTRAPPED__";
 function isNodeLike(target) {
     return !!target && typeof target.nodeType === "number";
 }
+function isEditableTarget(target) {
+    const el = target;
+    if (!el) {
+        return false;
+    }
+    const tagName = el.tagName?.toUpperCase();
+    return (tagName === "INPUT" || tagName === "TEXTAREA" || !!el.isContentEditable);
+}
 const highlight2Call = (targetWindow = window, targetDocument = document) => {
     if (targetWindow[HIGHLIGHT2CALL_BOOTSTRAP_FLAG]) {
         return;
@@ -42831,6 +43010,7 @@ const highlight2Call = (targetWindow = window, targetDocument = document) => {
     // 用于匹配电话号码的正则表达式
     // 支持多种格式: 1234567890, 123-456-7890, (123) 456-7890, 123.456.7890, +1 123-456-7890 等
     const PHONE_REGEX = /(?:\+?1[\s().-]*)?\(?\d{3}\)?[\s().-]*\d{3}[\s().-]*\d{4}/;
+    const HHA_ID_REGEX = /\b(?:AHC|AMD)-\d{4,6}\b/i;
     /**
      * 标准化电话号码：去除非数字字符，处理 11 位以 1 开头的号码
      * @param phoneNumber - 匹配到的电话号码字符串
@@ -42844,9 +43024,135 @@ const highlight2Call = (targetWindow = window, targetDocument = document) => {
         }
         return digits;
     }
+    function normalizeHhaId(rawId) {
+        return rawId.trim().toUpperCase();
+    }
+    function applyPopupStyles(container, titleEl, numberEl, closeButton, actionsContainer, fullActionsContainer, primaryButtons) {
+        container.style.position = "fixed";
+        container.style.zIndex = "999999";
+        container.style.backgroundColor = "#ffffff";
+        container.style.border = "1px solid #dcdcdc";
+        container.style.borderRadius = "8px";
+        container.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
+        container.style.fontFamily =
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+        container.style.fontSize = "14px";
+        container.style.color = "#333";
+        container.style.padding = "12px";
+        container.style.minWidth = "220px";
+        titleEl.style.fontWeight = "600";
+        titleEl.style.fontSize = "16px";
+        titleEl.style.marginBottom = "8px";
+        numberEl.style.backgroundColor = "#f0f0f0";
+        numberEl.style.padding = "4px 8px";
+        numberEl.style.borderRadius = "4px";
+        numberEl.style.marginBottom = "12px";
+        numberEl.style.textAlign = "center";
+        numberEl.style.fontWeight = "500";
+        actionsContainer.style.display = "flex";
+        actionsContainer.style.justifyContent = "space-around";
+        actionsContainer.style.gap = "10px";
+        fullActionsContainer.style.marginTop = "10px";
+        primaryButtons.forEach((btn) => {
+            btn.style.display = "inline-block";
+            btn.style.textDecoration = "none";
+            btn.style.color = "#fff";
+            btn.style.padding = "8px 12px";
+            btn.style.borderRadius = "5px";
+            btn.style.transition = "background-color 0.2s";
+            btn.style.flexGrow = "1";
+            btn.style.textAlign = "center";
+            btn.style.border = "none";
+            btn.style.cursor = "pointer";
+            btn.style.fontSize = "14px";
+            btn.style.backgroundColor = "#007bff";
+        });
+        closeButton.style.position = "absolute";
+        closeButton.style.top = "5px";
+        closeButton.style.right = "8px";
+        closeButton.style.fontSize = "20px";
+        closeButton.style.color = "#aaa";
+        closeButton.style.cursor = "pointer";
+        closeButton.style.fontWeight = "bold";
+        closeButton.addEventListener("mouseenter", () => {
+            closeButton.style.color = "#333";
+        });
+        closeButton.addEventListener("mouseleave", () => {
+            closeButton.style.color = "#aaa";
+        });
+    }
+    function createPopupShell(titleText, valueText, mouseEvent) {
+        removePopup();
+        popup = targetDocument.createElement("div");
+        popup.id = "highlight-caller-popup";
+        const title = targetDocument.createElement("div");
+        title.className = "hcp-title";
+        title.textContent = titleText;
+        const number = targetDocument.createElement("div");
+        number.className = "hcp-number";
+        number.textContent = valueText;
+        const actions = targetDocument.createElement("div");
+        actions.className = "hcp-actions";
+        const fullActions = targetDocument.createElement("div");
+        fullActions.className = "hcp-actions-full";
+        const closeButton = targetDocument.createElement("div");
+        closeButton.className = "hcp-close-btn";
+        closeButton.title = "关闭";
+        closeButton.textContent = "×";
+        popup.appendChild(title);
+        popup.appendChild(number);
+        popup.appendChild(actions);
+        popup.appendChild(fullActions);
+        popup.appendChild(closeButton);
+        applyPopupStyles(popup, title, number, closeButton, actions, fullActions, []);
+        targetDocument.body?.appendChild(popup);
+        const popupRect = popup.getBoundingClientRect();
+        let top = mouseEvent.clientY + 15;
+        let left = mouseEvent.clientX;
+        if (top + popupRect.height > targetWindow.innerHeight) {
+            top = mouseEvent.clientY - popupRect.height - 15;
+        }
+        if (left + popupRect.width > targetWindow.innerWidth) {
+            left = targetWindow.innerWidth - popupRect.width - 10;
+        }
+        popup.style.top = `${Math.max(8, top)}px`;
+        popup.style.left = `${Math.max(8, left)}px`;
+        closeButton.addEventListener("click", () => {
+            markPopupInteraction();
+            clearSelection();
+            removePopup();
+        });
+        return {
+            container: popup,
+            actionsContainer: actions,
+            fullActionsContainer: fullActions,
+        };
+    }
     // --- 脚本核心逻辑 ---
     // 使用类型注解，明确 popup 是一个 DIV 元素或 null
     let popup = null;
+    let suppressMouseUpUntil = 0;
+    let lastHandledMouseUpEvent = null;
+    let lastHandledMouseDownEvent = null;
+    function markPopupInteraction() {
+        suppressMouseUpUntil = Date.now() + 400;
+    }
+    function clearSelection() {
+        try {
+            targetWindow.getSelection()?.removeAllRanges();
+        }
+        catch {
+            // ignore selection API errors
+        }
+    }
+    function normalizeSelectionTextForMatch(text) {
+        return text
+            .replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g, "")
+            .replace(/[\u00a0\u2007\u202f]/g, " ")
+            .replace(/－/g, "-")
+            .replace(/[０-９]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
+            .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, "-");
+    }
     function getSelectedTextFromEditableTarget(target) {
         const el = target;
         if (!el) {
@@ -42874,74 +43180,108 @@ const highlight2Call = (targetWindow = window, targetDocument = document) => {
         }
     }
     /**
-     * 创建并显示功能弹窗
-     * @param phoneNumber - 匹配到的电话号码字符串
-     * @param mouseEvent - 触发弹窗的 MouseEvent 事件
+     * 创建并显示电话号码功能弹窗
      */
-    function createPopup(phoneNumber, mouseEvent) {
-        removePopup(); // 创建前先移除旧的
-        // 创建弹窗容器
-        popup = targetDocument.createElement("div");
-        popup.id = "highlight-caller-popup";
-        // 标准化电话号码（去除非数字，处理 11 位 -> 10 位）
+    function createPhonePopup(phoneNumber, mouseEvent) {
         const cleanedNumber = normalizePhoneNumber(phoneNumber);
-        // 验证号码长度（必须是 10 位）
         if (cleanedNumber.length !== 10) {
             console.log("[Highlight2Call] 号码长度不正确，跳过弹窗:", phoneNumber, "->", cleanedNumber);
             return;
         }
-        // 使用 target="_top" 来避免在 iframe 中导航失败的问题
-        popup.innerHTML = `
-            <div class="hcp-title">请选择操作</div>
-            <div class="hcp-number">${phoneNumber}</div>
-            <div class="hcp-actions">
-                <a href="tel:${cleanedNumber}" class="hcp-button" target="_top">📞 打电话</a>
-                <a href="sms:${cleanedNumber}" class="hcp-button" target="_top">💬 发短信</a>
-            </div>
-            <div class="hcp-actions-full">
-                <button class="hcp-button hcp-search-hha" data-phone="${cleanedNumber}">🔍 在HHA搜索</button>
-            </div>
-            <div class="hcp-close-btn" title="关闭">×</div>
-        `;
-        targetDocument.body?.appendChild(popup);
-        // --- 智能定位弹窗 ---
-        const popupRect = popup.getBoundingClientRect();
-        let top = mouseEvent.clientY + 15;
-        let left = mouseEvent.clientX;
-        // 防止弹窗超出视窗底部
-        if (top + popupRect.height > targetWindow.innerHeight) {
-            top = mouseEvent.clientY - popupRect.height - 15;
-        }
-        // 防止弹窗超出视窗右侧
-        if (left + popupRect.width > targetWindow.innerWidth) {
-            left = targetWindow.innerWidth - popupRect.width - 10;
-        }
-        popup.style.top = `${top}px`;
-        popup.style.left = `${left}px`;
-        // --- 事件绑定 ---
-        // 使用 <HTMLDivElement> 类型断言，确保 querySelector 返回正确的类型
-        const closeButton = popup.querySelector(".hcp-close-btn");
-        if (closeButton) {
-            closeButton.addEventListener("click", removePopup);
-        }
-        const actionButtons = popup.querySelectorAll("a.hcp-button");
-        actionButtons.forEach((btn) => {
-            // 点击后延时关闭弹窗，确保链接跳转可以被触发
-            btn.addEventListener("click", () => setTimeout(removePopup, 100));
+        const shell = createPopupShell("请选择操作", phoneNumber, mouseEvent);
+        const telButton = targetDocument.createElement("a");
+        telButton.className = "hcp-button";
+        telButton.href = `tel:${cleanedNumber}`;
+        telButton.target = "_top";
+        telButton.textContent = "📞 打电话";
+        const smsButton = targetDocument.createElement("a");
+        smsButton.className = "hcp-button";
+        smsButton.href = `sms:${cleanedNumber}`;
+        smsButton.target = "_top";
+        smsButton.textContent = "💬 发短信";
+        const searchButton = targetDocument.createElement("button");
+        searchButton.className = "hcp-button hcp-search-hha";
+        searchButton.textContent = "🔍 在HHAeXchange搜索";
+        searchButton.dataset.phone = cleanedNumber;
+        searchButton.style.width = "100%";
+        searchButton.style.backgroundColor = "#28a745";
+        applyPopupStyles(shell.container, shell.container.querySelector(".hcp-title"), shell.container.querySelector(".hcp-number"), shell.container.querySelector(".hcp-close-btn"), shell.actionsContainer, shell.fullActionsContainer, [telButton, smsButton, searchButton]);
+        searchButton.style.backgroundColor = "#28a745";
+        telButton.addEventListener("mouseenter", () => {
+            telButton.style.backgroundColor = "#0056b3";
         });
-        // HHA 搜索按钮事件
-        const searchHhaBtn = popup.querySelector(".hcp-search-hha");
-        if (searchHhaBtn) {
-            searchHhaBtn.addEventListener("click", async () => {
-                const phone = searchHhaBtn.dataset.phone;
-                if (phone) {
-                    removePopup();
-                    await searchHhaByPhone(phone);
-                }
+        telButton.addEventListener("mouseleave", () => {
+            telButton.style.backgroundColor = "#007bff";
+        });
+        smsButton.addEventListener("mouseenter", () => {
+            smsButton.style.backgroundColor = "#0056b3";
+        });
+        smsButton.addEventListener("mouseleave", () => {
+            smsButton.style.backgroundColor = "#007bff";
+        });
+        searchButton.addEventListener("mouseenter", () => {
+            searchButton.style.backgroundColor = "#218838";
+        });
+        searchButton.addEventListener("mouseleave", () => {
+            searchButton.style.backgroundColor = "#28a745";
+        });
+        shell.actionsContainer.appendChild(telButton);
+        shell.actionsContainer.appendChild(smsButton);
+        shell.fullActionsContainer.appendChild(searchButton);
+        [telButton, smsButton].forEach((btn) => {
+            btn.addEventListener("click", () => {
+                markPopupInteraction();
+                clearSelection();
+                targetWindow.setTimeout(removePopup, 100);
             });
-        }
+        });
+        searchButton.addEventListener("click", async () => {
+            const phone = searchButton.dataset.phone;
+            if (!phone) {
+                return;
+            }
+            markPopupInteraction();
+            clearSelection();
+            removePopup();
+            await searchHhaByPhone(phone);
+        });
+    }
+    /**
+     * 创建并显示 ID 搜索弹窗
+     */
+    function createIdPopup(normalizedId, mouseEvent) {
+        const shell = createPopupShell("ID 快速搜索", normalizedId, mouseEvent);
+        const searchButton = targetDocument.createElement("button");
+        searchButton.className = "hcp-button hcp-search-hha";
+        searchButton.textContent = "🔍 在HHAeXchange搜索";
+        searchButton.dataset.id = normalizedId;
+        searchButton.style.width = "100%";
+        searchButton.style.backgroundColor = "#28a745";
+        applyPopupStyles(shell.container, shell.container.querySelector(".hcp-title"), shell.container.querySelector(".hcp-number"), shell.container.querySelector(".hcp-close-btn"), shell.actionsContainer, shell.fullActionsContainer, [searchButton]);
+        searchButton.style.backgroundColor = "#28a745";
+        searchButton.addEventListener("mouseenter", () => {
+            searchButton.style.backgroundColor = "#218838";
+        });
+        searchButton.addEventListener("mouseleave", () => {
+            searchButton.style.backgroundColor = "#28a745";
+        });
+        shell.actionsContainer.style.display = "none";
+        shell.fullActionsContainer.appendChild(searchButton);
+        searchButton.addEventListener("click", async () => {
+            const id = searchButton.dataset.id;
+            if (!id) {
+                return;
+            }
+            markPopupInteraction();
+            clearSelection();
+            removePopup();
+            await searchHhaById(id);
+        });
     }
     function handleSelection(mouseSnapshot) {
+        if (Date.now() < suppressMouseUpUntil) {
+            return;
+        }
         if (popup &&
             isNodeLike(mouseSnapshot.target) &&
             popup.contains(mouseSnapshot.target)) {
@@ -42949,38 +43289,73 @@ const highlight2Call = (targetWindow = window, targetDocument = document) => {
         }
         const selectedTextFromDocument = targetWindow.getSelection()?.toString().trim() ?? "";
         const selectedTextFromEditable = getSelectedTextFromEditableTarget(mouseSnapshot.target);
-        const selectedText = selectedTextFromDocument || selectedTextFromEditable;
+        const selectedTextFromDocumentFinal = selectedTextFromDocument ||
+            mouseSnapshot.selectedTextFromDocumentSnapshot ||
+            "";
+        const selectedTextFromEditableFinal = selectedTextFromEditable ||
+            mouseSnapshot.selectedTextFromEditableSnapshot ||
+            "";
+        const selectedText = isEditableTarget(mouseSnapshot.target)
+            ? selectedTextFromEditableFinal
+            : selectedTextFromDocumentFinal || selectedTextFromEditableFinal;
         if (!selectedText) {
             removePopup();
             return;
         }
-        const match = selectedText.match(PHONE_REGEX);
-        if (!match) {
-            removePopup();
-            return;
-        }
+        const matchSourceText = normalizeSelectionTextForMatch(selectedText);
         const mouseEvent = {
             clientX: mouseSnapshot.clientX,
             clientY: mouseSnapshot.clientY,
         };
-        createPopup(match[0], mouseEvent);
+        const idMatch = matchSourceText.match(HHA_ID_REGEX);
+        if (idMatch?.[0]) {
+            createIdPopup(normalizeHhaId(idMatch[0]), mouseEvent);
+            return;
+        }
+        const phoneMatch = matchSourceText.match(PHONE_REGEX);
+        if (phoneMatch?.[0]) {
+            createPhonePopup(phoneMatch[0], mouseEvent);
+            return;
+        }
+        removePopup();
     }
-    // 监听全局的 mouseup 事件
-    targetDocument.addEventListener("mouseup", (e) => {
+    // 以 document capture 为主，window capture 为兜底；通过事件对象去重避免双触发。
+    const handleMouseUpCapture = (e) => {
+        if (lastHandledMouseUpEvent === e) {
+            return;
+        }
+        lastHandledMouseUpEvent = e;
+        if (popup && isNodeLike(e.target) && popup.contains(e.target)) {
+            markPopupInteraction();
+            return;
+        }
         const mouseSnapshot = {
             clientX: e.clientX,
             clientY: e.clientY,
             target: e.target,
+            selectedTextFromDocumentSnapshot: targetWindow.getSelection()?.toString().trim() ?? "",
+            selectedTextFromEditableSnapshot: getSelectedTextFromEditableTarget(e.target),
         };
         targetWindow.setTimeout(() => handleSelection(mouseSnapshot), 0);
-    }, true);
-    // 监听全局的 mousedown 事件，实现点击外部关闭弹窗
-    targetDocument.addEventListener("mousedown", (e) => {
+    };
+    const handleMouseDownCapture = (e) => {
+        if (lastHandledMouseDownEvent === e) {
+            return;
+        }
+        lastHandledMouseDownEvent = e;
+        if (popup && isNodeLike(e.target) && popup.contains(e.target)) {
+            markPopupInteraction();
+            return;
+        }
         if (popup && isNodeLike(e.target) && !popup.contains(e.target)) {
             removePopup();
         }
-    }, true);
-    console.log("划词拨号/发短信助手 已启动。");
+    };
+    targetWindow.addEventListener("mouseup", handleMouseUpCapture, true);
+    targetDocument.addEventListener("mouseup", handleMouseUpCapture, true);
+    targetWindow.addEventListener("mousedown", handleMouseDownCapture, true);
+    targetDocument.addEventListener("mousedown", handleMouseDownCapture, true);
+    console.log("划词拨号/ID 搜索助手 已启动。");
 };
 
 ;// ./src/js/VisitMonitor.ts
@@ -84567,7 +84942,7 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.21.10"};
+const package_namespaceObject = {"rE":"3.21.11"};
 ;// ./src/index.ts
 // Only inject styles on HHA pages — Outlook's strict CSP blocks style-loader injection
 if (!window.location.hostname.includes("outlook") &&
@@ -84609,6 +84984,9 @@ const HOST = window.location.hostname.toLowerCase();
 const IS_HHA_APP_HOST = HOST === "app.hhaexchange.com";
 const IS_HHA_REPORTS_HOST = HOST === "reports.hhaexchange.com";
 const IS_VOICE_TECH_HOST = HOST === "mt3.1voicetech.com";
+const IS_OUTLOOK_HOST = HOST === "outlook.office.com" ||
+    HOST === "outlook.cloud.microsoft" ||
+    HOST === "webshell.suite.office.com";
 const IS_BLOB_PAGE = window.location.protocol === "blob:";
 const MAIN_BOOTSTRAP_FLAG = "__HHA_SMART_ASSISTANT_MAIN_BOOTSTRAPPED__";
 const VISIT_QUICK_ACTIONS_FLAG = "__HHA_SMART_ASSISTANT_VISIT_QUICK_ACTIONS_BOOTSTRAPPED__";
@@ -84632,6 +85010,12 @@ function isCleanerDetailPage(url) {
 }
 function isPatientProfilePage(url) {
     return url.toLowerCase().includes("internalpatientinfo_ns.aspx");
+}
+function isCallReportsPage(url) {
+    const normalized = url.toLowerCase();
+    return (normalized.includes("callreportsbeta_ns.aspx") ||
+        normalized.includes("callreportsxslt_ns.aspx") ||
+        normalized.includes("callmaintenance_ns.aspx"));
 }
 function initVisitQuickActionButtons() {
     if (window[VISIT_QUICK_ACTIONS_FLAG]) {
@@ -84757,6 +85141,11 @@ async function main() {
         return;
     }
     if (!IS_HHA_APP_HOST) {
+        if (IS_OUTLOOK_HOST) {
+            console.log("[main] Outlook domain detected, bootstrapping highlight2call");
+            highlight2Call();
+            return;
+        }
         if (IS_HHA_REPORTS_HOST) {
             console.log("[main] Reports domain detected, bootstrapping report-specific features");
             // Epic 15: reports domain still needs Scheduled Visits coordinator filter UI.
@@ -84771,6 +85160,11 @@ async function main() {
             console.log("[main] Detail iframe detected, running quick-action bootstrap + cleaner resume");
             initVisitQuickActionButtons();
             await checkAndResumeCleaningTasks();
+            return;
+        }
+        else if (isCallReportsPage(currentUrl)) {
+            console.log("[main] CallReports iframe detected, running highlight2call-only bootstrap");
+            highlight2Call();
             return;
         }
         else if (isPatientProfilePage(currentUrl)) {
