@@ -15,6 +15,7 @@ import { TimesheetNotificationTemplate } from "../services/builtin/TimesheetNoti
 import { PatientVacationTemplate } from "../services/builtin/PatientVacationTemplate";
 import { EodReportTemplate } from "../services/builtin/EodReportTemplate";
 import { EmploymentActivationTemplate } from "../services/builtin/EmploymentActivationTemplate";
+import { FirstDayOfServiceTemplate } from "../services/builtin/FirstDayOfServiceTemplate";
 import { PageDetector } from "../services/PageDetector";
 import { matchInsurance } from "../utils/InsuranceMatcher";
 import { FaxPreviewModal } from "../components/FaxPreviewModal";
@@ -53,6 +54,7 @@ export class MailBuilderTab extends BaseTab {
   private eodReportTemplate: EodReportTemplate | null = null;
   private employmentActivationTemplate: EmploymentActivationTemplate | null =
     null;
+  private firstDayOfServiceTemplate: FirstDayOfServiceTemplate | null = null;
 
   async init(): Promise<void> {
     this.initialized = true;
@@ -491,6 +493,9 @@ export class MailBuilderTab extends BaseTab {
       if (!this.employmentActivationTemplate) {
         this.employmentActivationTemplate = new EmploymentActivationTemplate();
       }
+      if (!this.firstDayOfServiceTemplate) {
+        this.firstDayOfServiceTemplate = new FirstDayOfServiceTemplate();
+      }
 
       const pageType = PageDetector.getCurrentPageType();
 
@@ -506,6 +511,10 @@ export class MailBuilderTab extends BaseTab {
         {
           isActive: pageType === "PATIENT_PROFILE",
           render: (c) => this.patientVacationTemplate!.renderEntryCard(c),
+        },
+        {
+          isActive: pageType === "PATIENT_PROFILE",
+          render: (c) => this.firstDayOfServiceTemplate!.renderEntryCard(c),
         },
         {
           isActive: true, // 任意页面
