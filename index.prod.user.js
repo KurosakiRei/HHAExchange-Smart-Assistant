@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.21.11
+// @version             3.21.12
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -57685,6 +57685,761 @@ function buildGroupForm(existing, onSave, onCancel) {
     return form;
 }
 
+;// ./src/js/services/builtin/FirstDayInsuranceFallback.ts
+// Fallback options mirror the full insurance source list shared by business.
+const FIRST_DAY_INSURANCE_FALLBACK_OPTIONS = [
+    { value: "-1", label: "All" },
+    { value: "-2", label: "Undefined" },
+    { value: "42089", label: "Aetna Better Health of NY (AHC)" },
+    { value: "42085", label: "Aetna Better Health of NY (MTN)" },
+    { value: "42087", label: "Aetna Better Health of NY (PDE)" },
+    { value: "42086", label: "Aetna Better Health of NY (STI)" },
+    { value: "4990", label: "Aetna Better Health RN" },
+    { value: "20874", label: "Aetna CDPAP" },
+    { value: "4675", label: "Agewell Medicaid Advanage Plus" },
+    { value: "4999", label: "Alpha care" },
+    { value: "102", label: "Alpine" },
+    { value: "8164", label: "Always" },
+    { value: "2568", label: "Americare" },
+    { value: "9126", label: "Americare Home Care" },
+    { value: "18972", label: "Amerigroup NYC CDPAP" },
+    { value: "4993", label: "Amerigroup-Empire Blue Cross LCHSA" },
+    { value: "14005", label: "Anthem CDPAP(Integra)" },
+    { value: "5069", label: "Anthem(Integra)" },
+    { value: "4997", label: "ARCHCARE COMMUNITY LIFE" },
+    { value: "67824", label: "Archcare Senior Life-PACE" },
+    { value: "4994", label: "Bankers Conesco Life Insurance Company" },
+    { value: "26496", label: "Bikur Cholim Chesed Organization" },
+    { value: "9224", label: "Blue Cross Blue Shield of Florida" },
+    { value: "37903", label: "CALAVARY HOSPITAL HOSPICE" },
+    { value: "25146", label: "Caring Hospice Services" },
+    { value: "16560", label: "Caringkind" },
+    { value: "15190", label: "Cassena Care At Home / Centerlight CHHA" },
+    { value: "17709", label: "Center Light CHHA" },
+    { value: "5003", label: "CenterLight RN" },
+    { value: "44604", label: "CenterLight HealthCare (PACE) (AHC)" },
+    { value: "63239", label: "CenterLight HealthCare (PACE) (AMD)" },
+    { value: "44605", label: "CenterLight HealthCare (PACE) (MTN)" },
+    { value: "44607", label: "CenterLight HealthCare (PACE) (PDE)" },
+    { value: "44606", label: "CenterLight HealthCare (PACE) (STI)" },
+    { value: "4998", label: "CENTERS PLAN for a HEALTHY LIV" },
+    { value: "4995", label: "CNH" },
+    { value: "4996", label: "Cobble Hill" },
+    { value: "16070", label: "Continental General" },
+    { value: "10013", label: "Elderplan CDPAS PMPM" },
+    { value: "29870", label: "Elderplan MJHS (AHC)" },
+    { value: "29866", label: "Elderplan MJHS (MTN)" },
+    { value: "29868", label: "Elderplan MJHS (PDE)" },
+    { value: "29867", label: "Elderplan MJHS (STI)" },
+    { value: "5004", label: "Elderplan RN" },
+    { value: "56456", label: "ElderServe Health (AHC)" },
+    { value: "56458", label: "ElderServe Health (PDE)" },
+    { value: "56457", label: "ElderServe Health (STI)" },
+    { value: "5002", label: "Emblem Health" },
+    { value: "74159", label: "Emerest GUIDE (AHC)" },
+    { value: "6858", label: "Excellent Home Care" },
+    { value: "890", label: "Excellent Home Care Services" },
+    { value: "1253", label: "Extended Home Care" },
+    { value: "6587", label: "Extended Home Care" },
+    { value: "5622", label: "Extended Managed Long Term Care" },
+    { value: "63891", label: "Extended Nursing Personnel CHHA, LLC" },
+    { value: "50417", label: "Fidelis Care (AHC)" },
+    { value: "50418", label: "Fidelis Care (MTN)" },
+    { value: "50420", label: "Fidelis Care (PDE)" },
+    { value: "50419", label: "Fidelis Care (STI)" },
+    { value: "4971", label: "Fidelis care RN" },
+    { value: "9563", label: "Four Season CHHA" },
+    { value: "8879", label: "Four Seasons Nursing Rehab Center" },
+    { value: "5000", label: "Gentiva" },
+    { value: "71349", label: "Genworth Life & Annuity" },
+    { value: "2706", label: "Girling Health Care Of New York" },
+    { value: "4970", label: "Guildnet" },
+    { value: "70403", label: "HAMASPIK" },
+    { value: "9320", label: "Health Care Partners, MSO" },
+    { value: "5001", label: "Health First RN" },
+    { value: "58620", label: "Healthfirst (AHC)" },
+    { value: "58622", label: "Healthfirst (PDE)" },
+    { value: "58621", label: "Healthfirst (STI)" },
+    { value: "6379", label: "Hebrew Elderserve" },
+    { value: "4986", label: "HHH Choices" },
+    { value: "13935", label: "Hillside Manor CHHA" },
+    {
+        value: "64083",
+        label: "Holocaust Survivors Program Self Help Community Se",
+    },
+    { value: "5039", label: "Independence Care System, Inc" },
+    { value: "57129", label: "John Hancock Life & Health" },
+    { value: "25374", label: "Medical Indemnity Fund" },
+    { value: "1645", label: "METRO JEWISH" },
+    { value: "5005", label: "METROPLUS HEALTH" },
+    { value: "5182", label: "MJHS HOSPICE" },
+    { value: "73543", label: "Molina Health New York (AHC)" },
+    { value: "73547", label: "Molina Health New York (AMD)" },
+    { value: "73544", label: "Molina Health New York (MTN)" },
+    { value: "73546", label: "Molina Health New York (PDE)" },
+    { value: "73545", label: "Molina Health New York (STI)" },
+    { value: "71435", label: "New York State Insurance Fund" },
+    { value: "63344", label: "NHTD Waiver Service" },
+    { value: "15571", label: "North Shore LIJ CHHA" },
+    { value: "6474", label: "North Shore LIJ Health Plan" },
+    { value: "4977", label: "NY Congregational" },
+    { value: "7881", label: "NYCTA Workers Compensation" },
+    { value: "4976", label: "PARKER JEWISH" },
+    { value: "73386", label: "Parker Jewish Institute CHHA and Hospice" },
+    { value: "2432", label: "Personal Touch" },
+    { value: "5094", label: "Personal Touch Home Care" },
+    { value: "52506", label: "PHP Partner Health Plan" },
+    { value: "73832", label: "PREFERRED CERTIFIED" },
+    { value: "4975", label: "Prime Home Care" },
+    { value: "262", label: "Prime Home Health Services" },
+    { value: "25546", label: "Private Duty Experts" },
+    { value: "4498", label: "Private Pay" },
+    { value: "1", label: "Revival Home Health Care" },
+    { value: "68457", label: "Revival Home Health Care" },
+    { value: "4987", label: "RIVERSPRING RN" },
+    { value: "8048", label: "Royal Care Certified" },
+    { value: "66144", label: "Royal Care Certified of NY" },
+    { value: "4989", label: "Senior Health Partners" },
+    { value: "31308", label: "Senior Whole Health (AHC)" },
+    { value: "31309", label: "Senior Whole Health (MTN)" },
+    { value: "31311", label: "Senior Whole Health (PDE)" },
+    { value: "31310", label: "Senior Whole Health (STI)" },
+    { value: "5458", label: "Senior Whole Health RN" },
+    { value: "14796", label: "Shining Star Home Care CHHA" },
+    { value: "39758", label: "SWHNY-MLTC (AHC)" },
+    { value: "39754", label: "SWHNY-MLTC (MTN)" },
+    { value: "39756", label: "SWHNY-MLTC (PDE)" },
+    { value: "39755", label: "SWHNY-MLTC (STI)" },
+    { value: "63400", label: "TBI WAIVER" },
+    { value: "8285", label: "TestContract" },
+    { value: "5008", label: "United Health Community Plan" },
+    { value: "4093", label: "Village Care" },
+    { value: "27347", label: "Village Care Telehealth" },
+    { value: "4973", label: "VillageCareMAX" },
+    { value: "6590", label: "VNS CHOICE RN" },
+    { value: "55890", label: "VNS Health Health Plans (AHC)" },
+    { value: "8877", label: "VNSNY Choice Fida" },
+    { value: "8059", label: "Wellbound" },
+    { value: "5009", label: "WellCare" },
+    { value: "42185", label: "Your Choice at Home" },
+    { value: "7343", label: "YOUR CHOICE AT HOME, INC(CHHA)" },
+];
+
+;// ./src/js/services/builtin/FirstDayOfServiceTemplate.ts
+
+
+
+
+const FIXED_TO = '"RNs Coordinators" <Nursing@AlwaysNY.net>';
+const FIXED_CC = '"Reggie Thomas (Chief Operations Officer)" <rthomas@AlwaysNY.net>; "Ada Wu" <DWu@AlwaysNY.net>; "Tracy Vuong" <TVuong@AlwaysNY.net>; "Intake" <intake@AlwaysNY.net>';
+const FDS_STYLE_ID = "fds-template-styles";
+const FDS_STYLES = `
+<style id="${FDS_STYLE_ID}">
+.first-day-entry-card {
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.first-day-entry-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(43, 66, 89, 0.12);
+}
+.fds-modal {
+  max-width: 840px;
+}
+.fds-modal-body {
+  padding: 16px 20px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  max-height: calc(90vh - 160px);
+}
+.fds-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 4px;
+}
+.fds-variable-section,
+.fds-preview-section {
+  border: 1px solid #d8dde6;
+  border-radius: 8px;
+  padding: 12px;
+  background: #ffffff;
+}
+.fds-variable-section {
+  background: linear-gradient(180deg, #fbfdff 0%, #f7fafe 100%);
+}
+.fds-variable-row,
+.fds-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.fds-variable-row:last-of-type,
+.fds-preview-row:last-of-type {
+  margin-bottom: 0;
+}
+.fds-variable-label,
+.fds-preview-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+  min-width: 104px;
+  white-space: nowrap;
+}
+.fds-variable-input,
+.fds-variable-select,
+.fds-preview-input {
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 10px;
+  border: 1px solid #ccd4e0;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1f2937;
+  background: #fff;
+}
+.fds-variable-input:focus,
+.fds-variable-select:focus,
+.fds-preview-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.12);
+}
+.fds-variable-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 34px;
+  background-image: linear-gradient(45deg, transparent 50%, #5a6580 50%),
+    linear-gradient(135deg, #5a6580 50%, transparent 50%);
+  background-position: calc(100% - 16px) calc(50% - 2px),
+    calc(100% - 10px) calc(50% - 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+.fds-help-text {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #6b7280;
+}
+.fds-editor-section {
+  margin-top: 10px;
+  border: 1px solid #d0d7e2;
+  border-radius: 7px;
+  overflow: hidden;
+}
+.fds-editor-toolbar {
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px;
+  background: #f6f8fb;
+  border-bottom: 1px solid #e5e9f1;
+  flex-wrap: wrap;
+}
+.fds-editor-toolbar button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.fds-editor-toolbar button:hover {
+  background: #e9edf4;
+  border-color: #d7deea;
+}
+.fds-rich-editor {
+  min-height: 190px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  outline: none;
+  background: #fff;
+}
+.fds-rich-editor:focus {
+  background: #fcfdff;
+}
+.fds-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 12px 20px;
+  border-top: 1px solid #e0e4ea;
+  background: #f8fafc;
+}
+.fds-outlook-btn {
+  min-width: 116px;
+}
+.fds-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-60px);
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 1000007;
+  opacity: 0;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+}
+.fds-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.fds-toast.fds-toast--success {
+  background: #2e7d32;
+  color: #fff;
+}
+.fds-toast.fds-toast--warning {
+  background: #9a3412;
+  color: #fff;
+}
+</style>
+`;
+class FirstDayOfServiceTemplate {
+    constructor() {
+        this.pageChangeHandler = null;
+    }
+    renderEntryCard(container) {
+        if (this.pageChangeHandler) {
+            PageDetector.offPageChange(this.pageChangeHandler);
+            this.pageChangeHandler = null;
+        }
+        const card = document.createElement("div");
+        card.className = "template-card first-day-entry-card";
+        const pageType = PageDetector.getCurrentPageType();
+        this.updateCardState(card, pageType);
+        card.addEventListener("click", () => {
+            if (PageDetector.getCurrentPageType() === "PATIENT_PROFILE") {
+                this.openModal();
+            }
+        });
+        container.appendChild(card);
+        this.pageChangeHandler = (pt) => {
+            this.updateCardState(card, pt);
+        };
+        PageDetector.onPageChange(this.pageChangeHandler);
+    }
+    updateCardState(card, pageType) {
+        const isActive = pageType === "PATIENT_PROFILE";
+        card.innerHTML = `
+      <div class="template-card-header">
+        <span class="template-name">First Day of Service</span>
+        <div class="template-badges">
+          <span class="template-builtin-badge">内置</span>
+          <span class="template-target-badge">Patient页面</span>
+        </div>
+      </div>
+      <div class="template-card-preview">
+        <span class="template-subject">🩺 选择服务开始日期与保险后，一键生成并发送 Outlook 邮件</span>
+      </div>
+    `;
+        if (isActive) {
+            card.style.opacity = "";
+            card.style.pointerEvents = "";
+            card.title = "";
+            card.style.cursor = "pointer";
+        }
+        else {
+            card.style.opacity = "0.5";
+            card.style.pointerEvents = "none";
+            card.title = "请先导航到 Patient页面";
+            card.style.cursor = "not-allowed";
+        }
+    }
+    openModal() {
+        this.ensureStyles();
+        document.getElementById("fds-modal-overlay")?.remove();
+        const profileData = ProfileDataExtractor.extract();
+        const patientContext = this.getPatientContext(profileData);
+        const detectedInsurances = this.getDetectedInsuranceNames(profileData);
+        const allInsuranceOptions = this.getAllInsuranceOptions();
+        const autoOptions = detectedInsurances.length > 0
+            ? detectedInsurances
+            : ["[未检测到保险，请切换到手动选择]"];
+        const overlay = document.createElement("div");
+        overlay.className = "template-modal-overlay fds-modal-overlay";
+        overlay.id = "fds-modal-overlay";
+        overlay.innerHTML = `
+      <div class="template-modal fds-modal">
+        <div class="template-modal-header">
+          <h3 class="template-modal-title">First Day of Service</h3>
+          <button class="template-modal-close" id="fds-modal-close">&times;</button>
+        </div>
+
+        <div class="template-modal-body fds-modal-body">
+          <section class="fds-variable-section">
+            <div class="fds-section-title">变量设置</div>
+
+            <div class="fds-variable-row">
+              <label class="fds-variable-label" for="fds-service-date">服务开始日期:</label>
+              <input type="date" class="fds-variable-input" id="fds-service-date">
+            </div>
+
+            <div class="fds-variable-row">
+              <label class="fds-variable-label" for="fds-insurance-mode">保险来源:</label>
+              <select class="fds-variable-select" id="fds-insurance-mode">
+                <option value="auto">自动检测</option>
+                <option value="manual">手动选择</option>
+              </select>
+            </div>
+
+            <div class="fds-variable-row" id="fds-auto-wrap">
+              <label class="fds-variable-label" for="fds-auto-insurance">检测保险:</label>
+              <select class="fds-variable-select" id="fds-auto-insurance">
+                ${autoOptions
+            .map((name) => `<option value="${this.escapeHtml(name)}">${this.escapeHtml(name)}</option>`)
+            .join("")}
+              </select>
+            </div>
+
+            <div class="fds-variable-row" id="fds-manual-wrap" style="display:none;">
+              <label class="fds-variable-label" for="fds-manual-insurance">手动保险:</label>
+              <select class="fds-variable-select" id="fds-manual-insurance">
+                ${allInsuranceOptions
+            .map((opt) => `<option value="${this.escapeHtml(opt.value)}">${this.escapeHtml(opt.label)}</option>`)
+            .join("")}
+              </select>
+            </div>
+
+            <div class="fds-help-text">提示: 自动检测优先使用当前 Patient Profile 的保险数据。</div>
+          </section>
+
+          <section class="fds-preview-section">
+            <div class="fds-section-title">邮件预览与编辑</div>
+
+            <div class="fds-preview-row">
+              <label class="fds-preview-label" for="fds-to">收件人(To):</label>
+              <input type="text" id="fds-to" class="fds-preview-input" value="${this.escapeHtml(FIXED_TO)}">
+            </div>
+
+            <div class="fds-preview-row">
+              <label class="fds-preview-label" for="fds-cc">抄送(CC):</label>
+              <input type="text" id="fds-cc" class="fds-preview-input" value="${this.escapeHtml(FIXED_CC)}">
+            </div>
+
+            <div class="fds-preview-row">
+              <label class="fds-preview-label" for="fds-subject">主题(Subject):</label>
+              <input type="text" id="fds-subject" class="fds-preview-input">
+            </div>
+
+            <div class="fds-editor-section">
+              <div class="fds-editor-toolbar" id="fds-toolbar">
+                <button type="button" data-cmd="bold" title="粗体"><b>B</b></button>
+                <button type="button" data-cmd="italic" title="斜体"><i>I</i></button>
+                <button type="button" data-cmd="underline" title="下划线"><u>U</u></button>
+                <button type="button" data-cmd="insertUnorderedList" title="无序列表">≡</button>
+                <button type="button" data-cmd="insertOrderedList" title="有序列表">⒈</button>
+                <button type="button" data-cmd="removeFormat" title="清除格式">✕</button>
+              </div>
+              <div class="fds-rich-editor" id="fds-body-editor" contenteditable="true"></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="fds-modal-footer">
+          <button class="template-modal-btn btn-save fds-outlook-btn" id="fds-outlook">Outlook</button>
+        </div>
+      </div>
+    `;
+        document.body.appendChild(overlay);
+        document.body.style.overflow = "hidden";
+        const closeModal = () => {
+            overlay.remove();
+            document.body.style.overflow = "";
+            document.removeEventListener("keydown", escBlocker, true);
+            document.getElementById("fds-close-confirm-overlay")?.remove();
+        };
+        const escBlocker = (event) => {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        };
+        document.addEventListener("keydown", escBlocker, true);
+        const modeSelect = overlay.querySelector("#fds-insurance-mode");
+        const autoWrap = overlay.querySelector("#fds-auto-wrap");
+        const manualWrap = overlay.querySelector("#fds-manual-wrap");
+        const autoInsuranceSelect = overlay.querySelector("#fds-auto-insurance");
+        const manualInsuranceSelect = overlay.querySelector("#fds-manual-insurance");
+        const dateInput = overlay.querySelector("#fds-service-date");
+        const subjectInput = overlay.querySelector("#fds-subject");
+        const bodyEditor = overlay.querySelector("#fds-body-editor");
+        const toInput = overlay.querySelector("#fds-to");
+        const ccInput = overlay.querySelector("#fds-cc");
+        const toolbar = overlay.querySelector("#fds-toolbar");
+        let bodyDirty = false;
+        const hasAutoInsurance = detectedInsurances.length > 0;
+        if (!hasAutoInsurance) {
+            modeSelect.value = "manual";
+            autoWrap.style.display = "none";
+            manualWrap.style.display = "flex";
+        }
+        const getSelectedInsurance = () => {
+            if (modeSelect.value === "manual") {
+                const selected = manualInsuranceSelect.selectedOptions[0]?.textContent?.trim() || "";
+                if (selected === "All" || selected === "Undefined")
+                    return "";
+                return selected;
+            }
+            const selected = autoInsuranceSelect.selectedOptions[0]?.textContent?.trim() || "";
+            if (selected.startsWith("[未检测到保险"))
+                return "";
+            return selected;
+        };
+        const selectManualInsuranceByLabel = (label) => {
+            const target = Array.from(manualInsuranceSelect.options).find((opt) => (opt.textContent || "").trim() === label);
+            if (target) {
+                manualInsuranceSelect.value = target.value;
+            }
+        };
+        if (hasAutoInsurance) {
+            selectManualInsuranceByLabel(detectedInsurances[0]);
+        }
+        const updateModeUI = () => {
+            const manualMode = modeSelect.value === "manual";
+            autoWrap.style.display = manualMode ? "none" : "flex";
+            manualWrap.style.display = manualMode ? "flex" : "none";
+        };
+        const updatePreview = () => {
+            const serviceDate = this.formatDate(dateInput.value);
+            const insurance = getSelectedInsurance();
+            subjectInput.value = this.buildSubject(patientContext, serviceDate || "[请选择日期]");
+            if (!bodyDirty) {
+                bodyEditor.innerHTML = this.buildBodyHtml(insurance || "[请选择保险]", serviceDate || "[请选择日期]");
+            }
+        };
+        modeSelect.addEventListener("change", () => {
+            if (modeSelect.value === "manual") {
+                const autoSelected = autoInsuranceSelect.selectedOptions[0]?.textContent?.trim() || "";
+                if (autoSelected && !autoSelected.startsWith("[未检测到保险")) {
+                    selectManualInsuranceByLabel(autoSelected);
+                }
+            }
+            updateModeUI();
+            updatePreview();
+        });
+        autoInsuranceSelect.addEventListener("change", updatePreview);
+        manualInsuranceSelect.addEventListener("change", updatePreview);
+        dateInput.addEventListener("change", updatePreview);
+        dateInput.addEventListener("input", updatePreview);
+        bodyEditor.addEventListener("input", () => {
+            bodyDirty = true;
+        });
+        toolbar.addEventListener("mousedown", (event) => {
+            const target = event.target;
+            const button = target.closest("[data-cmd]");
+            if (!button)
+                return;
+            event.preventDefault();
+            const cmd = button.dataset.cmd;
+            if (cmd) {
+                document.execCommand(cmd, false);
+            }
+        });
+        overlay.querySelector("#fds-modal-close")?.addEventListener("click", () => {
+            this.showCloseConfirm(closeModal);
+        });
+        overlay.querySelector("#fds-outlook")?.addEventListener("click", () => {
+            const insurance = getSelectedInsurance();
+            const serviceDate = this.formatDate(dateInput.value);
+            if (!serviceDate) {
+                this.showToast("⚠️ 请先选择服务开始日期", "warning");
+                return;
+            }
+            if (!insurance) {
+                this.showToast("⚠️ 请先选择保险", "warning");
+                return;
+            }
+            const normalizedTo = this.normalizeRecipients(toInput.value);
+            if (!normalizedTo) {
+                this.showToast("⚠️ 收件人不能为空", "warning");
+                return;
+            }
+            const normalizedCc = this.normalizeRecipients(ccInput.value);
+            MailService.sendMailTask({
+                to: normalizedTo,
+                ...(normalizedCc ? { cc: normalizedCc } : {}),
+                subject: subjectInput.value.trim(),
+                body: bodyEditor.innerHTML,
+            });
+            this.showToast("✅ 已发送到 Outlook", "success");
+            closeModal();
+        });
+        updatePreview();
+    }
+    getPatientContext(profileData) {
+        const patientName = profileData?.type === "PATIENT" && profileData.name
+            ? this.sanitizePatientLabel(profileData.name)
+            : "[无法获取患者姓名]";
+        const patientId = profileData?.type === "PATIENT" && profileData.id
+            ? this.sanitizePatientLabel(profileData.id)
+            : "[无法获取患者ID]";
+        return {
+            patientName: patientName || "[无法获取患者姓名]",
+            patientId: patientId || "[无法获取患者ID]",
+        };
+    }
+    getDetectedInsuranceNames(profileData) {
+        if (!profileData || profileData.type !== "PATIENT")
+            return [];
+        const source = [...(profileData.insurances || [])];
+        if (profileData.insurance)
+            source.push(profileData.insurance);
+        const unique = new Set();
+        source.forEach((name) => {
+            const normalized = name.trim();
+            if (normalized)
+                unique.add(normalized);
+        });
+        return Array.from(unique);
+    }
+    getAllInsuranceOptions() {
+        const fromPage = this.readInsuranceOptionsFromPage();
+        if (fromPage.length > 0) {
+            return fromPage;
+        }
+        return [...FIRST_DAY_INSURANCE_FALLBACK_OPTIONS];
+    }
+    readInsuranceOptionsFromPage() {
+        const documents = this.collectAccessibleDocuments();
+        const merged = [];
+        documents.forEach((doc) => {
+            const select = doc.querySelector("#ctl00_ContentPlaceHolder1_uxDdlSource");
+            if (!select)
+                return;
+            const options = Array.from(select.options)
+                .map((opt) => ({
+                value: opt.value?.trim() || "",
+                label: (opt.textContent || "").trim(),
+            }))
+                .filter((opt) => opt.value && opt.label);
+            merged.push(...options);
+        });
+        if (merged.length === 0)
+            return [];
+        const deduped = new Map();
+        merged.forEach((opt) => {
+            if (!deduped.has(opt.value)) {
+                deduped.set(opt.value, opt);
+            }
+        });
+        return Array.from(deduped.values());
+    }
+    collectAccessibleDocuments() {
+        const docs = new Set();
+        const walk = (doc) => {
+            if (docs.has(doc))
+                return;
+            docs.add(doc);
+            const frames = Array.from(doc.querySelectorAll("iframe"));
+            frames.forEach((frame) => {
+                try {
+                    if (frame.contentDocument) {
+                        walk(frame.contentDocument);
+                    }
+                }
+                catch (_) {
+                    // Cross-origin frame, skip.
+                }
+            });
+        };
+        walk(document);
+        return Array.from(docs);
+    }
+    buildSubject(context, serviceDate) {
+        return `PT: ${context.patientName} ${context.patientId} - First Day of Service - ${serviceDate}`;
+    }
+    buildBodyHtml(insurance, serviceDate) {
+        return `Hello,<br><br>The first day of PCA service under ${this.escapeHtml(insurance)} for the patient will be ${this.escapeHtml(serviceDate)}.`;
+    }
+    normalizeRecipients(raw) {
+        return raw
+            .split(/[;,]/)
+            .map((item) => item.trim())
+            .filter(Boolean)
+            .join(",");
+    }
+    formatDate(inputValue) {
+        if (!inputValue)
+            return "";
+        const [year, month, day] = inputValue.split("-");
+        if (!year || !month || !day)
+            return "";
+        return `${month}/${day}/${year}`;
+    }
+    sanitizePatientLabel(value) {
+        return value
+            .replace(/\s*\*+\s*Inactive\s*$/i, "")
+            .replace(/\s*\*+\s*Discharged\s*$/i, "")
+            .replace(/\s*\(Discharged\)\s*$/i, "")
+            .trim();
+    }
+    showCloseConfirm(onConfirmClose) {
+        document.getElementById("fds-close-confirm-overlay")?.remove();
+        const overlay = document.createElement("div");
+        overlay.className = "timesheet-confirm-overlay";
+        overlay.id = "fds-close-confirm-overlay";
+        overlay.innerHTML = `
+      <div class="timesheet-confirm-box">
+        <p>⚠️ 你已有输入内容尚未发送，关闭将清空所有输入。</p>
+        <p>确认关闭吗？</p>
+        <div class="timesheet-confirm-actions">
+          <button class="template-modal-btn btn-cancel" id="fds-close-cancel">取消</button>
+          <button class="template-modal-btn btn-save" id="fds-close-confirm">确认关闭</button>
+        </div>
+      </div>
+    `;
+        document.body.appendChild(overlay);
+        overlay
+            .querySelector("#fds-close-cancel")
+            ?.addEventListener("click", () => {
+            overlay.remove();
+        });
+        overlay
+            .querySelector("#fds-close-confirm")
+            ?.addEventListener("click", () => {
+            overlay.remove();
+            onConfirmClose();
+        });
+    }
+    showToast(message, type) {
+        document.querySelectorAll(".fds-toast").forEach((node) => node.remove());
+        const toast = document.createElement("div");
+        toast.className = `fds-toast fds-toast--${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add("show"));
+        setTimeout(() => {
+            toast.classList.remove("show");
+            setTimeout(() => toast.remove(), 280);
+        }, 1800);
+    }
+    escapeHtml(value) {
+        return value
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+    ensureStyles() {
+        if (!document.getElementById(FDS_STYLE_ID)) {
+            document.head.insertAdjacentHTML("beforeend", FDS_STYLES);
+        }
+    }
+}
+
 ;// ./src/js/services/M11QConfigService.ts
 const STORAGE_KEY = "hha_m11q_fax_config";
 const DEFAULT_BUILTIN_ID = "8av";
@@ -78257,6 +79012,7 @@ class M11QPdfModal {
 
 
 
+
 /**
  * Mail Builder Tab
  * Epic 12: 智能邮件构筑助手
@@ -78286,6 +79042,7 @@ class MailBuilderTab extends BaseTab {
         this.patientVacationTemplate = null;
         this.eodReportTemplate = null;
         this.employmentActivationTemplate = null;
+        this.firstDayOfServiceTemplate = null;
     }
     async init() {
         this.initialized = true;
@@ -78642,6 +79399,9 @@ class MailBuilderTab extends BaseTab {
             if (!this.employmentActivationTemplate) {
                 this.employmentActivationTemplate = new EmploymentActivationTemplate();
             }
+            if (!this.firstDayOfServiceTemplate) {
+                this.firstDayOfServiceTemplate = new FirstDayOfServiceTemplate();
+            }
             const pageType = PageDetector.getCurrentPageType();
             // 每条记录包含「当前页可用」标志和渲染函数
             const entries = [
@@ -78652,6 +79412,10 @@ class MailBuilderTab extends BaseTab {
                 {
                     isActive: pageType === "PATIENT_PROFILE",
                     render: (c) => this.patientVacationTemplate.renderEntryCard(c),
+                },
+                {
+                    isActive: pageType === "PATIENT_PROFILE",
+                    render: (c) => this.firstDayOfServiceTemplate.renderEntryCard(c),
                 },
                 {
                     isActive: true, // 任意页面
@@ -84942,7 +85706,7 @@ function initScheduledVisitsConfigCardUI() {
 }
 
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.21.11"};
+const package_namespaceObject = {"rE":"3.21.12"};
 ;// ./src/index.ts
 // Only inject styles on HHA pages — Outlook's strict CSP blocks style-loader injection
 if (!window.location.hostname.includes("outlook") &&
