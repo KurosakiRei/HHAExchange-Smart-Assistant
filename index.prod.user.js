@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                HHAExchange Smart Assistant
 // @namespace           https://kurosakirei.dev/
-// @version             3.21.12
+// @version             3.21.15
 // @author              KurosakiRei <kurosakirei@outlook.com>
 // @description         Enhanced HHAExchange user experience with auto-fill forms, intelligent call handling, real-time visit monitoring, and multi-tab data synchronization for healthcare coordinators
 // @description:zh-CN   增强 HHAExchange 用户体验：自动填表、智能来电处理、实时访视监控、多标签页数据同步，专为医疗协调员设计
@@ -17,6 +17,8 @@
 // @match               *://outlook.office.com/mail/*
 // @match               https://outlook.office.com/mail/*
 // @match               *://*.office.com/*
+// @match               *://forms.office.com/*
+// @match               *://forms.microsoft.com/*
 // @match               *://outlook.cloud.microsoft/*
 // @match               https://outlook.cloud.microsoft/*
 // @require             https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js
@@ -26,10 +28,13 @@
 // @grant               GM_setValue
 // @grant               GM_getValue
 // @grant               GM.addElement
+// @grant               GM_download
 // @connect             app.hhaexchange.com
 // @connect             reports.hhaexchange.com
 // @connect             outlook.office.com
 // @connect             outlook.cloud.microsoft
+// @connect             forms.office.com
+// @connect             forms.microsoft.com
 // @connect             unpkg.com
 // @run-at              document-idle
 // ==/UserScript==
@@ -40641,11 +40646,232 @@ function getScheduleTime(ctx = document) {
     };
 }
 
+;// ./src/js/services/AideSensitiveDataRestore.ts
+/**
+ * Epic 24 (Story 24-1): Aide 档案页 DOB/SSN 显示恢复
+ *
+ * 背景：HHA 对无 SSN/DOB 查看权限的账号主动掩码（uxHidIsAccessSSNOrBirthDate=False），
+ * 但真实值已随页面下发至隐藏字段：
+ *   - DOB: #uxHfDtDOB / #hidprevDOB（MM/DD/YYYY）
+ *   - SSN: #uxHfSSN / #hidprevSSN（NNN-NN-NNNN）
+ * 本模块在页面内做零网络纯 DOM 还原，覆盖三个可见显示位与两个编辑态控件：
+ *   - 左栏信息区 DOB:  #ctl00_ContentPlaceHolder1_uxlblInfoDOB（SPAN）
+ *   - Demographics DOB: #uxLblPDOB（SPAN）
+ *   - Demographics SSN: #uxLblPSSN（SPAN）
+ *   - 编辑态 DOB:      #uxDtDOB（type=date，需 YYYY-MM-DD）
+ *   - 编辑态 SSN:      #uxTxtSSN（text input，readonly）
+ *
+ * 设计约束：
+ *   - 按窗口作用域 + 幂等（每个 window 一个初始化标记）
+ *   - MutationObserver + debounce 覆盖 UpdatePanel 回发 / 切 Tab / 重渲染
+ *   - 仅在命中掩码时替换，格式校验兜底，静默降级
+ *   - Tampermonkey 开关 hha_restore_aide_sensitive_data（默认 true）
+ */
+const STORAGE_KEY = "hha_restore_aide_sensitive_data";
+const INIT_FLAG_KEY = "__HHA_AIDE_SENSITIVE_RESTORED_FLAG__";
+const RESTORED_ATTR = "data-hha-sensitive-restored";
+const OBSERVE_DEBOUNCE_MS = 80;
+const DOB_MASK_RE = /^X{2}\/X{2}\/X{4}$/i;
+const SSN_MASK_RE = /^X{3}-X{2}-\d{4}$/i;
+const DOB_VALUE_RE = /^\d{2}\/\d{2}\/\d{4}$/;
+const SSN_VALUE_RE = /^\d{3}-\d{2}-\d{4}$/;
+/**
+ * 功能开关：GM_getValue 读取，默认开启；读取异常时按开启处理（不阻断已有行为）。
+ */
+function isFeatureEnabled() {
+    try {
+        return GM_getValue(STORAGE_KEY, true) !== false;
+    }
+    catch {
+        return true;
+    }
+}
+function isDobMasked(text) {
+    return DOB_MASK_RE.test(text.trim());
+}
+function isSsnMasked(text) {
+    return SSN_MASK_RE.test(text.trim());
+}
+function isValidDob(value) {
+    return DOB_VALUE_RE.test(value.trim());
+}
+function isValidSsn(value) {
+    return SSN_VALUE_RE.test(value.trim());
+}
+/**
+ * MM/DD/YYYY → YYYY-MM-DD（date input 专用）；非法输入返回 null。
+ */
+function dobToDateInputValue(dob) {
+    const m = dob.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!m)
+        return null;
+    return `${m[3]}-${m[1]}-${m[2]}`;
+}
+/**
+ * 按 id 顺序读取第一个通过校验的非空隐藏字段值。
+ */
+function readFirstValidValue(ids, validator) {
+    for (const id of ids) {
+        const el = document.getElementById(id);
+        if (!el)
+            continue;
+        const raw = el instanceof HTMLInputElement
+            ? el.value
+            : el.getAttribute("value") ?? "";
+        const v = (raw ?? "").trim();
+        if (v && validator(v))
+            return v;
+    }
+    return "";
+}
+function isVisible(el) {
+    if (!el)
+        return false;
+    const style = window.getComputedStyle(el);
+    return style.display !== "none" && style.visibility !== "hidden";
+}
+/**
+ * 仅当元素当前文本命中掩码正则时替换为真实值；幂等（已恢复则跳过）。
+ */
+function setTextIfMasked(el, real, maskRe) {
+    if (!el || !real)
+        return;
+    const current = (el.textContent ?? "").trim();
+    if (!maskRe.test(current) || current === real)
+        return;
+    el.textContent = real;
+    el.setAttribute(RESTORED_ATTR, "1");
+}
+/**
+ * 单次还原：读取隐藏字段真实值 → 写回所有显示位与编辑态控件。
+ * 任何元素缺失/格式不合法时静默跳过，绝不写入空值或脏值。
+ */
+function applyAideSensitiveDataRestore() {
+    const realDob = readFirstValidValue(["uxHfDtDOB", "hidprevDOB"], isValidDob);
+    const realSsn = readFirstValidValue(["uxHfSSN", "hidprevSSN"], isValidSsn);
+    if (realDob) {
+        // 左栏信息区 DOB + Demographics DOB（view 模式 SPAN）
+        setTextIfMasked(document.getElementById("ctl00_ContentPlaceHolder1_uxlblInfoDOB"), realDob, DOB_MASK_RE);
+        setTextIfMasked(document.getElementById("uxLblPDOB"), realDob, DOB_MASK_RE);
+        // 编辑态 date input（view 模式下官方隐藏，变为可见时由观察器触发赋值）
+        const dobInput = document.getElementById("uxDtDOB");
+        if (dobInput && isVisible(dobInput)) {
+            const iso = dobToDateInputValue(realDob);
+            if (iso && dobInput.value !== iso) {
+                dobInput.value = iso;
+                dobInput.setAttribute(RESTORED_ATTR, "1");
+            }
+        }
+    }
+    if (realSsn) {
+        // Demographics SSN（view 模式 SPAN）
+        setTextIfMasked(document.getElementById("uxLblPSSN"), realSsn, SSN_MASK_RE);
+        // 编辑态 readonly text input
+        const ssnInput = document.getElementById("uxTxtSSN");
+        if (ssnInput &&
+            isVisible(ssnInput) &&
+            ssnInput.value.trim() !== realSsn &&
+            SSN_MASK_RE.test(ssnInput.value.trim())) {
+            ssnInput.value = realSsn;
+            ssnInput.setAttribute(RESTORED_ATTR, "1");
+        }
+    }
+}
+/**
+ * 初始化（幂等，按窗口作用域）：
+ * 1. 仅 Aide_ns.aspx 页面生效；
+ * 2. 开关关闭时直接返回；
+ * 3. MutationObserver 观察 #aspnetForm（或 body），debounce 后重新应用，
+ *    覆盖 UpdatePanel 回发、切 Tab、编辑态切换等官方重渲染。
+ */
+function initAideSensitiveDataRestore() {
+    if (!window.location.href.toLowerCase().includes("aide_ns.aspx"))
+        return;
+    if (!isFeatureEnabled())
+        return;
+    if (window[INIT_FLAG_KEY])
+        return;
+    window[INIT_FLAG_KEY] = true;
+    applyAideSensitiveDataRestore();
+    let timer = null;
+    const schedule = () => {
+        if (timer !== null)
+            window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+            timer = null;
+            applyAideSensitiveDataRestore();
+        }, OBSERVE_DEBOUNCE_MS);
+    };
+    const target = document.getElementById("aspnetForm") ?? document.body;
+    if (!target)
+        return;
+    const observer = new MutationObserver(schedule);
+    observer.observe(target, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        characterData: true,
+    });
+}
+
 ;// ./src/js/services/HhaSearchService.ts
+
 
 const FALLBACK_TENANT_BASE_URL = "https://app.hhaexchange.com/ENT2603010000";
 const TENANT_CACHE_KEY = "hha_smart_assistant_tenant_base_url";
 let hasWarnedTenantFallback = false;
+let hasSearchSessionWarning = false;
+// ==================== Epic 24 (Story 24-2): 搜索 DOB 行级补全 ====================
+const AIDE_DOB_RESTORE_SWITCH_KEY = "hha_restore_aide_sensitive_data";
+const AIDE_DOB_ENRICH_MAX_ROWS = 30;
+const AIDE_DOB_ENRICH_CONCURRENCY = 3;
+const AIDE_DOB_ENRICH_TIMEOUT_MS = 8000;
+const AIDE_DOB_VALUE_RE = /^\d{2}\/\d{2}\/\d{4}$/;
+const aideDobCache = new Map();
+function isLikelyLoginPageHtml(html) {
+    const lower = html.toLowerCase();
+    return (lower.includes("client login") &&
+        lower.includes("forgot password") &&
+        lower.includes("hhaexchange"));
+}
+function dispatchSearchSessionWarning(message) {
+    if (hasSearchSessionWarning) {
+        return;
+    }
+    hasSearchSessionWarning = true;
+    window.dispatchEvent(new CustomEvent("hha:session-warning", {
+        detail: {
+            message: message ||
+                "⚠️ HHA Session 可能已过期，搜索请求已返回登录页。建议刷新页面重新登录。",
+            timestamp: Date.now(),
+        },
+    }));
+}
+function clearSearchSessionWarning() {
+    if (!hasSearchSessionWarning) {
+        return;
+    }
+    hasSearchSessionWarning = false;
+    window.dispatchEvent(new CustomEvent("hha:session-cleared"));
+}
+async function readHtmlWithSessionCheck(response, contextLabel) {
+    const html = await response.rawBody.text();
+    const responseUrl = (response.url || "").toLowerCase();
+    if (response.status === 401 ||
+        response.status === 403 ||
+        responseUrl.includes("/identity/account/login") ||
+        isLikelyLoginPageHtml(html)) {
+        const message = `⚠️ HHA Session 可能已过期，${contextLabel} 返回了登录页。建议刷新页面重新登录。`;
+        console.warn(`[HhaSearchService] ${contextLabel} session expired`, {
+            status: response.status,
+            responseUrl: response.url,
+        });
+        dispatchSearchSessionWarning(message);
+        throw new Error(message);
+    }
+    clearSearchSessionWarning();
+    return html;
+}
 function isOutlookHost() {
     const host = window.location.hostname.toLowerCase();
     return (host === "outlook.office.com" ||
@@ -40925,11 +41151,25 @@ function setupPopupProfileLinkFallback(popupDoc) {
     }
     popupDoc.body.dataset.hhaProfileLinkBound = "1";
     const openInNewTab = (targetUrl) => {
-        const popupWindow = popupDoc.defaultView ?? window;
-        const opened = popupWindow.open(targetUrl, "_blank", "noopener,noreferrer");
-        if (opened) {
+        // 1) Tampermonkey 特权 API：不受浏览器弹窗拦截限制，Outlook 等宿主下最可靠
+        try {
+            GM_openInTab(targetUrl, { active: true });
             return;
         }
+        catch {
+            // GM_openInTab 不可用（非 Tampermonkey 环境）时继续尝试 window.open
+        }
+        const popupWindow = popupDoc.defaultView ?? window;
+        // 2) window.open 新标签页。注意：带 "noopener" 特性时返回值按规范恒为 null，
+        //    但这不代表失败——标签页仍会打开，因此不要据此回退到就地跳转。
+        try {
+            popupWindow.open(targetUrl, "_blank", "noopener,noreferrer");
+            return;
+        }
+        catch {
+            // ignore
+        }
+        // 3) 最终兜底（仅当前面全部不可用时）：就地导航
         try {
             popupWindow.location.href = targetUrl;
         }
@@ -42353,7 +42593,7 @@ async function fetchHhaData(type, formattedNumber) {
     try {
         const r = (await GM_fetch(searchUrl));
         if (r.status >= 200 && r.status < 400) {
-            const html = await r.rawBody.text();
+            const html = await readHtmlWithSessionCheck(r, `${type} search`);
             const result = handler(html);
             result.searchUrl = searchUrl;
             return result;
@@ -42598,6 +42838,125 @@ function parsePatientRows(rawHtml) {
     });
     return records;
 }
+/**
+ * Epic 24 (Story 24-2): 从单个护工档案 HTML 提取真实 DOB。
+ * 数据源：AideProfile_ns.aspx 的隐藏字段 #uxHfDtDOB → #hidprevDOB。
+ */
+function extractAideDobFromProfileHtml(html) {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    for (const id of ["uxHfDtDOB", "hidprevDOB"]) {
+        const el = doc.getElementById(id);
+        const raw = el instanceof HTMLInputElement
+            ? el.value
+            : el?.getAttribute("value") ?? "";
+        const v = (raw ?? "").trim();
+        if (AIDE_DOB_VALUE_RE.test(v))
+            return v;
+    }
+    return null;
+}
+/** 给 promise 套软超时：超时/失败返回 null，调用方保留掩码值。 */
+function withTimeout(promise, ms) {
+    return new Promise((resolve) => {
+        const timer = setTimeout(() => resolve(null), ms);
+        promise.then((v) => {
+            clearTimeout(timer);
+            resolve(v);
+        }, () => {
+            clearTimeout(timer);
+            resolve(null);
+        });
+    });
+}
+/**
+ * 仅供单元测试：清空会话级 DOB 缓存，避免跨用例污染。
+ */
+function resetAideDobEnrichCacheForTests() {
+    aideDobCache.clear();
+}
+/** 拉取单个 AideID 的真实 DOB（会话级缓存）。 */
+async function fetchAideRealDob(aideId) {
+    const cached = aideDobCache.get(aideId);
+    if (cached)
+        return cached;
+    const url = `${_TENANT_BASE_URL}/Aide/AideProfile_ns.aspx?AideID=${aideId}`;
+    let dob = "";
+    try {
+        const r = (await withTimeout(GM_fetch(url), AIDE_DOB_ENRICH_TIMEOUT_MS));
+        if (r && r.status >= 200 && r.status < 400) {
+            dob = extractAideDobFromProfileHtml(await r.rawBody.text()) ?? "";
+        }
+    }
+    catch (error) {
+        console.warn(`[enrichAideSearchDob] 获取 AideID=${aideId} 生日失败，保留掩码`, error);
+    }
+    if (dob)
+        aideDobCache.set(aideId, dob);
+    return dob;
+}
+/**
+ * Epic 24 (Story 24-2): 搜索结果 DOB 行级补全。
+ *
+ * 官方 AideSearchXSLT_ns.aspx 返回的 DOB 是掩码且响应内无真实值；
+ * 本函数对每行（限前 N 行）从姓名链接解析 AideID，并行拉取
+ * AideProfile_ns.aspx 的真实 DOB 并替换掩码单元格。
+ *
+ * 容错策略：
+ * - 并发上限 3、单请求 8s 软超时、会话级缓存；
+ * - 超时/失败保留掩码，不阻塞展示；
+ * - 开关 hha_restore_aide_sensitive_data=false 时直接返回原 HTML。
+ */
+async function enrichAideSearchDob(rawHtml) {
+    try {
+        if (GM_getValue(AIDE_DOB_RESTORE_SWITCH_KEY, true) === false) {
+            return rawHtml;
+        }
+    }
+    catch {
+        // GM 存储不可用时按开启处理
+    }
+    const doc = new DOMParser().parseFromString(rawHtml, "text/html");
+    const table = doc.querySelector("#tdSearchResults") ??
+        doc.querySelector("table");
+    if (!table)
+        return rawHtml;
+    const headerRow = table.querySelector("thead tr") ?? table.querySelector("tr");
+    if (!headerRow)
+        return rawHtml;
+    const headerCells = Array.from(headerRow.querySelectorAll("th, td"));
+    const dobColIdx = headerCells.findIndex((c) => /date of birth|dob|birth/i.test(c.textContent?.trim() ?? ""));
+    if (dobColIdx < 0)
+        return rawHtml;
+    const rows = Array.from(table.querySelectorAll("tbody tr")).slice(0, AIDE_DOB_ENRICH_MAX_ROWS);
+    const tasks = [];
+    for (const row of rows) {
+        const cells = row.querySelectorAll("td");
+        const cell = cells[dobColIdx];
+        if (!cell || !isDobMasked(cell.textContent ?? ""))
+            continue;
+        const idText = extractProfileIdFromRow(row, "aide");
+        if (idText && /^\d+$/.test(idText)) {
+            tasks.push({ cell, aideId: parseInt(idText, 10) });
+        }
+    }
+    if (tasks.length === 0)
+        return rawHtml;
+    let cursor = 0;
+    const worker = async () => {
+        while (cursor < tasks.length) {
+            const i = cursor++;
+            const { cell, aideId } = tasks[i];
+            const dob = await fetchAideRealDob(aideId);
+            if (dob) {
+                cell.textContent = dob;
+                cell.setAttribute("data-hha-dob-enriched", "1");
+            }
+        }
+    };
+    const workerCount = Math.min(AIDE_DOB_ENRICH_CONCURRENCY, tasks.length);
+    await Promise.all(Array.from({ length: workerCount }, () => worker()));
+    return table.outerHTML;
+}
 async function fetchAllPages(type, params) {
     // 获取第 1 页
     const url1 = buildSearchUrl(type, params, 1);
@@ -42605,7 +42964,7 @@ async function fetchAllPages(type, params) {
     try {
         const r = (await GM_fetch(url1));
         if (r.status >= 200 && r.status < 400) {
-            page1Html = await r.rawBody.text();
+            page1Html = await readHtmlWithSessionCheck(r, `${type} search page 1`);
         }
         else {
             return { count: 0, rawHtml: `Request Failed: ${r.status}` };
@@ -42620,6 +42979,13 @@ async function fetchAllPages(type, params) {
     const totalCount = page1Result.count;
     if (totalCount <= 10) {
         // 单页结果，直接返回
+        if (type === "aide") {
+            // Epic 24 (Story 24-2): 行级 DOB 补全后再进入展示/解析流程
+            return {
+                ...page1Result,
+                rawHtml: await enrichAideSearchDob(page1Result.rawHtml),
+            };
+        }
         return page1Result;
     }
     // 多页：并行获取剩余页
@@ -42628,7 +42994,7 @@ async function fetchAllPages(type, params) {
     for (let pg = 2; pg <= totalPages; pg++) {
         const url = buildSearchUrl(type, params, pg);
         pagePromises.push(GM_fetch(url)
-            .then((r) => r.rawBody.text())
+            .then((r) => readHtmlWithSessionCheck(r, `${type} search page ${pg}`))
             .catch(() => ""));
     }
     const extraPages = await Promise.all(pagePromises);
@@ -42651,9 +43017,11 @@ async function fetchAllPages(type, params) {
     // 序列化合并后的 #tdSearchResults 为新的 rawHtml
     const mergedTable = doc1.querySelector("#tdSearchResults");
     const mergedRawHtml = mergedTable ? mergedTable.outerHTML : page1Html;
+    // Epic 24 (Story 24-2): aide 分支做行级 DOB 补全
+    const finalRawHtml = type === "aide" ? await enrichAideSearchDob(mergedRawHtml) : mergedRawHtml;
     const result = {
         count: totalCount,
-        rawHtml: mergedRawHtml,
+        rawHtml: finalRawHtml,
     };
     if (type === "patient" && page1Result.activeCount !== undefined) {
         result.activeCount = page1Result.activeCount;
@@ -58441,7 +58809,7 @@ class FirstDayOfServiceTemplate {
 }
 
 ;// ./src/js/services/M11QConfigService.ts
-const STORAGE_KEY = "hha_m11q_fax_config";
+const M11QConfigService_STORAGE_KEY = "hha_m11q_fax_config";
 const DEFAULT_BUILTIN_ID = "8av";
 const BUILTIN_FAX_OPTIONS = [
     { id: "main", label: "Main", fax: "718-646-0680" },
@@ -58470,7 +58838,7 @@ class M11QConfigService {
         return { ...M11QConfigService_DEFAULT_CONFIG };
     }
     static load() {
-        const saved = GM_getValue(STORAGE_KEY, null);
+        const saved = GM_getValue(M11QConfigService_STORAGE_KEY, null);
         if (!saved || typeof saved !== "object") {
             return this.getDefaultConfig();
         }
@@ -58495,7 +58863,7 @@ class M11QConfigService {
     }
     static save(config) {
         if (!config.remember) {
-            GM_setValue(STORAGE_KEY, this.getDefaultConfig());
+            GM_setValue(M11QConfigService_STORAGE_KEY, this.getDefaultConfig());
             return;
         }
         const normalized = {
@@ -58507,7 +58875,7 @@ class M11QConfigService {
         if (normalized.mode === "custom" && !normalized.customFax) {
             normalized.mode = "builtin";
         }
-        GM_setValue(STORAGE_KEY, normalized);
+        GM_setValue(M11QConfigService_STORAGE_KEY, normalized);
     }
     static resolveFaxNumber(config) {
         if (config.mode === "custom") {
@@ -85705,15 +86073,2373 @@ function initScheduledVisitsConfigCardUI() {
     }, 1000);
 }
 
+;// ./src/js/services/incident/IncidentTypes.ts
+function createEmptyIncidentPayload(incidentType) {
+    return {
+        incidentType,
+        patient: {
+            name: "",
+            dob: "",
+            admissionId: "",
+            serviceType: "UNKNOWN",
+            vendorOrContract: "",
+        },
+        reporter: {
+            name: "",
+            title: "",
+            source: "",
+        },
+        timeline: {
+            eventDate: "",
+            eventTime: "",
+            reportDateTime: "",
+        },
+        hospitalization: {
+            nhtdTbiCaseTypes: [],
+            reason: "",
+            reasonOtherText: "",
+            infectionType: "",
+            infectionDetails: "",
+            accidentDetails: "",
+            hospitalName: "",
+            hospitalNameOtherText: "",
+            duringServiceHours: "",
+        },
+        fall: {
+            accidentType: "",
+            nhtdTbiCaseTypes: [],
+            was911Dialed: "",
+            whoCalled911: "",
+            duringServiceHours: "",
+            caregiverInfo: "",
+            aideWhereabouts: "",
+            patientActivity: "",
+            adequateLighting: "",
+            nonSlipperyFootwear: "",
+            assistiveDeviceUsed: "",
+            assistiveDeviceSpecify: "",
+            assistiveDeviceSpecifyOther: "",
+            familyPowerAttorneyNotified: "",
+            reasonForFall: "",
+            bodyDamageDetails: "",
+            hospitalizationResult: "",
+            helpedPatientUp: "",
+        },
+        death: {
+            reportTitle: "",
+            reportTitleOther: "",
+            servicesReceived: "",
+            placeOfDeath: "",
+            dateOfDeath: "",
+            timeOfDeath: "",
+            duringServiceHours: "",
+            caregiverName: "",
+            caregiverActivity: "",
+            patientActivityAtDeath: "",
+            was911Called: "",
+            time911Called: "",
+            officialsArrived: "",
+            officialsArrivedOther: "",
+            whichOfficials: [],
+            whichOfficialsOther: "",
+            familyNotified: "",
+            additionalDetails: "",
+        },
+        notes: "",
+        generated: null,
+        safety: {
+            noSubmitGuardTriggered: false,
+            blockedActions: [],
+        },
+    };
+}
+function cloneIncidentPayload(payload) {
+    return JSON.parse(JSON.stringify(payload));
+}
+function cloneIncidentAutofillJob(job) {
+    return JSON.parse(JSON.stringify(job));
+}
+function getValueByPath(payload, path) {
+    const parts = path.split(".");
+    let cursor = payload;
+    for (const part of parts) {
+        if (cursor == null || typeof cursor !== "object") {
+            return undefined;
+        }
+        cursor = cursor[part];
+    }
+    if (typeof cursor === "string" || Array.isArray(cursor)) {
+        return cursor;
+    }
+    return undefined;
+}
+function setValueByPath(payload, path, value) {
+    const parts = path.split(".");
+    let cursor = payload;
+    for (let i = 0; i < parts.length - 1; i += 1) {
+        const part = parts[i];
+        if (!cursor[part] || typeof cursor[part] !== "object") {
+            cursor[part] = {};
+        }
+        cursor = cursor[part];
+    }
+    cursor[parts[parts.length - 1]] = value;
+}
+function isFieldVisible(field, payload) {
+    if (!field.visibleWhen) {
+        return true;
+    }
+    try {
+        return field.visibleWhen(payload);
+    }
+    catch {
+        return false;
+    }
+}
+function isFieldRequired(field, payload) {
+    if (typeof field.required === "boolean") {
+        return field.required;
+    }
+    if (typeof field.required === "function") {
+        try {
+            return field.required(payload);
+        }
+        catch {
+            return false;
+        }
+    }
+    return false;
+}
+function isValuePresent(value) {
+    if (typeof value === "string") {
+        return value.trim().length > 0;
+    }
+    if (Array.isArray(value)) {
+        return value.length > 0;
+    }
+    return false;
+}
+function toDisplayValue(value) {
+    if (typeof value === "string") {
+        return value;
+    }
+    if (Array.isArray(value)) {
+        return value.join(", ");
+    }
+    return "";
+}
+function getIncidentTypeLabel(incidentType) {
+    switch (incidentType) {
+        case "hospitalization":
+            return "Hospitalization";
+        case "fall":
+            return "Fall / Accident";
+        case "death":
+            return "Death";
+        default:
+            return incidentType;
+    }
+}
+function resolveFieldOptions(field, payload) {
+    if (!field.options) {
+        return [];
+    }
+    if (typeof field.options === "function") {
+        try {
+            return field.options(payload);
+        }
+        catch {
+            return [];
+        }
+    }
+    return field.options;
+}
+function applyPrefillToPayload(payload, prefill) {
+    if (prefill.patientName) {
+        payload.patient.name = prefill.patientName;
+    }
+    if (prefill.patientDob) {
+        payload.patient.dob = prefill.patientDob;
+    }
+    if (prefill.admissionId) {
+        payload.patient.admissionId = prefill.admissionId;
+    }
+    if (prefill.serviceType) {
+        payload.patient.serviceType = prefill.serviceType;
+    }
+    if (prefill.vendorOrContract) {
+        payload.patient.vendorOrContract = prefill.vendorOrContract;
+    }
+    return payload;
+}
+
+;// ./src/js/services/incident/IncidentAutofillBus.ts
+
+class IncidentAutofillBus {
+    static createJob(incidentType, payload, targetUrl) {
+        const now = Date.now();
+        const job = {
+            id: `incident_${now}_${Math.random().toString(36).slice(2, 9)}`,
+            incidentType,
+            targetUrl,
+            payload: cloneIncidentPayload(payload),
+            status: "PENDING",
+            createdAt: now,
+            updatedAt: now,
+            sourceHost: window.location.hostname,
+        };
+        GM_setValue(this.STORAGE_KEY, job);
+        this.lastSnapshot = JSON.stringify(job);
+        return job;
+    }
+    static getJob() {
+        const raw = GM_getValue(this.STORAGE_KEY, null);
+        if (!raw || typeof raw !== "object") {
+            return null;
+        }
+        const job = cloneIncidentAutofillJob(raw);
+        if (Date.now() - job.createdAt > this.EXPIRY_MS) {
+            this.clearJob();
+            return null;
+        }
+        return job;
+    }
+    static clearJob() {
+        GM_setValue(this.STORAGE_KEY, null);
+        this.lastSnapshot = "";
+    }
+    static updateStatus(status, patch) {
+        const job = this.getJob();
+        if (!job) {
+            return null;
+        }
+        const next = {
+            ...job,
+            ...patch,
+            status,
+            updatedAt: Date.now(),
+        };
+        GM_setValue(this.STORAGE_KEY, next);
+        this.lastSnapshot = JSON.stringify(next);
+        return next;
+    }
+    static complete(result) {
+        return this.updateStatus("COMPLETED", {
+            result,
+            errorMessage: undefined,
+        });
+    }
+    static fail(message, result) {
+        return this.updateStatus("FAILED", {
+            errorMessage: message,
+            result,
+        });
+    }
+    static isCurrentPageTarget(job, href = typeof window !== "undefined" ? window.location.href : "", pageTitle) {
+        if (!job.targetUrl) {
+            return false;
+        }
+        const resolvedPageTitle = pageTitle ?? (typeof document !== "undefined" ? document.title : "");
+        try {
+            const parsedTarget = new URL(job.targetUrl);
+            const target = this.unwrapSafeLink(parsedTarget) || parsedTarget;
+            const current = new URL(href);
+            const targetIsForms = this.isFormsHost(target.hostname);
+            const currentIsForms = this.isFormsHost(current.hostname);
+            if (target.origin !== current.origin) {
+                if (!(targetIsForms && currentIsForms)) {
+                    return false;
+                }
+            }
+            if (target.pathname && target.pathname !== "/") {
+                if (current.pathname !== target.pathname) {
+                    return this.isFormsShortUrlRedirectMatch(job.incidentType, target, current, resolvedPageTitle);
+                }
+            }
+            const targetEntries = Array.from(target.searchParams.entries());
+            if (targetEntries.length > 0) {
+                for (const [key, value] of targetEntries) {
+                    if (current.searchParams.get(key) !== value) {
+                        return this.isFormsShortUrlRedirectMatch(job.incidentType, target, current, resolvedPageTitle);
+                    }
+                }
+            }
+            return true;
+        }
+        catch {
+            return href.includes(job.targetUrl);
+        }
+    }
+    static unwrapSafeLink(url) {
+        const host = (url.hostname || "").toLowerCase();
+        if (!host.endsWith("safelinks.protection.outlook.com")) {
+            return null;
+        }
+        const embedded = url.searchParams.get("url");
+        if (!embedded) {
+            return null;
+        }
+        try {
+            return new URL(embedded);
+        }
+        catch {
+            try {
+                return new URL(decodeURIComponent(embedded));
+            }
+            catch {
+                return null;
+            }
+        }
+    }
+    static isFormsShortUrlRedirectMatch(incidentType, target, current, pageTitle) {
+        const targetPath = target.pathname.toLowerCase();
+        const currentPath = current.pathname.toLowerCase();
+        const targetIsForms = this.isFormsHost(target.hostname);
+        const currentIsForms = this.isFormsHost(current.hostname);
+        if (!targetIsForms || !currentIsForms) {
+            return false;
+        }
+        if (!targetPath.startsWith("/r/")) {
+            return false;
+        }
+        if (currentPath !== "/pages/responsepage.aspx") {
+            return false;
+        }
+        return this.isIncidentTypeCompatibleWithFormsTitle(incidentType, pageTitle);
+    }
+    static isFormsHost(hostname) {
+        const host = (hostname || "").toLowerCase();
+        return host === "forms.office.com" || host === "forms.microsoft.com";
+    }
+    static isIncidentTypeCompatibleWithFormsTitle(incidentType, pageTitle) {
+        const title = (pageTitle || "").toLowerCase();
+        if (!title) {
+            return true;
+        }
+        if (incidentType === "fall") {
+            return title.includes("fall") || title.includes("accident");
+        }
+        if (incidentType === "hospitalization") {
+            return title.includes("hospitalization");
+        }
+        if (incidentType === "death") {
+            return title.includes("death");
+        }
+        return true;
+    }
+    static onChange(listener) {
+        this.listeners.push(listener);
+        if (this.pollTimer === null) {
+            this.startPolling();
+        }
+        return () => {
+            this.listeners = this.listeners.filter((entry) => entry !== listener);
+            if (this.listeners.length === 0) {
+                this.stopPolling();
+            }
+        };
+    }
+    static startPolling() {
+        this.pollTimer = window.setInterval(() => {
+            const job = this.getJob();
+            const snapshot = job ? JSON.stringify(job) : "";
+            if (snapshot === this.lastSnapshot) {
+                return;
+            }
+            this.lastSnapshot = snapshot;
+            this.listeners.forEach((listener) => {
+                try {
+                    listener(job);
+                }
+                catch (error) {
+                    console.error("[IncidentAutofillBus] Listener error:", error);
+                }
+            });
+        }, this.POLL_MS);
+    }
+    static stopPolling() {
+        if (this.pollTimer !== null) {
+            window.clearInterval(this.pollTimer);
+            this.pollTimer = null;
+        }
+    }
+}
+IncidentAutofillBus.STORAGE_KEY = "hha_incident_autofill_bus";
+IncidentAutofillBus.EXPIRY_MS = 20 * 60 * 1000;
+IncidentAutofillBus.POLL_MS = 1000;
+IncidentAutofillBus.listeners = [];
+IncidentAutofillBus.pollTimer = null;
+IncidentAutofillBus.lastSnapshot = "";
+
+;// ./src/js/services/incident/IncidentOptionCatalog.ts
+function toOptions(values) {
+    return values.map((value) => ({ value, label: value }));
+}
+const HOSPITALIZATION_VENDOR_CONTRACT_VALUES = [
+    "Aetna Better Health of NY",
+    "Agewell Medicaid Advanage Plus",
+    "Alpine",
+    "Americare",
+    "Amerigroup-Empire Blue Cross LCHSA",
+    "Anthem (Integra)",
+    "ARCHCARE COMMUNITY LIFE",
+    "Bankers Conesco Life Insurance Company",
+    "Bikur Cholim Chesed Organization",
+    "Caring Hospice Services",
+    "Center Light CHHA",
+    "CENTERS PLAN for a HEALTHY LIV",
+    "Continenetal General",
+    "Elderplan MJHS",
+    "Empire BCBS(Integra)",
+    "Excellent Home Care Services",
+    "Extended Home Care",
+    "Fidelis Care",
+    "Four Season CHHA",
+    "Girling Health Care Of New York",
+    "Healthfirst",
+    "Holocaust Survivors Program Self Help Community",
+    "Home First-Elderplan RN",
+    "John Hancock Life & Health",
+    "Medical Indemnity Fund",
+    "METRO JEWISH",
+    "METROPLUS HEALTH",
+    "MJHS HOSPICE",
+    "Parker Jewish",
+    "Personal Touch",
+    "PHP Partner Health Plan",
+    "Prime Home Health Services",
+    "Private Pay",
+    "RiverSpring Health Plans",
+    "Royal Care Certified",
+    "Senior Whole Health",
+    "Shining Star Home Care CHHA",
+    "SWHNY-MLTC",
+    "VillageCareMAX",
+    "VNS Health",
+    "Other",
+];
+const DEATH_VENDOR_VALUES = [
+    "Always Home Care",
+    "AHC – New York",
+    "AHC -- Richmond",
+    "Private Duty Expert",
+    "Always NHTD/TBI",
+    "Edison Home Health Care",
+    "Allied Home Care",
+    "FreedomCare",
+    "PPL CDPAP",
+    "Elite Home Health Care",
+    "Edison Certified Home Health Agency",
+    "HCS Home Care",
+    "Partners In Care",
+    "Preferred Home Care of NY",
+    "Bestcare",
+    "Caregivers Home Care",
+    "Galaxy Home Care",
+    "Helping U Homecare",
+    "Prime Home Health Services",
+    "Chinese-American Planning Council Home Attendant Program",
+    "Sunnyside Community Services",
+    "RiverSpring Licensed Home Care",
+    "CenterLight Teamcare",
+    "VNS Health",
+    "Fidelis Care",
+    "Healthfirst",
+    "MetroPlusHealth",
+    "Elderplan",
+    "Hamaspik Choice",
+    "Independence Care System",
+    "Senior Health Partners",
+    "VillageCareMAX",
+    "ArchCare",
+    "Molina Healthcare",
+    "UnitedHealthcare Community Plan",
+    "EmblemHealth",
+    "Affinity by Molina",
+    "WellCare",
+    "Anthem Blue Cross Blue Shield",
+    "Medicaid Pending",
+    "Family member reported",
+    "Hospital staff reported",
+    "Other answer",
+];
+const HOSPITAL_NAME_VALUES = [
+    "Bellevue Hospital Center",
+    "BronxCare Health System",
+    "Brookdale Hospital Medical Center",
+    "Coney Island Hospital",
+    "Elmhurst Hospital Center",
+    "Flushing Hospital Medical Center",
+    "Harlem Hospital Center",
+    "Interfaith Medical Center",
+    "Jamaica Hospital Medical Center",
+    "Kings County Hospital Center",
+    "Lenox Hill Hospital",
+    "Long Island Jewish Medical Center",
+    "Lutheran Medical Center",
+    "Maimonides Medical Center",
+    "Maimonides Midwood Community Hospital",
+    "Memorial Sloan Kettering Cancer Center",
+    "Montefiore Medical Center Moses Campus",
+    "Montefiore Medical Center Weiler Campus",
+    "Mount Sinai Beth Israel",
+    "Mount Sinai Brooklyn",
+    "Mount Sinai Hospital",
+    "Mount Sinai Morningside",
+    "Mount Sinai Queens",
+    "Mount Sinai West",
+    "NewYork-Presbyterian Brooklyn Methodist Hospital",
+    "NewYork-Presbyterian/Columbia University Irving Medical Center",
+    "NewYork-Presbyterian/Lower Manhattan Hospital",
+    "NewYork-Presbyterian Queens",
+    "NewYork-Presbyterian/Weill Cornell Medical Center",
+    "North Central Bronx Hospital",
+    "NYC Health + Hospitals/Gotham Health",
+    "NYU Langone Hospital-Brooklyn",
+    "NYU Langone Hospital-Long Island",
+    "NYU Langone Hospital-Manhattan",
+    "NYU Langone Tisch Hospital",
+    "NYU Langone Orthopedic Hospital",
+    "One Brooklyn Health Brookdale",
+    "One Brooklyn Health Interfaith",
+    "One Brooklyn Health Kingsbrook Jewish Medical Center",
+    "Richmond University Medical Center",
+    "Staten Island University Hospital North",
+    "Staten Island University Hospital South",
+    "SUNY Downstate Medical Center",
+    "The Brooklyn Hospital Center",
+    "The Mount Sinai Hospital Emergency Department",
+    "University Hospital at Downstate",
+    "UPMC Chautauqua",
+    "Westchester Medical Center",
+    "White Plains Hospital",
+    "Wyckoff Heights Medical Center",
+    "Good Samaritan Hospital Medical Center",
+    "St Catherine of Siena Hospital",
+    "St Charles Hospital",
+    "St Francis Hospital & Heart Center",
+    "St John's Episcopal Hospital",
+    "St Joseph Hospital",
+    "Huntington Hospital",
+    "Long Island Community Hospital",
+    "Nassau University Medical Center",
+    "North Shore University Hospital",
+    "Plainview Hospital",
+    "South Shore University Hospital",
+    "Stony Brook University Hospital",
+    "South Nassau Communities Hospital",
+    "Cohen Children's Medical Center",
+    "Hospital for Special Surgery",
+    "Jacobi Medical Center",
+    "Lincoln Medical and Mental Health Center",
+    "Other",
+];
+const HOSPITALIZATION_REASON_VALUES = [
+    "Abdominal Pain",
+    "Altered Mental Status",
+    "Cardiac",
+    "Chest Pain",
+    "Dehydration",
+    "Difficulty Breathing",
+    "Dizziness",
+    "Fall / Accident",
+    "Fever",
+    "GI Symptoms",
+    "Headache",
+    "Hyperglycemia",
+    "Hypertension",
+    "Hypoglycemia",
+    "Infections",
+    "Medication Reaction",
+    "Neurological Symptoms",
+    "Pain Management",
+    "Planned Hospitalization",
+    "Psychiatric / Behavioral",
+    "Renal / Urologic",
+    "Respiratory Distress",
+    "Seizure",
+    "Stroke Symptoms",
+    "Syncope",
+    "Trauma / Injury",
+    "Unwell (Malaise)",
+    "Wound",
+    "Other answer",
+];
+const INFECTION_TYPE_VALUES = [
+    "COVID-19",
+    "Pneumonia",
+    "Respiratory Infection (any, but not Pneumonia )",
+    "UTI",
+    "Skin/Wound",
+    "Other answer",
+];
+const SOURCE_OF_INFORMATION_VALUES = [
+    "Family, Friends, Client Emergency Contact",
+    "Vendor",
+    "Social Worker, Hospital Employee",
+    "Caregiver (PCA, HHA, HCSS)",
+    "Other answer",
+];
+const FALL_ACCIDENT_TYPE_VALUES = [
+    "Bruises / Cuts",
+    "Car Accident",
+    "Trip / Fall",
+    "Fire / Burns",
+    "Patient Abuse / Physical Violence",
+    "Poisoning",
+    "Pressure ulcer / Wound",
+    "Other answer",
+];
+const YES_NO_UNKNOWN_VALUES = ["Yes", "No", "Unknown"];
+const YES_NO_VALUES = ["Yes", "No"];
+const FALL_REPORTER_TITLE_VALUES = [
+    "Family member",
+    "Caregiver (PCA, HHA, HCSS)",
+    "Vendor (Insurance Plan)",
+];
+const NHTD_TBI_CASE_VALUES = ["NHTD", "TBI", "Other answer"];
+const INCIDENT_OPTION_COUNTS = {
+    hospitalizationVendorContract: HOSPITALIZATION_VENDOR_CONTRACT_VALUES.length,
+    deathVendor: DEATH_VENDOR_VALUES.length,
+    hospitalName: HOSPITAL_NAME_VALUES.length,
+    hospitalizationReason: HOSPITALIZATION_REASON_VALUES.length,
+};
+const INCIDENT_OPTION_CATALOG = {
+    hospitalizationVendorContract: toOptions(HOSPITALIZATION_VENDOR_CONTRACT_VALUES),
+    hcssContract: toOptions(["NHTD Waiver Service", "TBI WAIVER"]),
+    deathVendor: toOptions(DEATH_VENDOR_VALUES),
+    hospitalName: toOptions(HOSPITAL_NAME_VALUES),
+    hospitalizationReason: toOptions(HOSPITALIZATION_REASON_VALUES),
+    infectionType: toOptions(INFECTION_TYPE_VALUES),
+    sourceOfInformation: toOptions(SOURCE_OF_INFORMATION_VALUES),
+    fallAccidentType: toOptions(FALL_ACCIDENT_TYPE_VALUES),
+    yesNoUnknown: toOptions(YES_NO_UNKNOWN_VALUES),
+    yesNo: toOptions(YES_NO_VALUES),
+    fallReporterTitle: toOptions(FALL_REPORTER_TITLE_VALUES),
+    nhtdTbiCase: toOptions(NHTD_TBI_CASE_VALUES),
+};
+
+;// ./src/js/services/incident/forms/DeathSchema.ts
+
+const TITLE_OPTIONS = [
+    { value: "HHA / PCA / HCSS", label: "HHA / PCA / HCSS" },
+    { value: "Family members", label: "Family members" },
+    { value: "Other answer", label: "Other answer" },
+];
+const SERVICES_OPTIONS = [
+    { value: "HHA / PCA", label: "HHA / PCA" },
+    { value: "HCSS", label: "HCSS" },
+    { value: "TBI", label: "TBI" },
+];
+const YES_NO_NA = [
+    { value: "Yes", label: "Yes" },
+    { value: "No", label: "No" },
+    { value: "N/A", label: "N/A" },
+];
+const YES_NO_UNKNOWN_NA = [
+    { value: "Yes", label: "Yes" },
+    { value: "No", label: "No" },
+    { value: "Unknown", label: "Unknown" },
+    { value: "N/A", label: "N/A" },
+];
+const YES_NO_UNKNOWN = [
+    { value: "Yes", label: "Yes" },
+    { value: "No", label: "No" },
+    { value: "Unknown", label: "Unknown" },
+];
+const YES_NO_UNKNOWN_OTHER = [
+    { value: "Yes", label: "Yes" },
+    { value: "No", label: "No" },
+    { value: "Unknown", label: "Unknown" },
+    { value: "Other answer", label: "Other answer" },
+];
+const OFFICIALS_OPTIONS = [
+    { value: "NYPD", label: "NYPD" },
+    { value: "NYFD", label: "NYFD" },
+    { value: "Paramedics, Hatzalah", label: "Paramedics, Hatzalah" },
+    { value: "Clerics", label: "Clerics" },
+    { value: "Other answer", label: "Other answer" },
+];
+const deathSchema = {
+    incidentType: "death",
+    displayName: "Death",
+    sections: [
+        {
+            id: "death-main",
+            title: "Patient Death Questionnaire",
+            fields: [
+                {
+                    id: "death-patient-name",
+                    bindTo: "patient.name",
+                    label: "Patient name",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "death-admission-id",
+                    bindTo: "patient.admissionId",
+                    label: "Admission ID",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "death-patient-dob",
+                    bindTo: "patient.dob",
+                    label: "Patient DOB",
+                    kind: "date",
+                    required: true,
+                },
+                {
+                    id: "death-reporter-name",
+                    bindTo: "reporter.name",
+                    label: "Who reported the death of the patient?",
+                    kind: "text",
+                    required: true,
+                    helperText: "Name of the person / short answer",
+                },
+                {
+                    id: "death-reporter-title",
+                    bindTo: "death.reportTitle",
+                    label: "What is the title of the person who reported death?",
+                    kind: "select",
+                    required: true,
+                    options: TITLE_OPTIONS,
+                },
+                {
+                    id: "death-reporter-title-other",
+                    bindTo: "death.reportTitleOther",
+                    label: "Title of reporter - Other",
+                    kind: "text",
+                    required: true,
+                    visibleWhen: (p) => p.death.reportTitle === "Other answer",
+                },
+                {
+                    id: "death-services",
+                    bindTo: "death.servicesReceived",
+                    label: "Services Patient received?",
+                    kind: "select",
+                    required: true,
+                    options: SERVICES_OPTIONS,
+                },
+                {
+                    id: "death-vendor",
+                    bindTo: "patient.vendorOrContract",
+                    label: "Contract / Vendor",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.hospitalizationVendorContract,
+                },
+                {
+                    id: "death-place",
+                    bindTo: "death.placeOfDeath",
+                    label: "Place of death (Home, Hospital, ect.)",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "death-date",
+                    bindTo: "death.dateOfDeath",
+                    label: "Date Of Death",
+                    kind: "date",
+                    required: true,
+                },
+                {
+                    id: "death-time",
+                    bindTo: "death.timeOfDeath",
+                    label: "Time Of Death",
+                    kind: "time",
+                    required: true,
+                },
+                {
+                    id: "death-service-hours",
+                    bindTo: "death.duringServiceHours",
+                    label: "Did the death occur during service hours?",
+                    kind: "select",
+                    required: true,
+                    options: YES_NO_NA,
+                },
+                {
+                    id: "death-caregiver-name",
+                    bindTo: "death.caregiverName",
+                    label: "Caregiver's Name",
+                    kind: "text",
+                    required: true,
+                    visibleWhen: (p) => p.death.duringServiceHours === "Yes",
+                },
+                {
+                    id: "death-caregiver-activity",
+                    bindTo: "death.caregiverActivity",
+                    label: "What was the caregiver doing when the patient died?",
+                    kind: "textarea",
+                    required: true,
+                    visibleWhen: (p) => p.death.duringServiceHours === "Yes",
+                },
+                {
+                    id: "death-patient-activity",
+                    bindTo: "death.patientActivityAtDeath",
+                    label: "What was the patient doing at the time of death?",
+                    kind: "textarea",
+                    required: true,
+                },
+                {
+                    id: "death-911-called",
+                    bindTo: "death.was911Called",
+                    label: "Was 911 called?",
+                    kind: "select",
+                    required: true,
+                    options: YES_NO_UNKNOWN_NA,
+                },
+                {
+                    id: "death-911-time",
+                    bindTo: "death.time911Called",
+                    label: "What was the time 911 called?",
+                    kind: "text",
+                    required: true,
+                    visibleWhen: (p) => p.death.was911Called === "Yes",
+                },
+                {
+                    id: "death-officials",
+                    bindTo: "death.officialsArrived",
+                    label: "Are any officials arrived at the patient's residence (NYPD, NYFD, paramedics, clerics)?",
+                    kind: "select",
+                    required: true,
+                    options: YES_NO_UNKNOWN_OTHER,
+                },
+                {
+                    id: "death-officials-other",
+                    bindTo: "death.officialsArrivedOther",
+                    label: "Officials arrived - Other",
+                    kind: "text",
+                    required: true,
+                    visibleWhen: (p) => p.death.officialsArrived === "Other answer",
+                },
+                {
+                    id: "death-which-officials",
+                    bindTo: "death.whichOfficials",
+                    label: "Specify which officials arrived at the patient's residence?",
+                    kind: "multiselect",
+                    required: true,
+                    options: OFFICIALS_OPTIONS,
+                    visibleWhen: (p) => p.death.officialsArrived === "Yes",
+                },
+                {
+                    id: "death-which-officials-other",
+                    bindTo: "death.whichOfficialsOther",
+                    label: "Which officials - Other",
+                    kind: "text",
+                    required: true,
+                    visibleWhen: (p) => p.death.officialsArrived === "Yes" &&
+                        p.death.whichOfficials.includes("Other answer"),
+                },
+                {
+                    id: "death-family-notified",
+                    bindTo: "death.familyNotified",
+                    label: "Was the family notified?",
+                    kind: "select",
+                    required: true,
+                    options: YES_NO_UNKNOWN,
+                },
+                {
+                    id: "death-additional-details",
+                    bindTo: "death.additionalDetails",
+                    label: "Additional Details",
+                    kind: "textarea",
+                    required: true,
+                },
+                {
+                    id: "death-notes",
+                    bindTo: "notes",
+                    label: "Notes",
+                    kind: "textarea",
+                },
+            ],
+        },
+    ],
+};
+
+;// ./src/js/services/incident/forms/FallSchema.ts
+
+function isNhtdTbiService(payload) {
+    return payload.patient.serviceType === "NHTD_TBI";
+}
+const fallSchema = {
+    incidentType: "fall",
+    displayName: "Fall / Accident",
+    sections: [
+        {
+            id: "fall-base",
+            title: "Basic Information",
+            fields: [
+                {
+                    id: "fall-accident-type",
+                    bindTo: "fall.accidentType",
+                    label: "Type of Accident",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.fallAccidentType,
+                },
+                {
+                    id: "fall-admission-id",
+                    bindTo: "patient.admissionId",
+                    label: "Admission ID",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "fall-vendor-contact",
+                    bindTo: "patient.vendorOrContract",
+                    label: "Vendor / Contact Name",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "fall-patient-name",
+                    bindTo: "patient.name",
+                    label: "Patient name",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "fall-service",
+                    bindTo: "patient.serviceType",
+                    label: "Services Patient received",
+                    kind: "select",
+                    required: true,
+                    options: [
+                        { value: "HHA", label: "HHA" },
+                        { value: "PCA", label: "PCA" },
+                        {
+                            value: "NHTD_TBI",
+                            label: "NHTD / TBI Waiver Program",
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            id: "fall-hcss-pre-step",
+            title: "NHTD / TBI Additional Step",
+            visibleWhen: (payload) => isNhtdTbiService(payload),
+            fields: [
+                {
+                    id: "fall-hcss-case",
+                    bindTo: "fall.nhtdTbiCaseTypes",
+                    label: "NHTD / TBI Case",
+                    kind: "multiselect",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.nhtdTbiCase,
+                },
+                {
+                    id: "fall-hcss-report-time",
+                    bindTo: "timeline.reportDateTime",
+                    label: "Specify the date and time you reported hospitalization to the personnel listed above",
+                    kind: "datetime-local",
+                    required: true,
+                },
+            ],
+        },
+        {
+            id: "fall-main-tree",
+            title: "Emergency Details",
+            fields: [
+                {
+                    id: "fall-reporter-name",
+                    bindTo: "reporter.name",
+                    label: "Who reported emergency?",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "fall-reporter-title",
+                    bindTo: "reporter.title",
+                    label: "Title of person who reported emergency",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.fallReporterTitle,
+                },
+                {
+                    id: "fall-date",
+                    bindTo: "timeline.eventDate",
+                    label: "Date of Fall / Accident",
+                    kind: "date",
+                    required: true,
+                },
+                {
+                    id: "fall-time",
+                    bindTo: "timeline.eventTime",
+                    label: "Time of Fall / Accident",
+                    kind: "time",
+                    required: true,
+                },
+                {
+                    id: "fall-911",
+                    bindTo: "fall.was911Dialed",
+                    label: "Was 911 dialed?",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.yesNoUnknown,
+                },
+                {
+                    id: "fall-911-caller",
+                    bindTo: "fall.whoCalled911",
+                    label: "Who called 911",
+                    kind: "text",
+                    required: true,
+                    visibleWhen: (payload) => payload.fall.was911Dialed === "Yes",
+                },
+                {
+                    id: "fall-service-hours",
+                    bindTo: "fall.duringServiceHours",
+                    label: "Was it during service hours?",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.yesNo,
+                },
+                {
+                    id: "fall-caregiver",
+                    bindTo: "fall.caregiverInfo",
+                    label: "Caregiver Name & Caregiver Code",
+                    kind: "text",
+                    required: true,
+                    visibleWhen: (payload) => payload.fall.duringServiceHours === "Yes",
+                },
+                {
+                    id: "fall-aide-whereabouts",
+                    bindTo: "fall.aideWhereabouts",
+                    label: "Where was the aide during the accident and what was the aide doing?",
+                    kind: "textarea",
+                    required: true,
+                    visibleWhen: (payload) => payload.fall.duringServiceHours === "Yes",
+                },
+            ],
+        },
+        {
+            id: "fall-risk-questions",
+            title: "Risk Assessment",
+            fields: [
+                {
+                    id: "fall-patient-activity",
+                    bindTo: "fall.patientActivity",
+                    label: "What was the patient doing at the time of fall",
+                    kind: "textarea",
+                    required: true,
+                },
+                {
+                    id: "fall-lighting",
+                    bindTo: "fall.adequateLighting",
+                    label: "Did the area where the fall occurred have adequate lighting?",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.yesNoUnknown,
+                },
+                {
+                    id: "fall-footwear",
+                    bindTo: "fall.nonSlipperyFootwear",
+                    label: "Was the patient wearing NON-Slippery footwear?",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.yesNoUnknown,
+                },
+                {
+                    id: "fall-assistive-device",
+                    bindTo: "fall.assistiveDeviceUsed",
+                    label: "Did the patient use any assistive devices (walker, wheelchair, cane, etc.)?",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.yesNoUnknown,
+                },
+                {
+                    id: "fall-assistive-device-specify",
+                    bindTo: "fall.assistiveDeviceSpecify",
+                    label: "Specify what device was in use.",
+                    kind: "select",
+                    required: true,
+                    visibleWhen: (payload) => payload.fall.assistiveDeviceUsed === "Yes",
+                    options: [
+                        { value: "Cane", label: "Cane" },
+                        { value: "Wheelchair", label: "Wheelchair" },
+                        { value: "Walker", label: "Walker" },
+                        { value: "Hoyer Lift", label: "Hoyer Lift" },
+                        { value: "Other answer", label: "Other answer" },
+                    ],
+                },
+                {
+                    id: "fall-assistive-device-specify-other",
+                    bindTo: "fall.assistiveDeviceSpecifyOther",
+                    label: "Specify what device was in use - Other",
+                    kind: "text",
+                    required: true,
+                    visibleWhen: (payload) => payload.fall.assistiveDeviceUsed === "Yes" &&
+                        payload.fall.assistiveDeviceSpecify === "Other answer",
+                },
+                {
+                    id: "fall-family-notified",
+                    bindTo: "fall.familyPowerAttorneyNotified",
+                    label: "Was the family/power of attorney notified?",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.yesNoUnknown,
+                },
+                {
+                    id: "fall-reason-for-fall",
+                    bindTo: "fall.reasonForFall",
+                    label: "Reason for fall (Ex. Dizziness, tripped, legs gave out)",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "fall-body-damage-details",
+                    bindTo: "fall.bodyDamageDetails",
+                    label: "Any damage to the patient's body? Locations of injuries?",
+                    kind: "textarea",
+                    required: true,
+                    helperText: "Имеются ли повреждения на теле пациента? Местонахождение травм? / 患者身体有受到什么损伤？受伤的部位是哪里？",
+                },
+                {
+                    id: "fall-hospitalization-result",
+                    bindTo: "fall.hospitalizationResult",
+                    label: "Any Hospitalization as a result of the fall",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.yesNoUnknown,
+                },
+                {
+                    id: "fall-helped-patient-up",
+                    bindTo: "fall.helpedPatientUp",
+                    label: "How / Who helped patient to get up",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "fall-notes",
+                    bindTo: "notes",
+                    label: "NOTES",
+                    kind: "textarea",
+                    helperText: "Add any additional information about the accident.",
+                },
+            ],
+        },
+    ],
+};
+
+;// ./src/js/services/incident/forms/HospitalizationSchema.ts
+
+const ACCIDENT_REASONS = new Set([
+    "Planned Hospitalization",
+    "Respiratory Distress",
+    "Trauma / Injury",
+    "Unwell (Malaise)",
+    "Wound",
+]);
+function isHcssService(payload) {
+    return payload.patient.serviceType === "HCSS";
+}
+function isReasonOtherWithoutText(payload) {
+    return (payload.hospitalization.reason === "Other answer" &&
+        !payload.hospitalization.reasonOtherText.trim());
+}
+const hospitalizationSchema = {
+    incidentType: "hospitalization",
+    displayName: "Hospitalization",
+    sections: [
+        {
+            id: "initial-information",
+            title: "Initial Information",
+            fields: [
+                {
+                    id: "patient-name",
+                    bindTo: "patient.name",
+                    label: "Patient Name",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "patient-dob",
+                    bindTo: "patient.dob",
+                    label: "Patient DOB",
+                    kind: "text",
+                    required: true,
+                    placeholder: "MM/DD/YYYY",
+                },
+                {
+                    id: "admission-id",
+                    bindTo: "patient.admissionId",
+                    label: "Admission ID",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "patient-service",
+                    bindTo: "patient.serviceType",
+                    label: "Patient Services",
+                    kind: "select",
+                    required: true,
+                    options: [
+                        { value: "HHA", label: "HHA" },
+                        { value: "PCA", label: "PCA" },
+                        { value: "HCSS", label: "HCSS (NHTD / TBI)" },
+                    ],
+                },
+                {
+                    id: "contract-or-vendor",
+                    bindTo: "patient.vendorOrContract",
+                    label: "Vendor / Contract",
+                    helperText: "服务类型为 HCSS 时自动切换为 NHTD / TBI Contract 选项。",
+                    kind: "select",
+                    required: true,
+                    options: (payload) => isHcssService(payload)
+                        ? INCIDENT_OPTION_CATALOG.hcssContract
+                        : INCIDENT_OPTION_CATALOG.hospitalizationVendorContract,
+                },
+            ],
+        },
+        {
+            id: "hcss-pre-step",
+            title: "HCSS Pre-Step",
+            description: "当服务类型为 HCSS 时，必须先完成该步骤。",
+            visibleWhen: (payload) => isHcssService(payload),
+            fields: [
+                {
+                    id: "hcss-case",
+                    bindTo: "hospitalization.nhtdTbiCaseTypes",
+                    label: "NHTD / TBI Case",
+                    kind: "multiselect",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.nhtdTbiCase,
+                },
+                {
+                    id: "hcss-report-time",
+                    bindTo: "timeline.reportDateTime",
+                    label: "Specify the date and time you reported hospitalization to the personnel listed above",
+                    kind: "datetime-local",
+                    required: true,
+                },
+            ],
+        },
+        {
+            id: "details-base",
+            title: "Details",
+            fields: [
+                {
+                    id: "hospitalization-date",
+                    bindTo: "timeline.eventDate",
+                    label: "Date of Hospitalization",
+                    kind: "date",
+                    required: true,
+                },
+                {
+                    id: "hospitalization-time",
+                    bindTo: "timeline.eventTime",
+                    label: "Time of Hospitalization or Time of 911 Called",
+                    kind: "time",
+                    required: true,
+                },
+                {
+                    id: "hospital-name",
+                    bindTo: "hospitalization.hospitalName",
+                    label: "Hospital Name",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.hospitalName,
+                },
+                {
+                    id: "hospital-name-other",
+                    bindTo: "hospitalization.hospitalNameOtherText",
+                    label: "Hospital Name - Other",
+                    kind: "text",
+                    required: (payload) => payload.hospitalization.hospitalName === "Other",
+                    visibleWhen: (payload) => payload.hospitalization.hospitalName === "Other",
+                },
+                {
+                    id: "hospitalization-during-service-hours",
+                    bindTo: "hospitalization.duringServiceHours",
+                    label: "During Service Hours?",
+                    kind: "select",
+                    required: true,
+                    options: [
+                        { value: "Yes", label: "Yes" },
+                        { value: "No", label: "No" },
+                        { value: "Unknown", label: "Unknown" },
+                    ],
+                },
+                {
+                    id: "hospitalization-reason",
+                    bindTo: "hospitalization.reason",
+                    label: "Reason For Hospitalization",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.hospitalizationReason,
+                },
+                {
+                    id: "hospitalization-reason-other",
+                    bindTo: "hospitalization.reasonOtherText",
+                    label: "Reason For Hospitalization - Other",
+                    kind: "text",
+                    required: (payload) => payload.hospitalization.reason === "Other answer",
+                    visibleWhen: (payload) => payload.hospitalization.reason === "Other answer",
+                },
+            ],
+        },
+        {
+            id: "reason-infection",
+            title: "Infection Details",
+            visibleWhen: (payload) => payload.hospitalization.reason === "Infections",
+            fields: [
+                {
+                    id: "infection-type",
+                    bindTo: "hospitalization.infectionType",
+                    label: "Type of Infection",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.infectionType,
+                },
+                {
+                    id: "infection-details",
+                    bindTo: "hospitalization.infectionDetails",
+                    label: "Infection - Details",
+                    kind: "textarea",
+                    required: true,
+                },
+            ],
+        },
+        {
+            id: "reason-accident",
+            title: "Accident Details",
+            visibleWhen: (payload) => ACCIDENT_REASONS.has(payload.hospitalization.reason),
+            fields: [
+                {
+                    id: "accident-details",
+                    bindTo: "hospitalization.accidentDetails",
+                    label: "Accident",
+                    kind: "textarea",
+                    required: true,
+                    helperText: "该字段在 Planned/Respiratory Distress/Trauma-Injury/Unwell/Wound 分支下为必填。",
+                },
+            ],
+        },
+        {
+            id: "source-and-reporter",
+            title: "Source & Notes",
+            description: "当 Reason=Other 且未填写文本时，本区块按官方表现隐藏。",
+            visibleWhen: (payload) => !isReasonOtherWithoutText(payload),
+            fields: [
+                {
+                    id: "source-of-information",
+                    bindTo: "reporter.source",
+                    label: "Source Of Information",
+                    kind: "select",
+                    required: true,
+                    options: INCIDENT_OPTION_CATALOG.sourceOfInformation,
+                },
+                {
+                    id: "name-who-report",
+                    bindTo: "reporter.name",
+                    label: "Name who report hospitalization",
+                    kind: "text",
+                    required: true,
+                },
+                {
+                    id: "reporter-title",
+                    bindTo: "reporter.title",
+                    label: "Reporter Title",
+                    kind: "text",
+                },
+                {
+                    id: "hospitalization-notes",
+                    bindTo: "notes",
+                    label: "Notes",
+                    kind: "textarea",
+                },
+            ],
+        },
+    ],
+};
+if (INCIDENT_OPTION_COUNTS.hospitalizationVendorContract !== 41) {
+    console.warn("[IncidentSchema] hospitalization Vendor/Contract option count mismatch:", INCIDENT_OPTION_COUNTS.hospitalizationVendorContract);
+}
+if (INCIDENT_OPTION_COUNTS.hospitalName !== 69) {
+    console.warn("[IncidentSchema] hospitalization Hospital Name option count mismatch:", INCIDENT_OPTION_COUNTS.hospitalName);
+}
+
+;// ./src/js/services/incident/IncidentSchemaRegistry.ts
+
+
+
+
+const REGISTRY = {
+    hospitalization: hospitalizationSchema,
+    fall: fallSchema,
+    death: deathSchema,
+};
+class IncidentSchemaRegistry {
+    static listIncidentTypes() {
+        return ["hospitalization", "fall", "death"];
+    }
+    static getSchema(incidentType) {
+        return REGISTRY[incidentType];
+    }
+    static getVisibleFields(payload) {
+        const schema = this.getSchema(payload.incidentType);
+        const fields = [];
+        schema.sections.forEach((section) => {
+            if (section.visibleWhen && !section.visibleWhen(payload)) {
+                return;
+            }
+            section.fields.forEach((field) => {
+                if (isFieldVisible(field, payload)) {
+                    fields.push(field);
+                }
+            });
+        });
+        return fields;
+    }
+    static validateRequired(payload) {
+        const issues = [];
+        const visibleFields = this.getVisibleFields(payload);
+        visibleFields.forEach((field) => {
+            if (!isFieldRequired(field, payload)) {
+                return;
+            }
+            const value = getValueByPath(payload, field.bindTo);
+            if (!isValuePresent(value)) {
+                issues.push({
+                    fieldId: field.id,
+                    label: field.label,
+                    reason: "required",
+                });
+            }
+        });
+        return issues;
+    }
+}
+
+;// ./src/js/services/incident/IncidentAutofillOrchestrator.ts
+
+
+const NEXT_BUTTON_MARKERS = ["next", "continue", "下一", "继续", "next page"];
+const DEFAULT_RENDER_WAIT_MS = 500;
+const DEFAULT_MAX_NAVIGATION_STEPS = 6;
+const DEFAULT_FIELD_INTERACTION_DELAY_MS = 220;
+const DEFAULT_BRANCH_REVEAL_WAIT_MS = 520;
+function normalizeLabel(text) {
+    return text.replace(/\s+/g, " ").trim().toLowerCase();
+}
+function IncidentAutofillOrchestrator_sleep(ms) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+function dispatchInputEvents(element) {
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+}
+function getElementText(element) {
+    const node = element;
+    return normalizeLabel(`${node.innerText || ""} ${node.textContent || ""} ${node.getAttribute("aria-label") || ""}`);
+}
+function getLabelTextForControl(root, control) {
+    const asHtml = control;
+    const ownLabel = asHtml.closest("label")?.textContent || "";
+    const id = control.id;
+    const forLabel = id
+        ? root.querySelector(`label[for="${CSS.escape(id)}"]`)?.textContent || ""
+        : "";
+    const legend = asHtml
+        .closest("fieldset")
+        ?.querySelector("legend")?.textContent;
+    return normalizeLabel(`${ownLabel} ${forLabel} ${legend || ""}`);
+}
+function bestControlMatch(root, label, selector) {
+    const target = normalizeLabel(label);
+    let bestScore = 0;
+    let best = null;
+    const controls = Array.from(root.querySelectorAll(selector));
+    controls.forEach((control) => {
+        const aria = normalizeLabel(control.getAttribute("aria-label") || "");
+        const placeholder = normalizeLabel(control.placeholder || "");
+        const name = normalizeLabel(control.name || "");
+        const id = normalizeLabel(control.id || "");
+        const labels = getLabelTextForControl(root, control);
+        let score = 0;
+        if (aria === target || labels === target || placeholder === target) {
+            score = 100;
+        }
+        else if (aria.includes(target) ||
+            labels.includes(target) ||
+            placeholder.includes(target)) {
+            score = 80;
+        }
+        else if (target && (name.includes(target) || id.includes(target))) {
+            score = 60;
+        }
+        if (score > bestScore) {
+            bestScore = score;
+            best = control;
+        }
+    });
+    return best;
+}
+function isSubmitLikeElement(element) {
+    if (!element) {
+        return false;
+    }
+    const asHtml = element;
+    const text = normalizeLabel(asHtml.innerText || asHtml.textContent || "");
+    const ariaLabel = normalizeLabel(asHtml.getAttribute("aria-label") || "");
+    const inputType = normalizeLabel(element.type || "");
+    const markerText = `${text} ${ariaLabel}`;
+    // If it's a navigation button (Next/Back/Prev/Continue), it is definitely NOT a submit action
+    if (/\bnext\b|\bback\b|\bprev\b|\bcontinue\b|\b下一\b|\b上一\b|\b返回\b/.test(markerText)) {
+        return false;
+    }
+    if (inputType === "submit") {
+        if (element.tagName === "INPUT") {
+            const val = normalizeLabel(element.value || "");
+            return /\bsubmit\b|\bsend\b|\bfinish\b|\bfinal\b|\b提交\b/.test(val);
+        }
+        return /\bsubmit\b|\bsend\b|\bfinish\b|\bfinal\b|\b提交\b/.test(markerText);
+    }
+    if (/\bsubmit\b|\bsend\b|\bfinish\b|\bfinal\b|\b提交\b/.test(markerText)) {
+        return true;
+    }
+    return false;
+}
+function installNoSubmitGuard(root) {
+    const blocked = [];
+    const clickHandler = (event) => {
+        const target = event.target;
+        const submitCandidate = target?.closest("button, input[type='submit'], [role='button']") ||
+            target;
+        if (!isSubmitLikeElement(submitCandidate)) {
+            return;
+        }
+        const text = submitCandidate?.innerText?.trim() ||
+            submitCandidate?.getAttribute("aria-label") ||
+            "submit-action";
+        blocked.push(`blocked-click:${text}`);
+        event.preventDefault();
+        event.stopPropagation();
+        if (typeof event.stopImmediatePropagation === "function") {
+            event.stopImmediatePropagation();
+        }
+    };
+    const submitHandler = (event) => {
+        blocked.push("blocked-form-submit");
+        event.preventDefault();
+        event.stopPropagation();
+    };
+    root.addEventListener("click", clickHandler, true);
+    root.addEventListener("submit", submitHandler, true);
+    return () => {
+        root.removeEventListener("click", clickHandler, true);
+        root.removeEventListener("submit", submitHandler, true);
+        return blocked;
+    };
+}
+function findElementByLabel(root, field) {
+    if (field.kind === "select") {
+        return bestControlMatch(root, field.label, "select");
+    }
+    return bestControlMatch(root, field.label, "input, textarea, select");
+}
+function isInteractable(element) {
+    const input = element;
+    if (typeof input.disabled === "boolean" && input.disabled) {
+        return false;
+    }
+    if (typeof input.readOnly === "boolean" && input.readOnly) {
+        return false;
+    }
+    const style = window.getComputedStyle(element);
+    if (style.display === "none" || style.visibility === "hidden") {
+        return false;
+    }
+    return true;
+}
+function findCheckboxByOption(root, field, optionValue) {
+    const target = normalizeLabel(optionValue);
+    const wantedField = normalizeLabel(field.label);
+    const candidates = Array.from(root.querySelectorAll("input[type='checkbox']"));
+    let scoped = candidates;
+    const fieldset = Array.from(root.querySelectorAll("fieldset")).find((entry) => normalizeLabel(entry.querySelector("legend")?.textContent || "").includes(wantedField));
+    if (fieldset) {
+        scoped = Array.from(fieldset.querySelectorAll("input[type='checkbox']"));
+    }
+    for (const candidate of scoped) {
+        const labelText = getLabelTextForControl(root, candidate);
+        const value = normalizeLabel(candidate.value || "");
+        const aria = normalizeLabel(candidate.getAttribute("aria-label") || "");
+        if (value === target ||
+            labelText.includes(target) ||
+            aria.includes(target)) {
+            return candidate;
+        }
+    }
+    return null;
+}
+function createFailure(field, code, reason, suggestion) {
+    return {
+        fieldId: field.id,
+        label: field.label,
+        code,
+        reason,
+        suggestion,
+    };
+}
+function isMicrosoftFormsRuntime(root) {
+    return !!root.querySelector('[data-automation-id="questionItem"]');
+}
+function normalizeQuestionText(text) {
+    return normalizeLabel(text)
+        .replace(/^\d+\.?\s*/g, "")
+        .replace(/\bsingle\s+choice\.?/g, "")
+        .replace(/\bsingle\s+line\s+text\.?/g, "")
+        .replace(/\bmulti\s+line\s+text\.?/g, "")
+        .replace(/\bdate\.?/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+function tokenizeQuestionText(text) {
+    return normalizeQuestionText(text)
+        .split(/[^a-z0-9\u4e00-\u9fff]+/i)
+        .map((token) => token.trim())
+        .filter((token) => token.length > 1);
+}
+function scoreQuestionMatch(label, question) {
+    const normalizedLabel = normalizeQuestionText(label);
+    const normalizedQuestion = normalizeQuestionText(question);
+    if (!normalizedLabel || !normalizedQuestion) {
+        return 0;
+    }
+    if (normalizedLabel === normalizedQuestion) {
+        return 1;
+    }
+    const labelTokens = tokenizeQuestionText(normalizedLabel);
+    const questionTokens = tokenizeQuestionText(normalizedQuestion);
+    if (!labelTokens.length || !questionTokens.length) {
+        return 0;
+    }
+    const labelSet = new Set(labelTokens);
+    const questionSet = new Set(questionTokens);
+    let intersection = 0;
+    labelSet.forEach((token) => {
+        if (questionSet.has(token)) {
+            intersection += 1;
+        }
+    });
+    return intersection / (labelSet.size + questionSet.size - intersection);
+}
+function getFormsQuestionText(questionItem) {
+    const title = questionItem
+        .querySelector('[data-automation-id="questionTitle"]')
+        ?.innerText?.trim() || "";
+    return normalizeQuestionText(title);
+}
+function findFormsQuestionItemByLabel(root, label) {
+    const questionItems = Array.from(root.querySelectorAll('[data-automation-id="questionItem"]'));
+    if (!questionItems.length) {
+        return null;
+    }
+    let bestScore = 0;
+    let best = null;
+    questionItems.forEach((questionItem) => {
+        const score = scoreQuestionMatch(label, getFormsQuestionText(questionItem));
+        if (score > bestScore) {
+            bestScore = score;
+            best = questionItem;
+        }
+    });
+    return bestScore >= 0.3 ? best : null;
+}
+function canonicalOptionText(text) {
+    return normalizeLabel(text)
+        .replace(/[\u00a0]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+function compactOptionText(text) {
+    return canonicalOptionText(text).replace(/[^a-z0-9\u4e00-\u9fff]+/gi, "");
+}
+function isOptionMatch(optionText, targetText) {
+    const optionCanonical = canonicalOptionText(optionText);
+    const targetCanonical = canonicalOptionText(targetText);
+    if (!optionCanonical || !targetCanonical) {
+        return false;
+    }
+    if (optionCanonical === targetCanonical) {
+        return true;
+    }
+    const optionCompact = compactOptionText(optionCanonical);
+    const targetCompact = compactOptionText(targetCanonical);
+    if (optionCompact === targetCompact) {
+        return true;
+    }
+    const hasVeryShortCandidate = optionCanonical.length <= 3 || targetCanonical.length <= 3;
+    if (hasVeryShortCandidate) {
+        return false;
+    }
+    if (optionCanonical.includes(targetCanonical) ||
+        targetCanonical.includes(optionCanonical)) {
+        return true;
+    }
+    const optionTokens = optionCanonical
+        .split(/[^a-z0-9\u4e00-\u9fff]+/i)
+        .filter((token) => token.length > 1);
+    const targetTokens = targetCanonical
+        .split(/[^a-z0-9\u4e00-\u9fff]+/i)
+        .filter((token) => token.length > 1);
+    if (!optionTokens.length || !targetTokens.length) {
+        return false;
+    }
+    const targetSet = new Set(targetTokens);
+    let overlap = 0;
+    optionTokens.forEach((token) => {
+        if (targetSet.has(token)) {
+            overlap += 1;
+        }
+    });
+    return overlap >= Math.min(optionTokens.length, targetTokens.length);
+}
+function setNativeTextValue(element, value) {
+    const isCombo = (element.getAttribute("role") || "").toLowerCase() === "combobox" ||
+        !!element.getAttribute("aria-haspopup");
+    // Convert ISO date format (yyyy-MM-dd) to the M/d/yyyy format that
+    // Fabric UI DatePicker expects.  The incident composer stores dates
+    // from <input type="date"> which always uses yyyy-MM-dd.
+    let resolvedValue = value;
+    if (isCombo && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        const parts = value.split("-");
+        const month = String(parseInt(parts[1], 10)); // strip leading zero
+        const day = String(parseInt(parts[2], 10));
+        resolvedValue = `${month}/${day}/${parts[0]}`;
+    }
+    // Set the value FIRST, before any interaction
+    const oldValue = element.value;
+    const prototype = element instanceof HTMLTextAreaElement
+        ? HTMLTextAreaElement.prototype
+        : HTMLInputElement.prototype;
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, "value");
+    if (descriptor?.set) {
+        descriptor.set.call(element, resolvedValue);
+    }
+    else {
+        element.value = resolvedValue;
+    }
+    // React 15+ value tracker bypass
+    const tracker = element._valueTracker;
+    if (tracker) {
+        tracker.setValue(oldValue);
+    }
+    // Focus ONLY — do NOT click (clicking a Fabric UI DatePicker opens
+    // the calendar dialog which resets the value).
+    element.focus();
+    dispatchInputEvents(element);
+    if (isCombo) {
+        element.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+        element.dispatchEvent(new KeyboardEvent("keyup", { key: "Enter", bubbles: true }));
+    }
+    else {
+        element.dispatchEvent(new Event("blur", { bubbles: true }));
+    }
+    element.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
+    if (isCombo) {
+        window.setTimeout(() => {
+            element.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+            element.dispatchEvent(new KeyboardEvent("keyup", { key: "Enter", bubbles: true }));
+        }, 200);
+    }
+}
+function isVisibleElement(element) {
+    const style = window.getComputedStyle(element);
+    if (style.display === "none" || style.visibility === "hidden") {
+        return false;
+    }
+    return element.getClientRects().length > 0;
+}
+async function selectFormsComboOption(root, questionItem, textValue) {
+    const comboButton = questionItem.querySelector('[role="button"][aria-haspopup="listbox"]');
+    if (!comboButton) {
+        return false;
+    }
+    comboButton.click();
+    await IncidentAutofillOrchestrator_sleep(140);
+    const visibleListboxes = Array.from(root.querySelectorAll('[role="listbox"]')).filter((listbox) => isVisibleElement(listbox));
+    let option = null;
+    for (const listbox of visibleListboxes) {
+        const candidate = Array.from(listbox.querySelectorAll('[role="option"]')).find((entry) => isOptionMatch(entry.innerText || entry.textContent || "", textValue));
+        if (candidate) {
+            option = candidate;
+            break;
+        }
+    }
+    if (!option) {
+        option =
+            Array.from(root.querySelectorAll('[role="option"]'))
+                .filter((entry) => isVisibleElement(entry))
+                .find((entry) => isOptionMatch(entry.innerText || entry.textContent || "", textValue)) || null;
+    }
+    if (!option) {
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        return false;
+    }
+    option.click();
+    await IncidentAutofillOrchestrator_sleep(140);
+    return true;
+}
+function findAndCheckEmailReceipt(root) {
+    // Primary: Forms uses a custom checkbox wrapped in
+    // <span data-automation-id="checkbox" data-automation-value="Receipt">
+    const formsCheckboxWrapper = root.querySelector('[data-automation-id="checkbox"][data-automation-value="Receipt"]');
+    if (formsCheckboxWrapper) {
+        const input = formsCheckboxWrapper.querySelector('input[type="checkbox"], input[role="checkbox"]');
+        const isChecked = input?.checked ||
+            input?.getAttribute("aria-checked") === "true" ||
+            formsCheckboxWrapper.getAttribute("aria-checked") === "true";
+        if (!isChecked) {
+            // Must click the <input> itself – Forms event handlers bind to input,
+            // clicking the wrapper <span> does NOT toggle aria-checked.
+            // Double-click for resilience: some Forms themes require a second hit.
+            if (input) {
+                input.click();
+                dispatchInputEvents(input);
+                window.setTimeout(() => {
+                    const stillUnchecked = !input.checked && input.getAttribute("aria-checked") !== "true";
+                    if (stillUnchecked) {
+                        input.click();
+                        dispatchInputEvents(input);
+                    }
+                }, 220);
+            }
+            else {
+                formsCheckboxWrapper.click();
+            }
+        }
+        return true;
+    }
+    // Fallback: search by label text for "email receipt"
+    const candidateLabels = Array.from(root.querySelectorAll("label, span")).filter((el) => /email receipt|email receive|receipt of my responses/i.test((el.textContent || "").replace(/\s+/g, " ")));
+    for (const label of candidateLabels) {
+        const scope = label.closest("label") || label.parentElement;
+        if (!scope)
+            continue;
+        const checkbox = scope.querySelector('input[type="checkbox"], input[role="checkbox"]');
+        if (checkbox) {
+            const isChecked = checkbox.checked || checkbox.getAttribute("aria-checked") === "true";
+            if (!isChecked) {
+                checkbox.click();
+                dispatchInputEvents(checkbox);
+            }
+            return true;
+        }
+    }
+    // Last resort: scan all checkboxes for email receipt text in their container
+    const allCheckboxes = Array.from(root.querySelectorAll('input[type="checkbox"], input[role="checkbox"]'));
+    for (const cb of allCheckboxes) {
+        const container = cb.closest("label, div, span");
+        if (container &&
+            /email receipt|email receive|receipt/i.test((container.textContent || "").replace(/\s+/g, " "))) {
+            const isChecked = cb.checked || cb.getAttribute("aria-checked") === "true";
+            if (!isChecked) {
+                cb.click();
+                dispatchInputEvents(cb);
+            }
+            return true;
+        }
+    }
+    return false;
+}
+function findTextOrDateInput(questionItem, kind) {
+    // For date fields, try the Forms date-picker aria label first,
+    // then native type=date, then placeholder-based fallback
+    if (kind === "date") {
+        const datePicker = questionItem.querySelector('input[aria-label="Date picker"]') ||
+            questionItem.querySelector('input[role="combobox"][aria-haspopup="dialog"]') ||
+            questionItem.querySelector('input[type="date"]') ||
+            questionItem.querySelector('input[placeholder*="date" i], input[placeholder*="M/d/yyyy" i]') ||
+            questionItem.querySelector('input[data-automation-id="textInput"][aria-label*="date" i], ' +
+                'input[data-automation-id="textInput"][placeholder*="date" i]');
+        if (datePicker)
+            return datePicker;
+        // Last resort: any input in the questionItem
+        return questionItem.querySelector('input[data-automation-id="textInput"], input:not([type="radio"]):not([type="checkbox"])');
+    }
+    // For text/time fields, try the standard textInput first, then fall back
+    // to date picker / combo (many Forms "text" fields are actually date pickers or combos)
+    return (questionItem.querySelector('input[data-automation-id="textInput"]') ||
+        questionItem.querySelector('input[aria-label="Date picker"]') ||
+        questionItem.querySelector('input[role="combobox"][aria-haspopup="dialog"]') ||
+        questionItem.querySelector('input[type="date"]') ||
+        questionItem.querySelector('input:not([type="radio"]):not([type="checkbox"])'));
+}
+function getChoiceOptionText(choiceElement) {
+    const textInput = choiceElement.querySelector('input[type="text"], input[data-automation-id="textInput"]');
+    if (textInput) {
+        const placeholder = textInput.getAttribute("placeholder") || "";
+        const ariaLabel = textInput.getAttribute("aria-label") || "";
+        if (placeholder.toLowerCase().includes("other") ||
+            ariaLabel.toLowerCase().includes("other")) {
+            return "Other answer";
+        }
+    }
+    const radioOrCheck = choiceElement.querySelector('input[type="radio"], input[type="checkbox"]');
+    if (radioOrCheck) {
+        const ariaLabel = radioOrCheck.getAttribute("aria-label");
+        if (ariaLabel) {
+            return ariaLabel;
+        }
+    }
+    return choiceElement.innerText || choiceElement.textContent || "";
+}
+async function fillMicrosoftFormsField(root, questionItem, field, value) {
+    const textValue = toDisplayValue(value);
+    if (field.kind === "multiselect") {
+        const values = Array.isArray(value) ? value : [];
+        if (!values.length) {
+            return { ok: true };
+        }
+        const unresolved = [];
+        const choiceItems = Array.from(questionItem.querySelectorAll('input[type="checkbox"]'))
+            .map((input) => input.closest("label"))
+            .filter(Boolean);
+        values.forEach((entry) => {
+            const targetChoice = choiceItems.find((choice) => isOptionMatch(getChoiceOptionText(choice), entry));
+            if (!targetChoice) {
+                unresolved.push(entry);
+                return;
+            }
+            const checkbox = targetChoice.querySelector('input[type="checkbox"]');
+            if (checkbox && !checkbox.checked) {
+                targetChoice.click();
+                dispatchInputEvents(checkbox);
+            }
+        });
+        if (unresolved.length) {
+            return {
+                ok: false,
+                failure: createFailure(field, "option_mismatch", `多选值未匹配: ${unresolved.join(", ")}`, "请在配置中确认多选项文案与官方 Form 完全一致，再重试。"),
+            };
+        }
+        return { ok: true };
+    }
+    if (field.kind === "select") {
+        const choiceItems = Array.from(questionItem.querySelectorAll('input[type="radio"]'))
+            .map((input) => input.closest("label"))
+            .filter(Boolean);
+        if (choiceItems.length) {
+            const matchedChoice = choiceItems.find((choice) => isOptionMatch(getChoiceOptionText(choice), textValue));
+            if (!matchedChoice) {
+                return {
+                    ok: false,
+                    failure: createFailure(field, "option_mismatch", `选项不匹配: ${field.label} -> ${textValue}`, "请更新 incident 选项目录，使值与官方选项一致后重试。"),
+                };
+            }
+            const radio = matchedChoice.querySelector('input[type="radio"]');
+            if (radio) {
+                if (!radio.checked) {
+                    matchedChoice.click();
+                }
+                dispatchInputEvents(radio);
+                // "Other answer" sub‑input: when the user selects "Other",
+                // a free‑text input appears inside the same choice label.
+                // Fill it now if we have an "other" value from the payload.
+                if (textValue === "Other answer" ||
+                    getChoiceOptionText(matchedChoice) === "Other answer") {
+                    const otherInput = matchedChoice.querySelector('input[type="text"], input[data-automation-id="textInput"]');
+                    // The other-value comes from the companion "-other" field
+                    // in the schema, which is filled separately.  We just need
+                    // to activate the radio; the text field gets its value from
+                    // the next field in the section loop.
+                }
+                return { ok: true };
+            }
+            matchedChoice.click();
+            return { ok: true };
+        }
+        const selectedFromCombo = await selectFormsComboOption(root, questionItem, textValue);
+        if (selectedFromCombo) {
+            return { ok: true };
+        }
+        return {
+            ok: false,
+            failure: createFailure(field, "option_mismatch", `选项不匹配: ${field.label} -> ${textValue}`, "请更新 incident 选项目录，使值与官方选项一致后重试。"),
+        };
+    }
+    const textControl = field.kind === "textarea"
+        ? questionItem.querySelector('textarea[data-automation-id="textInput"]')
+        : findTextOrDateInput(questionItem, field.kind);
+    if (textControl) {
+        if (!isInteractable(textControl)) {
+            return {
+                ok: false,
+                failure: createFailure(field, "field_not_interactable", `字段不可交互: ${field.label}`, "请确认字段已解锁且在当前页可见，然后重新执行自动填写。"),
+            };
+        }
+        setNativeTextValue(textControl, textValue);
+        return { ok: true };
+    }
+    // Combo fallback: many Forms "text" / "select" / "date" fields are actually
+    // role=button + aria-haspopup=listbox combos, not native inputs.
+    {
+        const comboResult = await selectFormsComboOption(root, questionItem, textValue);
+        if (comboResult) {
+            return { ok: true };
+        }
+    }
+    return {
+        ok: false,
+        maybeOnNextPage: true,
+        failure: createFailure(field, "field_not_found", `找不到字段控件: ${field.label}`, "请确认该字段是否位于下一页，或在表单中调整字段标题后重试。"),
+    };
+}
+async function fillSingleField(root, field, value) {
+    if (isMicrosoftFormsRuntime(root)) {
+        const questionItem = findFormsQuestionItemByLabel(root, field.label);
+        if (questionItem) {
+            const formsResult = await fillMicrosoftFormsField(root, questionItem, field, value);
+            if (formsResult.ok || formsResult.failure?.code !== "field_not_found") {
+                return formsResult;
+            }
+        }
+    }
+    const element = findElementByLabel(root, field);
+    if (!element) {
+        const code = field.visibleWhen ? "branch_unreached" : "field_not_found";
+        return {
+            ok: false,
+            maybeOnNextPage: true,
+            failure: createFailure(field, code, `找不到字段控件: ${field.label}`, code === "branch_unreached"
+                ? "请先确认前置分支答案已写入并触发页面分支，再重试自动填写。"
+                : "请确认该字段是否位于下一页，或在表单中调整字段标题后重试。"),
+        };
+    }
+    if (!isInteractable(element)) {
+        return {
+            ok: false,
+            failure: createFailure(field, "field_not_interactable", `字段不可交互: ${field.label}`, "请确认字段已解锁且在当前页可见，然后重新执行自动填写。"),
+        };
+    }
+    if (field.kind === "multiselect") {
+        const values = Array.isArray(value) ? value : [];
+        if (!values.length) {
+            return { ok: true };
+        }
+        const unresolved = [];
+        values.forEach((entry) => {
+            const candidate = findCheckboxByOption(root, field, entry);
+            if (!candidate) {
+                unresolved.push(entry);
+                return;
+            }
+            if (!candidate.checked) {
+                candidate.checked = true;
+                dispatchInputEvents(candidate);
+            }
+        });
+        if (unresolved.length) {
+            return {
+                ok: false,
+                failure: createFailure(field, "option_mismatch", `多选值未匹配: ${unresolved.join(", ")}`, "请在配置中确认多选项文案与官方 Form 完全一致，再重试。"),
+            };
+        }
+        return { ok: true };
+    }
+    if (element instanceof HTMLSelectElement) {
+        const options = Array.from(element.options);
+        const textValue = toDisplayValue(value);
+        const targetOption = options.find((opt) => normalizeLabel(opt.value) === normalizeLabel(textValue)) ||
+            options.find((opt) => normalizeLabel(opt.text) === normalizeLabel(textValue));
+        if (!targetOption) {
+            return {
+                ok: false,
+                failure: createFailure(field, "option_mismatch", `选项不匹配: ${field.label} -> ${textValue}`, "请更新 incident 选项目录，使值与官方下拉选项一致后重试。"),
+            };
+        }
+        element.value = targetOption.value;
+        dispatchInputEvents(element);
+        return { ok: true };
+    }
+    if (element instanceof HTMLInputElement ||
+        element instanceof HTMLTextAreaElement) {
+        element.value = toDisplayValue(value);
+        dispatchInputEvents(element);
+        return { ok: true };
+    }
+    return {
+        ok: false,
+        failure: createFailure(field, "field_not_interactable", `控件类型不支持: ${field.label}`, "请手动填写该字段并反馈新的控件类型，以便扩展自动填写支持。"),
+    };
+}
+function findNextButton(root) {
+    const candidates = Array.from(root.querySelectorAll("button, input[type='button'], input[type='submit'], [role='button']"));
+    // Primary: text-based match
+    let best = candidates.find((candidate) => {
+        if (isSubmitLikeElement(candidate))
+            return false;
+        const text = getElementText(candidate);
+        return NEXT_BUTTON_MARKERS.some((marker) => text.includes(marker));
+    });
+    // Fallback: aria-label match (Forms uses aria-label="Next" on some themes)
+    if (!best) {
+        best =
+            candidates.find((candidate) => {
+                if (isSubmitLikeElement(candidate))
+                    return false;
+                const aria = (candidate.getAttribute("aria-label") || "").toLowerCase();
+                return NEXT_BUTTON_MARKERS.some((marker) => aria.includes(marker));
+            }) || null;
+    }
+    // Ensure the button is interactable; if disabled, still return it —
+    // the caller may choose to wait
+    return best || null;
+}
+async function clickNextPage(root, waitForRenderMs) {
+    // Wait a bit for Forms to enable the Next button after filling page-1 fields
+    await IncidentAutofillOrchestrator_sleep(Math.max(waitForRenderMs, 600));
+    let nextButton = null;
+    // Retry up to 5 times (1.5s total) waiting for the button to become enabled
+    for (let attempt = 0; attempt < 5; attempt++) {
+        nextButton = findNextButton(root);
+        if (nextButton && isInteractable(nextButton))
+            break;
+        await IncidentAutofillOrchestrator_sleep(300);
+    }
+    if (!nextButton) {
+        console.warn("[IncidentAutofill] Next button not found for page navigation");
+        return false;
+    }
+    if (!isInteractable(nextButton)) {
+        console.warn("[IncidentAutofill] Next button found but still disabled");
+        return false;
+    }
+    nextButton.click();
+    await IncidentAutofillOrchestrator_sleep(waitForRenderMs);
+    return true;
+}
+class IncidentAutofillOrchestrator {
+    async run(payload, options = {}) {
+        const startedAt = Date.now();
+        const root = options.root || document;
+        const schema = IncidentSchemaRegistry.getSchema(payload.incidentType);
+        const failures = [];
+        let successCount = 0;
+        let blockedActions = [];
+        let hasRuntimeError = false;
+        const allowNavigation = options.allowNavigation !== false;
+        const waitForRenderMs = options.waitForRenderMs || DEFAULT_RENDER_WAIT_MS;
+        const maxNavigationSteps = options.maxNavigationSteps || DEFAULT_MAX_NAVIGATION_STEPS;
+        const fieldInteractionDelayMs = options.fieldInteractionDelayMs || DEFAULT_FIELD_INTERACTION_DELAY_MS;
+        const branchRevealWaitMs = options.branchRevealWaitMs || DEFAULT_BRANCH_REVEAL_WAIT_MS;
+        let navigationSteps = 0;
+        const cleanupGuard = installNoSubmitGuard(root);
+        try {
+            for (const section of schema.sections) {
+                if (section.visibleWhen && !section.visibleWhen(payload)) {
+                    continue;
+                }
+                for (const field of section.fields) {
+                    if (!isFieldVisible(field, payload)) {
+                        continue;
+                    }
+                    const value = getValueByPath(payload, field.bindTo);
+                    if (!isValuePresent(value)) {
+                        if (isFieldRequired(field, payload)) {
+                            failures.push(createFailure(field, "required_missing", `必填字段缺少值: ${field.label}`, "请先补齐该字段内容后再运行自动填写。"));
+                        }
+                        continue;
+                    }
+                    if (field.kind === "select") {
+                        const available = resolveFieldOptions(field, payload);
+                        const selected = toDisplayValue(value);
+                        const valid = available.some((option) => normalizeLabel(option.value) === normalizeLabel(selected) ||
+                            normalizeLabel(option.label) === normalizeLabel(selected));
+                        if (!valid) {
+                            failures.push(createFailure(field, "option_mismatch", `值不在选项集中: ${selected}`, "请更新选项目录并确认与官方 Form 完全一致后重试。"));
+                            continue;
+                        }
+                    }
+                    if (options.dryRun) {
+                        successCount += 1;
+                        continue;
+                    }
+                    let resolved = false;
+                    while (!resolved) {
+                        const fillResult = await fillSingleField(root, field, value);
+                        if (fillResult.ok) {
+                            successCount += 1;
+                            resolved = true;
+                            const postFillDelayMs = field.kind === "select" || field.kind === "multiselect"
+                                ? Math.max(waitForRenderMs, branchRevealWaitMs)
+                                : Math.max(waitForRenderMs, fieldInteractionDelayMs);
+                            await IncidentAutofillOrchestrator_sleep(postFillDelayMs);
+                            continue;
+                        }
+                        const canTryNextPage = allowNavigation &&
+                            fillResult.maybeOnNextPage &&
+                            navigationSteps < maxNavigationSteps;
+                        if (canTryNextPage) {
+                            const moved = await clickNextPage(root, waitForRenderMs);
+                            if (moved) {
+                                navigationSteps += 1;
+                                continue;
+                            }
+                            failures.push(createFailure(field, "navigation_failed", `无法导航到后续页面: ${field.label}`, "请手动点击 Next 到包含该字段的页面，然后重新运行自动填写。"));
+                            resolved = true;
+                            continue;
+                        }
+                        failures.push(fillResult.failure ||
+                            createFailure(field, "runtime_error", `未知填写错误: ${field.label}`, "请刷新页面后重试；若重复失败，请反馈该字段截图。"));
+                        resolved = true;
+                    }
+                    if (!resolved) {
+                        hasRuntimeError = true;
+                    }
+                }
+            }
+            // Post-processing: check the "Send me an email receipt" checkbox
+            // which lives outside the question-item structure
+            if (isMicrosoftFormsRuntime(root)) {
+                const emailChecked = findAndCheckEmailReceipt(root);
+                if (emailChecked) {
+                    successCount += 1;
+                }
+            }
+        }
+        catch (error) {
+            hasRuntimeError = true;
+            failures.push({
+                fieldId: "runtime",
+                label: "Incident Autofill",
+                code: "runtime_error",
+                reason: error?.message || "Unexpected runtime error",
+                suggestion: "请刷新官方 Form 页面后重试自动填写。",
+            });
+        }
+        finally {
+            blockedActions = cleanupGuard();
+            payload.safety.noSubmitGuardTriggered = blockedActions.length > 0;
+            payload.safety.blockedActions = blockedActions;
+        }
+        const endedAt = Date.now();
+        return {
+            status: failures.length > 0 || hasRuntimeError ? "FAILED" : "COMPLETED",
+            startedAt,
+            endedAt,
+            totalFields: successCount + failures.length,
+            successCount,
+            failedFields: failures,
+            blockedActions,
+            manualSubmitRequired: true,
+        };
+    }
+}
+
+;// ./src/js/services/incident/IncidentFormWorker.ts
+
+
+class IncidentFormWorker {
+    static init() {
+        if (this.started) {
+            return;
+        }
+        this.started = true;
+        if (window.self !== window.top) {
+            console.log("[IncidentFormWorker] Skip iframe context");
+            return;
+        }
+        console.log("[IncidentFormWorker] Initialized on forms host");
+        this.unsubscribe = IncidentAutofillBus.onChange(() => {
+            void this.tryProcess();
+        });
+        if (!this.visibilityBound) {
+            this.visibilityBound = true;
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "visible") {
+                    void this.tryProcess();
+                }
+            });
+            window.addEventListener("focus", () => {
+                void this.tryProcess();
+            });
+        }
+        void this.tryProcess();
+    }
+    static async tryProcess() {
+        if (this.processing) {
+            return;
+        }
+        const job = IncidentAutofillBus.getJob();
+        if (!job) {
+            return;
+        }
+        if (job.status !== "PENDING" && job.status !== "OPENING") {
+            return;
+        }
+        if (!IncidentAutofillBus.isCurrentPageTarget(job)) {
+            return;
+        }
+        if (document.visibilityState === "hidden") {
+            return;
+        }
+        this.processing = true;
+        IncidentAutofillBus.updateStatus("PROCESSING");
+        try {
+            const orchestrator = new IncidentAutofillOrchestrator();
+            const result = await orchestrator.run(job.payload, {
+                root: document,
+                allowNavigation: true,
+                waitForRenderMs: 1200,
+                maxNavigationSteps: 8,
+                fieldInteractionDelayMs: 260,
+                branchRevealWaitMs: 520,
+            });
+            IncidentAutofillBus.complete({
+                ...result,
+                jobId: job.id,
+            });
+            console.log("[IncidentFormWorker] Job completed:", job.id);
+        }
+        catch (error) {
+            const message = error?.message || "Unknown autofill worker error";
+            IncidentAutofillBus.fail(message, {
+                status: "FAILED",
+                jobId: job.id,
+                startedAt: Date.now(),
+                endedAt: Date.now(),
+                totalFields: 0,
+                successCount: 0,
+                failedFields: [
+                    {
+                        fieldId: "runtime",
+                        label: "Incident Worker",
+                        code: "runtime_error",
+                        reason: message,
+                        suggestion: "请刷新官方 Form 页面后重试自动填写。",
+                    },
+                ],
+                blockedActions: [],
+                manualSubmitRequired: true,
+            });
+            console.error("[IncidentFormWorker] Job failed:", message);
+        }
+        finally {
+            this.processing = false;
+        }
+    }
+}
+IncidentFormWorker.started = false;
+IncidentFormWorker.processing = false;
+IncidentFormWorker.unsubscribe = null;
+IncidentFormWorker.visibilityBound = false;
+
 ;// ./package.json
-const package_namespaceObject = {"rE":"3.21.12"};
+const package_namespaceObject = {"rE":"3.21.15"};
 ;// ./src/index.ts
-// Only inject styles on HHA pages — Outlook's strict CSP blocks style-loader injection
-if (!window.location.hostname.includes("outlook") &&
-    window.location.hostname !== "webshell.suite.office.com") {
+// Only inject styles on HHA pages; non-HHA domains (including Forms/Outlook) may have strict CSP.
+if (window.location.hostname === "app.hhaexchange.com" ||
+    window.location.hostname === "reports.hhaexchange.com") {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     __webpack_require__("./src/style/main.less");
 }
+
+
 
 
 
@@ -85751,6 +88477,7 @@ const IS_VOICE_TECH_HOST = HOST === "mt3.1voicetech.com";
 const IS_OUTLOOK_HOST = HOST === "outlook.office.com" ||
     HOST === "outlook.cloud.microsoft" ||
     HOST === "webshell.suite.office.com";
+const IS_FORMS_HOST = HOST === "forms.office.com" || HOST === "forms.microsoft.com";
 const IS_BLOB_PAGE = window.location.protocol === "blob:";
 const MAIN_BOOTSTRAP_FLAG = "__HHA_SMART_ASSISTANT_MAIN_BOOTSTRAPPED__";
 const VISIT_QUICK_ACTIONS_FLAG = "__HHA_SMART_ASSISTANT_VISIT_QUICK_ACTIONS_BOOTSTRAPPED__";
@@ -85774,6 +88501,9 @@ function isCleanerDetailPage(url) {
 }
 function isPatientProfilePage(url) {
     return url.toLowerCase().includes("internalpatientinfo_ns.aspx");
+}
+function isAideProfilePage(url) {
+    return url.toLowerCase().includes("aide_ns.aspx");
 }
 function isCallReportsPage(url) {
     const normalized = url.toLowerCase();
@@ -85905,6 +88635,11 @@ async function main() {
         return;
     }
     if (!IS_HHA_APP_HOST) {
+        if (IS_FORMS_HOST) {
+            console.log("[main] Forms domain detected, bootstrapping incident worker");
+            IncidentFormWorker.init();
+            return;
+        }
         if (IS_OUTLOOK_HOST) {
             console.log("[main] Outlook domain detected, bootstrapping highlight2call");
             highlight2Call();
@@ -85935,6 +88670,12 @@ async function main() {
             console.log("[main] Patient profile iframe detected, running bulk-notes bootstrap");
             highlight2Call();
             initPatientCalendarBulkNotes();
+            return;
+        }
+        else if (isAideProfilePage(currentUrl)) {
+            // Epic 24 (Story 24-1): 嵌套 Aide_ns（Compliance 配置区）同样需要 DOB/SSN 恢复
+            console.log("[main] Aide profile iframe detected, running sensitive-data restore bootstrap");
+            initAideSensitiveDataRestore();
             return;
         }
         else {
@@ -86089,6 +88830,8 @@ async function main() {
     ProfileDataExtractor.enhanceCaregiverSearchPanel();
     ProfileDataExtractor.enhancePatientAddressLink();
     initPatientCalendarBulkNotes();
+    // Epic 24 (Story 24-1): Aide 页 DOB/SSN 显示恢复（顶层窗口）
+    initAideSensitiveDataRestore();
     // Epic 18: Search page Clear Filters buttons
     initSearchPageEnhancements();
     // Initialize Multi-Tab Panel (Epic 7: Story 7.1, 7.2, 7.3)
@@ -86205,6 +88948,18 @@ function embedMultiTabPanel(trackerContainer, dragHandle, trackerPanel) {
         .init()
         .then(() => {
         console.log("[Epic 7] Multi-Tab Panel embedded in tracker-container");
+        // --- Session 过期警告事件监听 ---
+        // VisitMonitor 检测到 session 过期时会派发 hha:session-warning 事件
+        window.addEventListener("hha:session-warning", ((e) => {
+            const message = e.detail?.message;
+            console.warn("[Epic 7] Session warning received:", message);
+            panel.setSessionWarning(true, message);
+        }));
+        // VisitMonitor 参数刷新成功时会派发 hha:session-cleared 事件
+        window.addEventListener("hha:session-cleared", (() => {
+            console.log("[Epic 7] Session warning cleared");
+            panel.setSessionWarning(false);
+        }));
         // Hook bell button click - 使用已克隆的新铃铛
         setupBellClickHandler(container, newDragHandle, trackerPanel);
     })
