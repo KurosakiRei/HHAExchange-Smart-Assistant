@@ -1,7 +1,7 @@
-// Only inject styles on HHA pages — Outlook's strict CSP blocks style-loader injection
+// Only inject styles on HHA pages; non-HHA domains (including Forms/Outlook) may have strict CSP.
 if (
-  !window.location.hostname.includes("outlook") &&
-  window.location.hostname !== "webshell.suite.office.com"
+  window.location.hostname === "app.hhaexchange.com" ||
+  window.location.hostname === "reports.hhaexchange.com"
 ) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   require("./style/main.less");
@@ -32,6 +32,7 @@ import {
 } from "./js/HomePage";
 import { MultiTabPanel } from "./js/MultiTabPanel";
 import { ProfileDataExtractor } from "./js/services/ProfileDataExtractor";
+import { initAideSensitiveDataRestore } from "./js/services/AideSensitiveDataRestore";
 import { initSearchPageEnhancements } from "./js/SearchPageEnhancements";
 import { StatusTrackingTab } from "./js/tabs/StatusTrackingTab";
 import { QAReportTab } from "./js/tabs/QAReportTab";
@@ -47,6 +48,7 @@ import { OutlookMiniPanel } from "./js/services/OutlookMiniPanel";
 import { TinyMCEBundler } from "./js/services/TinyMCEBundler";
 import { initDocumentDropzone } from "./js/services/DocumentDropzone";
 import { initScheduledVisitsConfigCardUI } from "./js/ScheduledVisitsFilter";
+import { IncidentFormWorker } from "./js/services/incident/IncidentFormWorker";
 
 import { version } from "../package.json";
 
@@ -58,6 +60,8 @@ const IS_OUTLOOK_HOST =
   HOST === "outlook.office.com" ||
   HOST === "outlook.cloud.microsoft" ||
   HOST === "webshell.suite.office.com";
+const IS_FORMS_HOST =
+  HOST === "forms.office.com" || HOST === "forms.microsoft.com";
 const IS_BLOB_PAGE = window.location.protocol === "blob:";
 const MAIN_BOOTSTRAP_FLAG = "__HHA_SMART_ASSISTANT_MAIN_BOOTSTRAPPED__";
 const VISIT_QUICK_ACTIONS_FLAG =
@@ -88,6 +92,10 @@ function isCleanerDetailPage(url: string): boolean {
 
 function isPatientProfilePage(url: string): boolean {
   return url.toLowerCase().includes("internalpatientinfo_ns.aspx");
+}
+
+function isAideProfilePage(url: string): boolean {
+  return url.toLowerCase().includes("aide_ns.aspx");
 }
 
 function isCallReportsPage(url: string): boolean {
@@ -296,6 +304,14 @@ async function main() {
   }
 
   if (!IS_HHA_APP_HOST) {
+    if (IS_FORMS_HOST) {
+      console.log(
+        "[main] Forms domain detected, bootstrapping incident worker"
+      );
+      IncidentFormWorker.init();
+      return;
+    }
+
     if (IS_OUTLOOK_HOST) {
       console.log(
         "[main] Outlook domain detected, bootstrapping highlight2call"
@@ -337,6 +353,13 @@ async function main() {
       );
       highlight2Call();
       initPatientCalendarBulkNotes();
+      return;
+    } else if (isAideProfilePage(currentUrl)) {
+      // Epic 24 (Story 24-1): 嵌套 Aide_ns（Compliance 配置区）同样需要 DOB/SSN 恢复
+      console.log(
+        "[main] Aide profile iframe detected, running sensitive-data restore bootstrap"
+      );
+      initAideSensitiveDataRestore();
       return;
     } else {
       console.log("[main] Non-top iframe detected, skipping HHA bootstrap");
@@ -596,6 +619,9 @@ async function main() {
   ProfileDataExtractor.enhancePatientAddressLink();
   initPatientCalendarBulkNotes();
 
+  // Epic 24 (Story 24-1): Aide 页 DOB/SSN 显示恢复（顶层窗口）
+  initAideSensitiveDataRestore();
+
   // Epic 18: Search page Clear Filters buttons
   initSearchPageEnhancements();
 
@@ -733,6 +759,20 @@ function embedMultiTabPanel(
     .init()
     .then(() => {
       console.log("[Epic 7] Multi-Tab Panel embedded in tracker-container");
+
+      // --- Session 过期警告事件监听 ---
+      // VisitMonitor 检测到 session 过期时会派发 hha:session-warning 事件
+      window.addEventListener("hha:session-warning", ((e: CustomEvent) => {
+        const message = e.detail?.message;
+        console.warn("[Epic 7] Session warning received:", message);
+        panel.setSessionWarning(true, message);
+      }) as EventListener);
+
+      // VisitMonitor 参数刷新成功时会派发 hha:session-cleared 事件
+      window.addEventListener("hha:session-cleared", (() => {
+        console.log("[Epic 7] Session warning cleared");
+        panel.setSessionWarning(false);
+      }) as EventListener);
 
       // Hook bell button click - 使用已克隆的新铃铛
       setupBellClickHandler(container, newDragHandle, trackerPanel);

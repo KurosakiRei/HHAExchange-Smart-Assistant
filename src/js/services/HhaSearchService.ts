@@ -1,8 +1,80 @@
 import GM_fetch from "@trim21/gm-fetch";
+import { isDobMasked } from "./AideSensitiveDataRestore";
 
 const FALLBACK_TENANT_BASE_URL = "https://app.hhaexchange.com/ENT2603010000";
 const TENANT_CACHE_KEY = "hha_smart_assistant_tenant_base_url";
 let hasWarnedTenantFallback = false;
+let hasSearchSessionWarning = false;
+
+// ==================== Epic 24 (Story 24-2): 搜索 DOB 行级补全 ====================
+const AIDE_DOB_RESTORE_SWITCH_KEY = "hha_restore_aide_sensitive_data";
+const AIDE_DOB_ENRICH_MAX_ROWS = 30;
+const AIDE_DOB_ENRICH_CONCURRENCY = 3;
+const AIDE_DOB_ENRICH_TIMEOUT_MS = 8000;
+const AIDE_DOB_VALUE_RE = /^\d{2}\/\d{2}\/\d{4}$/;
+const aideDobCache = new Map<number, string>();
+
+function isLikelyLoginPageHtml(html: string): boolean {
+  const lower = html.toLowerCase();
+  return (
+    lower.includes("client login") &&
+    lower.includes("forgot password") &&
+    lower.includes("hhaexchange")
+  );
+}
+
+function dispatchSearchSessionWarning(message?: string): void {
+  if (hasSearchSessionWarning) {
+    return;
+  }
+
+  hasSearchSessionWarning = true;
+  window.dispatchEvent(
+    new CustomEvent("hha:session-warning", {
+      detail: {
+        message:
+          message ||
+          "⚠️ HHA Session 可能已过期，搜索请求已返回登录页。建议刷新页面重新登录。",
+        timestamp: Date.now(),
+      },
+    })
+  );
+}
+
+function clearSearchSessionWarning(): void {
+  if (!hasSearchSessionWarning) {
+    return;
+  }
+
+  hasSearchSessionWarning = false;
+  window.dispatchEvent(new CustomEvent("hha:session-cleared"));
+}
+
+async function readHtmlWithSessionCheck(
+  response: Response & { rawBody: Blob },
+  contextLabel: string
+): Promise<string> {
+  const html = await response.rawBody.text();
+  const responseUrl = (response.url || "").toLowerCase();
+
+  if (
+    response.status === 401 ||
+    response.status === 403 ||
+    responseUrl.includes("/identity/account/login") ||
+    isLikelyLoginPageHtml(html)
+  ) {
+    const message = `⚠️ HHA Session 可能已过期，${contextLabel} 返回了登录页。建议刷新页面重新登录。`;
+    console.warn(`[HhaSearchService] ${contextLabel} session expired`, {
+      status: response.status,
+      responseUrl: response.url,
+    });
+    dispatchSearchSessionWarning(message);
+    throw new Error(message);
+  }
+
+  clearSearchSessionWarning();
+  return html;
+}
 
 // ==================== 动态 Tenant URL 检测 ====================
 
@@ -386,12 +458,25 @@ function setupPopupProfileLinkFallback(popupDoc: Document): void {
   popupDoc.body.dataset.hhaProfileLinkBound = "1";
 
   const openInNewTab = (targetUrl: string): void => {
-    const popupWindow = popupDoc.defaultView ?? window;
-    const opened = popupWindow.open(targetUrl, "_blank", "noopener,noreferrer");
-    if (opened) {
+    // 1) Tampermonkey 特权 API：不受浏览器弹窗拦截限制，Outlook 等宿主下最可靠
+    try {
+      GM_openInTab(targetUrl, { active: true });
       return;
+    } catch {
+      // GM_openInTab 不可用（非 Tampermonkey 环境）时继续尝试 window.open
     }
 
+    const popupWindow = popupDoc.defaultView ?? window;
+    // 2) window.open 新标签页。注意：带 "noopener" 特性时返回值按规范恒为 null，
+    //    但这不代表失败——标签页仍会打开，因此不要据此回退到就地跳转。
+    try {
+      popupWindow.open(targetUrl, "_blank", "noopener,noreferrer");
+      return;
+    } catch {
+      // ignore
+    }
+
+    // 3) 最终兜底（仅当前面全部不可用时）：就地导航
     try {
       popupWindow.location.href = targetUrl;
     } catch {
@@ -2150,7 +2235,7 @@ export async function fetchHhaData(
   try {
     const r = (await GM_fetch(searchUrl)) as Response & { rawBody: Blob };
     if (r.status >= 200 && r.status < 400) {
-      const html = await r.rawBody.text();
+      const html = await readHtmlWithSessionCheck(r, `${type} search`);
       const result = handler(html);
       result.searchUrl = searchUrl;
       return result;
@@ -2492,6 +2577,143 @@ export function parsePatientRows(rawHtml: string): PatientRecord[] {
   return records;
 }
 
+/**
+ * Epic 24 (Story 24-2): 从单个护工档案 HTML 提取真实 DOB。
+ * 数据源：AideProfile_ns.aspx 的隐藏字段 #uxHfDtDOB → #hidprevDOB。
+ */
+export function extractAideDobFromProfileHtml(html: string): string | null {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  for (const id of ["uxHfDtDOB", "hidprevDOB"]) {
+    const el = doc.getElementById(id);
+    const raw =
+      el instanceof HTMLInputElement
+        ? el.value
+        : el?.getAttribute("value") ?? "";
+    const v = (raw ?? "").trim();
+    if (AIDE_DOB_VALUE_RE.test(v)) return v;
+  }
+  return null;
+}
+
+/** 给 promise 套软超时：超时/失败返回 null，调用方保留掩码值。 */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(null);
+      }
+    );
+  });
+}
+
+/**
+ * 仅供单元测试：清空会话级 DOB 缓存，避免跨用例污染。
+ */
+export function resetAideDobEnrichCacheForTests(): void {
+  aideDobCache.clear();
+}
+
+/** 拉取单个 AideID 的真实 DOB（会话级缓存）。 */
+async function fetchAideRealDob(aideId: number): Promise<string> {
+  const cached = aideDobCache.get(aideId);
+  if (cached) return cached;
+
+  const url = `${_TENANT_BASE_URL}/Aide/AideProfile_ns.aspx?AideID=${aideId}`;
+  let dob = "";
+  try {
+    const r = (await withTimeout(GM_fetch(url), AIDE_DOB_ENRICH_TIMEOUT_MS)) as
+      | (Response & { rawBody: Blob })
+      | null;
+    if (r && r.status >= 200 && r.status < 400) {
+      dob = extractAideDobFromProfileHtml(await r.rawBody.text()) ?? "";
+    }
+  } catch (error) {
+    console.warn(
+      `[enrichAideSearchDob] 获取 AideID=${aideId} 生日失败，保留掩码`,
+      error
+    );
+  }
+  if (dob) aideDobCache.set(aideId, dob);
+  return dob;
+}
+
+/**
+ * Epic 24 (Story 24-2): 搜索结果 DOB 行级补全。
+ *
+ * 官方 AideSearchXSLT_ns.aspx 返回的 DOB 是掩码且响应内无真实值；
+ * 本函数对每行（限前 N 行）从姓名链接解析 AideID，并行拉取
+ * AideProfile_ns.aspx 的真实 DOB 并替换掩码单元格。
+ *
+ * 容错策略：
+ * - 并发上限 3、单请求 8s 软超时、会话级缓存；
+ * - 超时/失败保留掩码，不阻塞展示；
+ * - 开关 hha_restore_aide_sensitive_data=false 时直接返回原 HTML。
+ */
+export async function enrichAideSearchDob(rawHtml: string): Promise<string> {
+  try {
+    if (GM_getValue<boolean>(AIDE_DOB_RESTORE_SWITCH_KEY, true) === false) {
+      return rawHtml;
+    }
+  } catch {
+    // GM 存储不可用时按开启处理
+  }
+
+  const doc = new DOMParser().parseFromString(rawHtml, "text/html");
+  const table =
+    doc.querySelector<HTMLTableElement>("#tdSearchResults") ??
+    doc.querySelector<HTMLTableElement>("table");
+  if (!table) return rawHtml;
+
+  const headerRow =
+    table.querySelector("thead tr") ?? table.querySelector("tr");
+  if (!headerRow) return rawHtml;
+  const headerCells = Array.from(headerRow.querySelectorAll("th, td"));
+  const dobColIdx = headerCells.findIndex((c) =>
+    /date of birth|dob|birth/i.test(c.textContent?.trim() ?? "")
+  );
+  if (dobColIdx < 0) return rawHtml;
+
+  const rows = Array.from(
+    table.querySelectorAll<HTMLElement>("tbody tr")
+  ).slice(0, AIDE_DOB_ENRICH_MAX_ROWS);
+
+  const tasks: { cell: HTMLElement; aideId: number }[] = [];
+  for (const row of rows) {
+    const cells = row.querySelectorAll("td");
+    const cell = cells[dobColIdx] as HTMLElement | undefined;
+    if (!cell || !isDobMasked(cell.textContent ?? "")) continue;
+    const idText = extractProfileIdFromRow(row, "aide");
+    if (idText && /^\d+$/.test(idText)) {
+      tasks.push({ cell, aideId: parseInt(idText, 10) });
+    }
+  }
+  if (tasks.length === 0) return rawHtml;
+
+  let cursor = 0;
+  const worker = async (): Promise<void> => {
+    while (cursor < tasks.length) {
+      const i = cursor++;
+      const { cell, aideId } = tasks[i];
+      const dob = await fetchAideRealDob(aideId);
+      if (dob) {
+        cell.textContent = dob;
+        cell.setAttribute("data-hha-dob-enriched", "1");
+      }
+    }
+  };
+
+  const workerCount = Math.min(AIDE_DOB_ENRICH_CONCURRENCY, tasks.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+
+  return table.outerHTML;
+}
+
 export async function fetchAllPages(
   type: "aide" | "patient",
   params: HhaQuickSearchParams
@@ -2502,7 +2724,7 @@ export async function fetchAllPages(
   try {
     const r = (await GM_fetch(url1)) as Response & { rawBody: Blob };
     if (r.status >= 200 && r.status < 400) {
-      page1Html = await r.rawBody.text();
+      page1Html = await readHtmlWithSessionCheck(r, `${type} search page 1`);
     } else {
       return { count: 0, rawHtml: `Request Failed: ${r.status}` };
     }
@@ -2518,6 +2740,13 @@ export async function fetchAllPages(
   const totalCount = page1Result.count;
   if (totalCount <= 10) {
     // 单页结果，直接返回
+    if (type === "aide") {
+      // Epic 24 (Story 24-2): 行级 DOB 补全后再进入展示/解析流程
+      return {
+        ...page1Result,
+        rawHtml: await enrichAideSearchDob(page1Result.rawHtml),
+      };
+    }
     return page1Result;
   }
 
@@ -2528,7 +2757,12 @@ export async function fetchAllPages(
     const url = buildSearchUrl(type, params, pg);
     pagePromises.push(
       GM_fetch(url)
-        .then((r) => (r as Response & { rawBody: Blob }).rawBody.text())
+        .then((r) =>
+          readHtmlWithSessionCheck(
+            r as Response & { rawBody: Blob },
+            `${type} search page ${pg}`
+          )
+        )
         .catch(() => "")
     );
   }
@@ -2561,9 +2795,13 @@ export async function fetchAllPages(
   const mergedTable = doc1.querySelector<HTMLElement>("#tdSearchResults");
   const mergedRawHtml = mergedTable ? mergedTable.outerHTML : page1Html;
 
+  // Epic 24 (Story 24-2): aide 分支做行级 DOB 补全
+  const finalRawHtml =
+    type === "aide" ? await enrichAideSearchDob(mergedRawHtml) : mergedRawHtml;
+
   const result: HhaSearchResult = {
     count: totalCount,
-    rawHtml: mergedRawHtml,
+    rawHtml: finalRawHtml,
   };
   if (type === "patient" && page1Result.activeCount !== undefined) {
     result.activeCount = page1Result.activeCount;

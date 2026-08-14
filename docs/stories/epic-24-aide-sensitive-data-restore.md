@@ -7,7 +7,7 @@
 | **Epic ID** | EPIC-024 |
 | **标题** | Aide 页面 DOB/SSN 显示恢复与搜索结果生日补全 |
 | **优先级** | P1 |
-| **状态** | 🚧 待开发（文档已就绪） |
+| **状态** | ✅ verified（用户实测通过：HHA 档案页 / 搜索弹窗 / Outlook 搜索均正常） |
 | **关联系统** | AideSensitiveDataRestore（新建）, HhaSearchService, ProfileDataExtractor（受益）, index.ts 主 bootstrap |
 | **依赖 Epic** | Epic 7（Multi-Tab Panel）, Epic 18（Quick Search） |
 | **ADR** | ADR-023 |
@@ -66,20 +66,20 @@ HHAExchange 近期对无 SSN/DOB 查看权限的账号启用了敏感信息掩�
 
 ### 验收标准
 
-- [ ] 新建 `src/js/services/AideSensitiveDataRestore.ts`，导出 `initAideSensitiveDataRestore()`；模块内自行判断当前 URL 是否为 `Aide_ns.aspx`，否则直接返回
-- [ ] 读取真实值：`#uxHfDtDOB` → `#hidprevDOB` 取第一个通过 `/^\d{2}\/\d{2}\/\d{4}$/` 校验的值；`#uxHfSSN` → `#hidprevSSN` 取第一个通过 `/^\d{3}-\d{2}-\d{4}$/` 校验的值
-- [ ] 恢复三个显示位（仅当当前文本命中掩码正则时替换）：
+- [x] 新建 `src/js/services/AideSensitiveDataRestore.ts`，导出 `initAideSensitiveDataRestore()`；模块内自行判断当前 URL 是否为 `Aide_ns.aspx`，否则直接返回
+- [x] 读取真实值：`#uxHfDtDOB` → `#hidprevDOB` 取第一个通过 `/^\d{2}\/\d{2}\/\d{4}$/` 校验的值；`#uxHfSSN` → `#hidprevSSN` 取第一个通过 `/^\d{3}-\d{2}-\d{4}$/` 校验的值
+- [x] 恢复三个显示位（仅当当前文本命中掩码正则时替换）：
   - `#ctl00_ContentPlaceHolder1_uxlblInfoDOB` 文本 → 真实 DOB（如 `07/15/1956`）
   - `#uxLblPDOB` 文本 → 真实 DOB
   - `#uxLblPSSN` 文本 → 真实 SSN（如 `830-39-4421`）
   - DOB 掩码正则 `/^X{2}\/X{2}\/X{4}$/i`；SSN 掩码正则 `/^X{3}-X{2}-\d{4}$/i`
-- [ ] 编辑态同步：`#uxDtDOB`（date input）赋 `YYYY-MM-DD` 格式（提供 `MM/DD/YYYY → YYYY-MM-DD` 转换），`#uxTxtSSN` 赋真实 SSN；元素不存在/不可见时跳过
-- [ ] 幂等：每个 window 一个初始化标记（如 `window.__HHA_AIDE_SENSITIVE_RESTORED_FLAG__`）；写入前先比对当前值，已恢复元素加 `data-hha-sensitive-restored` 属性并跳过
-- [ ] 重渲染覆盖：`MutationObserver` 观察 `#aspnetForm`（或 body）子树，debounce 50~100ms 后重新应用；写入真实值后不会再次命中掩码正则，避免循环触发
-- [ ] 开关：`GM_getValue("hha_restore_aide_sensitive_data", true)` 为 `false` 时模块直接返回
-- [ ] 在 `src/index.ts` 主 bootstrap 中与 `ProfileDataExtractor.enhanceCaregiverSearchPanel()` 同级调用 `initAideSensitiveDataRestore()`；确认不被 iframe 抑制逻辑拦截，嵌套 Aide_ns（Compliance 配置区）同样生效
-- [ ] 静默降级：任何元素缺失/格式不合法时跳过该元素，不抛错、不写空值
-- [ ] `npm run build` 通过，无新增 TS 错误
+- [x] 编辑态同步：`#uxDtDOB`（date input）赋 `YYYY-MM-DD` 格式（提供 `MM/DD/YYYY → YYYY-MM-DD` 转换），`#uxTxtSSN` 赋真实 SSN；元素不存在/不可见时跳过
+- [x] 幂等：每个 window 一个初始化标记（`window.__HHA_AIDE_SENSITIVE_RESTORED_FLAG__`）；写入前先比对当前值，已恢复元素加 `data-hha-sensitive-restored` 属性并跳过
+- [x] 重渲染覆盖：`MutationObserver` 观察 `#aspnetForm`（或 body）子树，debounce 50~100ms 后重新应用；写入真实值后不会再次命中掩码正则，避免循环触发
+- [x] 开关：`GM_getValue("hha_restore_aide_sensitive_data", true)` 为 `false` 时模块直接返回
+- [x] 在 `src/index.ts` 主 bootstrap 中与 `ProfileDataExtractor.enhanceCaregiverSearchPanel()` 同级调用 `initAideSensitiveDataRestore()`；新增 `isAideProfilePage()` 分支，嵌套 Aide_ns（Compliance 配置区）同样生效
+- [x] 静默降级：任何元素缺失/格式不合法时跳过该元素，不抛错、不写空值
+- [x] `npm run build` 通过，无新增 TS 错误
 
 ### 实现提示
 
@@ -97,19 +97,19 @@ HHAExchange 近期对无 SSN/DOB 查看权限的账号启用了敏感信息掩�
 
 ### 验收标准
 
-- [ ] 在 `src/js/services/HhaSearchService.ts` 新增 `enrichAideSearchDob(rawHtml: string): Promise<string>`，在 `fetchAllPages("aide", ...)` 合并出完整 `rawHtml` 后调用，再返回结果（QuickSearchTab / IncomingCallHandler / EmploymentActivationTemplate 无需改调用方）
-- [ ] 行 AideID 解析：从姓名链接 `onclick="RedirectToAidePage(3632255)"` 提取（复用现有 `/RedirectToAidePage\(\s*(\d+)/` 思路；如 `preserveProfileIdsInRawHtml` 已写入 `data-hha-profile-id` 则优先取该属性）
-- [ ] 数据源：`${TENANT_BASE}/Aide/AideProfile_ns.aspx?AideID={ID}`（GM_fetch 带凭证，已验证无需 officeID）；从响应 HTML 提取 `#uxHfDtDOB` 并通过 `/^\d{2}\/\d{2}\/\d{4}$/` 校验
-- [ ] 替换规则：按表头文本定位 `Date of Birth` 列；仅当单元格文本命中 `/^X{2}\/X{2}\/X{4}$/i` 时替换为真实值；每行独立处理
-- [ ] 限流与容错：
-  - 并发上限 3（分批 `Promise.all` 或信号量）
-  - 单请求 8s 超时（`AbortController` / `Promise.race`），超时或失败保留掩码值
+- [x] 在 `src/js/services/HhaSearchService.ts` 新增 `enrichAideSearchDob(rawHtml: string): Promise<string>`，在 `fetchAllPages("aide", ...)` 合并出完整 `rawHtml` 后调用，再返回结果（QuickSearchTab / IncomingCallHandler / EmploymentActivationTemplate 无需改调用方）
+- [x] 行 AideID 解析：从姓名链接 `onclick="RedirectToAidePage(3632255)"` 提取（复用现有 `/RedirectToAidePage\(\s*(\d+)/` 思路；`preserveProfileIdsInRawHtml` 已写入 `data-hha-profile-id` 时优先取该属性）
+- [x] 数据源：`${TENANT_BASE}/Aide/AideProfile_ns.aspx?AideID={ID}`（GM_fetch 带凭证，已验证无需 officeID）；从响应 HTML 提取 `#uxHfDtDOB` 并通过 `/^\d{2}\/\d{2}\/\d{4}$/` 校验
+- [x] 替换规则：按表头文本定位 `Date of Birth` 列；仅当单元格文本命中 `/^X{2}\/X{2}\/X{4}$/i` 时替换为真实值；每行独立处理
+- [x] 限流与容错：
+  - 并发上限 3（worker 池，实测 max-in-flight ≤ 3）
+  - 单请求 8s 超时（`Promise.race` 软超时），超时或失败保留掩码值
   - 会话级缓存 `Map<number, string>`，同一 AideID 不重复请求
   - 补全上限：仅处理合并结果前 30 行（常量可配置），超出部分保持掩码
-- [ ] 补全失败不影响主流程：`fetchAllPages` 仍正常返回，展示不阻塞、不报错弹窗（console.warn 即可）
-- [ ] 开关 `hha_restore_aide_sensitive_data=false` 时跳过补全直接返回原 `rawHtml`
-- [ ] 单测：mock `GM_fetch` 返回搜索表格 HTML + 单个档案 HTML，断言 DOB 列替换成功；失败/超时分支保留 `XX/XX/XXXX`
-- [ ] `npm run build` 通过
+- [x] 补全失败不影响主流程：`fetchAllPages` 仍正常返回，展示不阻塞、不报错弹窗（console.warn 即可）
+- [x] 开关 `hha_restore_aide_sensitive_data=false` 时跳过补全直接返回原 `rawHtml`
+- [x] 单测：mock `GM_fetch` 返回搜索表格 HTML + 单个档案 HTML，断言 DOB 列替换成功；失败/超时/缓存/并发上限分支保留 `XX/XX/XXXX`
+- [x] `npm run build` 通过
 
 ### 实现提示
 
@@ -127,21 +127,22 @@ HHAExchange 近期对无 SSN/DOB 查看权限的账号启用了敏感信息掩�
 
 ### 验收标准
 
-- [ ] Tampermonkey 存储键 `hha_restore_aide_sensitive_data`（默认 `true`）；档案页模块与搜索补全均读取该开关，关闭后完全等同原状
-- [ ] 单测覆盖：
+- [x] Tampermonkey 存储键 `hha_restore_aide_sensitive_data`（默认 `true`）；档案页模块与搜索补全均读取该开关，关闭后完全等同原状
+- [x] 单测覆盖：
   - 档案页三处显示位 + 编辑态控件赋值（jsdom）
-  - 幂等：连续两次 `applyRestore` 后 DOM 不变
+  - 幂等：连续两次 `applyAideSensitiveDataRestore` 后 DOM 不变
   - 掩码/真实值正则与 `MM/DD/YYYY → YYYY-MM-DD` 转换
-  - 搜索补全成功、单行失败不影响其他行、全失败保留掩码、并发上限生效
-- [ ] 手动验收清单：
-  1. 打开 `Aide_ns.aspx?AideId=3632255`：左栏 DOB、Demographics DOB、Demographics SSN 三处均显示真实值
-  2. 点击 Edit：DOB date input 与 SSN input 显示真实值
-  3. 切换 Profile/Compliance 等 Tab 再切回：恢复保持
-  4. 快速搜索 `Fu GuiZhi`：弹窗 DOB 列显示 `07/15/1956`；SSN 列保持掩码（非目标）
-  5. 打开 MailBuilder：`{{caregiver_dob}}` 变量为真实生日（附带收益）
-  6. 设置 `hha_restore_aide_sensitive_data=false` 刷新：三处与搜索均回到掩码，无报错
-- [ ] 回归：来电搜索、QuickSearch 组合搜索、Employment 向导 Step1 行为不回归
-- [ ] `npm run build` + `npm test` 通过
+  - 搜索补全成功、单行失败不影响其他行、全失败保留掩码、并发上限 ≤3 生效
+- [x] 手动验收清单（用户实测通过，2026-08-13）：
+  1. 打开 `Aide_ns.aspx?AideId=3632255`：左栏 DOB、Demographics DOB、Demographics SSN 三处均显示真实值 ✅
+  2. 点击 Edit：DOB date input 与 SSN input 显示真实值 ✅
+  3. 切换 Profile/Compliance 等 Tab 再切回：恢复保持 ✅
+  4. 快速搜索 `Fu GuiZhi`：弹窗 DOB 列显示 `07/15/1956`；SSN 列保持掩码（非目标） ✅
+  5. 打开 MailBuilder：`{{caregiver_dob}}` 变量为真实生日（附带收益） ✅
+  6. 设置 `hha_restore_aide_sensitive_data=false` 刷新：三处与搜索均回到掩码，无报错 ✅
+  7. Outlook（outlook.cloud.microsoft）快速搜索：DOB 列真实值 + 点击名字新开标签页 ✅（清理旧脚本副本后）
+- [x] 回归：来电搜索、QuickSearch 组合搜索、Employment 向导 Step1 行为不回归（全量 41 测试通过，含既有 incident 测试）
+- [x] `npm run build` + `npm test` 通过
 
 ### 实现提示
 
@@ -155,3 +156,10 @@ HHAExchange 近期对无 SSN/DOB 查看权限的账号启用了敏感信息掩�
 1. HHA 若停止在页面下发隐藏字段真实值（或搜索行去掉 `RedirectToAidePage` 链接），本功能静默降级为掩码显示，需要重新取证。
 2. 搜索补全对大结果集只处理前 30 行，其余保持掩码（可调常量）。
 3. 结果弹窗的 SSN 列按需求保持掩码，不随本 Epic 改变。
+
+## 修复记录
+
+- **2026-08-13（搜索结果 DOB 补全实测确认）**：在真实页面驱动 QuickSearch 面板搜索后，新弹窗 DOB 列已显示真实值并带 `data-hha-dob-enriched="1"`。用户截图中的弹窗为重装脚本前生成的旧弹窗（blob 页面不刷新），关闭后重新搜索即可看到补全结果。
+- **2026-08-13（Outlook 搜索结果点击跳转修复）**：`setupPopupProfileLinkFallback` 的 `openInNewTab` 原实现用 `window.open(url, "_blank", "noopener,noreferrer")` 的返回值判断成败，但该特性组合按规范恒返回 `null`，导致必然落入 `location.href` 就地跳转分支（搜索结果窗口内跳转）。已改为优先 `GM_openInTab(targetUrl, { active: true })`（Tampermonkey 特权 API，不受宿主弹窗拦截影响），`window.open` 作为第二选择且不再依赖返回值，`location.href` 仅作最终兜底。
+- **2026-08-13（Outlook 域名功能失效根因——旧脚本副本）**：实测发现 Outlook（outlook.cloud.microsoft）页面执行的是一份**旧版 userscript 副本**：生成的搜索弹窗锚点只有 `rel="noopener noreferrer"` 而无 `target="_blank"`（当前源码两个分支都会设置 target），且 DOB 无补全标记。而 app.hhaexchange.com 页面执行的是最新构建（DOB 补全正常）。判定 Tampermonkey（或 Tampermonkey BETA）中存在多份「HHAExchange Smart Assistant」脚本，Outlook 域名命中的是旧副本。处理：删除管理器内所有旧副本、只保留重新导入的 `dist/index.prod.user.js`，版本号已升到 **3.21.15** 便于识别——重载 Outlook 后控制台应看到 `HHA Exchange Smart Assistant 3.21.15 : script start`。
+- **2026-08-13（用户最终验收）**：清理旧脚本副本后，HHA 档案页、搜索弹窗、Outlook 快速搜索（生日补全 + 新标签页打开）全部实测通过，Epic 24 关闭。
